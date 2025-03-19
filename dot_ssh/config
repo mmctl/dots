@@ -3,13 +3,13 @@
 Host github.com *.github.com gitlab.com *.gitlab.com
     User mmctl
     IdentityFile "%d/.ssh/git_ed25519"
-    
+
 ## General
 ## Each of these can be overwritten for specific hosts
-## by simply specifying the option in a preceding 
+## by simply specifying the option in a preceding
 ## stanza/section that matches that host
 Host *
-    AddKeysToAgent ask
+    AddKeysToAgent yes
     BatchMode no
     CASignatureAlgorithms -"rsa*"
     Ciphers -"3des-cbc"
@@ -19,7 +19,7 @@ Host *
     ForwardAgent no
     ForwardX11 no
     ForwardX11Trusted no
-    GSSAPIAuthentication no    
+    GSSAPIAuthentication no
     HashKnownHosts no
     HostbasedAcceptedAlgorithms -"rsa*"
     HostbasedAuthentication no
