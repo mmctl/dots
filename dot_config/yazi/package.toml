@@ -1,0 +1,49 @@
+[[plugin.deps]]
+use = "yazi-rs/plugins:full-border"
+rev = "cb6165b"
+hash = "1f3dad061209081a6b04dd6ff2cb06c7"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:hide-preview"
+rev = "cb6165b"
+hash = "53f826884e2c7e521cecc492a7f31d7e"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:max-preview"
+rev = "cb6165b"
+hash = "a8025f2bb311e869069364fba01abffc"
+
+[[plugin.deps]]
+use = "imsi32/yatline"
+rev = "6b0fc1e"
+hash = "ab115c6cc77f5710c27f39dfa2f3d4d"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:smart-enter"
+rev = "cb6165b"
+hash = "7918aab6a71caf31b58411f789195677"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:smart-filter"
+rev = "cb6165b"
+hash = "f0c4b41b5d19a3144958383333eff6e7"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:jump-to-char"
+rev = "cb6165b"
+hash = "a670c03eb3760812e044a24f94cedc55"
+
+[[plugin.deps]]
+use = "KKV9/compress"
+rev = "60b24af"
+hash = "ee025be766240cc98e671754ac836da3"
+
+[[plugin.deps]]
+use = "dawsers/fuse-archive"
+rev = "a58327c"
+hash = "6a6d24880ce7666048fb81ad758c48d3"
+
+[[flavor.deps]]
+use = "yazi-rs/flavors:catppuccin-macchiato"
+rev = "b929df6"
+hash = "3ec21bcfd2735cfcbab61faaf43e59e4"

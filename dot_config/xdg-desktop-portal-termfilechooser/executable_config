@@ -1,0 +1,3 @@
+[filechooser]
+cmd=yazi-wrapper.sh
+default_dir=$XDG_DATA_HOME/downloads

@@ -1,0 +1,130 @@
+/* Main configuration */
+configuration {
+	font: "RobotoMono Nerd Font Medium 12";
+	line-margin: 10;
+	location: 0;
+	yoffset: 0;
+	xoffset: 0;
+	fixed-num-lines: true;
+	show-icons: false;
+	terminal: "alacritty";
+	ssh-client: "ssh";
+	ssh-command: "{terminal} -e {ssh-client} {host} [-p {port}]";
+	run-command: "{cmd}";
+	run-list-command: "";
+	run-shell-command: "{terminal} -e {cmd}";
+	window-command: "";
+	window-match-fields: "all";
+	disable-history: false;
+	ignored-prefixes: "";
+	sort: true;
+	sorting-method: "fzf";
+	case-sensitive: false;
+	cycle: true;
+	sidebar-mode: true;
+	hover-select: false;
+	eh: 1;
+	auto-select: false;
+	parse-hosts: false;
+	parse-known-hosts: true;
+	matching: "normal";
+	tokenize: true;
+	m: "-1";
+	dpi: 0;
+	threads: 0;
+	scroll-method: 0;
+	window-format: "{t}   {c}   {w}";
+	click-to-exit: true;
+	max-history-size: 10;
+	combi-hide-mode-prefix: false;
+	combi-display-format: "{mode} | {text}";
+	cache-dir: "/home/mm/.cache/rofi";
+	window-thumbnail: false;
+	normalize-match: true;
+	steal-focus: false;
+	refilter-timeout-limit: 300;
+	xserver-i300-workaround: true;
+	pid: "/run/user/1000/rofi.pid";
+	display-window: " ";
+	display-ssh:    " ";
+ 	display-run:    " ";
+	display-drun:   " ";
+    	display-combi:  " ";
+	display-filebrowser: " ";
+	kb-primary-paste: "Alt+y";
+	kb-secondary-paste: "Alt+Y";
+	kb-clear-line: "Alt+l";
+	kb-move-front: "Control+a";
+	kb-move-end: "Control+e";
+	kb-move-word-back: "Control+Left";
+	kb-move-word-forward: "Control+Right";
+	kb-move-char-back: "Left";
+	kb-move-char-forward: "Right";
+	kb-remove-word-back: "Alt+BackSpace";
+	kb-remove-word-forward: "Alt+w";
+	kb-remove-char-forward: "Delete";
+	kb-remove-char-back: "BackSpace";
+	kb-remove-to-eol: "Alt+e";
+	kb-remove-to-sol: "Alt+a";
+	kb-accept-entry: "Return,KP_Enter,Control+v";
+	kb-accept-custom: "Control+Return,Control+V";
+	kb-accept-custom-alt: "Control+Alt+Return,Control+Alt+v";
+	kb-accept-alt: "Shift+Return,Control+o";
+	kb-delete-entry: "Shift+Delete,Alt+d";
+	kb-mode-next: "Tab";
+	kb-mode-previous: "ISO_Left_Tab";
+	kb-mode-complete: "Control+m";
+	kb-row-left: "Control+h";
+	kb-row-right: "Control+l";
+	kb-row-up: "Up";
+	kb-row-down: "Down";
+	kb-element-next: "Control+n";
+	kb-element-prev: "Control+p";
+	kb-page-prev: "Page_Up";
+	kb-page-next: "Page_Down";
+	kb-row-select: "Control+r";
+	kb-screenshot: "Alt+s";
+	kb-cancel: "Escape,Control+q,Control+g";
+	kb-select-1: "Control+1";
+	kb-select-2: "Control+2";
+	kb-select-3: "Control+3";
+	kb-select-4: "Control+4";
+	kb-select-5: "Control+5";
+	kb-select-6: "Control+6";
+	kb-select-7: "Control+7";
+	kb-select-8: "Control+8";
+	kb-select-9: "Control+9";
+	kb-select-10: "Control+0";
+	ml-row-left: "ScrollLeft";
+	ml-row-right: "ScrollRight";
+	ml-row-up: "ScrollUp";
+	ml-row-down: "ScrollDown";
+	me-select-entry: "MousePrimary";
+	me-accept-entry: "MouseDPrimary";
+	me-accept-custom: "Control+MouseDPrimary";
+  window {
+	hide-active-window : true;
+	close-on-delete : false;
+  }
+  filebrowser {
+	directory : "/";
+	directories-first: true;
+	show-hidden : true;
+	sorting-method: "name";
+	command : "xdg-open";
+  }
+}
+
+
+
+/* Theming */
+@theme "/home/mm/.config/rofi/nord-theme.rasi"
+
+listview {
+	lines: 6;
+	columns: 2;
+}
+
+window {
+	width: 35%;
+}

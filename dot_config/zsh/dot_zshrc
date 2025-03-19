@@ -1,0 +1,32 @@
+# Set (basic) environment
+[[ -f "$ZDOTDIR/env.zsh" && -r "$ZDOTDIR/env.zsh" ]] && . "$ZDOTDIR/env.zsh"
+
+# Set settings needed/preferred before Oh-My-Zsh script
+[[ -f "$ZDOTDIR/presettings.zsh" && -r "$ZDOTDIR/presettings.zsh" ]] && . "$ZDOTDIR/presettings.zsh"
+
+# Define/override functions before Oh-My-Zsh script
+[[ -f "$ZDOTDIR/prefunctions.zsh" && -r "$ZDOTDIR/prefunctions.zsh" ]] && . "$ZDOTDIR/prefunctions.zsh"
+
+
+# Source Oh-My-Zsh script
+[[ -f "$ZSH/oh-my-zsh.sh" && -r "$ZSH/oh-my-zsh.sh" ]] && . "$ZSH/oh-my-zsh.sh"
+
+
+# Set (other) settings, e.g., plugins, potentially overriding those by default/Oh-My-Zsh
+[[ -f "$ZDOTDIR/postsettings.zsh" && -r "$ZDOTDIR/postsettings.zsh" ]] && . "$ZDOTDIR/postsettings.zsh"
+
+# Define/override functions after Oh-My-Zsh script
+[[ -f "$ZDOTDIR/postfunctions.zsh" && -r "$ZDOTDIR/postfunctions.zsh" ]] && . "$ZDOTDIR/postfunctions.zsh"
+
+# Set (custom) aliases, potentially overriding those by Oh-My-Zsh
+[[ -f "$ZDOTDIR/aliases.zsh" && -r "$ZDOTDIR/aliases.zsh" ]] && . "$ZDOTDIR/aliases.zsh"
+
+# Set (custom) keybindings, potentially overriding those by Oh-My-Zsh
+[[ -f "$ZDOTDIR/keybindings.zsh" && -r "$ZDOTDIR/keybindings.zsh" ]] && . "$ZDOTDIR/keybindings.zsh"
+
+# Set/style prompt
+[[ -f "$ZDOTDIR/prompt.zsh" && -r "$ZDOTDIR/prompt.zsh" ]] && . "$ZDOTDIR/prompt.zsh"
+
+
+# Commands executed at startup
+fastfetch
