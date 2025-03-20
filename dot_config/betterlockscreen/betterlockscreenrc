@@ -17,7 +17,7 @@ quiet=false
 
 
 # Theme (Nord)
-font="Roboto"
+font="Open Sans"
 time_format="%H:%M:%S"
 locktext="Enter password"
 veriftext="Verifying..."
