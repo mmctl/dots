@@ -3,46 +3,46 @@
 ;; Environment
 ;;; Config
 (defconst THEMES_DIR (file-name-as-directory
-		                  (if (getenv "XDG_CONFIG_HOME")
-			                    (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/themes/")
-			                  (file-name-concat user-emacs-directory "themes/")))
+                      (if (getenv "XDG_CONFIG_HOME")
+                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/themes/")
+                        (file-name-concat user-emacs-directory "themes/")))
   "Directory where (custom) themes are stored.")
 
 (defconst CUSTOM_FILE (if (getenv "XDG_CONFIG_HOME")
-			                    (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/custom-set.el")
-			                  (file-name-concat user-emacs-directory "custom-set.el"))
+                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/custom-set.el")
+                        (file-name-concat user-emacs-directory "custom-set.el"))
   "File where (automatically generated) customization settings are stored")
 
 (defconst FUNCS_DIR (file-name-as-directory
-		                 (if (getenv "XDG_CONFIG_HOME")
-			                   (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/funcs/")
-		                   (file-name-concat user-emacs-directory "funcs/")))
+                     (if (getenv "XDG_CONFIG_HOME")
+                         (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/funcs/")
+                       (file-name-concat user-emacs-directory "funcs/")))
   "Directory where (custom) functions are defined")
 
 (defconst TEMPLATES_DIR (file-name-as-directory
-		                     (if (getenv "XDG_CONFIG_HOME")
-			                       (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/templates/")
-		                       (file-name-concat user-emacs-directory "templates/")))
+                         (if (getenv "XDG_CONFIG_HOME")
+                             (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/templates/")
+                           (file-name-concat user-emacs-directory "templates/")))
   "Directory where (custom) templates are defined")
 
 ;;; Data
 (defconst BACKUPS_DIR (file-name-as-directory
-		                   (if (getenv "XDG_DATA_HOME")
-			                     (file-name-concat (getenv "XDG_DATA_HOME") "emacs/backups/")
-			                   (file-name-concat user-emacs-directory "backups/")))
+                       (if (getenv "XDG_DATA_HOME")
+                           (file-name-concat (getenv "XDG_DATA_HOME") "emacs/backups/")
+                         (file-name-concat user-emacs-directory "backups/")))
   "Directory where (automatically generated) backup files are stored.")
 
 ;;; Cache
 (defconst AUTOSAVES_DIR (file-name-as-directory
-			                   (if (getenv "XDG_CACHE_HOME")
-			                       (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/autosaves/")
-			                     (file-name-concat user-emacs-directory "autosaves/")))
+                         (if (getenv "XDG_CACHE_HOME")
+                             (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/autosaves/")
+                           (file-name-concat user-emacs-directory "autosaves/")))
   "Directory where auto-save files are stored.")
 
 (defconst LOCKS_DIR (file-name-as-directory
-			               (if (getenv "XDG_CACHE_HOME")
-			                   (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/locks/")
-			                 (file-name-concat user-emacs-directory "locks/")))
+                     (if (getenv "XDG_CACHE_HOME")
+                         (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/locks/")
+                       (file-name-concat user-emacs-directory "locks/")))
   "Directory where lock files are stored.")
 
 
@@ -79,23 +79,23 @@
 ;;; Backups
 (setopt backup-directory-alist `((".*" . ,BACKUPS_DIR))
         make-backup-files t
-	      vc-make-backup-files nil
-	      version-control t
-	      kept-old-versions 2
-	      kept-new-versions 3
-	      delete-old-versions t
-	      backup-by-copying nil
-	      backup-by-copying-when-linked t
-	      backup-by-copying-when-mismatch t)
+        vc-make-backup-files nil
+        version-control t
+        kept-old-versions 2
+        kept-new-versions 3
+        delete-old-versions t
+        backup-by-copying nil
+        backup-by-copying-when-linked t
+        backup-by-copying-when-mismatch t)
 
 ;;; Auto-saves
 (setopt auto-save-file-name-transforms `((".*" ,(file-name-concat AUTOSAVES_DIR "\\1") t))
         auto-save-visited-file-name nil
-	      auto-save-interval 50
-	      auto-save-timeout 20
-	      auto-save-default t
-	      delete-auto-save-files t
-	      auto-save-list-file-prefix nil)
+        auto-save-interval 50
+        auto-save-timeout 20
+        auto-save-default t
+        delete-auto-save-files t
+        auto-save-list-file-prefix nil)
 
 ;;; Locks
 (setopt lock-file-name-transforms `((".*" ,(file-name-concat LOCKS_DIR "\\1") t))
@@ -110,11 +110,11 @@
 (require 'package)
 
 (setopt package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-			                     ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-			                     ("melpa" . "https://melpa.org/packages/"))
-	      package-archive-priorities '(("gnu" . 10)
-				                             ("nongnu" . 5)
-				                             ("melpa" . 1)))
+                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                           ("melpa" . "https://melpa.org/packages/"))
+        package-archive-priorities '(("gnu" . 10)
+                                     ("nongnu" . 5)
+                                     ("melpa" . 1)))
 
 (package-initialize)
 
@@ -404,13 +404,13 @@
 ;;; General
 (setopt use-package-always-ensure nil
         use-package-always-defer nil
-	      use-package-always-pin nil
-	      use-package-always-demand nil)
+        use-package-always-pin nil
+        use-package-always-demand nil)
 
 (when (and (not (package-installed-p 'vc-use-package)) (< emacs-major-version 30))
   (package-vc-install
    '(vc-use-package :url "https://github.com/slotThe/vc-use-package"
-		                :vc-backend Git))
+                    :vc-backend Git))
   (require 'vc-use-package))
 
 ;;; Helpers
@@ -423,16 +423,16 @@
   :config
   (setopt which-key-idle-delay 0.5
           which-key-popup-type 'side-window
-	        which-key-side-window-location 'bottom
-	        which-key-side-window-max-height 0.25
+          which-key-side-window-location 'bottom
+          which-key-side-window-max-height 0.25
           which-key-max-description-length 0.20
-	        which-key-add-column-padding 2
-	        which-key-show-prefix 'left
-	        which-key-show-remaining-keys t
+          which-key-add-column-padding 2
+          which-key-show-prefix 'left
+          which-key-show-remaining-keys t
           which-key-preserve-window-configuration t
-	        which-key-sort-uppercase-first nil
+          which-key-sort-uppercase-first nil
           which-key-sort-order 'which-key-key-order-alpha
-	        which-key-use-C-h-commands nil
+          which-key-use-C-h-commands nil
           which-key-show-early-on-C-h nil
           which-key-paging-prefixes '("C-x")
           which-key-paging-key "<f3>")
@@ -784,10 +784,10 @@
           doom-themes-enable-italic t)
   (doom-themes-visual-bell-config)
   (setopt doom-nord-brighter-modeline t
-	        doom-nord-brighter-comments nil
-	        doom-nord-comment-bg nil
-	        doom-nord-padded-modeline nil
-	        doom-nord-region-highlight 'snowstorm)
+          doom-nord-brighter-comments nil
+          doom-nord-comment-bg nil
+          doom-nord-padded-modeline nil
+          doom-nord-region-highlight 'snowstorm)
   (load-theme 'doom-nord t)
   (doom-themes-set-faces nil
     '(trailing-whitespace :background magenta)
@@ -802,9 +802,9 @@
     '(tempel-default :foreground 'unspecified :background 'unspecified
                      :inherit 'lazy-highlight :slant 'italic)
     '(tempel-field :foreground 'unspecified :background 'unspecified
-                     :inherit 'highlight)
+                   :inherit 'highlight)
     '(tempel-form :foreground 'unspecified :background 'unspecified
-                     :inherit 'match)))
+                  :inherit 'match)))
 
 ;; Cross-package enhancements
 ;;; Custom functions (with package dependencies)
