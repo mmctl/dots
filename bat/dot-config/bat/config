@@ -1,0 +1,11 @@
+--tabs=4
+--wrap=auto
+--color=auto
+--italic-text=never
+--decorations=auto
+--paging=auto
+--pager="less -F -S -+N --+wordwrap"
+--theme="Nord"
+--squeeze-blank
+--style=changes,header-filename,rule,numbers 
+--set-terminal-title

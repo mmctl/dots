@@ -1,0 +1,10 @@
+# Remind user to upgrade yazi plugins upon yazi upgrade
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = yazi
+
+[Action]
+Description = "Reminder to upgrade yazi plugins"
+When = PostTransaction
+Exec = /usr/bin/echo "==> yazi has been upgraded, consider upgrading its plugins using 'ya pack --upgrade'"

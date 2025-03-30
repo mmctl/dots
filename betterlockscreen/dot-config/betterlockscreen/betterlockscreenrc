@@ -1,0 +1,46 @@
+# Options
+## Commands
+i3lockcolor_bin="i3lock"
+suspend_command="systemctl suspend"
+
+## Behavior
+display_on=0
+span_image=false
+lock_timeout=300
+fx_list=(dim blur dimblur pixel dimpixel color)
+dim_level=40
+blur_level=1
+pixel_scale=10,1000
+solid_color=2e3440
+wallpaper_cmd="feh --bg-scale"
+quiet=false
+
+
+# Theme (Nord)
+font="Open Sans"
+time_format="%H:%M:%S"
+locktext="Enter password"
+veriftext="Verifying..."
+wrongtext="Failure."
+loginbox=2e344099
+loginshadow=00000000
+verifcolor=b48eadff
+wrongcolor=bf616aff
+modifcolor=ebcb8bff
+timecolor=eceff4ff
+greetercolor=eceff4ff
+ringcolor=d8dee9ff
+ringvercolor=b48eadff
+ringwrongcolor=bf616aff
+insidecolor=00000000
+insidevercolor=00000000
+insidewrongcolor=00000000
+separatorcolor=00000000
+keyhlcolor=a3be8cff
+bshlcolor=d08770ff
+layoutcolor=d8dee9ff
+bgcolor=000000ff
+
+
+# Options to underlying i3lock-color command expert options
+# lockargs=(-n)  # Default (no-fork)

@@ -1,0 +1,4 @@
+--dotfiles
+--no-folding
+--verbose=3
+--target="$HOME"

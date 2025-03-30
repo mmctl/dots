@@ -1,0 +1,129 @@
+// Designed for Arch Linux
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        "source": "arch2",
+        "color": {
+            "1": "cyan",
+            "2": "cyan"
+        }
+    },
+    "display": {
+        "color": {
+            "separator": "blue"
+        },
+        "separator": " | ",
+        "constants": [
+            ">-----------<+>---------------------------------------------------<"
+        ]
+    },
+    "modules": [
+        {
+            "type": "custom",
+            "format": "{$1}",
+            "outputColor": "separator"
+        },
+	{
+            "type": "os",
+            "key": "   OS      ",
+            "keyColor": "magenta"
+        },
+	{
+            "type": "kernel",
+            "key": "   Kernel  ",
+            "keyColor": "magenta"
+        },
+	{
+            "type": "packages",
+            "key": "   Packages",
+            "keyColor": "magenta"
+        },
+	{
+            "type": "uptime",
+            "key": "  󰔛 Uptime  ",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "custom",
+            "format": "{$1}",
+            "outputColor": "separator"
+        },
+	{
+	    "type": "lm",
+	    "key": "  󱎴 LM      ",
+	    "keyColor": "green", 
+	},
+	{
+            "type": "wm",
+            "key": "  󱂬 WM      ",
+            "keyColor": "green",
+        },
+        {
+            "type": "shell",
+            "key": "   Shell   ",
+            "keyColor": "green"
+        },
+        {
+            "type": "terminal",
+            "key": "   Terminal",
+            "keyColor": "green"
+        },
+	{
+            "type": "custom",
+            "format": "{$1}",
+            "outputColor": "separator"
+        },
+	{
+            "type": "memory",
+            "key": "   RAM     ",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "swap",
+            "key": "  󰓡 Swap    ",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "disk",
+            "key": "   Disk    ",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "localip",
+            "key": "  󱦂 IP (LAN)",
+            "keyColor": "yellow"
+        },
+        {
+            "type": "custom",
+            "format": "{$1}",
+            "outputColor": "separator"
+        },
+        {
+            "type": "board",
+            "key": "   Board   ",
+            "keyColor": "red"
+        },
+        {
+            "type": "cpu",
+            "key": "  󰻠 CPU     ",
+            "keyColor": "red",
+	    "temp": true
+        },
+        {
+            "type": "gpu",
+            "key": "   GPU     ",
+            "keyColor": "red",
+	    "temp": true
+        },
+	{
+            "type": "display",
+            "key": "  󰍹 Display ",
+            "keyColor": "red"
+        },
+        {
+            "type": "custom",
+            "format": "{$1}",
+            "outputColor": "separator"
+        }
+    ]
+}

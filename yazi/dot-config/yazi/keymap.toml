@@ -1,0 +1,389 @@
+# Yazi configuration file (keymap)
+
+## Manager
+[manager]
+keymap = [
+    # Escape/Close/Suspend
+    { on = [ "q", "q" ], run = "quit --no-cwd-file", desc = "Quit the process without outputting cwd-file" },
+    { on = [ "q", "Q" ], run = "quit", desc = "Quit the process" },
+    { on = [ "q", "t" ], run = "close", desc = "Close (kill) the current tab, or quit if it's the last" },
+    { on = [ "q", "s" ], run = "suspend", desc = "Suspend the process" },
+
+    { on = "<Esc>", run = "escape", desc = "Exit visual mode, clear selection, or cancel search" },
+    { on = "<C-g>", run = "escape", desc = "Exit visual mode, clear selection, or cancel search" },
+
+    # Movement/Navigation (Basic)
+    { on = "<Left>", run = "plugin augment-command -- leave --no-skip", desc = "Leave directory" },
+    { on = "<Down>", run = "plugin augment-command -- arrow 1",  desc = "Move cursor down" },
+    { on = "<Up>", run = "plugin augment-command -- arrow -1", desc = "Move cursor up" },
+    { on = "<Right>", run = "plugin augment-command -- enter --no-skip", desc = "Enter directory" },
+
+    { on = "h", run = "plugin augment-command -- leave --no-skip", desc = "Leave directory" },
+    { on = "j", run = "plugin augment-command -- arrow 1",  desc = "Move cursor down" },
+    { on = "k", run = "plugin augment-command -- arrow -1", desc = "Move cursor up" },
+    { on = "l", run = "plugin augment-command -- enter --no-skip", desc = "Enter directory" },
+
+    { on = "<S-Left>", run = "plugin augment-command -- leave", desc = "Leave directory (skipping)" },
+    { on = "<S-Down>", run = "plugin augment-command -- parent_arrow 1",  desc = "Move cursor down in parent directory" },
+    { on = "<S-Up>", run = "plugin augment-command -- parent_arrow -1", desc = "Move cursor up in partent directory" },
+    { on = "<S-Right>", run = "plugin augment-command -- enter", desc = "Enter directory (skipping)" },
+
+    { on = "H", run = "plugin augment-command -- leave", desc = "Leave directory (skipping)" },
+    { on = "J", run = "plugin augment-command -- parent_arrow 1",  desc = "Move cursor down in parent directory" },
+    { on = "K", run = "plugin augment-command -- parent_arrow -1",  desc = "Move cursor up in parent directory" },
+    { on = "L", run = "plugin augment-command -- enter", desc = "Enter directory (skipping)" },
+
+    { on = "<PageUp>", run = "plugin augment-command -- arrow -100%", desc = "Move cursor up one page" },
+    { on = "<PageDown>",   run = "plugin augment-command -- arrow 100%",  desc = "Move cursor down one page" },
+
+    { on = "<End>", run = "plugin augment-command -- arrow top", desc = "Move cursor to the bottom"},
+    { on = "<Home>", run = "plugin augment-command -- arrow bot", desc = "Move cursor to the top"},
+
+    { on = "<C-Left>", run = "back", desc = "Go back to the previous directory" },
+    { on = "<C-Right>", run = "forward", desc = "Go forward to the next directory" },
+
+    { on = "<C-j>", run = "plugin jump-to-char", desc = "Jump to character" },
+
+    # Seek (i.e., movement in preview window)
+    { on = "<C-Down>", run = "seek 5", desc = "Move down 5 unit in preview" },
+    { on = "<C-Up>", run = "seek -5", desc = "Move up 5 unit in preview" },
+    { on = "<C-PageDown>", run = "seek 30", desc = "Move down 30 units in preview" },
+    { on = "<C-PageUp>", run = "seek -30", desc = "Move up 30 unit in preview" },
+
+    # Spot (i.e., get information on file)
+    { on = "<Tab>", run = "spot", desc = "Spot hovered file" },
+    { on = "<C-i>", run = "spot", desc = "Spot hovered file" },
+
+    # Toggle (i.e., selecting files)
+    { on = "m", run = "toggle", desc = "Toggle selection of current file" },
+    { on = "M", run = "toggle_all --state=on", desc = "Select all files in CWD" },
+    { on = "<C-m>", run = "toggle_all", desc = "Toggle select of all files in CWD" },
+
+    # File-level operation (open, copy, cut, paste, delete, create, etc.)
+    ## Open
+    { on = "<Enter>", run = "plugin augment-command -- open", desc = "Open files" },
+    { on = "<C-o>", run = "plugin augment-command -- open --interactive", desc = "Open files interactively" },
+    { on = "<C-v>", run = "plugin augment-command -- open", desc = "Open files" },
+    ## Copy/Cut/Paste
+    { on = "<C-t>", run = "yank", desc = "Copy files" },
+    { on = "<A-t>", run = "yank --cut", desc = "Kill/Cut files" },
+    { on = "<C-u>", run = "unyank", desc = "Uncopy/Unkill/Uncut (cancel copy status)" },
+    { on = "<A-y>", run = "plugin augment-command -- paste", desc = "Paste files in CWD" },
+    { on = "<A-Y>", run = "plugin augment-command -- paste --force", desc = "Paste files in CWD, overwriting" },
+    { on = "<C-A-y>", run = "plugin augment-command -- paste --smart", desc = "Paste files in hovered directory (or else CWD)" },
+    { on = "<C-A-Y>", run = "plugin augment-command -- paste --force --smart", desc = "Paste files in hovered directory (or else CWD, overwriting" },
+    ## Delete/Remove
+    { on = "<Delete>", run = "plugin augment-command -- remove --force", desc = "Trash files" },
+    { on = [ "d", "p" ], run = "plugin augment-command -- remove --permanently", desc = "Delete files permanently" },
+    { on = [ "d", "t" ], run = "plugin augment-command -- remove --force", desc = "Trash files" },
+    { on = [ "d", "u" ], run = "plugin restore", desc = "Restore last trashed files" },
+    ## Create
+    { on = "n", run = "plugin augment-command -- create", desc = "Create a new file (directory if name ends in '/')" },
+    { on = "N", run = "plugin augment-command -- create --force", desc = "Create a new file (directory if name ends in '/'), overwriting" },
+    ## Rename
+    { on = "r", run = "plugin augment-command -- rename --empty=stem --cursor=start", desc = "Rename files (start empty)" },
+    { on = "R", run = "plugin augment-command -- rename --cursor=start --force", desc = "Rename files (start empty), overwriting" },
+    { on = "<C-r>", run = "plugin augment-command -- rename --cursor=start", desc = "Rename files (start with current name)" },
+    ## Search
+    { on = [ "s", "f" ], run = "search fd --args='--full-path --color=never'", desc = "Search files by name via fd" },
+    { on = [ "s", "g" ], run = "search rg --args='--search-zip --smart-case --line-buffered --color=never --no-heading --no-column --no-line-number --no-stats'", desc = "Search files by content via ripgrep" },
+    { on = [ "s", "s" ], run = "find --smart", desc= "Search files in CWD (forward)" },
+    { on = [ "s", "r" ], run = "find --smart --previous", desc = "Search files in CWD (backward/reverse)" },
+    ## Link
+    { on = [ "<C-x>", "l" ], run = "link --relative", desc = "Symlink the relative path of yanked files" },
+    { on = [ "<C-x>", "L" ], run = "link", desc = "Symlink the absolute path of yanked files" },
+    { on = [ "<C-x>", "<C-l>" ], run = "hardlink --follow", desc = "Hardlink yanked files" },
+
+    # Meta-level operation (cd, sort, tabs, etc.)
+    ## Copy/Cut/Paste (to/from clipboard)
+    { on = [ "<C-x>", "<C-t>" ], run = 'shell -- cb copy -nc -np "$@"', desc = "Copy files to clipboard" },
+    { on = [ "<C-x>", "<A-t>" ], run = 'shell -- cb cut -nc -np "$@"', desc = "Cut files to clipboard" },
+    { on = [ "<C-x>", "<C-y>" ], run = 'shell -- dragon -x -f -a -T "$@"', desc = "Drag files" },
+    ## CD (goto)
+    { on = [ "g", "h" ], run = "cd $HOME", desc = "Go to user home directory"},
+    { on = [ "g", "c" ], run = "cd $XDG_CONFIG_HOME", desc = "Go to config directory"},
+    { on = [ "g", "p" ], run = "cd $HOME/projects", desc = "Go to project directory"},
+    { on = [ "g", "a" ], run = "cd $HOME/areas", desc = "Go to areas directory"},
+    { on = [ "g", "r" ], run = "cd $HOME/resources", desc = "Go to resources directory"},
+    { on = [ "g", "R" ], run = "cd /", desc = "Go to root directory"},
+    { on = [ "g", "A" ], run = "cd $HOME/archive", desc = "Go to archive directory"},
+    { on = [ "g", "d" ], run = "cd $XDG_DATA_HOME/documents", desc = "Go to documents directory"},
+    { on = [ "g", "D" ], run = "cd $XDG_DATA_HOME/downloads", desc = "Go to downloads directory"},
+    { on = [ "g", "i" ], run = "cd --interactive", desc = "Go to directory interactively"},
+    { on = [ "g", "f" ], run = "plugin fzf", desc = "Go to (location of) file interactively using fzf"},
+    ## Sort/Order
+    { on = [ "o", "a" ], run = "sort alphabetical --reverse=no --dir-first", desc = "Sort alphabetically" },
+    { on = [ "o", "A" ], run = "sort alphabetical --reverse --dir-first", desc = "Sort alphabetically (reverse)" },
+    { on = [ "o", "b" ], run = "sort btime --reverse=no", desc = "Sort by birth time" },
+    { on = [ "o", "B" ], run = "sort btime --reverse", desc = "Sort by birth time (reverse)" },
+    { on = [ "o", "e" ], run = "sort extension --reverse=no --dir-first", desc = "Sort by extension" },
+    { on = [ "o", "E" ], run = "sort extension --reverse --dir-first", desc = "Sort by extension (reverse)" },
+    { on = [ "o", "m" ], run = "sort mtime --reverse=no", desc = "Sort by modification time" },
+    { on = [ "o", "M" ], run = "sort mtime --reverse", desc = "Sort by modification time (reverse)" },
+    { on = [ "o", "n" ], run = "sort natural --reverse=no --dir-first", desc = "Sort naturally" },
+    { on = [ "o", "N" ], run = "sort natural --reverse --dir-first", desc = "Sort naturally (reverse)" },
+    ## Archive
+    { on = [ "a", "c" ], run = "plugin compress", desc = "Archive (compress) file(s)" },
+    { on = [ "a", "d" ], run = "plugin augment-command -- extract", desc = "Extract archive(s)" },
+    { on = [ "a", "m" ], run = "plugin fuse-archive mount", desc = "Mount and enter archive" },
+    { on = [ "a", "u" ], run = "plugin fuse-archive unmount", desc = "Unmount and leave archive" },
+    ## Filter
+    { on = "f", run = "plugin smart-filter", desc = "Filter files" },
+    ## Tabs
+    { on = "t", run = "plugin augment-command -- tab_create --current", desc = "Create a new tab with CWD" },
+    { on = "T", run = "plugin augment-command -- tab_create --current --smart", desc = "Create a new tab with hovered directory (or else CWD)" },
+    { on = "<C-1>", run = "plugin augment-command -- tab_switch 0", desc = "Switch to the first tab" },
+    { on = "<C-2>", run = "plugin augment-command -- tab_switch 1", desc = "Switch to the second tab (creating)" },
+    { on = "<C-3>", run = "plugin augment-command -- tab_switch 2", desc = "Switch to the third tab (creating)" },
+    { on = "<C-4>", run = "plugin augment-command -- tab_switch 3", desc = "Switch to the fourth tab (creating)" },
+    { on = "<C-5>", run = "plugin augment-command -- tab_switch 4", desc = "Switch to the fifth tab (creating)" },
+    { on = "<C-6>", run = "plugin augment-command -- tab_switch 5", desc = "Switch to the sixth tab (creating)" },
+    { on = "<C-7>", run = "plugin augment-command -- tab_switch 6", desc = "Switch to the seventh tab (creating)" },
+    { on = "<C-8>", run = "plugin augment-command -- tab_switch 7", desc = "Switch to the eigth tab (creating)" },
+    { on = "<C-9>", run = "plugin augment-command -- tab_switch 8", desc = "Switch to the ninth tab (creating)" },
+    ## Hidden files
+    { on = [ "<C-c>", "h" ], run = "hidden --toggle", desc = "Toggle visibility of hidden files" },
+    ## Task manager
+    { on = [ "<C-x>", "m" ], run = "tasks_show", desc = "Show task manager" },
+    ## Shell execution
+    { on = [ "<C-x>",  "e"], run = "shell --interactive", desc = "Run shell interactively" },
+    { on = [ "<C-x>",  "<C-e>"], run = "shell --interactive --block", desc = "Run shell interactively" },
+
+    # Panes
+    { on = [ "p", "p" ], run = "plugin toggle-pane min-parent", desc = "Toggle visibility of parent pane" },
+    { on = [ "p", "P" ], run = "plugin toggle-pane max-parent", desc = "Maximize (or restore) parent pane" },
+    { on = [ "p", "c" ], run = "plugin toggle-pane min-current", desc = "Toggle visibility of CWD pane" },
+    { on = [ "p", "C" ], run = "plugin toggle-pane max-current", desc = "Maximize (or restore) CWD pane" },
+    { on = [ "p", "v" ], run = "plugin toggle-pane min-preview", desc = "Toggle visibility of preview pane" },
+    { on = [ "p", "V" ], run = "plugin toggle-pane max-preview", desc = "Maximize (or restore) preview pane" },
+    { on = [ "p", "r" ], run = "plugin toggle-pane reset", desc = "Reset panes" },
+
+    # Mode switch
+    { on = "v", run = "visual_mode", desc = "Enter visual mode (set/select)" },
+    { on = "V", run = "visual_mode --unset", desc = "Enter visual mode (unset/deselect)" },
+
+    # Help
+    { on = "~", run = "help", desc = "Open help"},
+    { on = "<C-h>", run = "help", desc = "Open help"},
+    { on = "<F1>", run = "help", desc = "Open help"},
+
+    # Panes
+    { on = [ "p", "p" ], run = "plugin toggle-pane min-parent", desc = "Toggle visibility of parent pane" },
+    { on = [ "p", "P" ], run = "plugin toggle-pane max-parent", desc = "Maximize (or restore) parent pane" },
+    { on = [ "p", "c" ], run = "plugin toggle-pane min-current", desc = "Toggle visibility of CWD pane" },
+    { on = [ "p", "C" ], run = "plugin toggle-pane max-current", desc = "Maximize (or restore) CWD pane" },
+    { on = [ "p", "v" ], run = "plugin toggle-pane min-preview", desc = "Toggle visibility of preview pane" },
+    { on = [ "p", "V" ], run = "plugin toggle-pane max-preview", desc = "Maximize (or restore) preview pane" },
+    { on = [ "p", "r" ], run = "plugin toggle-pane reset", desc = "Reset panes" },
+]
+
+
+## Tasks
+[tasks]
+keymap = [
+    # Close
+    { on = "q", run = "close", desc = "Close task manager" },
+    { on = "<Esc>", run = "close", desc = "Close task manager" },
+
+    # Movement
+    { on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<Up>", run = "arrow -1", desc = "Move cursor up" },
+
+    { on = "<j>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<k>", run = "arrow -1", desc = "Move cursor up" },
+
+    # Inspect/cancel tasks
+    { on = "<Enter>", run = "inspect", desc = "Inspect the task" },
+    { on = "<C-o>", run = "inspect", desc = "Inspect the task" },
+    { on = "<C-v>", run = "inspect", desc = "Inspect the task" },
+    { on = "i", run = "inspect", desc = "Inspect the task" },
+    { on = "<Delete>", run = "cancel", desc = "Kill the task" },
+    { on = "k", run = "cancel", desc = "Kill the task" },
+    { on = "d", run = "cancel", desc = "Kill the task" },
+
+    # Help
+    { on = "~", run = "help", desc = "Open help"},
+    { on = "<C-h>", run = "help", desc = "Open help"},
+    { on = "<F1>", run = "help", desc = "Open help"},
+]
+
+
+## Spot
+[spot]
+keymap = [
+    # Close
+    { on = "q", run = "close", desc = "Close spot" },
+    { on = "<Esc>", run = "close", desc = "Close spot" },
+
+    # Movement
+    { on = "<Left>", run = "sweep -1",  desc = "Swipe to next file" },
+    { on = "<Down>", run = "arrow 1", desc = "Move cursor down" },
+    { on = "<Up>", run = "arrow -1", desc = "Move cursor up" },
+    { on = "<Right>", run = "sweep 1", desc = "Swipe to previous file" },
+
+    { on = "<h>", run = "sweep -1", desc = "Swipe to next file" },
+    { on = "<j>", run = "arrow 1", desc = "Move cursor down" },
+    { on = "<k>", run = "arrow -1", desc = "Move cursor up" },
+    { on = "<l>", run = "sweep 1", desc = "Swipe to previous file" },
+
+    # Copy
+    { on = "<C-t>", run = "copy cell", desc = "Copy cell" },
+
+    # Help
+    { on = "~", run = "help", desc = "Open help"},
+    { on = "<C-h>", run = "help", desc = "Open help"},
+    { on = "<F1>", run = "help", desc = "Open help"},
+]
+
+
+## Pick
+[pick]
+keymap = [
+    # Close/Submit
+    { on = "q", run = "close", desc = "Cancel pick" },
+    { on = "<Esc>", run = "close", desc = "Cancel pick" },
+    { on = "<Enter>", run = "close --submit", desc = "Submit pick" },
+    { on = "<C-v>", run = "close --submit", desc = "Submit pick" },
+
+    # Movement
+    { on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<Up>", run = "arrow -1", desc = "Move cursor up" },
+
+    { on = "<j>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<k>", run = "arrow -1", desc = "Move cursor up" },
+
+    # Help
+    { on = "~", run = "help", desc = "Open help"},
+    { on = "<C-h>", run = "help", desc = "Open help"},
+    { on = "<F1>", run = "help", desc = "Open help"},
+]
+
+
+## Input
+[input]
+keymap = [
+    # Close/Submit
+    { on = "<C-q>", run = "close", desc = "Cancel input" },
+    { on = "<Esc>", run = "escape", desc = "Go to normal mode, or cancel input" },
+    { on = "<C-g>", run = "escape", desc = "Go to normal mode, or cancel input" },
+    { on = "<Enter>", run = "close --submit", desc = "Submit confirm" },
+    { on = "<C-v>", run = "close --submit", desc = "Submit confirm" },
+
+    # Movement
+    ## Character-wise
+    { on = "<Left>", run = "move -1", desc = "Move cursor back a character" },
+    { on = "<Right>", run = "move 1", desc = "Move cursor forward a character" },
+    { on = "<h>", run = "move -1", desc = "Move cursor back a character" },
+    { on = "<l>", run = "move 1", desc = "Move cursor forward a character" },
+    ## Word-wise
+    { on = "<C-Left>", run = "backward", desc = "Move cursor back to start of current or previous word" },
+    { on = "<C-Right>", run = "forward", desc = "Move cursor forward to start of next word" },
+    { on = "<C-p>", run = "backward", desc = "Move cursor backward to start of current of previous word" },
+    { on = "<C-n>", run = "forward", desc = "Move cursor forward to start of next word" },
+    { on = "<C-;>", run = "forward --end-of-word", desc = "Move cursor forward to end of next word" },
+    ## Line-wise
+    { on = "<C-a>", run = "move bol", desc = "Move cursor to beginning of line (BOL)" },
+    { on = "<C-e>", run = "move eol", desc = "Move cursor to end of line (EOL)" },
+    { on = "<Home>", run = "move bol", desc = "Move cursor to beginning of line (BOL)" },
+    { on = "<End>", run = "move eol", desc = "Move cursor to end of line (EOL)" },
+
+    # Delete (insert mode)
+    { on = "<Backspace>", run = "backspace", desc = "Delete character before the cursor" },
+    { on = "<Delete>", run = "backspace --under", desc = "Delete character under/after the cursor" },
+
+    # Kill (insert mode)
+    ## Word-wise
+    { on = "<A-Backspace>", run = "kill backward", desc = "Kill previous (backward) word" },
+    { on = "<A-w>", run = "kill forward", desc = "Kill next (forward) word" },
+    ## Line-wise
+    { on = "<A-a>", run = "kill bol", desc = "Kill to beginning of line (BOL)" },
+    { on = "<A-e>", run = "kill eol", desc = "Kill to end of line (EOL)" },
+
+    # Yank/Cut/Paste (normal mode)
+    { on = "<C-t>", run = "yank", desc = "Yank (copy)" },
+    { on = "<A-t>", run = "delete --cut", desc = "Cut" },
+    { on = "<Delete>", run = "delete", desc = "Delete" },
+    { on = "<A-y>", run = "paste", desc = "Paste copied material after cursor" },
+    { on = "<C-A-y>", run = "paste --before", desc = "Paste copied material before cursor" },
+
+    # Undo/Redo (normal mode)
+    { on = "<A-;>", run = "undo", desc = "Undo last operation" },
+    { on = "<A-/>", run = "redo", desc = "Redo last operation" },
+
+    # Mode switch (normal mode)
+    { on = [ "<C-x>", "v" ], run = "visual", desc = "Enter visual mode" },
+    { on = [ "<C-x>", "i" ], run = "insert", desc = "Enter insert mode" },
+
+    # Help
+    { on = "~", run = "help", desc = "Open help"},
+    { on = "<C-h>", run = "help", desc = "Open help"},
+    { on = "<F1>", run = "help", desc = "Open help"},
+]
+
+
+## Confirm
+[confirm]
+keymap = [
+    # Close/Submit
+    { on = "<q>", run = "close", desc = "Cancel confirm" },
+    { on = "<Esc>", run = "close", desc = "Cancel confirm" },
+    { on = "<Enter>", run = "close --submit", desc = "Submit confirm" },
+    { on = "<C-v>", run = "close --submit", desc = "Submit confirm" },
+
+    { on = "n", run = "close", desc = "Cancel confirm" },
+    { on = "y", run = "close --submit", desc = "Submit confirm" },
+
+    # Movement
+    { on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<Up>", run = "arrow -1", desc = "Move cursor up" },
+
+    { on = "<j>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<k>", run = "arrow -1", desc = "Move cursor up" },
+
+    # Help
+    { on = "~", run = "help", desc = "Open help"},
+    { on = "<C-h>", run = "help", desc = "Open help"},
+    { on = "<F1>", run = "help", desc = "Open help"},
+]
+
+## Completion
+[cmp]
+keymap = [
+    # Close/Submit
+    { on = "q", run = [ "close", "close_input" ], desc = "Cancel completion and input" },
+    { on = "<Esc>", run = "close", desc = "Cancel completion" },
+    { on = "<Enter>", run = "close --submit", desc = "Submit completion" },
+    { on = "<C-v>", run = [ "close --submit", "close_input --submit" ], desc = "Submit completion and input" },
+
+    # Movement
+    { on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<Up>", run = "arrow -1", desc = "Move cursor up" },
+
+    { on = "<j>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<k>", run = "arrow -1", desc = "Move cursor up" },
+
+    # Help
+    { on = "~", run = "help", desc = "Open help"},
+    { on = "<C-h>", run = "help", desc = "Open help"},
+    { on = "<F1>", run = "help", desc = "Open help"},
+]
+
+
+## Help
+[help]
+keymap = [
+    # Clear/Close
+    { on = "q", run = "close", desc = "Hide help" },
+    { on = "<Esc>", run = "escape", desc = "Clear filter, or hide help" },
+    { on = "<C-g>", run = "escape", desc = "Clear filter, or hide help" },
+
+    # Movement
+    { on = "<Down>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<Up>", run = "arrow -1", desc = "Move cursor up" },
+
+    { on = "<j>", run = "arrow 1",  desc = "Move cursor down" },
+    { on = "<k>", run = "arrow -1", desc = "Move cursor up" },
+
+    # Filter
+    { on = "f" , run = "filter", desc = "Filter help items"},
+]

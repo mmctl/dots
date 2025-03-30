@@ -1,0 +1,331 @@
+# Variables
+## Main modifier
+set $mod Mod4
+
+## Shorthands for GUI, Alt, Control and Shift modifiers
+set $G Mod4
+set $A Mod1
+set $C Control
+set $S Shift
+
+## Movement
+set $left h
+set $down j
+set $up k
+set $right l
+
+## Workspaces
+### Numbered
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+
+### Mnemonics
+set $wsdocs "󰈙 Docs"
+set $wsedit " Edit"
+set $wsfiles "󰉋 Files"
+set $wssocial " Social"
+set $wsterm " Term"
+set $wsweb " Web"
+
+# Global settings
+## Default orientation is automatically determined
+default_orientation auto
+
+## Containers on workspace level will start in default mode
+workspace_layout default
+
+## Font (used in window titles)
+font pango:MonaspiceKr Nerd Font Medium 10
+
+## Align window titles (if present) in the center
+title_align center
+
+## Border around windows is a line of 2 pixels
+default_border pixel 2
+default_floating_border pixel 2
+
+## Hide borders of a window against edges of screen, if it is the only window in workspace
+hide_edge_borders smart_no_gaps
+
+## Mousing over a window focusses it
+focus_follows_mouse yes
+
+## When in fullscreen, only show popups of fullscreen application
+popup_during_fullscreen smart
+
+## Switches focusses window moves mouse to center of that window
+mouse_warping output
+
+## Focus wraps around inside container when no other containers/windows
+## are present in the chosen direction, but, if there are, moves over container border
+focus_wrapping yes
+
+## Don't go back to previous workspace when re-issuing shortcut for current workspace
+workspace_auto_back_and_forth no
+
+## Prevent urgency hint from resetting for 500 ms upon switching workspaces to window with urgency hint set
+force_display_urgency_hint 500 ms
+
+## When window activates and requests focus, only focus it when it is on current workspace;
+## otherwise, merely mark it urgent (but don't give it focus)
+focus_on_window_activation smart
+
+## Activate floating/tiling drag feature by holding main modifier and dragging with mouse
+floating_modifier $mod
+tiling_drag modifier
+
+## Gap alongside window edges set to 5px, except when there is only one window
+gaps inner 7px
+gaps outer 0px
+smart_gaps on
+
+
+
+# Coloring
+## class                border  bground text    indicator child_border
+client.focused          #88C0D0 #4C566A #ECEFF4 #88C0D0   #88C0D0
+client.focused_inactive #434C5E #2E3440 #D8DEE9 #434C5E   #434C5E
+client.unfocused        #434C5E #2E3440 #D8DEE9 #434C5E   #434C5E
+client.urgent           #D08770 #BF616A #ECEFF4 #D08770   #D08770
+client.placeholder      #000000 #0C0C0C #FFFFFF #000000   #0C0C0C
+
+client.background       #000000
+
+
+
+# Modes (definitions)
+## System control
+set $mode_systemctl System control mode: [r]eboot, [p]oweroff, [ESC]ape to default mode
+
+mode "$mode_systemctl" {
+	### Regular operation bindings
+	bindsym r exec --no-startup-id systemctl reboot, mode "default"
+#	bindsym s exec --no-startup-id betterlockscreen --suspend --quiet -l dimpixel, mode "default"
+	bindsym p exec --no-startup-id systemctl poweroff, mode "default"
+
+	### Meta bindings
+	bindsym Escape mode "default"
+}
+
+## Session control
+set $mode_sessionctl Session control mode: [e]xit, [l]ock, [r]eload, [R]estart, [ESC]ape to default mode
+
+mode "$mode_sessionctl" {
+        ### Regular operation bindings
+        bindsym e exec --no-startup-id i3-msg exit
+        bindsym l exec --no-startup-id betterlockscreen --quiet -l dimpixel, mode "default"
+        bindsym r reload
+        bindsym $S+r restart
+
+        ### Meta bindings
+        bindsym Escape mode "default"
+}
+
+## Resize
+set $mode_resizectl Resize control mode: [w]idth decrease, [W]idth increase, [h]eight decrease, [H]eight increase, [ESC]ape to default mode
+
+mode "$mode_resizectl" {
+        ### Regular operation bindings
+        bindsym w resize shrink width 10 px or 5 ppt
+        bindsym $S+w resize shrink height 10 px or 5 ppt
+        bindsym h resize grow height 10 px or 5 ppt
+        bindsym $S+h resize grow width 10 px or 5 ppt
+
+        ### Meta bindings
+        bindsym Escape mode "default"
+}
+
+## Notifications
+set $mode_notificationctl Notification control mode: [c]ontext menu, [k]ill (top-most), [K]ill (all), [h]istory (show most recent), [p]ause (toggle), [r]eload, [ESC]ape to default mode
+
+mode "$mode_notificationctl" {
+        ### Regular operation bindings
+        bindsym c exec --no-startup-id dunstctl context, mode "default"
+        bindsym k exec --no-startup-id dunstctl close
+        bindsym $S+k exec --no-startup-id dunstctl close-all
+        bindsym h exec --no-startup-id dunstctl history-pop
+        bindsym p exec --no-startup-id dunstctl pause toggle
+        bindsym r exec --no-startup-id dunstctl reload, mode "default"
+
+        ### Meta bindings
+        bindsym Escape mode "default"
+}
+
+
+# Bindings
+## Meta
+### System control mode
+bindsym $mod+$A+Escape mode "$mode_systemctl"
+
+### Session control mode
+bindsym $mod+$A+s mode "$mode_sessionctl"
+
+### Resize control mode
+bindsym $mod+$A+r mode "$mode_resizectl"
+
+### Notification control mode
+bindsym $mod+$A+n mode "$mode_notificationctl"
+
+### Kill/Close window
+bindsym $mod+$A+q kill
+
+### Volume control
+bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+## Applications
+### Browsers
+#### Run firefox
+bindsym $mod+$A+b exec firefox
+
+### Editors
+#### Run emacsclient (creating a new frame)
+bindsym $mod+$A+e exec --no-startup-id emacsclient -c -s 'gui' -n --alternate-editor=
+
+### Launchers
+#### Run rofi
+bindsym --release $mod+space exec --no-startup-id rofi -modes combi -combi-modes 'window#drun#run#ssh' -show combi
+
+### Terminals (and terminal-based applications)
+#### Run alacritty
+bindsym $mod+$A+t exec alacritty
+#### Run yazi in alacritty
+bindsym $mod+$A+f exec "alacritty --class FileManager,Yazi -e yazi"
+
+
+## Focus
+### Directional
+#### Windows/Containers
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+
+#### Workspaces
+##### Numbered
+bindsym $mod+1 workspace number $ws1
+bindsym $mod+2 workspace number $ws2
+bindsym $mod+3 workspace number $ws3
+bindsym $mod+4 workspace number $ws4
+bindsym $mod+5 workspace number $ws5
+bindsym $mod+6 workspace number $ws6
+bindsym $mod+7 workspace number $ws7
+bindsym $mod+8 workspace number $ws8
+bindsym $mod+9 workspace number $ws9
+
+##### Mnemonics
+bindsym $mod+d workspace $wsdocs
+bindsym $mod+e workspace $wsedit
+bindsym $mod+f workspace $wsfiles
+bindsym $mod+s workspace $wssocial
+bindsym $mod+t workspace $wsterm
+bindsym $mod+w workspace $wsweb
+
+
+### Relational
+bindsym $mod+$C+p focus parent
+bindsym $mod+$C+c focus child
+bindsym $mod+$C+m focus mode_toggle # toggle focus between floating/tiling
+
+
+## Movement
+### Directional
+#### Windows/Containers
+bindsym $mod+$S+$left move left
+bindsym $mod+$S+$down move down
+bindsym $mod+$S+$up move up
+bindsym $mod+$S+$right move right
+
+#### Workspaces
+##### Numbered
+bindsym $mod+$S+1 move container to workspace number $ws1
+bindsym $mod+$S+2 move container to workspace number $ws2
+bindsym $mod+$S+3 move container to workspace number $ws3
+bindsym $mod+$S+4 move container to workspace number $ws4
+bindsym $mod+$S+5 move container to workspace number $ws5
+bindsym $mod+$S+6 move container to workspace number $ws6
+bindsym $mod+$S+7 move container to workspace number $ws7
+bindsym $mod+$S+8 move container to workspace number $ws8
+bindsym $mod+$S+9 move container to workspace number $ws9
+
+##### Mnemonics
+bindsym $mod+$S+d move container to workspace $wsdocs
+bindsym $mod+$S+e move container to workspace $wsedit
+bindsym $mod+$S+f move container to workspace $wsfiles
+bindsym $mod+$S+s move container to workspace $wssocial
+bindsym $mod+$S+t move container to workspace $wsterm
+bindsym $mod+$S+w move container to workspace $wsweb
+
+
+## Split and layout
+bindsym $mod+$C+h split horizontal
+bindsym $mod+$C+v split vertical
+bindsym $mod+$C+l layout toggle splith splitv tabbed
+bindsym $mod+$C+f fullscreen toggle
+bindsym $mod+$C+s floating toggle
+
+
+# Start i3bar to display a workspace bar (using i3status-rs)
+bar {
+    id bar-primary
+    i3bar_command i3bar
+    status_command i3status-rs
+    mode dock
+    position top
+    tray_output none
+    font pango:MonaspiceKr Nerd Font Medium 11
+    workspace_buttons yes
+    binding_mode_indicator yes
+    colors {
+           background #3b4252
+           separator #4c566a
+           statusline #eceff4
+           focused_workspace #5e81ac #5e81ac #eceff4
+           active_workspace #5e81ac #5e81ac #eceff4
+           inactive_workspace #4c566a #4c566a #d8dee9
+           urgent_workspace #ebcb8b #bf616a #eceff4
+    }
+}
+
+
+# Automatic assignments
+## Documents
+
+## Editors
+assign [class="(?i)Emacs"] $wsedit
+for_window [class="(?i)Emacs"] focus
+
+## Socials
+
+## Files
+assign [class="(?i)FileManager"] $wsfiles
+for_window [class="(?i)FileManager"] focus
+
+## Terminals
+assign [class="(?i)Terminal"] $wsterm
+for_window [class="(?i)Terminal"] focus
+
+
+## Web (browsers)
+assign [class="(?i)Firefox"] $wsweb
+for_window [class="(?i)Firefox"] focus
+
+
+# Initial setup
+## Background
+exec_always --no-startup-id feh --bg-scale --no-fehbg "$XDG_DATA_HOME/wallpapers/nord/samurai_village.jpeg"
+
+## Compositor
+exec_always --no-startup-id killall picom; picom --write-pid-path "$XDG_RUNTIME_DIR/picom.pid" -b
+
+## Emacs daemons (don't kill/restart when reloading config)
+exec --no-startup-id COLORTERM=truecolor emacs --bg-daemon='tty'
+exec --no-startup-id emacs --bg-daemon='gui'

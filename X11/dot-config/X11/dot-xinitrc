@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Source .xprofile
+if [ -f "$XDG_CONFIG_HOME/X11/.xprofile" ]; then
+    . "$XDG_CONFIG_HOME/X11/.xprofile"
+fi
+
+# User-specific X resources
+userresources="$XDG_CONFIG_HOME/X11/.Xresources"
+
+# System-wide resources
+sysresources='/etc/X11/xinit/.Xresources'
+
+# Merge in system resources
+if [ -f "$sysresources" ]; then
+    xrdb -merge "$sysresources"
+fi
+
+# Merge in user resources
+if [ -f "$userresources" ]; then
+    xrdb -load -I${XDG_CONFIG_HOME}/X11 -merge "$userresources"
+fi
+
+
+# Source drop-in system-wide xinit files 
+if [ -d /etc/X11/xinit/xinitrc.d ] ; then
+ for f in /etc/X11/xinit/xinitrc.d/?*.sh ; do
+  [ -x "$f" ] && . "$f"
+ done
+ unset f
+fi
+
+
+# Miscellaneous setup
+nvidia-settings --config="$XDG_CONFIG_HOME/nvidia/.nvidia-settings-rc" --load-config-only
+
+# Launch applications
+exec /usr/bin/i3 > "$XDG_STATE_HOME/i3/i3-log" 2>&1

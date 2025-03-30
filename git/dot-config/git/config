@@ -1,0 +1,57 @@
+# Git configuration files (global scope)
+## Core/Meta
+[init]
+	defaultBranch = main
+[user]
+	name = mmctl
+	email = kernel@mmeijers.com
+# [core] Use environment variables for editors/pagers
+[color]
+	ui = auto
+[mergetool]
+	keepBackups = false
+	keepTemporaries = false
+	writeToTemp = false
+	prompt = false
+
+## Commands
+### Info/Status
+[grep]
+	lineNumber = true
+[status]
+	submoduleSummary = true
+	showUntrackedFiles = all
+[diff]
+	algorithm = histogram
+	mnemonicPrefix = true
+	renames = true
+	wordRegex = \\w+
+	submodule = log
+	colorMoved = true
+[log]
+	abbrevCommit = true
+	date = default-local
+	decorate = auto
+[tag]
+	sort = version:refname
+
+### Down
+[fetch]
+	recurseSubmodules = on-demand
+	prune = true
+[merge]
+	conflictstyle = diff3
+	ff = false
+[pull]
+	ff = only
+[transfer]
+	fsckObjects = true
+
+### Up
+[commit]
+	verbose = true
+[rebase]
+	autoSquash = true
+[push]
+	default = upstream
+	followTags = true
