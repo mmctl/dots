@@ -1,6 +1,6 @@
 /* Main configuration */
 configuration {
-	font: "RobotoMono Nerd Font Medium 12";
+	font: "MonaspiceNe Nerd Font Medium 11";
 	line-margin: 10;
 	location: 0;
 	yoffset: 0;
@@ -49,7 +49,7 @@ configuration {
 	display-ssh:    " ";
  	display-run:    " ";
 	display-drun:   " ";
-    	display-combi:  " ";
+  display-combi:  " ";
 	display-filebrowser: " ";
 	kb-primary-paste: "Alt+y";
 	kb-secondary-paste: "Alt+Y";
@@ -83,7 +83,7 @@ configuration {
 	kb-page-prev: "Page_Up";
 	kb-page-next: "Page_Down";
 	kb-row-select: "Control+r";
-	kb-screenshot: "Alt+s";
+	kb-screenshot: "Alt+o";
 	kb-cancel: "Escape,Control+q,Control+g";
 	kb-select-1: "Control+1";
 	kb-select-2: "Control+2";
@@ -121,10 +121,10 @@ configuration {
 @theme "/home/mm/.config/rofi/nord-theme.rasi"
 
 listview {
-	lines: 6;
+	lines: 7;
 	columns: 2;
 }
 
 window {
-	width: 35%;
+	width: 50%;
 }
