@@ -146,8 +146,12 @@ keymap = [
     ## Task manager
     { on = [ "<C-x>", "m" ], run = "tasks_show", desc = "Show task manager" },
     ## Shell execution
-    { on = [ "<C-x>",  "e"], run = "shell --interactive", desc = "Run shell interactively" },
-    { on = [ "<C-x>",  "<C-e>"], run = "shell --interactive --block", desc = "Run shell interactively" },
+    { on = [ "<C-x>",  "s" ], run = "shell --interactive", desc = "Run shell interactively" },
+    { on = [ "<C-x>",  "S" ], run = "shell --interactive --block", desc = "Run shell interactively" },
+
+    # Editor/Pager
+    { on = "e", run = "plugin augment-command -- editor", desc = "Open files in $EDITOR" },
+    { on = "i",  run = "plugin augment-command -- pager", desc = "Open files in $PAGER" },
 
     # Panes
     { on = [ "p", "p" ], run = "plugin toggle-pane min-parent", desc = "Toggle visibility of parent pane" },
@@ -166,15 +170,6 @@ keymap = [
     { on = "~", run = "help", desc = "Open help"},
     { on = "<C-h>", run = "help", desc = "Open help"},
     { on = "<F1>", run = "help", desc = "Open help"},
-
-    # Panes
-    { on = [ "p", "p" ], run = "plugin toggle-pane min-parent", desc = "Toggle visibility of parent pane" },
-    { on = [ "p", "P" ], run = "plugin toggle-pane max-parent", desc = "Maximize (or restore) parent pane" },
-    { on = [ "p", "c" ], run = "plugin toggle-pane min-current", desc = "Toggle visibility of CWD pane" },
-    { on = [ "p", "C" ], run = "plugin toggle-pane max-current", desc = "Maximize (or restore) CWD pane" },
-    { on = [ "p", "v" ], run = "plugin toggle-pane min-preview", desc = "Toggle visibility of preview pane" },
-    { on = [ "p", "V" ], run = "plugin toggle-pane max-preview", desc = "Maximize (or restore) preview pane" },
-    { on = [ "p", "r" ], run = "plugin toggle-pane reset", desc = "Reset panes" },
 ]
 
 

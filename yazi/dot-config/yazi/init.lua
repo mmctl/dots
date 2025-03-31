@@ -31,7 +31,7 @@ require("augment-command"):setup({
     skip_single_subdirectory_on_leave = true,
     smooth_scrolling = true,
     scroll_delay = 0.01,
-    wraparound_file_navigation = true,
+    wraparound_file_navigation = false,
 })
 
 ---- Archives
