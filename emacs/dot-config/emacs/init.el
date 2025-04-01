@@ -196,6 +196,9 @@
 (setopt ring-bell-function #'ignore)
 (setopt visible-bell nil)
 
+(setopt hl-line-sticky-flag nil)
+(setopt global-hl-line-sticky-flag nil)
+
 ;;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)
 (setopt bidi-paragraph-direction 'left-to-right)
@@ -762,6 +765,18 @@
          ("C-c f" . magit-file-dispatch)
          :map magit-mode-map
          ("C-v" . magit-visit-thing)
+         ("C-t" . magit-copy-section-value)
+         ("C-T" . magit-copy-buffer-revision)
+         ("C-c C-t" . magit-copy-thing)
+         ("C-w" . nil)
+         ("M-w" . nil)
+         ("C-c C-w" . nil)
+         :map magit-diff-section-map
+         ("C-v" . magit-diff-visit-worktree-file)
+         ("C-j" . nil)
+         :map magit-module-section-map
+         ("C-v" . magit-submodule-visit)
+         ("C-j" . nil)
          :map with-editor-mode-map
          ("C-c C-v" . with-editor-finish)
          ("C-c C-q" . with-editor-cancel))

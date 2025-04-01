@@ -190,6 +190,9 @@ bindsym $mod+$A+b exec firefox
 #### Run emacsclient (creating a new frame)
 bindsym $mod+$A+e exec --no-startup-id emacsclient -c -s 'gui' -n --alternate-editor=
 
+#### Run Thunderbird
+bindsym $mod+$A+m exec thunderbird
+
 ### Launchers
 #### Run rofi
 bindsym --release $mod+space exec --no-startup-id rofi -modes combi -combi-modes 'window#drun#run#ssh' -show combi
@@ -308,6 +311,8 @@ assign [class="(?i)Emacs"] $wsedit
 for_window [class="(?i)Emacs"] focus
 
 ## Socials
+assign [class="(?i)Thunderbird"] $wssocial
+for_window [class="(?i)Thunderbird"] focus
 
 ## Files
 assign [class="(?i)FileManager"] $wsfiles

@@ -71,7 +71,7 @@ keymap = [
     { on = "<A-y>", run = "plugin augment-command -- paste", desc = "Paste files in CWD" },
     { on = "<A-Y>", run = "plugin augment-command -- paste --force", desc = "Paste files in CWD, overwriting" },
     { on = "<C-A-y>", run = "plugin augment-command -- paste --smart", desc = "Paste files in hovered directory (or else CWD)" },
-    { on = "<C-A-Y>", run = "plugin augment-command -- paste --force --smart", desc = "Paste files in hovered directory (or else CWD, overwriting" },
+    { on = "<C-A-Y>", run = "plugin augment-command -- paste --force --smart", desc = "Paste files in hovered directory (or else CWD), overwriting" },
     ## Delete/Remove
     { on = "<Delete>", run = "plugin augment-command -- remove --force", desc = "Trash files" },
     { on = [ "d", "p" ], run = "plugin augment-command -- remove --permanently", desc = "Delete files permanently" },
@@ -147,7 +147,7 @@ keymap = [
     { on = [ "<C-x>", "m" ], run = "tasks_show", desc = "Show task manager" },
     ## Shell execution
     { on = [ "<C-x>",  "s" ], run = "shell --interactive", desc = "Run shell interactively" },
-    { on = [ "<C-x>",  "S" ], run = "shell --interactive --block", desc = "Run shell interactively" },
+    { on = [ "<C-x>",  "S" ], run = "shell --interactive --block", desc = "Run shell interactively, blocking" },
 
     # Editor/Pager
     { on = "e", run = "plugin augment-command -- editor", desc = "Open files in $EDITOR" },
