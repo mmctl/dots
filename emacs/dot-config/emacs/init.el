@@ -455,11 +455,12 @@
               ("C-v" . #'dired-find-file)
               ("RET" . #'dired-find-file)
               ("<return>" . #'dired-find-file)
+              ("C-o" . #'dired-display-file)
               ("C-<up>" . #'dired-prev-dirline)
               ("C-<down>" . #'dired-next-dirline)
-              ("C-p" . #'dired-previous-marked-file)
+              ("C-p" . #'dired-prev-marked-file)
               ("C-n" . #'dired-next-marked-file)
-              ("<prior>" . #'dired-up-directory)))
+              ("C-<prior>" . #'dired-up-directory)))
 
 ;;; Helpers
 (use-package which-key
