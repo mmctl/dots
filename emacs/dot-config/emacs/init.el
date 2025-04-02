@@ -285,7 +285,7 @@
 
 ;;;; Deleting
 (keymap-global-set "M-d" 'delete-region)
-(featurep 'ns)
+
 ;;; Management
 ;;;; Quitting
 (defvar-keymap a-quit-map
@@ -370,6 +370,10 @@
 
 (keymap-global-set "C-x b" 'a-buffer-map-prefix)
 
+;;; Navigation/searching
+(keymap-global-set "C-x C-f" #'find-file)
+(keymap-global-set "C-x C-r" #'recentf-open)
+
 ;;;; Goto map
 (defvar-keymap a-goto-map
   :doc "Keymap for navigation"
@@ -394,11 +398,13 @@
   :prefix 'a-search-map-prefix
   "f" #'find-file
   "r" #'recentf-open
+  "R" #'find-file-read-only
   "i b" #'isearch-backward
   "i f" #'isearch-forward
   "i s" #'isearch-forward-symbol
+  "i r" #'isearch-query-replace
   "i w" #'isearch-forward-word
-  "i p" #'isearch-forward-symbol-at-point)
+  "i ." #'isearch-forward-symbol-at-point)
 
 (keymap-global-set "C-c s" 'a-search-map-prefix)
 
@@ -415,6 +421,45 @@
    '(vc-use-package :url "https://github.com/slotThe/vc-use-package"
                     :vc-backend Git))
   (require 'vc-use-package))
+
+;;; Base/Built-in
+(use-package isearch
+  :init
+  (setopt search-exit-option t)
+  (setopt isearch-repeat-on-direction-change t
+          isearch-lazy-count t
+          isearch-lax-whitespace t
+          isearch-allow-scroll t
+          isearch-allow-motion t)
+  (setopt lazy-count-prefix-format nil
+          lazy-count-suffix-format " [%s of %s]")
+  :bind (:map isearch-mode-map
+              ("C-w" . nil)
+              ("C-v" . #'isearch-exit)
+              ("C-t" . #'isearch-yank-word-or-char)
+              ("M-y" . #'isearch-yank-kill)))
+
+(use-package dired
+  :init
+  (setopt dired-listing-switches (purecopy "-lahF")
+          dired-maybe-use-globstar t
+          dired-mouse-drag-files t
+          dired-always-read-filesystem t
+          dired-mark-region 'file
+          dired-movement-style 'bounded
+          dired-auto-revert-buffer #'dired-directory-changed-p
+          dired-recursive-deletes 'top
+          dired-switches-in-mode-line 'as-is
+          dired-recursive-copies 'top)
+  :bind (:map dired-mode-map
+              ("C-v" . #'dired-find-file)
+              ("RET" . #'dired-find-file)
+              ("<return>" . #'dired-find-file)
+              ("C-<up>" . #'dired-prev-dirline)
+              ("C-<down>" . #'dired-next-dirline)
+              ("C-p" . #'dired-previous-marked-file)
+              ("C-n" . #'dired-next-marked-file)
+              ("<prior>" . #'dired-up-directory)))
 
 ;;; Helpers
 (use-package which-key
@@ -634,7 +679,8 @@
   :pin melpa
   :bind (("C-j" . avy-goto-char)
          :map isearch-mode-map
-         ("M-s a" . avy-isearch)
+         ("C-j" . nil)
+         ("C-S-j" . #'avy-isearch)
          :map minibuffer-mode-map
          ("C-j" . nil))
   :config
