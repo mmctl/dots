@@ -55,9 +55,10 @@ keymap = [
     { on = "<C-i>", run = "spot", desc = "Spot hovered file" },
 
     # Toggle (i.e., selecting files)
-    { on = "m", run = "toggle", desc = "Toggle selection of current file" },
-    { on = "M", run = "toggle_all --state=on", desc = "Select all files in CWD" },
+    { on = "m", run = "toggle", desc = "Toggle selection of hovered file" },
+    { on = "M", run = [ "toggle", "plugin augment-command -- arrow 1" ], desc = "Toggle selection of hovered file and move cursor down" },
     { on = "<C-m>", run = "toggle_all", desc = "Toggle select of all files in CWD" },
+    { on = "<A-m>", run = "toggle_all --state=on", desc = "Select all files in CWD" },
 
     # File-level operation (open, copy, cut, paste, delete, create, etc.)
     ## Open
@@ -65,13 +66,13 @@ keymap = [
     { on = "<C-o>", run = "plugin augment-command -- open --interactive", desc = "Open files interactively" },
     { on = "<C-v>", run = "plugin augment-command -- open", desc = "Open files" },
     ## Copy/Cut/Paste
-    { on = "<C-t>", run = "yank", desc = "Copy files" },
+    { on = "<C-t>", run = [ "yank", 'shell -- echo "$@" | xclip -i -selection clipboard -t text/uri-list' ], desc = "Copy files (in client and to clipboard, as uri)" },
     { on = "<A-t>", run = "yank --cut", desc = "Kill/Cut files" },
     { on = "<C-u>", run = "unyank", desc = "Uncopy/Unkill/Uncut (cancel copy status)" },
     { on = "<A-y>", run = "plugin augment-command -- paste", desc = "Paste files in CWD" },
-    { on = "<A-Y>", run = "plugin augment-command -- paste --force", desc = "Paste files in CWD, overwriting" },
+    { on = "<A-S-y>", run = "plugin augment-command -- paste --force", desc = "Paste files in CWD, overwriting" },
     { on = "<C-A-y>", run = "plugin augment-command -- paste --smart", desc = "Paste files in hovered directory (or else CWD)" },
-    { on = "<C-A-Y>", run = "plugin augment-command -- paste --force --smart", desc = "Paste files in hovered directory (or else CWD), overwriting" },
+    { on = "<C-A-S-y>", run = "plugin augment-command -- paste --force --smart", desc = "Paste files in hovered directory (or else CWD), overwriting" },
     ## Delete/Remove
     { on = "<Delete>", run = "plugin augment-command -- remove --force", desc = "Trash files" },
     { on = [ "d", "p" ], run = "plugin augment-command -- remove --permanently", desc = "Delete files permanently" },
@@ -96,19 +97,23 @@ keymap = [
 
     # Meta-level operation (cd, sort, tabs, etc.)
     ## Copy/Cut/Paste (to/from clipboard)
-    { on = [ "<C-x>", "<C-t>" ], run = 'shell -- cb copy -nc -np "$@"', desc = "Copy files to clipboard" },
-    { on = [ "<C-x>", "<A-t>" ], run = 'shell -- cb cut -nc -np "$@"', desc = "Cut files to clipboard" },
-    { on = [ "<C-x>", "<C-y>" ], run = 'shell -- dragon -x -f -a -T "$@"', desc = "Drag files" },
+    { on = [ "<C-x>", "<C-t>" ], run = 'shell -- cb copy -nc -np "$@"', desc = "Copy files (raw) to clipboard" },
+    { on = [ "<C-x>", "<A-t>" ], run = 'shell -- cb cut -nc -np "$@"', desc = "Cut files (raw) to clipboard" },
+    { on = [ "<C-x>", "<C-y>" ], run = 'shell -- dragon -x -f -a -T "$@"', desc = "Drag files to other application" },
     ## CD (goto)
     { on = [ "g", "h" ], run = "cd $HOME", desc = "Go to user home directory"},
     { on = [ "g", "c" ], run = "cd $XDG_CONFIG_HOME", desc = "Go to config directory"},
     { on = [ "g", "p" ], run = "cd $HOME/projects", desc = "Go to project directory"},
     { on = [ "g", "a" ], run = "cd $HOME/areas", desc = "Go to areas directory"},
     { on = [ "g", "r" ], run = "cd $HOME/resources", desc = "Go to resources directory"},
-    { on = [ "g", "R" ], run = "cd /", desc = "Go to root directory"},
     { on = [ "g", "A" ], run = "cd $HOME/archive", desc = "Go to archive directory"},
     { on = [ "g", "d" ], run = "cd $XDG_DATA_HOME/documents", desc = "Go to documents directory"},
     { on = [ "g", "D" ], run = "cd $XDG_DATA_HOME/downloads", desc = "Go to downloads directory"},
+    { on = [ "g", "m" ], run = "cd $XDG_DATA_HOME/media", desc = "Go to media directory"},
+    { on = [ "g", "m" ], run = "cd $XDG_DATA_HOME/media", desc = "Go to media directory"},
+    { on = [ "g", "R" ], run = "cd /", desc = "Go to root directory"},
+    { on = [ "g", "e" ], run = "cd /etc", desc = "Go to etc (system config) directory"},
+    { on = [ "g", "u" ], run = "cd /usr", desc = "Go to usr directory"},
     { on = [ "g", "i" ], run = "cd --interactive", desc = "Go to directory interactively"},
     { on = [ "g", "f" ], run = "plugin fzf", desc = "Go to (location of) file interactively using fzf"},
     ## Sort/Order
@@ -299,7 +304,7 @@ keymap = [
     { on = "<A-t>", run = "delete --cut", desc = "Cut" },
     { on = "<Delete>", run = "delete", desc = "Delete" },
     { on = "<A-y>", run = "paste", desc = "Paste copied material after cursor" },
-    { on = "<C-A-y>", run = "paste --before", desc = "Paste copied material before cursor" },
+    { on = "<A-S-y>", run = "paste --before", desc = "Paste copied material before cursor" },
 
     # Undo/Redo (normal mode)
     { on = "<A-;>", run = "undo", desc = "Undo last operation" },
