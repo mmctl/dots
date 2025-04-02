@@ -65,6 +65,7 @@ user_pref("mousewheel.default.delta_multiplier_y", 85);             // sets the 
 user_pref("mousewheel.default.delta_multiplier_z", 85);             // sets the z-axis step size
 user_pref("mousewheel.min_line_scroll_amount", 10);                 // if the CSS line height is smaller than this value in pixels, each scroll click will scroll this amount
 
+user_pref("widget.use-xdg-desktop-portal.file-picker", 1);
 
 // Check if "_user.js.parrot" field in about:config is set to this value
 user_pref("_user.js.parrot", "SUCCESS: Overrides loaded!");
