@@ -146,16 +146,33 @@ mode "$mode_resizectl" {
 set $mode_notificationctl Notification control mode: [c]ontext menu, [k]ill (top-most), [K]ill (all), [h]istory (show most recent), [p]ause (toggle), [r]eload, [ESC]ape to default mode
 
 mode "$mode_notificationctl" {
-        ### Regular operation bindings
-        bindsym c exec --no-startup-id dunstctl context, mode "default"
-        bindsym k exec --no-startup-id dunstctl close
-        bindsym $S+k exec --no-startup-id dunstctl close-all
-        bindsym h exec --no-startup-id dunstctl history-pop
-        bindsym p exec --no-startup-id dunstctl pause toggle
-        bindsym r exec --no-startup-id dunstctl reload, mode "default"
+    ### Regular operation bindings
+    bindsym c exec --no-startup-id dunstctl context, mode "default"
+    bindsym k exec --no-startup-id dunstctl close
+    bindsym $S+k exec --no-startup-id dunstctl close-all
+    bindsym h exec --no-startup-id dunstctl history-pop
+    bindsym p exec --no-startup-id dunstctl pause toggle
+    bindsym r exec --no-startup-id dunstctl reload, mode "default"
 
-        ### Meta bindings
-        bindsym Escape mode "default"
+    ### Meta bindings
+    bindsym Escape mode "default"
+}
+
+
+## Screenshots
+set $mode_screenshot Screenshot mode: [d]isplay (save), [D]isplay (clip), [w]indow (save), [W]indow (clip), [r]egion (save), [R]egion (clip), [ESC]ape to default mode
+
+mode "$mode_screenshot" {
+    ### Regular operation bindings
+    bindsym d exec --no-startup-id maim --format=png --quality 10 "$XDG_DATA_HOME/media/pictures/screenshots/display-$(date -Iseconds)", mode default
+    bindsym D exec --no-startup-id maim --format=png --quality 6 | xclip -selection clipboard -t image/png, mode default
+    bindsym w exec --no-startup-id maim --format=png --quality 10 --window $(xdotool getactivewindow) "$XDG_DATA_HOME/media/pictures/screenshots/window-$(date -Iseconds)", mode default
+    bindsym W exec --no-startup-id maim --format=png --quality 6 --window $(xdotool getactivewindow) | xclip -selection clipboard -t image/png, mode default
+    bindsym r exec --no-startup-id "maim --format=png --quality 10 --select --bordersize=2 --color=0.706,0.557,0.678 $XDG_DATA_HOME/media/pictures/screenshots/region-$(date -Iseconds)", mode default
+    bindsym R exec --no-startup-id "maim --format=png --quality 6 --select --bordersize=2 --color=0.706,0.557,0.678 | xclip -selection clipboard -t image/png", mode default
+
+    ### Meta bindings
+    bindsym Escape mode "default"
 }
 
 
@@ -172,6 +189,10 @@ bindsym $mod+$A+r mode "$mode_resizectl"
 
 ### Notification control mode
 bindsym $mod+$A+n mode "$mode_notificationctl"
+
+### Screenshot mode
+bindsym $mod+$A+p mode "$mode_screenshot"
+
 
 ### Kill/Close window
 bindsym $mod+$A+q kill
@@ -205,7 +226,7 @@ bindsym $mod+$A+f exec "alacritty --class FileManager,Yazi -e yazi"
 
 ### Password Managers
 #### Run rofi-rbw
-bindsym --release $mod+$A+p exec --no-startup-id rofi-rbw
+bindsym --release $mod+$A+v exec --no-startup-id rofi-rbw
 
 
 ## Focus
@@ -239,7 +260,7 @@ bindsym $mod+w workspace $wsweb
 
 ### Relational
 bindsym $mod+$C+p focus parent
-bindsym $mod+$C+c focus child
+bindsym $mod+$C+c focuschild
 bindsym $mod+$C+m focus mode_toggle # toggle focus between floating/tiling
 
 
