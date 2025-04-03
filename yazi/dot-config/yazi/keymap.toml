@@ -79,8 +79,8 @@ keymap = [
     { on = [ "d", "t" ], run = "plugin augment-command -- remove --force", desc = "Trash files" },
     { on = [ "d", "u" ], run = "plugin restore", desc = "Restore last trashed files" },
     ## Create
-    { on = "n", run = "plugin augment-command -- create", desc = "Create a new file (directory if name ends in '/')" },
-    { on = "N", run = "plugin augment-command -- create --force", desc = "Create a new file (directory if name ends in '/'), overwriting" },
+    { on = "n", run = "create", desc = "Create a new file (directory if name ends in '/')" },
+    { on = "N", run = "create --force", desc = "Create a new file (directory if name ends in '/'), overwriting" },
     ## Rename
     { on = "r", run = "plugin augment-command -- rename --empty=stem --cursor=start", desc = "Rename files (start empty)" },
     { on = "R", run = "plugin augment-command -- rename --cursor=start --force", desc = "Rename files (start empty), overwriting" },

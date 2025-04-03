@@ -43,6 +43,11 @@ use = "boydaihungst/restore"
 rev = "5d22884"
 hash = "8e6fc2d660f661c91e30b10dd1a251b8"
 
+[[plugin.deps]]
+use = "Ape/open-with-cmd"
+rev = "433cf30"
+hash = "86e0312b01bc5762813c6c1d0517f073"
+
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-macchiato"
 rev = "68326b4"

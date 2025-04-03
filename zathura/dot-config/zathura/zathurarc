@@ -1,0 +1,244 @@
+# zathurarc
+## Options
+### Girara
+set n-completion-items 15
+
+### Zathura
+set abort-clear-search "true"
+set adjust-open "best-fit"
+set database "sqlite"
+set open-first-page "false"
+set page-cache-size 25
+set page-padding 2
+set scroll-step 50
+set selection-notification "false"
+set show-recent 15
+set statusbar-home-tilde "true"
+set window-title-home-tilde "true"
+set zoom-step 10
+
+## Key bindings (emacs-like)
+### Normal mode
+#### Meta
+map [normal] q       quit
+map [normal] <C-q>   quit
+map [normal] Esc     abort
+map [normal] <C-g>   abort
+map [normal] <A-r>   reload
+map [normal] <A-c>   recolor
+map [normal] <A-p>   print
+
+map [normal] <A-m>   toggle_page_mode
+map [normal] <A-t>   cycle_first_column
+map [normal] <A-s>   toggle_statusbar
+map [normal] <A-i>   toggle_inputbar
+map [normal] <A-x>   focus_inputbar
+
+map [normal] <Tab>    toggle_index
+map [normal] <C-i>    toggle_index
+map [normal] <C-f>    toggle_fullscreen
+
+#### Movement/Navigation
+map [normal] <Left>       scroll left
+map [normal] <Down>       scroll down
+map [normal] <Up>         scroll up
+map [normal] <Right>      scroll right
+
+map [normal] h            scroll left
+map [normal] j            scroll down
+map [normal] k            scroll up
+map [normal] l            scroll right
+
+map [normal] J            scroll page-bottom
+map [normal] K            scroll page-top
+
+map [normal] <C-Left>     scroll half-left
+map [normal] <C-Down>     scroll half-down
+map [normal] <C-Up>       scroll half-up
+map [normal] <C-Right>    scroll half-right
+
+map [normal] <Space>      scroll half-down
+map [normal] <BackSpace>  scroll half-up
+map [normal] <S-Space>    scroll half-up
+
+map [normal] <PageDown>   scroll full-down
+map [normal] <PageUp>     scroll full-up
+
+map [normal] <C-a>        scroll full-left
+map [normal] <C-n>        scroll full-down
+map [normal] <C-p>        scroll full-up
+map [normal] <C-e>        scroll full-right
+
+map [normal] n        navigate next
+map [normal] p        navigate previous
+
+map [normal] g      goto
+map [normal] e      goto bottom
+map [normal] s      goto top
+map [normal] <C-l>  snap_to_page
+
+#### Searching
+map [normal] <C-r>        search backward
+map [normal] <C-s>        search forward
+
+#### Zooming/Rotating
+map [normal] +    zoom in
+map [normal] =    zoom in
+map [normal] -    zoom out
+map [normal] z    zoom in
+map [normal] Z    zoom out
+map [normal] <C-z> zoom
+
+map [normal] r    rotate rotate-cw
+map [normal] R    rotate rotate-ccw
+
+#### Fitting
+map [normal] a  adjust_window best-fit
+map [normal] A  adjust_window width
+
+#### Miscellaneous
+map [normal] m      mark_add
+map [normal] M      mark_evaluate
+
+map [normal] u      display_link
+map [normal] U      follow
+
+map [normal] b      jumplist backward
+map [normal] f      jumplist forward
+
+### Fullscreen mode
+#### Meta
+map [fullscreen] q       quit
+map [fullscreen] <C-q>   quit
+map [fullscreen] Esc     abort
+map [fullscreen] <C-g>   abort
+map [fullscreen] <A-r>   reload
+map [fullscreen] <A-c>   recolor
+map [fullscreen] <A-p>   print
+
+map [fullscreen] <A-m>   toggle_page_mode
+map [fullscreen] <A-t>   cycle_first_column
+map [fullscreen] <A-s>   toggle_statusbar
+map [fullscreen] <A-i>   toggle_inputbar
+map [fullscreen] <A-x>   focus_inputbar
+
+map [fullscreen] <Tab>    toggle_index
+map [fullscreen] <C-i>    toggle_index
+map [fullscreen] <C-f>    toggle_fullscreen
+
+#### Movement/Navigation
+map [fullscreen] <Left>       scroll left
+map [fullscreen] <Down>       scroll down
+map [fullscreen] <Up>         scroll up
+map [fullscreen] <Right>      scroll right
+
+map [fullscreen] h            scroll left
+map [fullscreen] j            scroll down
+map [fullscreen] k            scroll up
+map [fullscreen] l            scroll right
+
+map [fullscreen] J            scroll page-bottom
+map [fullscreen] K            scroll page-top
+
+map [fullscreen] <C-Left>     scroll half-left
+map [fullscreen] <C-Down>     scroll half-down
+map [fullscreen] <C-Up>       scroll half-up
+map [fullscreen] <C-Right>    scroll half-right
+
+map [fullscreen] <Space>      scroll half-down
+map [fullscreen] <BackSpace>  scroll half-up
+map [fullscreen] <S-Space>    scroll half-up
+
+map [fullscreen] <PageDown>   scroll full-down
+map [fullscreen] <PageUp>     scroll full-up
+
+map [fullscreen] <C-a>        scroll full-left
+map [fullscreen] <C-n>        scroll full-down
+map [fullscreen] <C-p>        scroll full-up
+map [fullscreen] <C-e>        scroll full-right
+
+map [fullscreen] n        navigate next
+map [fullscreen] p        navigate previous
+
+map [fullscreen] g      goto
+map [fullscreen] e      goto bottom
+map [fullscreen] s      goto top
+map [fullscreen] <C-l>  snap_to_page
+
+#### Searching
+map [fullscreen] <C-r>        search backward
+map [fullscreen] <C-s>        search forward
+
+#### Zooming/Rotating
+map [fullscreen] +    zoom in
+map [fullscreen] =    zoom in
+map [fullscreen] -    zoom out
+map [fullscreen] z    zoom in
+map [fullscreen] Z    zoom out
+map [fullscreen] <C-z> zoom
+
+map [fullscreen] r    rotate rotate-cw
+map [fullscreen] R    rotate rotate-ccw
+
+#### Fitting
+map [fullscreen] a  adjust_window best-fit
+map [fullscreen] A  adjust_window width
+
+#### Miscellaneous
+map [fullscreen] m      mark_add
+map [fullscreen] M      mark_evaluate
+
+map [fullscreen] u      display_link
+map [fullscreen] U      follow
+
+map [fullscreen] b      jumplist backward
+map [fullscreen] f      jumplist forward
+
+
+### Index mode
+#### Meta
+map [index] q       quit
+map [index] <C-q>   quit
+map [index] Esc     abort
+map [index] <C-g>   abort
+
+map [index] <A-s>   toggle_statusbar
+map [index] <A-i>   toggle_inputbar
+map [index] <A-x>   focus_inputbar
+
+map [index] <Tab>   toggle_index
+map [index] <C-i>   toggle_index
+
+#### Movement/Navigation
+map [index] <Down>       navigate_index down
+map [index] <Up>         navigate_index up
+
+map [index] h            navigate_index collapse
+map [index] j            navigate_index down
+map [index] k            navigate_index up
+map [index] l            navigate_index expand
+
+map [index] H            navigate_index collapse-all
+map [index] J            navigate_index bottom
+map [index] K            navigate_index top
+map [index] L            navigate_index expand-all
+
+map [index] <PageDown>   navigate_index bottom
+map [index] <PageUp>     navigate_index top
+
+map [index] a            navigate_index collapse
+map [index] e            navigate_index expand
+map [index] <C-a>        navigate_index collapse-all
+map [index] <C-e>        navigate_index expand-all
+
+map [index] n            navigate_index down
+map [index] p            navigate_index up
+
+#### Selection
+map [index] <Return> navigate_index select
+map [index] <C-v>    navigate_index select 
+
+
+## Theme
+set font "MonaspiceKr Nerd Font Medium 11"
+include zathura-nord-theme

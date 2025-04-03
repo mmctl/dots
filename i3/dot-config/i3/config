@@ -164,11 +164,11 @@ set $mode_screenshot Screenshot mode: [d]isplay (save), [D]isplay (clip), [w]ind
 
 mode "$mode_screenshot" {
     ### Regular operation bindings
-    bindsym d exec --no-startup-id maim --format=png --quality 10 "$XDG_DATA_HOME/media/pictures/screenshots/display-$(date -Iseconds)", mode default
+    bindsym d exec --no-startup-id maim --format=png --quality 10 "$XDG_DATA_HOME/media/pictures/screenshots/display-$(date +'%Y%m%dT%H%M%S')", mode default
     bindsym D exec --no-startup-id maim --format=png --quality 6 | xclip -selection clipboard -t image/png, mode default
-    bindsym w exec --no-startup-id maim --format=png --quality 10 --window $(xdotool getactivewindow) "$XDG_DATA_HOME/media/pictures/screenshots/window-$(date -Iseconds)", mode default
+    bindsym w exec --no-startup-id maim --format=png --quality 10 --window $(xdotool getactivewindow) "$XDG_DATA_HOME/media/pictures/screenshots/window-$(date +'%Y%m%dT%H%M%S')", mode default
     bindsym W exec --no-startup-id maim --format=png --quality 6 --window $(xdotool getactivewindow) | xclip -selection clipboard -t image/png, mode default
-    bindsym r exec --no-startup-id "maim --format=png --quality 10 --select --bordersize=2 --color=0.706,0.557,0.678 $XDG_DATA_HOME/media/pictures/screenshots/region-$(date -Iseconds)", mode default
+    bindsym r exec --no-startup-id "maim --format=png --quality 10 --select --bordersize=2 --color=0.706,0.557,0.678 $XDG_DATA_HOME/media/pictures/screenshots/region-$(date +'%Y%m%dT%H%M%S')", mode default
     bindsym R exec --no-startup-id "maim --format=png --quality 6 --select --bordersize=2 --color=0.706,0.557,0.678 | xclip -selection clipboard -t image/png", mode default
 
     ### Meta bindings
@@ -203,20 +203,17 @@ bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT
 bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
 
 ## Applications
-### Browsers
-#### Run firefox
-bindsym $mod+$A+b exec firefox
+### Documents
+#### Run zathura
+bindsym $mod+$A+d exec zathura
 
 ### Editors
 #### Run emacsclient (creating a new frame)
 bindsym $mod+$A+e exec --no-startup-id emacsclient -c -s 'gui' -n --alternate-editor=
 
+### Socials
 #### Run Thunderbird
 bindsym $mod+$A+m exec thunderbird
-
-### Launchers
-#### Run rofi
-bindsym --release $mod+space exec --no-startup-id rofi -modes combi -combi-modes 'window#drun#run#ssh' -show combi
 
 ### Terminals (and terminal-based applications)
 #### Run alacritty
@@ -224,9 +221,18 @@ bindsym $mod+$A+t exec alacritty
 #### Run yazi in alacritty
 bindsym $mod+$A+f exec "alacritty --class FileManager,Yazi -e yazi"
 
+### Web (Browsers)
+#### Run firefox
+bindsym $mod+$A+b exec firefox
+
+### Launchers
+#### Run rofi
+bindsym --release $mod+space exec --no-startup-id rofi -modes combi -combi-modes 'window#drun#run#ssh' -show combi
+
 ### Password Managers
 #### Run rofi-rbw
 bindsym --release $mod+$A+v exec --no-startup-id rofi-rbw
+
 
 
 ## Focus
@@ -326,6 +332,8 @@ bar {
 
 # Automatic assignments
 ## Documents
+assign [class="(?i)Zathura"] $wsdocs
+for_window [class="(?i)Zathura"] focus
 
 ## Editors
 assign [class="(?i)Emacs"] $wsedit

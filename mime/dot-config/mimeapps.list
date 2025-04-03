@@ -7,10 +7,32 @@ inode/directory=yazi.desktop
 ## Text
 text/html=firefox.desktop
 text/xml=firefox.desktop
+text/calendar=org.mozilla.Thunderbird.desktop
+text/vcard=org.mozilla.Thunderbird.desktop
+text/x-vcard=org.mozilla.Thunderbird.desktop
 
+text/english=emacsclient.desktop
+text/plain=emacsclient.desktop
+text/vcard=org.mozilla.Thunderbird.desktop
+text/x-c=emacsclient.desktop
+text/x-c++=emacsclient.desktop
+text/x-c++hdr=emacsclient.desktop
+text/x-c++src=emacsclient.desktop
+text/x-chdr=emacsclient.desktop
+text/x-csrc=emacsclient.desktop
+text/x-java=emacsclient.desktop
+text/x-makefile=emacsclient.desktop
+text/x-moc=emacsclient.desktop
+text/x-pascal=emacsclient.desktop
+text/x-tcl=emacsclient.desktop
+text/x-tex=emacsclient.desktop
+
+message/rfc822=org.mozilla.Thunderbird.desktop
 
 ## Images
 image/avif=firefox.desktop
+image/svg+xml=firefox.desktop
+
 image/bmp=feh.desktop
 image/gif=feh.desktop
 image/heic=feh.desktop
@@ -18,7 +40,6 @@ image/jpeg=feh.desktop
 image/jpg=feh.desktop
 image/pjpeg=feh.desktop
 image/png=feh.desktop
-image/svg+xml=firefox.desktop
 image/tiff=feh.desktop
 image/webp=feh.desktop
 image/x-bmp=feh.desktop
@@ -30,6 +51,9 @@ image/x-portable-graymap=feh.desktop
 image/x-portable-pixmap=feh.desktop
 image/x-tga=feh.desktop
 image/x-xbitmap=feh.desktop
+
+image/eps=org.pwmt.zathura-ps.desktop
+image/x-eps=org.pwmt.zathura-ps.desktop
 
 
 ## Audio and video
@@ -144,12 +168,21 @@ video/x-theora+ogg=mpv.desktop
 ## Applications
 ### Firefox
 application/json=firefox.desktop
-application/pdf=firefox.desktop
 application/rdf+xml=firefox.desktop
 application/rss+xml=firefox.desktop
 application/x-xpinstall=firefox.desktop
 application/xhtml+xml=firefox.desktop
 application/xml=firefox.desktop
+
+### Zathura
+application/eps=org.pwmt.zathura-ps.desktop
+application/epub+zip=org.pwmt.zathura-pdf-mupdf.desktop
+application/oxps=org.pwmt.zathura-pdf-mupdf.desktop
+application/pdf=org.pwmt.zathura-pdf-mupdf.desktop
+application/postscript=org.pwmt.zathura-ps.desktop
+application/x-eps=org.pwmt.zathura-ps.desktop
+application/x-fictionbook=org.pwmt.zathura-pdf-mupdf.desktop
+
 
 ### MPV
 application/mxf=mpv.desktop
@@ -179,6 +212,12 @@ application/x-streamingmedia=mpv.desktop
 x-scheme-handler/chrome=firefox.desktop
 x-scheme-handler/http=firefox.desktop
 x-scheme-handler/https=firefox.desktop
-x-scheme-handler/mailto=firefox.desktop
 x-scheme-handler/about=firefox.desktop
 x-scheme-handler/unknown=firefox.desktop
+
+x-scheme-handler/mailto=org.mozilla.Thunderbird.desktop
+x-scheme-handler/mid=org.mozilla.Thunderbird.desktop
+x-scheme-handler/webcal=org.mozilla.Thunderbird.desktop
+x-scheme-handler/webcals=org.mozilla.Thunderbird.desktop
+
+x-scheme-handler/org-protocol=emacsclient.desktop

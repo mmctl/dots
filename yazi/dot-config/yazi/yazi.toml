@@ -41,6 +41,7 @@ edit = [
 ### Open
 open = [
     { run = 'xdg-open "$1"', desc = "Open", for = "linux" },
+    { run = 'ya emit plugin open-with-cmd', desc = "Open with...", for = "linux" },
 ]
 ### Extract
 extract = [
@@ -66,9 +67,9 @@ meta = [
 [open]
 rules = [
     ### Folder
-    { name = "*/", use = [ "edit", "visit", "meta" ] },
+    { name = "*/", use = [ "edit", "open", "visit", "meta" ] },
     ### Text
-    { mime = "text/*", use = [ "edit", "visit", "meta" ] },
+    { mime = "text/*", use = [ "edit", "open", "visit", "meta" ] },
     ### Image
     { mime = "image/*", use = [ "open", "visit", "meta" ] },
     ### Media
