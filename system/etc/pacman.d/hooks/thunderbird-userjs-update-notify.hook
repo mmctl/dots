@@ -1,0 +1,10 @@
+# Remind user to update thunderbird user.js and clean up preferences
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = thunderbird
+
+[Action]
+Description = Reminder to update thunderbird user.js and clean up preferences
+When = PostTransaction
+Exec = /usr/bin/echo "==> thunderbird has been upgraded, consider updating your user.js and cleaning up your (inactive) preferences"

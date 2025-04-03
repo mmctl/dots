@@ -842,6 +842,19 @@
   (add-to-list 'magit-no-confirm 'safe-with-wip)
   (magit-wip-mode 1))
 
+(use-package tex
+  :ensure auctex)
+
+(use-package pdf-tools
+  :ensure t)
+
+(use-package org
+  :ensure t)
+
+(use-package proof-general
+  :ensure t)
+
+
 ;;; Themes
 (use-package doom-themes
   :ensure t
@@ -905,7 +918,6 @@
 (add-hook 'special-mode-hook #'setup-a-mix-mode)
 (add-hook 'log-edit-mode-hook #'setup-a-mix-mode)
 (add-hook 'tex-mode-hook #'setup-a-mix-mode)
-(add-hook 'latex-mode-hook #'setup-a-mix-mode)
 (add-hook 'conf-mode-hook #'setup-a-mix-mode)
 
 (add-hook 'prog-mode-hook #'setup-a-code-mode)
