@@ -267,7 +267,7 @@
 (keymap-global-set "M-l" 'kill-whole-line)
 
 (keymap-global-set "M-b" 'backward-kill-sexp)
-(keymap-global-set "M-f" 'forward-kill-sexp)
+(keymap-global-set "M-f" 'kill-sexp)
 
 (keymap-global-set "M-p" 'backward-kill-sentence)
 (keymap-global-set "M-n" 'kill-sentence)
@@ -321,8 +321,8 @@
 (defvar-keymap a-frame-map
   :doc "Keymap for frame management"
   :prefix 'a-frame-map-prefix
-  "q" #'delete-frame
-  "Q" #'delete-other-frames
+  "k" #'delete-frame
+  "K" #'delete-other-frames
   "u" #'undelete-frame
   "c" #'clone-frame
   "m" #'make-frame-command
@@ -336,18 +336,14 @@
 (defvar-keymap a-window-map
   :doc "Keymap for window management"
   :prefix 'a-window-map-prefix
-  "q" #'delete-window
-  "Q" #'delete-other-windows
+  "k" #'delete-window
+  "K" #'delete-other-windows
   "C-q" #'delete-windows-on
   "s" #'split-window-horizontally
   "S" #'split-window-vertically
   "f" #'fit-window-to-buffer
   "g" #'other-window
   "t" #'tear-off-window
-  "h" #'windmove-left
-  "j" #'windmove-down
-  "k" #'windmove-up
-  "l" #'windmove-right
   "<left>" #'windmove-left
   "<down>" #'windmove-down
   "<up>" #'windmove-up
@@ -359,8 +355,8 @@
 (defvar-keymap a-buffer-map
   :doc "Keymap for buffer management"
   :prefix 'a-buffer-map-prefix
-  "q" #'kill-current-buffer
-  "Q" #'kill-buffer
+  "k" #'kill-current-buffer
+  "K" #'kill-buffer
   "C-q" #'kill-some-buffers
   "s" #'save-buffer
   "S" #'save-some-buffers
@@ -429,7 +425,7 @@
   (setopt isearch-repeat-on-direction-change t
           isearch-lazy-count t
           isearch-lax-whitespace t
-          isearch-allow-scroll t
+          isearch-allow-scroll 'unlimited
           isearch-allow-motion t)
   (setopt lazy-count-prefix-format nil
           lazy-count-suffix-format " [%s of %s]")
@@ -496,6 +492,32 @@
   (setopt marginalia-field-width 100)
   (marginalia-mode 1))
 
+(use-package jinx
+  :ensure t
+  :hook ((text-mode . jinx-mode)
+         (prog-mode . jinx-mode)
+         (conf-mode . jinx-mode))
+  :bind (("M-$" . jinx-correct)
+         ("C-M-$" . jinx-languages)
+         :map jinx-overlay-map
+         ("C-n" . jinx-next)
+         ("C-p" . jinx-previous)
+         :map jinx-repeat-map
+         ("C-n" . jinx-next)
+         ("C-p" . jinx-previous)
+         :map jinx-correct-map
+         ("C-n" . jinx-next)
+         ("C-p" . jinx-previous))
+  :config
+  (setopt jinx-languages "en_US")
+  (setopt jinx-include-faces '((prog-mode font-lock-comment-face
+                                          font-lock-doc-face)
+                               (conf-mode font-lock-comment-face
+                                          font-lock-doc-face)
+                               (yaml-mode . conf-mode)
+                               (yaml-ts-mode . conf-mode))))
+
+
 ;;; Completion
 (use-package orderless
   :ensure t
@@ -524,6 +546,8 @@
               ("TAB" . minibuffer-complete)
               ("<tab>" . minibuffer-complete)
               ("C-?" . minibuffer-completion-help)
+              ("C-p" . previous-history-element)
+              ("C-n" . next-history-element)
               ("C-<up>" . previous-history-element)
               ("C-<down>" . next-history-element)
               ("<prior>" . vertico-previous-group)
@@ -539,12 +563,21 @@
 
 (use-package vertico-directory
   :after vertico
-  :ensure nil ; inlcuded with vertico
+  :ensure nil ; included with vertico
   :bind (:map vertico-map
               ("C-d" . vertico-directory-enter)
               ("<backspace>" . vertico-directory-delete-char)
               ("M-<backspace>" . vertico-directory-delete-word))
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+
+(use-package vertico-mouse
+  :after vertico
+  :ensure nil ; included with vertico
+  :config
+  (keymap-set vertico-mouse-map "<mouse-1>" (vertico-mouse--click "C-v"))
+  (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-o"))
+  (vertico-mouse-mode 1))
 
 
 (use-package corfu
@@ -843,16 +876,77 @@
   (magit-wip-mode 1))
 
 (use-package tex
-  :ensure auctex)
+  :ensure auctex
+  :hook
+  (Tex-language-en . (lambda () (jinx-languages "en_US")))
+  (Tex-language-nl . (lambda () (jinx-languages "nl")))
+  :config
+  (setopt TeX-file-line-error t
+          TeX-display-help t
+          TeX-PDF-mode t
+          TeX-auto-save t
+          TeX-parse-self t
+          TeX-master nil
+          TeX-save-query t
+          TeX-auto-regexp-list 'TeX-auto-full-regexp-list
+          TeX-auto-untabify t)
+  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))
 
 (use-package pdf-tools
-  :ensure t)
+  :ensure t
+  :init
+  (setopt pdf-tools-handle-upgrades nil)
+  (pdf-loader-install)
+  :hook
+  ((pdf-view-mode . pdf-view-themed-minor-mode)
+   (pdf-tools-enabled . (lambda ()
+                          (keymap-set pdf-annot-edit-contents-minor-mode-map
+                                      "C-c C-v"
+                                      #'pdf-annot-edit-contents-commit)))
+   (pdf-tools-enabled . (lambda ()
+                          (keymap-set pdf-sync-minor-mode-map "<double-mouse-1>" nil))))
+  :bind (:map pdf-view-mode-map
+              ("q" . #'kill-this-buffer)
+              ("<down>" . #'pdf-view-next-line-or-next-page)
+              ("<up>" . #'pdf-view-previous-line-or-previous-page)
+              ("n" . #'pdf-view-next-page-command)
+              ("p" . #'pdf-view-previous-page-command)
+              ("<next>" . #'pdf-view-next-page-command)
+              ("<prior>" . #'pdf-view-previous-page-command)
+              ("C-n" . #'pdf-view-scroll-down-or-next-page)
+              ("C-p" . #'pdf-view-scroll-up-or-previous-page)
+              ("SPC" . #'pdf-view-scroll-down-or-next-page)
+              ("DEL" . #'pdf-view-scroll-up-or-previous-page)
+              ("<backspace>" . #'pdf-view-scroll-up-or-previous-page)
+              ("<end>" . #'pdf-view-last-page)
+              ("<home>" . #'pdf-view-first-page)
+              ("C-l" . #'pdf-goto-label)
+              ("C-;" . #'pdf-goto-page)
+              ("z" . #'pdf-view-enlarge)
+              ("Z" . #'pdf-view-shrink)
+              ("0" . #'pdf-view-scale-reset)
+              ("r" . #'pdf-view-rotate)
+              ("R" . #'revert-buffer)
+              ("a w" . #'pdf-view-fit-width-to-window)
+              ("a h" . #'pdf-view-fit-height-to-window)
+              ("a p" . #'pdf-view-fit-page-to-window)
+              ("m" . #'pdf-view-position-to-register)
+              ("M" . #'pdf-view-jump-to-register)
+              ("v d" . #'pdf-view-dark-minor-mode)
+              ("v m" . #'pdf-view-midnight-minor-mode)
+              ("v t" . #'pdf-view-themed-minor-mode)
+              ("v p" . #'pdf-view-printer-minor-mode))
+  :config
+  (setopt pdf-view-display-size 'fit-page)
+  (setopt pdf-view-use-unicode-ligther nil)
+  (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode))
 
 (use-package org
   :ensure t)
 
 (use-package proof-general
-  :ensure t)
+  :ensure t
+  :pin melpa)
 
 
 ;;; Themes
@@ -872,6 +966,8 @@
     '(trailing-whitespace :background magenta)
     '(vertico-current :foreground 'unspecified :background 'unspecified
                       :inherit 'highlight :extend t)
+    '(vertico-mouse :foreground 'unspecified :background 'unspecified
+                      :inherit 'lazy-highlight :extend t)
     '(corfu-border :foreground 'unspecified :background 'unspecified
                    :inherit 'vertical-border)
     '(corfu-bar :foreground 'unspecified :background 'unspecified
@@ -884,6 +980,7 @@
                    :inherit 'highlight)
     '(tempel-form :foreground 'unspecified :background 'unspecified
                   :inherit 'match)))
+
 
 ;; Cross-package enhancements
 ;;; Custom functions (with package dependencies)
@@ -915,7 +1012,6 @@
 ;;; Modes
 (add-hook 'text-mode-hook #'setup-a-text-mode)
 
-(add-hook 'special-mode-hook #'setup-a-mix-mode)
 (add-hook 'log-edit-mode-hook #'setup-a-mix-mode)
 (add-hook 'tex-mode-hook #'setup-a-mix-mode)
 (add-hook 'conf-mode-hook #'setup-a-mix-mode)
