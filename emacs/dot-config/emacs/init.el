@@ -219,72 +219,72 @@
 ;;; Movement
 (windmove-default-keybindings 'meta)
 
-(keymap-global-set "<left>" 'left-char)
-(keymap-global-set "<right>" 'right-char)
+(keymap-global-set "<left>" #'left-char)
+(keymap-global-set "<right>" #'right-char)
 
-(keymap-global-set "C-<left>" 'backward-word)
-(keymap-global-set "C-<right>" 'forward-word)
+(keymap-global-set "C-<left>" #'backward-word)
+(keymap-global-set "C-<right>" #'forward-word)
 
-(keymap-global-set "C-a" 'move-beginning-of-line)
-(keymap-global-set "C-e" 'move-end-of-line)
+(keymap-global-set "C-a" #'move-beginning-of-line)
+(keymap-global-set "C-e" #'move-end-of-line)
 
-(keymap-global-set "<up>" 'previous-line)
-(keymap-global-set "<down>" 'next-line)
+(keymap-global-set "<up>" #'previous-line)
+(keymap-global-set "<down>" #'next-line)
 
-(keymap-global-set "C-<up>" 'backward-paragraph)
-(keymap-global-set "C-<down>" 'forward-paragraph)
+(keymap-global-set "C-<up>" #'backward-paragraph)
+(keymap-global-set "C-<down>" #'forward-paragraph)
 
-(keymap-global-set "<home>" 'beginning-of-buffer)
-(keymap-global-set "<end>" 'end-of-buffer)
+(keymap-global-set "<home>" #'beginning-of-buffer)
+(keymap-global-set "<end>" #'end-of-buffer)
 
-(keymap-global-set "C-<prior>" 'scroll-other-window-down)
-(keymap-global-set "C-<next>" 'scroll-other-window)
+(keymap-global-set "C-<prior>" #'scroll-other-window-down)
+(keymap-global-set "C-<next>" #'scroll-other-window)
 
-(keymap-global-set "C-<home>" 'beginning-of-buffer-other-window)
-(keymap-global-set "C-<end>" 'end-of-buffer-other-window)
+(keymap-global-set "C-<home>" #'beginning-of-buffer-other-window)
+(keymap-global-set "C-<end>" #'end-of-buffer-other-window)
 
-(keymap-global-set "C-b" 'switch-to-prev-buffer)
-(keymap-global-set "C-f" 'switch-to-next-buffer)
+(keymap-global-set "C-b" #'switch-to-prev-buffer)
+(keymap-global-set "C-f" #'switch-to-next-buffer)
 
-(keymap-global-set "C-p" 'backward-sentence)
-(keymap-global-set "C-n" 'forward-sentence)
+(keymap-global-set "C-p" #'backward-sentence)
+(keymap-global-set "C-n" #'forward-sentence)
 
-(keymap-global-set "C-w" 'other-window)
+(keymap-global-set "C-w" #'other-window)
 
 ;;; Selection
-(keymap-global-set "C-SPC" 'set-mark-command)
+(keymap-global-set "C-SPC" #'set-mark-command)
 
 ;;; Manipulation
 ;;;; Copying
-(keymap-global-set "C-t" 'kill-ring-save)
-(keymap-global-set "C-T" 'clipboard-kill-ring-save)
+(keymap-global-set "C-t" #'kill-ring-save)
+(keymap-global-set "C-T" #'clipboard-kill-ring-save)
 
 ;;;; Killing
-(keymap-global-set "M-<backspace>" 'backward-kill-word)
-(keymap-global-set "M-<deletechar>" 'kill-word)
+(keymap-global-set "M-<backspace>" #'backward-kill-word)
+(keymap-global-set "M-<deletechar>" #'kill-word)
 
-(keymap-global-set "M-e" 'kill-line)
-(keymap-global-set "M-l" 'kill-whole-line)
+(keymap-global-set "M-e" #'kill-line)
+(keymap-global-set "M-l" #'kill-whole-line)
 
-(keymap-global-set "M-b" 'backward-kill-sexp)
-(keymap-global-set "M-f" 'kill-sexp)
+(keymap-global-set "M-b" #'backward-kill-sexp)
+(keymap-global-set "M-f" #'kill-sexp)
 
-(keymap-global-set "M-p" 'backward-kill-sentence)
-(keymap-global-set "M-n" 'kill-sentence)
+(keymap-global-set "M-p" #'backward-kill-sentence)
+(keymap-global-set "M-n" #'kill-sentence)
 
-(keymap-global-set "M-t" 'kill-region)
-(keymap-global-set "M-T" 'clipboard-kill-region)
+(keymap-global-set "M-t" #'kill-region)
+(keymap-global-set "M-T" #'clipboard-kill-region)
 
-(keymap-global-set "M-;" 'undo)
-(keymap-global-set "M-/" 'undo-redo)
+(keymap-global-set "M-;" #'undo)
+(keymap-global-set "M-/" #'undo-redo)
 
 ;;;; Yanking
-(keymap-global-set "M-y" 'yank)
-(keymap-global-set "M-Y" 'clipboard-yank)
-(keymap-global-set "C-M-y" 'yank-pop)
+(keymap-global-set "M-y" #'yank)
+(keymap-global-set "M-Y" #'clipboard-yank)
+(keymap-global-set "C-M-y" #'yank-pop)
 
 ;;;; Deleting
-(keymap-global-set "M-d" 'delete-region)
+(keymap-global-set "M-d" #'delete-region)
 
 ;;; Management
 ;;;; Quitting
@@ -906,36 +906,36 @@
    (pdf-tools-enabled . (lambda ()
                           (keymap-set pdf-sync-minor-mode-map "<double-mouse-1>" nil))))
   :bind (:map pdf-view-mode-map
-              ("q" . #'kill-this-buffer)
-              ("<down>" . #'pdf-view-next-line-or-next-page)
-              ("<up>" . #'pdf-view-previous-line-or-previous-page)
-              ("n" . #'pdf-view-next-page-command)
-              ("p" . #'pdf-view-previous-page-command)
-              ("<next>" . #'pdf-view-next-page-command)
-              ("<prior>" . #'pdf-view-previous-page-command)
-              ("C-n" . #'pdf-view-scroll-down-or-next-page)
-              ("C-p" . #'pdf-view-scroll-up-or-previous-page)
-              ("SPC" . #'pdf-view-scroll-down-or-next-page)
-              ("DEL" . #'pdf-view-scroll-up-or-previous-page)
-              ("<backspace>" . #'pdf-view-scroll-up-or-previous-page)
-              ("<end>" . #'pdf-view-last-page)
-              ("<home>" . #'pdf-view-first-page)
-              ("C-l" . #'pdf-goto-label)
-              ("C-;" . #'pdf-goto-page)
-              ("z" . #'pdf-view-enlarge)
-              ("Z" . #'pdf-view-shrink)
-              ("0" . #'pdf-view-scale-reset)
-              ("r" . #'pdf-view-rotate)
-              ("R" . #'revert-buffer)
-              ("a w" . #'pdf-view-fit-width-to-window)
-              ("a h" . #'pdf-view-fit-height-to-window)
-              ("a p" . #'pdf-view-fit-page-to-window)
-              ("m" . #'pdf-view-position-to-register)
-              ("M" . #'pdf-view-jump-to-register)
-              ("v d" . #'pdf-view-dark-minor-mode)
-              ("v m" . #'pdf-view-midnight-minor-mode)
-              ("v t" . #'pdf-view-themed-minor-mode)
-              ("v p" . #'pdf-view-printer-minor-mode))
+              ("q" . kill-this-buffer)
+              ("<down>" . pdf-view-next-line-or-next-page)
+              ("<up>" . pdf-view-previous-line-or-previous-page)
+              ("n" . pdf-view-next-page-command)
+              ("p" . pdf-view-previous-page-command)
+              ("<next>" . pdf-view-next-page-command)
+              ("<prior>" . pdf-view-previous-page-command)
+              ("C-n" . pdf-view-scroll-down-or-next-page)
+              ("C-p" . pdf-view-scroll-up-or-previous-page)
+              ("SPC" . pdf-view-scroll-down-or-next-page)
+              ("DEL" . pdf-view-scroll-up-or-previous-page)
+              ("<backspace>" . pdf-view-scroll-up-or-previous-page)
+              ("<end>" . pdf-view-last-page)
+              ("<home>" . pdf-view-first-page)
+              ("C-l" . pdf-goto-label)
+              ("C-;" . pdf-goto-page)
+              ("z" . pdf-view-enlarge)
+              ("Z" . pdf-view-shrink)
+              ("0" . pdf-view-scale-reset)
+              ("r" . pdf-view-rotate)
+              ("R" . revert-buffer)
+              ("a w" . pdf-view-fit-width-to-window)
+              ("a h" . pdf-view-fit-height-to-window)
+              ("a p" . pdf-view-fit-page-to-window)
+              ("m" . pdf-view-position-to-register)
+              ("M" . pdf-view-jump-to-register)
+              ("v d" . pdf-view-dark-minor-mode)
+              ("v m" . pdf-view-midnight-minor-mode)
+              ("v t" . pdf-view-themed-minor-mode)
+              ("v p" . pdf-view-printer-minor-mode))
   :config
   (setopt pdf-view-display-size 'fit-page)
   (setopt pdf-view-use-unicode-ligther nil)
@@ -944,20 +944,17 @@
 (use-package org
   :ensure t)
 
+;;;; Note, proof-general itself might never actually be loaded
+;;;; because individual proof assistants load only trigger their own mode
+;;;; and might only load proof.el or proof-site.el instead of proof-general.el
+;;;; As such, we cannot conveniently make use of/rely on any autoloading facilities
+;;;; provided by use-package and put (almost) all necessary config in :init directly
+;;;; (Unless perhaps something like `use-package proof` using `:ensure proof-general`?)
 (use-package proof-general
   :ensure t
   :pin melpa
-  :hook (easycrypt-mode . (lambda () (setq-local electric-indent-inhibit t)))
-  :bind (:map bufhist-mode-map
-              ("C-p" . #'bufhist-prev)
-              ("C-n" . #'bufhist-next)
-              ("C-<prior>" . #'bufhist-prev)
-              ("C-<next>" . #'bufhist-next)
-              ("C-<home>" . #'bufhist-first)
-              ("C-<end>" . #'bufhist-last)
-              ("M-c" . #'bufhist-clear)
-              ("M-d" . #'bufhist-delete))
   :init
+  ;;;;; Options
   (setopt proof-splash-enable nil
           proof-toolbar-enable nil)
   (setopt proof-delete-empty-windows t
@@ -971,23 +968,35 @@
           proof-auto-action-when-deactivating-scripting 'retract)
   (setopt bufhist-ring-size 32)
   (setopt easycrypt-script-indent nil
-          easycrypt-one-command-per-line nil))
+          easycrypt-one-command-per-line nil)
+  ;;;;; Hooks
+  ;;;;;; General
+  (defun setup-a-bufhist-map ()
+    (keymap-set bufhist-mode-map "C-p" #'bufhist-prev)
+    (keymap-set bufhist-mode-map "C-n" #'bufhist-next)
+    (keymap-set bufhist-mode-map "C-<prior>" #'bufhist-prev)
+    (keymap-set bufhist-mode-map "C-<next>" #'bufhist-next)
+    (keymap-set bufhist-mode-map "C-<home>" #'bufhist-first)
+    (keymap-set bufhist-mode-map "C-<end>" #'bufhist-last)
+    (keymap-set bufhist-mode-map "M-c" #'bufhist-clear)
+    (keymap-set bufhist-mode-map "M-d" #'bufhist-delete))
+  (defun setup-a-proof-mode-map ()
+    (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
+    (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive))
+  (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
+  (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
+  ;;;;;; EasyCrypt
+  (add-hook 'easycrypt-mode-hook #'(lambda () (setq-local electric-indent-inhibit t))))
 
 ;;; Themes
+;;;; Doom-themes general
 (use-package doom-themes
   :ensure t
   :config
   (setopt doom-themes-enable-bold t
           doom-themes-enable-italic t)
   (doom-themes-visual-bell-config)
-  (setopt doom-nord-brighter-modeline t
-          doom-nord-brighter-comments nil
-          doom-nord-comment-bg nil
-          doom-nord-padded-modeline nil
-          doom-nord-region-highlight 'snowstorm)
-  (load-theme 'doom-nord t)
   (doom-themes-set-faces nil
-    '(trailing-whitespace :background magenta)
     '(vertico-current :foreground 'unspecified :background 'unspecified
                       :inherit 'highlight)
     '(vertico-mouse :foreground 'unspecified :background 'unspecified
@@ -1004,19 +1013,42 @@
                    :inherit 'highlight)
     '(tempel-form :foreground 'unspecified :background 'unspecified
                   :inherit 'match)
+    '(proof-mouse-highlight-face :inherit 'lazy-highlight)
+    '(proof-region-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
+    '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
+    '(proof-active-area-face :inherit 'secondary-selection)))
+
+;;;; Doom-themes specific
+;;;;; Nord <3
+(use-package doom-nord-theme
+  :after doom-themes
+  :ensure nil ; provided by doom-themes
+  :demand t ; Use this theme
+  :config
+  (setopt doom-nord-brighter-modeline t
+          doom-nord-brighter-comments nil
+          doom-nord-comment-bg nil
+          doom-nord-padded-modeline nil
+          doom-nord-region-highlight 'snowstorm)
+  (load-theme 'doom-nord t)
+  (doom-themes-set-faces 'doom-nord
+    '(trailing-whitespace :background magenta)
     '(proof-queue-face :background magenta)
     '(proof-locked-face :background base4)
     '(proof-script-sticky-error-face :background red)
     '(proof-script-highlight-error-face :background red :weight 'bold :slant 'italic)
-    '(proof-mouse-highlight-face :inherit 'lazy-highlight)
-    '(proof-region-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
-    '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
+    '(proof-highlight-dependent-name-face :foreground magenta)
+    '(proof-highlight-dependency-name-face :foreground violet)
     '(proof-declaration-name-face :foreground blue)
     '(proof-tacticals-name-face :foreground green)
     '(proof-error-face :foreground red)
     '(proof-warning-face :foreground yellow)
     '(proof-debug-message-face :foreground orange)
-    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)))
+    '(proof-boring-face :inherit 'default)
+    '(proof-eager-annotation-face :inherit 'proof-warning-face :slant 'italic)
+    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face))
+  (enable-theme 'doom-nord))
+
 
 ;; Cross-package enhancements
 ;;; Custom functions (with package dependencies)
