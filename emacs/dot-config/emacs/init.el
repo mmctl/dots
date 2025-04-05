@@ -946,8 +946,32 @@
 
 (use-package proof-general
   :ensure t
-  :pin melpa)
-
+  :pin melpa
+  :hook (easycrypt-mode . (lambda () (setq-local electric-indent-inhibit t)))
+  :bind (:map bufhist-mode-map
+              ("C-p" . #'bufhist-prev)
+              ("C-n" . #'bufhist-next)
+              ("C-<prior>" . #'bufhist-prev)
+              ("C-<next>" . #'bufhist-next)
+              ("C-<home>" . #'bufhist-first)
+              ("C-<end>" . #'bufhist-last)
+              ("M-c" . #'bufhist-clear)
+              ("M-d" . #'bufhist-delete))
+  :init
+  (setopt proof-splash-enable nil
+          proof-toolbar-enable nil)
+  (setopt proof-delete-empty-windows t
+          proof-output-tooltips t)
+  (setopt proof-electric-terminator-enable t
+          proof-prog-name-ask t
+          proof-next-command-insert-space nil
+          proof-keep-response-history t
+          pg-input-ring-size 32
+          proof-follow-mode 'locked
+          proof-auto-action-when-deactivating-scripting 'retract)
+  (setopt bufhist-ring-size 32)
+  (setopt easycrypt-script-indent nil
+          easycrypt-one-command-per-line nil))
 
 ;;; Themes
 (use-package doom-themes
@@ -965,9 +989,9 @@
   (doom-themes-set-faces nil
     '(trailing-whitespace :background magenta)
     '(vertico-current :foreground 'unspecified :background 'unspecified
-                      :inherit 'highlight :extend t)
+                      :inherit 'highlight)
     '(vertico-mouse :foreground 'unspecified :background 'unspecified
-                      :inherit 'lazy-highlight :extend t)
+                      :inherit 'lazy-highlight)
     '(corfu-border :foreground 'unspecified :background 'unspecified
                    :inherit 'vertical-border)
     '(corfu-bar :foreground 'unspecified :background 'unspecified
@@ -979,8 +1003,20 @@
     '(tempel-field :foreground 'unspecified :background 'unspecified
                    :inherit 'highlight)
     '(tempel-form :foreground 'unspecified :background 'unspecified
-                  :inherit 'match)))
-
+                  :inherit 'match)
+    '(proof-queue-face :background magenta)
+    '(proof-locked-face :background base4)
+    '(proof-script-sticky-error-face :background red)
+    '(proof-script-highlight-error-face :background red :weight 'bold :slant 'italic)
+    '(proof-mouse-highlight-face :inherit 'lazy-highlight)
+    '(proof-region-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
+    '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
+    '(proof-declaration-name-face :foreground blue)
+    '(proof-tacticals-name-face :foreground green)
+    '(proof-error-face :foreground red)
+    '(proof-warning-face :foreground yellow)
+    '(proof-debug-message-face :foreground orange)
+    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)))
 
 ;; Cross-package enhancements
 ;;; Custom functions (with package dependencies)

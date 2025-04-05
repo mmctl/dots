@@ -43,6 +43,10 @@ export CLIPBOARD_TMPDIR="$XDG_CACHE_HOME/clipboard"
 export CLIPBOARD_PERSISTDIR="$XDG_STATE_HOME/clipboard"
 export CLIPBOARD_THEME='ansi'
 
+### OPAM
+export OPAMROOT="$XDG_DATA_HOME/opam"
+
+
 ## Default programs (non-GUI)
 export PAGER='less'
 export MANPAGER='less'
@@ -50,6 +54,12 @@ export SUDO_EDITOR='vi'
 export EDITOR='emacsclient -t -s tty --alternate-editor='
 export ALTERNATE_EDITOR='' # This will spawn an emacs daemon upon running emacsclient (if no daemon is running yet)
 
+
 ## Options
 export LESS='-g -i -J -N -Q -R -W --incsearch --tabs=4 --header=0,0 --intr=^G --line-num-width=5 --mouse --redraw-on-quit --search-options=W --show-preproc-errors --use-color --wheel-lines=3 --wordwrap'
 export LESSUTFCHARDEF='E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p'
+
+
+## Miscellaneous
+### OPAM initialization (directories and auto-completions)
+test -r "$OPAMROOT/opam-init/init.sh" && . "$OPAMROOT/opam-init/init.sh" > /dev/null 2> /dev/null || true
