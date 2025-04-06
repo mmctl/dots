@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t -*-
-;; func-pkgs
+;; func-pkgs.el
 ;; Dependencies
 (require 'avy)
 (require 'embark)
@@ -27,4 +27,4 @@
 
 (provide 'func-pkgs)
 
-;;; func-pkgs ends here
+;;; func-pkgs.el ends here

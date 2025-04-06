@@ -8,22 +8,26 @@
                         (file-name-concat user-emacs-directory "themes/")))
   "Directory where (custom) themes are stored.")
 
-(defconst CUSTOM_FILE (if (getenv "XDG_CONFIG_HOME")
-                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/custom-set.el")
-                        (file-name-concat user-emacs-directory "custom-set.el"))
-  "File where (automatically generated) customization settings are stored")
-
 (defconst FUNCS_DIR (file-name-as-directory
                      (if (getenv "XDG_CONFIG_HOME")
                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/funcs/")
                        (file-name-concat user-emacs-directory "funcs/")))
-  "Directory where (custom) functions are defined")
+  "Directory where (custom) functions/functionalities are defined")
 
 (defconst TEMPLATES_DIR (file-name-as-directory
                          (if (getenv "XDG_CONFIG_HOME")
                              (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/templates/")
                            (file-name-concat user-emacs-directory "templates/")))
   "Directory where (custom) templates are defined")
+
+(defconst MISC_DIR (file-name-as-directory
+                      (if (getenv "XDG_CONFIG_HOME")
+                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/misc/")
+                        (file-name-concat user-emacs-directory "misc/")))
+  "Directory where (custom) miscellaneous data/settings are stored.")
+
+(defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
+  "File where (automatically generated) customization settings are stored")
 
 ;;; Data
 (defconst BACKUPS_DIR (file-name-as-directory
@@ -57,6 +61,9 @@
 (unless (file-directory-p TEMPLATES_DIR)
   (make-directory TEMPLATES_DIR))
 
+(unless (file-directory-p MISC_DIR)
+  (make-directory MISC_DIR))
+
 (unless (file-directory-p BACKUPS_DIR)
   (make-directory BACKUPS_DIR))
 
@@ -74,6 +81,7 @@
 
 ;;; Load path/pointers
 (add-to-list 'load-path FUNCS_DIR)
+(add-to-list 'load-path MISC_DIR)
 (setopt custom-theme-directory THEMES_DIR)
 
 ;;; Backups
@@ -101,7 +109,8 @@
 (setopt lock-file-name-transforms `((".*" ,(file-name-concat LOCKS_DIR "\\1") t))
         create-lockfiles t)
 
-;;; Custom functions (without package dependencies)
+;;; Custom constants and functions/functionalities (without package dependencies)
+(require 'custom-consts)
 (require 'func-frames)
 (require 'func-modes)
 (require 'func-utils)
@@ -570,7 +579,6 @@
               ("M-<backspace>" . vertico-directory-delete-word))
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
-
 (use-package vertico-mouse
   :after vertico
   :ensure nil ; included with vertico
@@ -578,7 +586,6 @@
   (keymap-set vertico-mouse-map "<mouse-1>" (vertico-mouse--click "C-v"))
   (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-o"))
   (vertico-mouse-mode 1))
-
 
 (use-package corfu
   :ensure t
@@ -635,6 +642,7 @@
           cape-dabbrev-check-other-buffers #'cape--buffers-major-mode
           cape-file-prefix '("file:" "f:")
           cape-file-directory-must-exist t)
+
   (defalias 'cape-abbrev-prefix-2 (cape-capf-prefix-length #'cape-abbrev 2))
   (defalias 'cape-dabbrev-prefix-2 (cape-capf-prefix-length #'cape-dabbrev 2))
   (defalias 'cape-line-prefix-3 (cape-capf-prefix-length #'cape-line 3))
@@ -674,6 +682,12 @@
   (add-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
   (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
+
+(use-package cape-keyword
+  :after cape
+  :ensure nil ; provided by cape
+  :config
+  (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ec-keyword-list)))
 
 (use-package tempel
   :ensure t
@@ -955,20 +969,25 @@
   :pin melpa
   :init
   ;;;;; Options
+  ;;;;;; General
   (setopt proof-splash-enable nil
           proof-toolbar-enable nil)
   (setopt proof-delete-empty-windows t
           proof-output-tooltips t)
   (setopt proof-electric-terminator-enable t
-          proof-prog-name-ask t
+          proof-sticky-errors t
+          proof-prog-name-ask nil
+          proof-minibuffer-messages t
           proof-next-command-insert-space nil
           proof-keep-response-history t
           pg-input-ring-size 32
           proof-follow-mode 'locked
           proof-auto-action-when-deactivating-scripting 'retract)
   (setopt bufhist-ring-size 32)
+  ;;;;;; EasyCrypt
   (setopt easycrypt-script-indent nil
           easycrypt-one-command-per-line nil)
+  (setopt easycrypt-prog-name "easycrypt")
   ;;;;; Hooks
   ;;;;;; General
   (defun setup-a-bufhist-map ()
@@ -982,7 +1001,27 @@
     (keymap-set bufhist-mode-map "M-d" #'bufhist-delete))
   (defun setup-a-proof-mode-map ()
     (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
-    (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive))
+    (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive)
+    (keymap-set proof-mode-map "C-<prior>" #'proof-goto-command-start)
+    (keymap-set proof-mode-map "C-<next>" #'proof-goto-command-end)
+    (keymap-set proof-mode-map "C-<end>" #'proof-goto-end-of-locked)
+    (keymap-set proof-mode-map "C-c C-v" #'proof-goto-point)
+    (keymap-set proof-mode-map "C-c C-d" #'proof-undo-and-delete-successful-command)
+    (keymap-set proof-mode-map "C-c C-a" #'proof-goto-command-start)
+    (keymap-set proof-mode-map "C-c C-e" #'proof-goto-command-end)
+    (keymap-set proof-mode-map "C-c C-l" #'proof-goto-end-of-locked)
+    (keymap-set proof-mode-map "C-c C-w" #'proof-display-some-buffers)
+    (keymap-set proof-mode-map "C-c C-k" #'pg-response-clear-displays)
+    (keymap-set proof-mode-map "C-c C-x" #'proof-minibuffer-cmd)
+    (keymap-set proof-mode-map "C-c C-q" #'proof-shell-exit)
+    (keymap-set proof-mode-map "M-p" #'pg-previous-matching-input-from-input)
+    (keymap-set proof-mode-map "M-n" #'pg-next-matching-input-from-input)
+    (keymap-set proof-mode-map "C-M-p" #'pg-previous-input)
+    (keymap-set proof-mode-map "C-M-n" #'pg-next-input)
+    (keymap-set proof-mode-map "C-c C-y p" #'pg-previous-matching-input-from-input)
+    (keymap-set proof-mode-map "C-c C-y n" #'pg-next-matching-input-from-input)
+    (keymap-set proof-mode-map "C-c C-y P" #'pg-previous-matching-input)
+    (keymap-set proof-mode-map "C-c C-y N" #'pg-next-matching-input))
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
   ;;;;;; EasyCrypt
@@ -996,6 +1035,7 @@
   (setopt doom-themes-enable-bold t
           doom-themes-enable-italic t)
   (doom-themes-visual-bell-config)
+
   (doom-themes-set-faces nil
     '(vertico-current :foreground 'unspecified :background 'unspecified
                       :inherit 'highlight)
@@ -1030,28 +1070,33 @@
           doom-nord-comment-bg nil
           doom-nord-padded-modeline nil
           doom-nord-region-highlight 'snowstorm)
+
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(trailing-whitespace :background magenta)
     '(proof-queue-face :background magenta)
     '(proof-locked-face :background base4)
-    '(proof-script-sticky-error-face :background red)
-    '(proof-script-highlight-error-face :background red :weight 'bold :slant 'italic)
+    '(proof-script-sticky-error-face :background red :underline yellow)
+    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                        :weight 'semi-bold :slant 'italic)
     '(proof-highlight-dependent-name-face :foreground magenta)
     '(proof-highlight-dependency-name-face :foreground violet)
-    '(proof-declaration-name-face :foreground blue)
+    '(proof-declaration-name-face :foreground cyan)
     '(proof-tacticals-name-face :foreground green)
-    '(proof-error-face :foreground red)
-    '(proof-warning-face :foreground yellow)
+    '(proof-tactics-name-face :foreground teal)
+    '(proof-error-face :foreground red :weight 'semi-bold)
+    '(proof-warning-face :foreground yellow :weight 'semi-bold)
     '(proof-debug-message-face :foreground orange)
-    '(proof-boring-face :inherit 'default)
-    '(proof-eager-annotation-face :inherit 'proof-warning-face :slant 'italic)
-    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face))
+    '(proof-boring-face :foreground base5)
+    '(proof-eager-annotation-face :inherit 'proof-warning-face :weight 'normal)
+    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
+    '(easycrypt-tactics-closing-face :foreground yellow)
+    '(easycrypt-tactics-dangerous-face :foreground red))
   (enable-theme 'doom-nord))
 
 
 ;; Cross-package enhancements
-;;; Custom functions (with package dependencies)
+;;; Custom functions/functionalities (with package dependencies)
 (require 'func-pkgs)
 
 ;;; Avy + Embark
