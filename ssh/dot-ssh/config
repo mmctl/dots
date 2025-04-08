@@ -1,8 +1,15 @@
 # SSH Configuration (User-specific)
 ## Git-related
-Host github.com *.github.com gitlab.com *.gitlab.com
-    User mmctl
+Host github.com
+    HostName github.com
+    User MM45
     IdentityFile "%d/.ssh/git_ed25519"
+
+Host github-personal
+    HostName github.com
+    User mmctl
+    IdentityFile "%d/.ssh/git_ed25519_personal"
+
 
 ## General
 ## Each of these can be overwritten for specific hosts

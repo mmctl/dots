@@ -1,5 +1,6 @@
-[general]
+#[general]
 import = ["~/.config/alacritty/alacritty-colors-nord.toml"]
+shell = { program = "/usr/bin/zsh" }
 
 
 [env]
@@ -38,7 +39,7 @@ thickness = 0.15
 
 
 [terminal]
-shell = { program = "/usr/bin/zsh" }
+# shell = { program = "/usr/bin/zsh" }
 
 
 [[hints.enabled]]

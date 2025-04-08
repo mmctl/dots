@@ -4,10 +4,6 @@ export TERMCMD='alacritty'
 export BROWSER='firefox'
 export VISUAL='emacsclient -c -s gui --alternate-editor='
 
-## Default locations
-export CUDA_CACHE_PATH="$XDG_CACHE_HOME/nvidia/ComputeCache"
-export __GL_SHADER_DISK_CACHE_PATH="$XDG_CACHE_HOME/nvidia/GLCache"
-
 ## Themes
 export GTK_THEME='Nordic-darker'
 export XCURSOR_THEME='Nordzy-cursors'

@@ -1,6 +1,6 @@
 # Directories
 ## ZSH (OMZ)
-ZSH="/usr/share/oh-my-zsh" ## Oh my Zsh installation
+ZSH="$XDG_CONFIG_HOME/zsh/oh-my-zsh" ## Oh my Zsh installation
 ZSH_CUSTOM="$XDG_DATA_HOME/oh-my-zsh" ## Additional custom folder (on top>
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/oh-my-zsh"
 

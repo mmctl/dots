@@ -17,14 +17,14 @@
   (when (display-graphic-p)
     (cond
      ((member "MonaspiceNe Nerd Font" (font-family-list))
-      (face-remap-add-relative 'default '(:family "MonaspiceNe Nerd Font" :height 120 :weight medium)))
+      (face-remap-add-relative 'default '(:family "MonaspiceNe Nerd Font" :height 110 :weight medium)))
      ((member "Monaspace Neon" (font-family-list))
-      (face-remap-add-relative 'default '(:family "Monaspace Neon" :height 120 :weight medium))))
+      (face-remap-add-relative 'default '(:family "Monaspace Neon" :height 110 :weight medium))))
     (cond
      ((member "MonaspiceRn Nerd Font" (font-family-list))
-      (face-remap-add-relative 'font-lock-comment-face '(:family "MonaspiceRn Nerd Font" :height 120 :weight medium)))
+      (face-remap-add-relative 'font-lock-comment-face '(:family "MonaspiceRn Nerd Font" :height 110 :weight medium)))
      ((member "Monaspice Radon" (font-family-list))
-      (face-remap-add-relative 'font-lock-comment-face '(:family "Monaspace Radon" :height 120 :weight medium)))))
+      (face-remap-add-relative 'font-lock-comment-face '(:family "Monaspace Radon" :height 110 :weight medium)))))
   (setq-local show-trailing-whitespace t)
   (setq-local display-line-numbers-type 'relative)
   (setq-local display-line-numbers-current-absolute nil)
@@ -37,14 +37,14 @@
   (when (display-graphic-p)
     (cond
      ((member "MonaspiceAr Nerd Font" (font-family-list))
-      (face-remap-add-relative 'default '(:family "MonaspiceAr Nerd Font" :height 120 :weight medium)))
+      (face-remap-add-relative 'default '(:family "MonaspiceAr Nerd Font" :height 110 :weight medium)))
      ((member "Monaspice Argon" (font-family-list))
-      (face-remap-add-relative 'default '(:family "Monaspace Argon" :height 120 :weight medium))))
+      (face-remap-add-relative 'default '(:family "Monaspace Argon" :height 110 :weight medium))))
     (cond
      ((member "MonaspiceRn Nerd Font" (font-family-list))
-      (face-remap-add-relative 'font-lock-comment-face '(:family "MonaspiceRn Nerd Font" :height 120 :weight medium)))
+      (face-remap-add-relative 'font-lock-comment-face '(:family "MonaspiceRn Nerd Font" :height 110 :weight medium)))
      ((member "Monaspice Radon" (font-family-list))
-      (face-remap-add-relative 'font-lock-comment-face '(:family "Monaspace Radon" :height 120 :weight medium)))))
+      (face-remap-add-relative 'font-lock-comment-face '(:family "Monaspace Radon" :height 110 :weight medium)))))
   (setq-local show-trailing-whitespace t)
   (setq-local display-line-numbers-type 'relative)
   (setq-local display-line-numbers-current-absolute nil)
@@ -58,14 +58,14 @@
   (when (display-graphic-p)
     (cond
      ((member "MonaspiceAr Nerd Font" (font-family-list))
-      (face-remap-add-relative 'default '(:family "MonaspiceAr Nerd Font" :height 120 :weight medium)))
+      (face-remap-add-relative 'default '(:family "MonaspiceAr Nerd Font" :height 110 :weight medium)))
      ((member "Monaspice Argon" (font-family-list))
-      (face-remap-add-relative 'default '(:family "Monaspace Argon" :height 120 :weight medium))))
+      (face-remap-add-relative 'default '(:family "Monaspace Argon" :height 110 :weight medium))))
     (cond
      ((member "MonaspiceRn Nerd Font" (font-family-list))
-      (face-remap-add-relative 'font-lock-comment-face '(:family "MonaspiceRn Nerd Font" :height 120 :weight medium)))
+      (face-remap-add-relative 'font-lock-comment-face '(:family "MonaspiceRn Nerd Font" :height 110 :weight medium)))
      ((member "Monaspice Radon" (font-family-list))
-      (face-remap-add-relative 'font-lock-comment-face '(:family "Monaspace Radon" :height 120 :weight medium))))))
+      (face-remap-add-relative 'font-lock-comment-face '(:family "Monaspace Radon" :height 110 :weight medium))))))
 
 (provide 'func-modes)
 ;;; func-modes.el ends here

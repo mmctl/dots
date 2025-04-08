@@ -1,11 +1,11 @@
-// Designed for Arch Linux
+// Designed for Ubuntu Mate
 {
     "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
     "logo": {
-        "source": "arch2",
+        "source": "ubuntu-mate",
         "color": {
-            "1": "cyan",
-            "2": "cyan"
+            "1": "yellow",
+            "2": "red"
         }
     },
     "display": {
