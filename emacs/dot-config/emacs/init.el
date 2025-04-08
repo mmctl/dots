@@ -1035,7 +1035,6 @@
   (setopt doom-themes-enable-bold t
           doom-themes-enable-italic t)
   (doom-themes-visual-bell-config)
-
   (doom-themes-set-faces nil
     '(vertico-current :foreground 'unspecified :background 'unspecified
                       :inherit 'highlight)
@@ -1070,7 +1069,7 @@
           doom-nord-comment-bg nil
           doom-nord-padded-modeline nil
           doom-nord-region-highlight 'snowstorm)
-
+  
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(trailing-whitespace :background magenta)

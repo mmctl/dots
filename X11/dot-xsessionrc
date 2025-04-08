@@ -6,9 +6,9 @@ if [ -f "$XDG_CONFIG_HOME/X11/.xprofile" ]; then
 fi
 
 # User-specific X resources
-userresources="$XDG_CONFIG_HOME/X11/.Xresources"
+usrsrcs="$XDG_CONFIG_HOME/X11/.Xresources"
 
 # Merge in user resources
-if [ -f "$userresources" ]; then
-    xrdb -load -I${XDG_CONFIG_HOME}/X11 -merge "$userresources"
+if [ -f "$usrsrcs" ]; then
+    xrdb -merge -I${XDG_CONFIG_HOME}/X11 "$usrsrcs"
 fi

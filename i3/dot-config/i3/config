@@ -183,7 +183,7 @@ bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ to
 ## Applications
 ### Documents
 #### Run Atril
-bindsym $mod+$A+d exec Atril
+bindsym $mod+$A+d exec atril
 
 ### Editors
 #### Run emacsclient (creating a new frame)
@@ -198,7 +198,7 @@ bindsym $mod+$A+m exec thunderbird
 
 ### Terminals (and terminal-based applications)
 #### Run alacritty
-bindsym $mod+$A+t exec alacritty
+bindsym $mod+$A+t exec --no-startup-id alacritty
 
 ### Web (Browsers)
 #### Run firefox

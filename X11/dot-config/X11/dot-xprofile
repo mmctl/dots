@@ -7,4 +7,4 @@ export VISUAL='emacsclient -c -s gui --alternate-editor='
 ## Themes
 export GTK_THEME='Nordic-darker'
 export XCURSOR_THEME='Nordzy-cursors'
-export XCURSOR_SIZE='32'
+export XCURSOR_SIZE='24'
