@@ -1,0 +1,8 @@
+icons_format = "{icon}"
+
+[theme]
+theme = "nord"
+
+
+[icons]
+icons = "material-nf"
