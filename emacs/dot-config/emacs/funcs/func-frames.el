@@ -13,13 +13,14 @@
   ;;;; Faces
   (cond
    ((member "MonaspiceAr Nerd Font" (font-family-list))
-    (set-face-attribute 'default frame :family "MonaspiceAr Nerd Font" :height 120 :weight 'medium)
+    (set-face-attribute 'default frame :family "MonaspiceAr Nerd Font"
+                        :height 120 :weight 'medium)
     (set-face-attribute 'mode-line frame :family "MonaspiceAr Nerd Font")
     (set-face-attribute 'mode-line-active frame :family "MonaspiceAr Nerd Font")
     (set-face-attribute 'mode-line-inactive frame :family "MonaspiceAr Nerd Font")
     (set-face-attribute 'minibuffer-prompt frame :family "MonaspiceAr Nerd Font"))
    ((member "Monaspace Argon" (font-family-list))
-    (set-face-attribute 'default frame :family "Monaspice Argon" :height 120 :weight 'medium)
+    (set-face-attribute 'default frame :family "Monaspace Argon" :height 120 :weight 'medium)
     (set-face-attribute 'mode-line frame :family "Monaspace Argon")
     (set-face-attribute 'mode-line-active frame :family "Monaspace Argon")
     (set-face-attribute 'mode-line-inactive frame :family "Monaspace Argon")
@@ -31,6 +32,13 @@
    ((member "Monaspace Neon" (font-family-list))
     (set-face-attribute 'line-number frame :family "Monaspace Neon")
     (set-face-attribute 'line-number-current-line frame :family "Monaspace Neon")))
+  (cond
+   ((member "MonaspiceKr Nerd Font" (font-family-list))
+    (set-face-attribute 'fixed-pitch frame :family "MonaspiceKr Nerd Font"
+                        :height 110 :weight 'medium))
+   ((member "Monaspace Krypton" (font-family-list))
+    (set-face-attribute 'fixed-pitch frame :family "Monaspace Krypton"
+                        :height 110 :weight 'medium)))
   (setopt display-line-numbers-width 3))
 
 
