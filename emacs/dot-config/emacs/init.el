@@ -228,10 +228,10 @@
 (keymap-set function-key-map "C-M-S-<iso-lefttab>" "C-M-<backtab>")
 
 ;;; Movement
-(keymap-global-set "M-S-h" #'windmove-left)
-(keymap-global-set "M-S-j" #'windmove-down)
-(keymap-global-set "M-S-k" #'windmove-up)
-(keymap-global-set "M-S-l" #'windmove-right)
+(keymap-global-set "M-H" #'windmove-left)
+(keymap-global-set "M-J" #'windmove-down)
+(keymap-global-set "M-K" #'windmove-up)
+(keymap-global-set "M-L" #'windmove-right)
 
 (keymap-global-set "<left>" #'left-char)
 (keymap-global-set "<right>" #'right-char)
@@ -271,7 +271,7 @@
 ;;; Manipulation
 ;;;; Copying
 (keymap-global-set "C-t" #'kill-ring-save)
-(keymap-global-set "C-T" #'clipboard-kill-ring-save)
+(keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
 ;;;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
@@ -556,7 +556,7 @@
   :bind (:map vertico-map
               ("C-o" . vertico-insert)
               ("C-v" . vertico-exit)
-              ("C-M-p" . vertico-exit-input)
+              ("C-M-v" . vertico-exit-input)
               ("TAB" . minibuffer-complete)
               ("<tab>" . minibuffer-complete)
               ("C-?" . minibuffer-completion-help)
