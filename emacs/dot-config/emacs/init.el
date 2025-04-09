@@ -208,6 +208,8 @@
 (setopt hl-line-sticky-flag nil)
 (setopt global-hl-line-sticky-flag nil)
 
+(setopt shift-select-mode t)
+
 ;;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)
 (setopt bidi-paragraph-direction 'left-to-right)
@@ -226,7 +228,10 @@
 (keymap-set function-key-map "C-M-S-<iso-lefttab>" "C-M-<backtab>")
 
 ;;; Movement
-(windmove-default-keybindings 'meta)
+(keymap-global-set "M-H" #'windmove-left)
+(keymap-global-set "M-J" #'windmove-down)
+(keymap-global-set "M-K" #'windmove-up)
+(keymap-global-set "M-L" #'windmove-right)
 
 (keymap-global-set "<left>" #'left-char)
 (keymap-global-set "<right>" #'right-char)
@@ -266,7 +271,7 @@
 ;;; Manipulation
 ;;;; Copying
 (keymap-global-set "C-t" #'kill-ring-save)
-(keymap-global-set "C-T" #'clipboard-kill-ring-save)
+(keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
 ;;;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
@@ -492,6 +497,71 @@
           which-key-paging-key "<f3>")
   (which-key-mode 1))
 
+(use-package easy-kill
+  :ensure t
+  :demand t
+  :bind (("<remap> <kill-ring-save>" . #'easy-kill)
+         ("<remap> <mark-word>" . #'easy-mark)
+         :map easy-kill-base-map
+         ("<remap> <kill-ring-save>" . #'easy-kill-cycle)
+         ("<" . #'easy-kill-shrink)
+         (">" . #'easy-kill-expand)
+         ("a" . #'easy-kill-append)
+         ("k" . #'easy-kill-region)
+         ("r" . #'easy-delete-region)
+         ("q" . #'easy-kill-abort)
+         ("p" . #'easy-kill-exchange-point-and-mark))
+  :config
+  (setopt easy-kill-cycle-ignored '(filename defun-name buffer-file-name))
+  (setopt easy-kill-try-things '(url email line word))
+  (setopt easy-mark-try-things '(url email sexp word)))
+
+(use-package expand-region
+  :ensure t
+  :pin melpa
+  :bind ("C->" . #'er/expand-region)
+  :config
+  (setopt expand-region-fast-keys-enabled t)
+  (setopt expand-region-contract-fast-key "<")
+  (setopt expand-region-reset-fast-key "r"))
+
+(use-package undo-tree
+  :ensure t
+  :demand t
+  :bind (:map undo-tree-visualizer-mode-map
+              ("C-f" . nil)
+              ("C-b" . nil)
+              ("h" . #'undo-tree-visualizer-scroll-left)
+              ("j" . #'undo-tree-visualizer-scroll-down)
+              ("k" . #'undo-tree-visualizer-scroll-up)
+              ("l" . #'undo-tree-visualizer-scroll-right)
+              :map undo-tree-visualizer-selection-mode-map
+              ("C-f" . nil)
+              ("C-b" . nil)
+              ("C-v" . #'undo-tree-visualizer-set))
+  :config
+  ;; Create and store undo history directory
+  (defconst UNDO_DIR (file-name-as-directory
+                      (if (getenv "XDG_DATA_HOME")
+                          (file-name-concat (getenv "XDG_DATA_HOME") "emacs/undos/")
+                        (file-name-concat user-emacs-directory "undos/")))
+    "Directory where (automatically generated) undo (history) files are stored.")
+  (unless (file-directory-p UNDO_DIR)
+    (make-directory UNDO_DIR t))
+  (setopt undo-tree-history-directory-alist `(("." . ,UNDO_DIR)))
+  (setopt undo-tree-auto-save-history t)
+
+  (setopt undo-tree-mode-lighter " UT")
+  (setopt undo-tree-incompatible-major-modes '(term-mode doc-view-mode))
+  (setopt undo-tree-enable-undo-in-region t)
+  (setopt undo-tree-visualizer-diff t)
+
+  (global-undo-tree-mode 1))
+
+(use-package crux
+  :ensure t
+  :pin melpa)
+
 (use-package marginalia
   :ensure t
   :demand t
@@ -551,7 +621,7 @@
   :bind (:map vertico-map
               ("C-o" . vertico-insert)
               ("C-v" . vertico-exit)
-              ("C-M-p" . vertico-exit-input)
+              ("C-M-v" . vertico-exit-input)
               ("TAB" . minibuffer-complete)
               ("<tab>" . minibuffer-complete)
               ("C-?" . minibuffer-completion-help)
@@ -717,7 +787,7 @@
   ;; Create and store templates directory
   (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/")))
   (unless (file-directory-p TEMPEL_DIR)
-    (make-directory TEMPEL_DIR))
+    (make-directory TEMPEL_DIR t))
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
   (global-tempel-abbrev-mode 1))
 
@@ -850,6 +920,13 @@
   :after consult)
 
 ;;; Tools
+(use-package projectile
+  :ensure t)
+
+(use-package diff-hl
+  :ensure t
+  :pin melpa)
+
 (use-package magit
   :ensure t
   :init
@@ -956,14 +1033,35 @@
   (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode))
 
 (use-package org
-  :ensure t)
+  :ensure t
+  :init
+  (setopt org-replace-disputed-keys t)
+  (setopt org-return-follows-link t)
+  :hook (org-mode . setup-a-mix-mode)
+  :bind (:map org-mode-map
+              ("C-j" . nil)
+              ("S-RET" . #'org-return-and-maybe-indent)
+              :map org-read-date-minibuffer-local-map
+              ("C-v" . nil)
+              ("C-<" . #'org-calendar-scroll-three-months-left)
+              ("C->" . #'org-calendar-scroll-three-months-right))
+  :config
+  ;; Create and store templates directory
+  (defconst ORG_DIR (file-name-as-directory
+                     (if (getenv "XDG_DATA_HOME")
+                         (file-name-concat (getenv "XDG_DATA_HOME") "org/")
+                       "~/org/"))
+    "Directory used as default location for org files.")
+  (unless (file-directory-p ORG_DIR)
+    (make-directory ORG_DIR t))
+  (setopt org-default-notes-file (file-name-concat ORG_DIR ".notes"))
+  (setopt org-support-shift-select t))
+
 
 ;;;; Note, proof-general itself might never actually be loaded
-;;;; because individual proof assistants load only trigger their own mode
-;;;; and might only load proof.el or proof-site.el instead of proof-general.el
-;;;; As such, we cannot conveniently make use of/rely on any autoloading facilities
-;;;; provided by use-package and put (almost) all necessary config in :init directly
-;;;; (Unless perhaps something like `use-package proof` using `:ensure proof-general`?)
+;;;; because individual proof assistants only trigger their own mode
+;;;; and might only load proof.el or proof-site.el instead of proof-general.e
+;;;; As such, we simply put (almost) all necessary config in :init directly
 (use-package proof-general
   :ensure t
   :pin melpa
@@ -1069,7 +1167,7 @@
           doom-nord-comment-bg nil
           doom-nord-padded-modeline nil
           doom-nord-region-highlight 'snowstorm)
-  
+
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(trailing-whitespace :background magenta)

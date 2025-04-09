@@ -10,5 +10,5 @@ usrsrcs="$XDG_CONFIG_HOME/X11/.Xresources"
 
 # Merge in user resources
 if [ -f "$usrsrcs" ]; then
-    xrdb -merge -I${XDG_CONFIG_HOME}/X11 "$usrsrcs"
+    xrdb -load -I${XDG_CONFIG_HOME}/X11 "$usrsrcs"
 fi
