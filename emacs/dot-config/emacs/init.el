@@ -53,25 +53,25 @@
 ;; Bootstrap
 ;;; Directories
 (unless (file-directory-p THEMES_DIR)
-  (make-directory THEMES_DIR))
+  (make-directory THEMES_DIR t))
 
 (unless (file-directory-p FUNCS_DIR)
-  (make-directory FUNCS_DIR))
+  (make-directory FUNCS_DIR t))
 
 (unless (file-directory-p TEMPLATES_DIR)
-  (make-directory TEMPLATES_DIR))
+  (make-directory TEMPLATES_DIR t))
 
 (unless (file-directory-p MISC_DIR)
-  (make-directory MISC_DIR))
+  (make-directory MISC_DIR t))
 
 (unless (file-directory-p BACKUPS_DIR)
-  (make-directory BACKUPS_DIR))
+  (make-directory BACKUPS_DIR t))
 
 (unless (file-directory-p AUTOSAVES_DIR)
-  (make-directory AUTOSAVES_DIR))
+  (make-directory AUTOSAVES_DIR t))
 
 (unless (file-directory-p LOCKS_DIR)
-  (make-directory LOCKS_DIR))
+  (make-directory LOCKS_DIR t))
 
 ;;; Custom file
 (unless (file-exists-p CUSTOM_FILE)

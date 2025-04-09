@@ -34,6 +34,31 @@ set $wssocial " Social"
 set $wsterm " Term"
 set $wsweb " Web"
 
+## Programs (launch commands)
+### Documents
+#### Default reader
+set $execread exec zathura
+
+### Editing
+#### Default editor
+set $execedit exec --no-startup-id emacsclient -c -s 'gui' -n --alternate-editor=
+
+### Files
+#### Default file manager
+set $execfm exec "alacritty --class FileManager,Yazi -e yazi"
+
+### Social
+#### Default mail client
+set $execmail exec thunderbird
+
+### Terminal
+#### Default terminal
+set $execterm exec alacritty
+
+### Web
+#### Default browser
+set $execbrow exec firefox
+
 
 # Global settings
 ## Default orientation is automatically determined
@@ -201,35 +226,35 @@ bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ to
 
 ## Applications
 ### Documents
-#### Run zathura
-bindsym $mod+$A+d exec zathura
+#### Run default reader
+bindsym $mod+$A+d $execread
 
-### Editors
-#### Run emacsclient (creating a new frame)
-bindsym $mod+$A+e exec --no-startup-id emacsclient -c -s 'gui' -n --alternate-editor=
+### Editing
+#### Run default editor
+bindsym $mod+$A+e $execedit
+
+### Files
+#### Run default file manager
+bindsym $mod+$A+f $execfm
 
 ### Socials
 #### Run Thunderbird
-bindsym $mod+$A+m exec thunderbird
+bindsym $mod+$A+m $execmail
 
-### Terminals (and terminal-based applications)
-#### Run alacritty
-bindsym $mod+$A+t exec alacritty
-#### Run yazi in alacritty
-bindsym $mod+$A+f exec "alacritty --class FileManager,Yazi -e yazi"
+### Terminals
+#### Run default terminal
+bindsym $mod+$A+t $execterm
 
 ### Web (Browsers)
-#### Run firefox
-bindsym $mod+$A+b exec firefox
+#### Run default browser
+bindsym $mod+$A+b $execbrow
 
-### Launchers
-#### Run rofi
+### Miscellaneous
+#### Run default launcher (rofi)
 bindsym --release $mod+space exec --no-startup-id rofi -modes combi -combi-modes 'window#drun#run#ssh' -show combi
 
-### Password Managers
-#### Run rofi-rbw
+#### Run default password vault (rofi-rbw; bitwarden)
 bindsym --release $mod+$A+v exec --no-startup-id rofi-rbw
-
 
 
 ## Focus
@@ -349,6 +374,7 @@ bar {
            urgent_workspace #ebcb8b #bf616a #eceff4
     }
 }
+
 
 # Automatic assignments
 ## Workspaces to outputs
