@@ -260,8 +260,11 @@
 (keymap-global-set "C-b" #'switch-to-prev-buffer)
 (keymap-global-set "C-f" #'switch-to-next-buffer)
 
-(keymap-global-set "C-p" #'backward-sentence)
-(keymap-global-set "C-n" #'forward-sentence)
+(keymap-global-set "C-p" #'backward-sexp)
+(keymap-global-set "C-n" #'forward-sexp)
+
+(keymap-global-set "C-M-p" #'backward-sentence)
+(keymap-global-set "C-M-n" #'forward-sentence)
 
 (keymap-global-set "C-w" #'other-window)
 
@@ -283,8 +286,11 @@
 (keymap-global-set "M-b" #'backward-kill-sexp)
 (keymap-global-set "M-f" #'kill-sexp)
 
-(keymap-global-set "M-p" #'backward-kill-sentence)
-(keymap-global-set "M-n" #'kill-sentence)
+(keymap-global-set "M-p" #'backward-kill-sexp)
+(keymap-global-set "M-n" #'kill-sexp)
+
+(keymap-global-set "C-M-p" #'backward-kill-sentence)
+(keymap-global-set "C-M-n" #'kill-sentence)
 
 (keymap-global-set "M-t" #'kill-region)
 (keymap-global-set "M-T" #'clipboard-kill-region)
@@ -326,8 +332,8 @@
   "W" #'delete-other-windows
   "C-w" #'delete-windows-on
   "b" #'kill-current-buffer
-  "B" #'kill-buffer
-  "C-b" #'kill-some-buffers)
+  "B" #'kill-some-buffers
+  "C-b" #'kill-buffer)
 
 (keymap-global-set "C-x k" 'a-kill-map-prefix)
 
@@ -352,7 +358,7 @@
   :prefix 'a-window-map-prefix
   "k" #'delete-window
   "K" #'delete-other-windows
-  "C-q" #'delete-windows-on
+  "C-k" #'delete-windows-on
   "s" #'split-window-horizontally
   "S" #'split-window-vertically
   "f" #'fit-window-to-buffer
@@ -370,8 +376,8 @@
   :doc "Keymap for buffer management"
   :prefix 'a-buffer-map-prefix
   "k" #'kill-current-buffer
-  "K" #'kill-buffer
-  "C-q" #'kill-some-buffers
+  "K" #'kill-some-buffers
+  "C-k" #'kill-buffer
   "s" #'save-buffer
   "S" #'save-some-buffers
   "g" #'switch-to-buffer
@@ -512,9 +518,17 @@
          ("q" . #'easy-kill-abort)
          ("p" . #'easy-kill-exchange-point-and-mark))
   :config
+  (setopt easy-kill-alist '((?w word           " ")
+                            (?s sexp           "\n")
+                            (?h list           "\n")
+                            (?f filename       "\n")
+                            (?d defun          "\n\n")
+                            (?D defun-name     " ")
+                            (?l line           "\n")
+                            (?b buffer-file-name)))
   (setopt easy-kill-cycle-ignored '(filename defun-name buffer-file-name))
-  (setopt easy-kill-try-things '(url email line word))
-  (setopt easy-mark-try-things '(url email sexp word)))
+  (setopt easy-kill-try-things '(url email word line))
+  (setopt easy-mark-try-things '(url email word sexp)))
 
 (use-package expand-region
   :ensure t
@@ -528,7 +542,9 @@
 (use-package undo-tree
   :ensure t
   :demand t
-  :bind (:map undo-tree-visualizer-mode-map
+  :bind (:map undo-tree-map
+              ("<remap> <undo-redo>" . undo-tree-redo)
+              :map undo-tree-visualizer-mode-map
               ("C-f" . nil)
               ("C-b" . nil)
               ("h" . #'undo-tree-visualizer-scroll-left)
@@ -557,10 +573,6 @@
   (setopt undo-tree-visualizer-diff t)
 
   (global-undo-tree-mode 1))
-
-(use-package crux
-  :ensure t
-  :pin melpa)
 
 (use-package marginalia
   :ensure t
@@ -748,7 +760,7 @@
   ;; Local
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
   (add-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
-  (add-hook 'latex-mode-hook #'setup-a-cape-mix-mode)
+  (add-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
   (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
@@ -792,6 +804,65 @@
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
+(use-package crux
+  :ensure t
+  :demand t
+  :pin melpa
+  :bind (("<remap> <kill-line>" . crux-smart-kill-line)
+         ("<remap> <kill-whole-line>" . crux-kill-whole-line)
+         ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
+         ("M-a" . crux-kill-line-backwards)
+         :map a-kill-map
+         ("B" . crux-kill-other-buffers)
+         :map a-buffer-map
+         ("c" . crux-create-scratch-buffer)
+         ("d" . crux-kill-buffer-truename)
+         ("K" . crux-kill-other-buffers)
+         ("p" . crux-switch-to-previous-buffer)
+         :map a-window-map
+         ("e" . crux-transpose-windows))
+  :config
+  (defvar-keymap a-crux-map
+    :doc "Keymap for crux actions"
+    :prefix 'a-crux-map-prefix
+    "RET" #'crux-smart-open-line
+    "<return>" #'crux-smart-open-line
+    "S-RET" #'crux-smart-open-line-above
+    "S-<return>" #'crux-smart-open-line-above
+    "c" #'crux-copy-file-preserve-attributes
+    "C" #'crux-cleanup-buffer-or-region
+    "d" #'crux-duplicate-current-line-or-region
+    "D" #'crux-duplicate-and-comment-current-line-or-region
+    "e" #'crux-eval-and-replace
+    "f f" #'crux-recentf-find-file
+    "f d" #'crux-recentf-find-directory
+    "f i" #'crux-find-user-init-file
+    "f c" #'crux-find-user-custom-file
+    "f s" #'crux-find-shell-init-file
+    "f l" #'crux-find-current-directory-dir-locals-file
+    "F" #'crux-recentf-find-directory
+    "k" #'crux-delete-file-and-buffer
+    "i" #'crux-indent-rigidly-and-copy-to-clipboard
+    "j" #'crux-top-join-line
+    "J" #'crux-kill-and-join-forward
+    "r" #'crux-rename-file-and-buffer
+    "s" #'crux-sudo-edit
+    "u" #'crux-view-url
+    "x" #'crux-visit-term-buffer
+    "X" #'crux-visit-shell-buffer
+    "C-u" #'crux-upcase-region
+    "C-l" #'crux-downcase-region
+    "C-c" #'crux-captialize-region)
+  (keymap-global-set "C-c x" 'a-crux-map-prefix)
+
+  (crux-reopen-as-root-mode 1))
+
+(use-package ace-window
+  :ensure t
+  :bind (("<remap> <other-window>" . ace-winow)
+         ("C-w" . ace-window))
+  :config)
+
 (use-package avy
   :ensure t
   :pin melpa
@@ -972,6 +1043,12 @@
   (Tex-language-en . (lambda () (jinx-languages "en_US")))
   (Tex-language-nl . (lambda () (jinx-languages "nl")))
   :config
+  (setopt TeX-view-program-selection
+          '(((output-dvi has-no-display-manager) "dvi2tty")
+            ((output-dvi style-pstricks) "dvips and gv")
+            (output-dvi "xdvi")
+            (output-pdf "PDF Tools")
+            (output-html "xdg-open")))
   (setopt TeX-file-line-error t
           TeX-display-help t
           TeX-PDF-mode t
@@ -1224,6 +1301,7 @@
 
 (add-hook 'log-edit-mode-hook #'setup-a-mix-mode)
 (add-hook 'tex-mode-hook #'setup-a-mix-mode)
+(add-hook 'TeX-mode-hook #'setup-a-mix-mode)
 (add-hook 'conf-mode-hook #'setup-a-mix-mode)
 
 (add-hook 'prog-mode-hook #'setup-a-code-mode)

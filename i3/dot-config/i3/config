@@ -54,13 +54,13 @@ default_floating_border pixel 2
 ## Hide borders of a window against edges of screen, if it is the only window in workspace
 hide_edge_borders smart_no_gaps
 
-## Mousing over a window focusses it
+## Mousing over a window focuses it
 focus_follows_mouse yes
 
 ## When in fullscreen, only show popups of fullscreen application
 popup_during_fullscreen smart
 
-## Switches focusses window moves mouse to center of that window
+## Focusing window moves mouse to center of that window
 mouse_warping output
 
 ## Focus wraps around inside container when no other containers/windows

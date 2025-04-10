@@ -3,10 +3,6 @@
 export LANG='en_US.UTF-8'
 
 
-## Path
-export PATH="$HOME/.local/bin:$PATH"
-
-
 ## Default locations (config, cache, etc.)
 ### XDG
 export XDG_CACHE_HOME="$HOME/.cache"
@@ -53,6 +49,14 @@ export ALTERNATE_EDITOR='' # This will spawn an emacs daemon upon running emacsc
 ## Options
 export LESS='-g -i -J -N -Q -R -W --incsearch --tabs=4 --line-num-width=5 --mouse --use-color --wheel-lines=3'
 export LESSUTFCHARDEF='E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p'
+
+
+## Paths
+### Executables
+export PATH="$HOME/.local/bin:$XDG_DATA_HOME/texlive/2025/bin/x86_64-linux:$PATH"
+
+### Manuals
+export MANPATH=":$XDG_DATA_HOME/texlive/2025/texmf-dist/doc/man"
 
 
 ## Miscellaneous
