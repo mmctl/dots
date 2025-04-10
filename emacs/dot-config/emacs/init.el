@@ -21,9 +21,9 @@
   "Directory where (custom) templates are defined")
 
 (defconst MISC_DIR (file-name-as-directory
-                      (if (getenv "XDG_CONFIG_HOME")
-                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/misc/")
-                        (file-name-concat user-emacs-directory "misc/")))
+                    (if (getenv "XDG_CONFIG_HOME")
+                        (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/misc/")
+                      (file-name-concat user-emacs-directory "misc/")))
   "Directory where (custom) miscellaneous data/settings are stored.")
 
 (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
@@ -260,8 +260,11 @@
 (keymap-global-set "C-b" #'switch-to-prev-buffer)
 (keymap-global-set "C-f" #'switch-to-next-buffer)
 
-(keymap-global-set "C-p" #'backward-sentence)
-(keymap-global-set "C-n" #'forward-sentence)
+(keymap-global-set "C-p" #'backward-sexp)
+(keymap-global-set "C-n" #'forward-sexp)
+
+(keymap-global-set "C-S-p" #'backward-sentence)
+(keymap-global-set "C-S-n" #'forward-sentence)
 
 (keymap-global-set "C-w" #'other-window)
 
@@ -280,11 +283,14 @@
 (keymap-global-set "M-e" #'kill-line)
 (keymap-global-set "M-l" #'kill-whole-line)
 
-(keymap-global-set "M-b" #'backward-kill-sexp)
-(keymap-global-set "M-f" #'kill-sexp)
+(keymap-global-set "M-b" #'backward-kill-sentence)
+(keymap-global-set "M-f" #'kill-sentence)
 
-(keymap-global-set "M-p" #'backward-kill-sentence)
-(keymap-global-set "M-n" #'kill-sentence)
+(keymap-global-set "M-p" #'backward-kill-sexp)
+(keymap-global-set "M-n" #'kill-sexp)
+
+(keymap-global-set "M-P" #'backward-kill-sentence)
+(keymap-global-set "M-N" #'kill-sentence)
 
 (keymap-global-set "M-t" #'kill-region)
 (keymap-global-set "M-T" #'clipboard-kill-region)
@@ -298,7 +304,7 @@
 (keymap-global-set "C-M-y" #'yank-pop)
 
 ;;;; Deleting
-(keymap-global-set "M-d" #'delete-region)
+(keymap-global-set "M-D" #'delete-region)
 
 ;;; Management
 ;;;; Quitting
@@ -326,8 +332,8 @@
   "W" #'delete-other-windows
   "C-w" #'delete-windows-on
   "b" #'kill-current-buffer
-  "B" #'kill-buffer
-  "C-b" #'kill-some-buffers)
+  "B" #'kill-some-buffers
+  "C-b" #'kill-buffer)
 
 (keymap-global-set "C-x k" 'a-kill-map-prefix)
 
@@ -350,9 +356,14 @@
 (defvar-keymap a-window-map
   :doc "Keymap for window management"
   :prefix 'a-window-map-prefix
+  "-" #'shrink-window
+  "+" #'enlarge-window
+  ">" #'shrink-window-horizontally
+  "<" #'enlarge-window-horizontally
+  "b" #'balance-windows
   "k" #'delete-window
   "K" #'delete-other-windows
-  "C-q" #'delete-windows-on
+  "C-k" #'delete-windows-on
   "s" #'split-window-horizontally
   "S" #'split-window-vertically
   "f" #'fit-window-to-buffer
@@ -370,13 +381,14 @@
   :doc "Keymap for buffer management"
   :prefix 'a-buffer-map-prefix
   "k" #'kill-current-buffer
-  "K" #'kill-buffer
-  "C-q" #'kill-some-buffers
+  "K" #'kill-some-buffers
+  "C-k" #'kill-buffer
   "s" #'save-buffer
   "S" #'save-some-buffers
+  "m" #'switch-to-minibuffer
   "g" #'switch-to-buffer
   "G" #'switch-to-buffer-other-window
-  "M-g" #'switch-to-minibuffer)
+  "M-g" #'switch-to-buffer-other-frame)
 
 (keymap-global-set "C-x b" 'a-buffer-map-prefix)
 
@@ -390,6 +402,7 @@
   :prefix 'a-goto-map-prefix
   "b" #'switch-to-buffer
   "B" #'switch-to-buffer-other-window
+  "C-b" #'switch-to-buffer-other-frame
   "c" #'goto-char
   "f" #'other-frame
   "l" #'goto-line
@@ -407,6 +420,8 @@
   :doc "Keymap for searching"
   :prefix 'a-search-map-prefix
   "f" #'find-file
+  "F" #'find-file-other-window
+  "C-f" #'find-file-other-frame
   "r" #'recentf-open
   "R" #'find-file-read-only
   "i b" #'isearch-backward
@@ -496,6 +511,77 @@
           which-key-paging-prefixes '("C-x")
           which-key-paging-key "<f3>")
   (which-key-mode 1))
+
+(use-package easy-kill
+  :ensure t
+  :demand t
+  :bind (("<remap> <kill-ring-save>" . #'easy-kill)
+         ("<remap> <mark-word>" . #'easy-mark)
+         :map easy-kill-base-map
+         ("<remap> <kill-ring-save>" . #'easy-kill-cycle)
+         ("<" . #'easy-kill-shrink)
+         (">" . #'easy-kill-expand)
+         ("a" . #'easy-kill-append)
+         ("k" . #'easy-kill-region)
+         ("r" . #'easy-delete-region)
+         ("q" . #'easy-kill-abort)
+         ("p" . #'easy-kill-exchange-point-and-mark))
+  :config
+  (setopt easy-kill-alist '((?w word           " ")
+                            (?s sexp           "\n")
+                            (?h list           "\n")
+                            (?f filename       "\n")
+                            (?d defun          "\n\n")
+                            (?D defun-name     " ")
+                            (?l line           "\n")
+                            (?b buffer-file-name)))
+  (setopt easy-kill-cycle-ignored '(filename defun-name buffer-file-name))
+  (setopt easy-kill-try-things '(url email word line))
+  (setopt easy-mark-try-things '(url email word sexp)))
+
+(use-package expand-region
+  :ensure t
+  :pin melpa
+  :bind ("C->" . #'er/expand-region)
+  :config
+  (setopt expand-region-fast-keys-enabled t)
+  (setopt expand-region-contract-fast-key "<")
+  (setopt expand-region-reset-fast-key "r"))
+
+(use-package undo-tree
+  :ensure t
+  :demand t
+  :bind (:map undo-tree-map
+              ("<remap> <undo-redo>" . undo-tree-redo)
+              :map undo-tree-visualizer-mode-map
+              ("C-f" . nil)
+              ("C-b" . nil)
+              ("h" . #'undo-tree-visualizer-scroll-left)
+              ("j" . #'undo-tree-visualizer-scroll-down)
+              ("k" . #'undo-tree-visualizer-scroll-up)
+              ("l" . #'undo-tree-visualizer-scroll-right)
+              :map undo-tree-visualizer-selection-mode-map
+              ("C-f" . nil)
+              ("C-b" . nil)
+              ("C-v" . #'undo-tree-visualizer-set))
+  :config
+  ;; Create and store undo history directory
+  (defconst UNDO_DIR (file-name-as-directory
+                      (if (getenv "XDG_DATA_HOME")
+                          (file-name-concat (getenv "XDG_DATA_HOME") "emacs/undos/")
+                        (file-name-concat user-emacs-directory "undos/")))
+    "Directory where (automatically generated) undo (history) files are stored.")
+  (unless (file-directory-p UNDO_DIR)
+    (make-directory UNDO_DIR t))
+  (setopt undo-tree-history-directory-alist `(("." . ,UNDO_DIR)))
+  (setopt undo-tree-auto-save-history t)
+
+  (setopt undo-tree-mode-lighter " UT")
+  (setopt undo-tree-incompatible-major-modes '(term-mode doc-view-mode))
+  (setopt undo-tree-enable-undo-in-region t)
+  (setopt undo-tree-visualizer-diff t)
+
+  (global-undo-tree-mode 1))
 
 (use-package marginalia
   :ensure t
@@ -683,7 +769,7 @@
   ;; Local
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
   (add-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
-  (add-hook 'latex-mode-hook #'setup-a-cape-mix-mode)
+  (add-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
   (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
@@ -728,6 +814,73 @@
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
+(use-package crux
+  :ensure t
+  :demand t
+  :pin melpa
+  :bind (("<remap> <kill-line>" . crux-smart-kill-line)
+         ("<remap> <kill-whole-line>" . crux-kill-whole-line)
+         ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
+         ("M-a" . crux-kill-line-backwards)
+         ("M-d" . crux-duplicate-current-line-or-region)
+         :map a-kill-map
+         ("B" . crux-kill-other-buffers)
+         :map a-buffer-map
+         ("c" . crux-create-scratch-buffer)
+         ("d" . crux-kill-buffer-truename)
+         ("K" . crux-kill-other-buffers)
+         ("p" . crux-switch-to-previous-buffer)
+         :map a-window-map
+         ("e" . crux-transpose-windows))
+  :config
+  (defvar-keymap a-crux-map
+    :doc "Keymap for crux actions"
+    :prefix 'a-crux-map-prefix
+    "RET" #'crux-smart-open-line
+    "<return>" #'crux-smart-open-line
+    "S-RET" #'crux-smart-open-line-above
+    "S-<return>" #'crux-smart-open-line-above
+    "c" #'crux-copy-file-preserve-attributes
+    "C" #'crux-cleanup-buffer-or-region
+    "d" #'crux-duplicate-current-line-or-region
+    "D" #'crux-duplicate-and-comment-current-line-or-region
+    "e" #'crux-eval-and-replace
+    "f f" #'crux-recentf-find-file
+    "f d" #'crux-recentf-find-directory
+    "f i" #'crux-find-user-init-file
+    "f c" #'crux-find-user-custom-file
+    "f s" #'crux-find-shell-init-file
+    "f l" #'crux-find-current-directory-dir-locals-file
+    "F" #'crux-recentf-find-directory
+    "k" #'crux-delete-file-and-buffer
+    "i" #'crux-indent-rigidly-and-copy-to-clipboard
+    "j" #'crux-top-join-line
+    "J" #'crux-kill-and-join-forward
+    "r" #'crux-rename-file-and-buffer
+    "s" #'crux-sudo-edit
+    "u" #'crux-view-url
+    "x" #'crux-visit-term-buffer
+    "X" #'crux-visit-shell-buffer
+    "C-u" #'crux-upcase-region
+    "C-l" #'crux-downcase-region
+    "C-c" #'crux-captialize-region)
+  (keymap-global-set "C-c x" 'a-crux-map-prefix)
+
+  (crux-reopen-as-root-mode 1))
+
+(use-package ace-window
+  :ensure t
+  :bind (("<remap> <other-window>" . ace-window)
+         ("C-w" . ace-window)
+         :map a-goto-map
+         ("W" . ace-window))
+  :config
+  (setopt aw-keys '(?a ?s ?d ?f ?h ?j ?k ?l))
+  (setopt aw-scope 'visible
+          aw-minibuffer-flag t
+          aw-ignore-current nil
+          aw-background t))
+
 (use-package avy
   :ensure t
   :pin melpa
@@ -775,15 +928,17 @@
          :map a-buffer-map
          ("g" . consult-buffer)
          ("G" . consult-buffer-other-window)
+         ("M-g" . consult-buffer-other-frame)
          :map a-goto-map
          ("b" . consult-buffer)
          ("B" . consult-buffer-other-window)
+         ("C-b" . consult-buffer-other-frame)
          ("e" . consult-compile-error)
          ("d" . consult-flymake)
          ("l" . consult-goto-line)
          ("o" . consult-outline)
          ("m" . consult-mark)
-         ("k" . consult-global-mark)
+         ("M" . consult-global-mark)
          ("i" . consult-imenu)
          ("I" . consult-imenu-multi)
          :map a-search-map
@@ -834,10 +989,21 @@
          :map embark-general-map
          ("t" . embark-copy-as-kill)
          ("C-o" . embark-select)
+         :map embark-file-map
+         ("F" . find-file-other-window)
+         ("C-f" . find-file-other-frame)
+         ("l" . find-file-literally)
+         :map embark-library-map
+         ("F" . find-library-other-window)
+         ("C-f" . find-library-other-frame)
          :map embark-buffer-map
          ("g" . switch-to-buffer)
+         ("G" . switch-to-buffer-other-window)
+         ("M-g" . switch-to-buffer-other-frame)
          :map embark-identifier-map
          ("f" . xref-find-definitions)
+         ("F" . xref-find-definitions-other-window)
+         ("C-f" . xref-find-definitions-other-frame)
          :map embark-symbol-map
          ("f" . embark-find-definition)
          :map embark-package-map
@@ -856,6 +1022,13 @@
   :after consult)
 
 ;;; Tools
+(use-package projectile
+  :ensure t)
+
+(use-package diff-hl
+  :ensure t
+  :pin melpa)
+
 (use-package magit
   :ensure t
   :init
@@ -901,6 +1074,12 @@
   (Tex-language-en . (lambda () (jinx-languages "en_US")))
   (Tex-language-nl . (lambda () (jinx-languages "nl")))
   :config
+  (setopt TeX-view-program-selection
+          '(((output-dvi has-no-display-manager) "dvi2tty")
+            ((output-dvi style-pstricks) "dvips and gv")
+            (output-dvi "xdvi")
+            (output-pdf "PDF Tools")
+            (output-html "xdg-open")))
   (setopt TeX-file-line-error t
           TeX-display-help t
           TeX-PDF-mode t
@@ -977,9 +1156,9 @@
   :config
   ;; Create and store templates directory
   (defconst ORG_DIR (file-name-as-directory
-                         (if (getenv "XDG_DATA_HOME")
-                             (file-name-concat (getenv "XDG_DATA_HOME") "org/")
-                           "~/org/"))
+                     (if (getenv "XDG_DATA_HOME")
+                         (file-name-concat (getenv "XDG_DATA_HOME") "org/")
+                       "~/org/"))
     "Directory used as default location for org files.")
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
@@ -1066,7 +1245,7 @@
     '(vertico-current :foreground 'unspecified :background 'unspecified
                       :inherit 'highlight)
     '(vertico-mouse :foreground 'unspecified :background 'unspecified
-                      :inherit 'lazy-highlight)
+                    :inherit 'lazy-highlight)
     '(corfu-border :foreground 'unspecified :background 'unspecified
                    :inherit 'vertical-border)
     '(corfu-bar :foreground 'unspecified :background 'unspecified
@@ -1100,6 +1279,8 @@
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(trailing-whitespace :background magenta)
+    '(aw-background-face :inherit 'avy-background-face)
+    '(aw-leading-char-face :inherit 'avy-lead-face)
     '(proof-queue-face :background magenta)
     '(proof-locked-face :background base4)
     '(proof-script-sticky-error-face :background red :underline yellow)
@@ -1153,6 +1334,7 @@
 
 (add-hook 'log-edit-mode-hook #'setup-a-mix-mode)
 (add-hook 'tex-mode-hook #'setup-a-mix-mode)
+(add-hook 'TeX-mode-hook #'setup-a-mix-mode)
 (add-hook 'conf-mode-hook #'setup-a-mix-mode)
 
 (add-hook 'prog-mode-hook #'setup-a-code-mode)
