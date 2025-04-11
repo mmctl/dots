@@ -19,7 +19,8 @@
           (visibility . t)
           (auto-raise . t)
           (auto-lower . nil)
-          (left-fringe . 0)
+          (left-fringe . 8)
+          (right-fringe . 8)
           (left-divider-width . 3)
           (right-divider-width . 3)
           (cursor-type . bar)
@@ -27,6 +28,5 @@
           (alpha . 0.9)))
 
 ;; Garbage collection
-(setopt gc-cons-threshold 33554432 ; 32 MB
+(setopt gc-cons-threshold 33554432
         gc-cons-percentage 0.15)
-
