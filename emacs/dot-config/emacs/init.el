@@ -1040,6 +1040,7 @@
 ;;; Tools
 (use-package projectile
   :ensure t
+  :demand t
   :init
   (setopt projectile-mode-line-prefix " Ptile"
           projective-keymap-prefix "C-c p")
