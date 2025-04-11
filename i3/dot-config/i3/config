@@ -190,7 +190,7 @@ bindsym $mod+$A+d exec atril
 bindsym $mod+$A+e exec --no-startup-id emacsclient -c -s 'gui' -n --alternate-editor=
 
 ### Files
-bindsym $mod+$A+f exec caja "$HOME"
+bindsym $mod+$A+f exec --no-startup-id "alacritty --class FileManager,Yazi -e yazi"
 
 ### Socials
 #### Run Thunderbird
@@ -353,6 +353,9 @@ for_window [class="(?i)Emacs"] focus
 ## Files
 assign [class="(?i)Caja"] $wsfiles
 for_window [class="(?i)Caja"] focus
+
+assign [class="(?i)FileManager"] $wsfiles
+for_window [class="(?i)FileManager"] focus
 
 ## Socials
 assign [class="(?i)Thunderbird"] $wssocial

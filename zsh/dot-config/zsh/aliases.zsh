@@ -1,5 +1,5 @@
 # LS
-alias ls='ls --color=tty' 
+alias ls='ls --color=tty'
 
 # Yazi
 alias y='yazi'

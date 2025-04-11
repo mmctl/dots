@@ -849,7 +849,7 @@
     "f c" #'crux-find-user-custom-file
     "f s" #'crux-find-shell-init-file
     "f l" #'crux-find-current-directory-dir-locals-file
-    "F" #'crux-recentf-find-directory
+    "F" #'crux-recentf-find-file
     "k" #'crux-delete-file-and-buffer
     "i" #'crux-indent-rigidly-and-copy-to-clipboard
     "j" #'crux-top-join-line
@@ -862,9 +862,7 @@
     "C-u" #'crux-upcase-region
     "C-l" #'crux-downcase-region
     "C-c" #'crux-captialize-region)
-  (keymap-global-set "C-c x" 'a-crux-map-prefix)
-
-  (crux-reopen-as-root-mode 1))
+  (keymap-global-set "C-c x" 'a-crux-map-prefix))
 
 (use-package ace-window
   :ensure t
@@ -873,16 +871,16 @@
          :map a-goto-map
          ("W" . ace-window))
   :config
-  (setopt aw-keys '(?a ?s ?d ?f ?h ?j ?k ?l))
+  (setopt aw-keys '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
   (setopt aw-scope 'visible
           aw-minibuffer-flag nil
           aw-ignore-current nil
           aw-background t
           aw-dispatch-always t)
   (setq-default aw-dispatch-alist
-                '((?q aw-delete-window "Delete window")
-                  (?Q delete-other-windows "Delete other windows")
-                  (?e aw-swap-window "Swap buffers between windows")
+                '((?k aw-delete-window "Kill window")
+                  (?K delete-other-windows "Kill other windows")
+                  (?s aw-swap-window "Swap buffers between windows")
                   (?m aw-move-window "Move current buffer to window")
                   (?y aw-copy-window "Copy current buffer to window")
                   (?g aw-switch-buffer-in-window "Select buffer in window")
@@ -1054,7 +1052,7 @@
           projectile-sort-order 'recently-active
           projectile-dirconfig-comment-prefix ?\#
           projectile-find-dir-includes-top-level t
-          projectile-enable-idle-timer t
+          projectile-enable-idle-timer nil
           projectile-current-project-on-switch 'move-to-end)
   (projectile-mode 1))
 
