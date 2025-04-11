@@ -2,51 +2,48 @@
 ;; init.el
 ;; Environment
 ;;; Config
-(defconst THEMES_DIR (file-name-as-directory
+(defconst EMACS_CONFIG_DIR (file-name-as-directory
                       (if (getenv "XDG_CONFIG_HOME")
-                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/themes/")
-                        (file-name-concat user-emacs-directory "themes/")))
+                                (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
+                              user-emacs-directory))
+  "Directory where Emacs configuration is stored.")
+
+(defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
   "Directory where (custom) themes are stored.")
 
-(defconst FUNCS_DIR (file-name-as-directory
-                     (if (getenv "XDG_CONFIG_HOME")
-                         (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/funcs/")
-                       (file-name-concat user-emacs-directory "funcs/")))
-  "Directory where (custom) functions/functionalities are defined")
+(defconst FUNCS_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "funcs/"))
+  "Directory where (custom) functions/functionalities are defined.")
 
-(defconst TEMPLATES_DIR (file-name-as-directory
-                         (if (getenv "XDG_CONFIG_HOME")
-                             (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/templates/")
-                           (file-name-concat user-emacs-directory "templates/")))
-  "Directory where (custom) templates are defined")
+(defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
+  "Directory where (custom) templates are defined.")
 
-(defconst MISC_DIR (file-name-as-directory
-                      (if (getenv "XDG_CONFIG_HOME")
-                          (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/misc/")
-                        (file-name-concat user-emacs-directory "misc/")))
-  "Directory where (custom) miscellaneous data/settings are stored.")
+(defconst MISC_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "misc/"))
+  "Directory where (custom) miscellaneous configuration/settings are stored.")
 
 (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
-  "File where (automatically generated) customization settings are stored")
+  "File where (automatically generated) customization settings are stored.")
 
 ;;; Data
-(defconst BACKUPS_DIR (file-name-as-directory
+(defconst EMACS_DATA_DIR (file-name-as-directory
                        (if (getenv "XDG_DATA_HOME")
-                           (file-name-concat (getenv "XDG_DATA_HOME") "emacs/backups/")
-                         (file-name-concat user-emacs-directory "backups/")))
+                              (file-name-concat (getenv "XDG_DATA_HOME") "emacs/")
+                            user-emacs-directory))
+  "Directory where (additional) Emacs data is stored.")
+
+(defconst BACKUPS_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "backups/"))
   "Directory where (automatically generated) backup files are stored.")
 
 ;;; Cache
-(defconst AUTOSAVES_DIR (file-name-as-directory
+(defconst EMACS_CACHE_DIR (file-name-as-directory
                          (if (getenv "XDG_CACHE_HOME")
-                             (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/autosaves/")
-                           (file-name-concat user-emacs-directory "autosaves/")))
+                               (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
+                             user-emacs-directory))
+  "Directory where Emacs cache is stored.")
+
+(defconst AUTOSAVES_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "autosaves/"))
   "Directory where auto-save files are stored.")
 
-(defconst LOCKS_DIR (file-name-as-directory
-                     (if (getenv "XDG_CACHE_HOME")
-                         (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/locks/")
-                       (file-name-concat user-emacs-directory "locks/")))
+(defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
   "Directory where lock files are stored.")
 
 
@@ -263,8 +260,8 @@
 (keymap-global-set "C-p" #'backward-sexp)
 (keymap-global-set "C-n" #'forward-sexp)
 
-(keymap-global-set "C-M-p" #'backward-sentence)
-(keymap-global-set "C-M-n" #'forward-sentence)
+(keymap-global-set "C-S-p" #'backward-sentence)
+(keymap-global-set "C-S-n" #'forward-sentence)
 
 (keymap-global-set "C-w" #'other-window)
 
@@ -283,14 +280,14 @@
 (keymap-global-set "M-e" #'kill-line)
 (keymap-global-set "M-l" #'kill-whole-line)
 
-(keymap-global-set "M-b" #'backward-kill-sexp)
-(keymap-global-set "M-f" #'kill-sexp)
+(keymap-global-set "M-b" #'backward-kill-sentence)
+(keymap-global-set "M-f" #'kill-sentence)
 
 (keymap-global-set "M-p" #'backward-kill-sexp)
 (keymap-global-set "M-n" #'kill-sexp)
 
-(keymap-global-set "C-M-p" #'backward-kill-sentence)
-(keymap-global-set "C-M-n" #'kill-sentence)
+(keymap-global-set "M-P" #'backward-kill-sentence)
+(keymap-global-set "M-N" #'kill-sentence)
 
 (keymap-global-set "M-t" #'kill-region)
 (keymap-global-set "M-T" #'clipboard-kill-region)
@@ -304,7 +301,7 @@
 (keymap-global-set "C-M-y" #'yank-pop)
 
 ;;;; Deleting
-(keymap-global-set "M-d" #'delete-region)
+(keymap-global-set "M-D" #'delete-region)
 
 ;;; Management
 ;;;; Quitting
@@ -350,12 +347,17 @@
   "g" #'other-frame
   "s" #'suspend-frame)
 
-(keymap-global-set "C-x f" 'a-frame-map-prefix)
+(keymap-global-set "C-x ^" 'a-frame-map-prefix)
 
 ;;;; Windows
 (defvar-keymap a-window-map
   :doc "Keymap for window management"
   :prefix 'a-window-map-prefix
+  "-" #'shrink-window
+  "+" #'enlarge-window
+  ">" #'shrink-window-horizontally
+  "<" #'enlarge-window-horizontally
+  "b" #'balance-windows
   "k" #'delete-window
   "K" #'delete-other-windows
   "C-k" #'delete-windows-on
@@ -378,16 +380,21 @@
   "k" #'kill-current-buffer
   "K" #'kill-some-buffers
   "C-k" #'kill-buffer
-  "s" #'save-buffer
-  "S" #'save-some-buffers
   "g" #'switch-to-buffer
   "G" #'switch-to-buffer-other-window
-  "M-g" #'switch-to-minibuffer)
+  "M-g" #'switch-to-buffer-other-frame
+  "m" #'switch-to-minibuffer
+  "s" #'save-buffer
+  "S" #'save-some-buffers
+  "r" #'revert-buffer
+  "R" #'revert-buffer-quick)
 
 (keymap-global-set "C-x b" 'a-buffer-map-prefix)
 
 ;;; Navigation/searching
-(keymap-global-set "C-x C-f" #'find-file)
+(keymap-global-set "C-x f" #'find-file)
+(keymap-global-set "C-x F" #'find-file-other-window)
+(keymap-global-set "C-x C-f" #'find-file-other-frame)
 (keymap-global-set "C-x C-r" #'recentf-open)
 
 ;;;; Goto map
@@ -396,6 +403,7 @@
   :prefix 'a-goto-map-prefix
   "b" #'switch-to-buffer
   "B" #'switch-to-buffer-other-window
+  "C-b" #'switch-to-buffer-other-frame
   "c" #'goto-char
   "f" #'other-frame
   "l" #'goto-line
@@ -413,6 +421,8 @@
   :doc "Keymap for searching"
   :prefix 'a-search-map-prefix
   "f" #'find-file
+  "F" #'find-file-other-window
+  "C-f" #'find-file-other-frame
   "r" #'recentf-open
   "R" #'find-file-read-only
   "i b" #'isearch-backward
@@ -557,10 +567,7 @@
               ("C-v" . #'undo-tree-visualizer-set))
   :config
   ;; Create and store undo history directory
-  (defconst UNDO_DIR (file-name-as-directory
-                      (if (getenv "XDG_DATA_HOME")
-                          (file-name-concat (getenv "XDG_DATA_HOME") "emacs/undos/")
-                        (file-name-concat user-emacs-directory "undos/")))
+  (defconst UNDO_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "undos/"))
     "Directory where (automatically generated) undo (history) files are stored.")
   (unless (file-directory-p UNDO_DIR)
     (make-directory UNDO_DIR t))
@@ -568,7 +575,7 @@
   (setopt undo-tree-auto-save-history t)
 
   (setopt undo-tree-mode-lighter " UT")
-  (setopt undo-tree-incompatible-major-modes '(term-mode doc-view-mode))
+  (setopt undo-tree-incompatible-major-modes '(term-mode image-mode doc-view-mode pdf-view-mode))
   (setopt undo-tree-enable-undo-in-region t)
   (setopt undo-tree-visualizer-diff t)
 
@@ -718,7 +725,7 @@
 (use-package cape
   :ensure t
   :demand t
-  :bind ("C-c p" . cape-prefix-map)
+  :bind ("C-c e" . cape-prefix-map)
   :config
   (setopt cape-dict-limit 50
           cape-dabbrev-check-other-buffers #'cape--buffers-major-mode
@@ -797,7 +804,8 @@
     "i" #'tempel-insert)
   (keymap-global-set "C-c t" 'a-tempel-map-prefix)
   ;; Create and store templates directory
-  (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/")))
+  (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/"))
+    "Directory where tempel templates are stored.")
   (unless (file-directory-p TEMPEL_DIR)
     (make-directory TEMPEL_DIR t))
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
@@ -812,6 +820,7 @@
          ("<remap> <kill-whole-line>" . crux-kill-whole-line)
          ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
          ("M-a" . crux-kill-line-backwards)
+         ("M-d" . crux-duplicate-current-line-or-region)
          :map a-kill-map
          ("B" . crux-kill-other-buffers)
          :map a-buffer-map
@@ -859,9 +868,32 @@
 
 (use-package ace-window
   :ensure t
-  :bind (("<remap> <other-window>" . ace-winow)
-         ("C-w" . ace-window))
-  :config)
+  :bind (("C-w" . ace-window)
+         ("C-S-w" . other-window)
+         :map a-goto-map
+         ("W" . ace-window))
+  :config
+  (setopt aw-keys '(?a ?s ?d ?f ?h ?j ?k ?l))
+  (setopt aw-scope 'visible
+          aw-minibuffer-flag nil
+          aw-ignore-current nil
+          aw-background t
+          aw-dispatch-always t)
+  (setq-default aw-dispatch-alist
+                '((?q aw-delete-window "Delete window")
+                  (?Q delete-other-windows "Delete other windows")
+                  (?e aw-swap-window "Swap buffers between windows")
+                  (?m aw-move-window "Move current buffer to window")
+                  (?y aw-copy-window "Copy current buffer to window")
+                  (?g aw-switch-buffer-in-window "Select buffer in window")
+                  (?G aw-switch-buffer-other-window "Select buffer in other window")
+                  (?r aw-flip-window)
+                  (?x aw-execute-command-other-window "Execute command in other window")
+                  (?w aw-split-window-fair "Split window fairly")
+                  (?h aw-split-window-horz "Split window horizontally")
+                  (?v aw-split-window-vert "Split window vertically")
+                  (?t aw-transpose-frame "Transpose frames")
+                  (?? aw-show-dispatch-help))))
 
 (use-package avy
   :ensure t
@@ -910,26 +942,29 @@
          :map a-buffer-map
          ("g" . consult-buffer)
          ("G" . consult-buffer-other-window)
+         ("M-g" . consult-buffer-other-frame)
          :map a-goto-map
          ("b" . consult-buffer)
          ("B" . consult-buffer-other-window)
+         ("C-b" . consult-buffer-other-frame)
          ("e" . consult-compile-error)
          ("d" . consult-flymake)
          ("l" . consult-goto-line)
          ("o" . consult-outline)
          ("m" . consult-mark)
-         ("k" . consult-global-mark)
+         ("M" . consult-global-mark)
          ("i" . consult-imenu)
          ("I" . consult-imenu-multi)
          :map a-search-map
          ("f" . find-file)
-         ("F" . consult-fd)
-         ("C-f" . consult-find)
+         ("F" . find-file-other-window)
+         ("C-f" . consult-fd)
+         ("M-f" . consult-find)
          ("r" . consult-recent-file)
          ("c" . consult-locate)
-         ("g" . consult-grep)
-         ("G" . consult-ripgrep)
-         ("M-g" . consult-git-grep)
+         ("g" . consult-ripgrep)
+         ("G" . consult-git-grep)
+         ("M-g" . consult-grep)
          ("l" . consult-line)
          ("L" . consult-line-multi)
          ("k" . consult-keep-lines)
@@ -958,7 +993,8 @@
   (setopt consult-async-refresh-delay 0.1
           consult-async-input-thottle 0.3
           consult-async-input-debounce 0.1
-          consult-async-min-input 2))
+          consult-async-min-input 2)
+  (setopt xref-show-xrefs-function #'consult-xref))
 
 (use-package embark
   :ensure t
@@ -969,10 +1005,21 @@
          :map embark-general-map
          ("t" . embark-copy-as-kill)
          ("C-o" . embark-select)
+         :map embark-file-map
+         ("F" . find-file-other-window)
+         ("C-f" . find-file-other-frame)
+         ("l" . find-file-literally)
+         :map embark-library-map
+         ("F" . find-library-other-window)
+         ("C-f" . find-library-other-frame)
          :map embark-buffer-map
          ("g" . switch-to-buffer)
+         ("G" . switch-to-buffer-other-window)
+         ("M-g" . switch-to-buffer-other-frame)
          :map embark-identifier-map
          ("f" . xref-find-definitions)
+         ("F" . xref-find-definitions-other-window)
+         ("C-f" . xref-find-definitions-other-frame)
          :map embark-symbol-map
          ("f" . embark-find-definition)
          :map embark-package-map
@@ -992,11 +1039,45 @@
 
 ;;; Tools
 (use-package projectile
-  :ensure t)
+  :ensure t
+  :demand t
+  :init
+  (setopt projectile-mode-line-prefix " Ptile"
+          projective-keymap-prefix "C-c p")
+  :bind ("C-c p" . projectile-command-map)
+  :config
+  ;; Create and store projectile known projects file
+  (defconst PTILE_FILE (file-name-concat EMACS_DATA_DIR "projectile-bookmarks.eld")
+    "File where projectile's known projects are stored.")
+  (setopt projectile-known-projects-file PTILE_FILE)
+  (setopt projectile-enable-caching t
+          projectile-sort-order 'recently-active
+          projectile-dirconfig-comment-prefix ?\#
+          projectile-find-dir-includes-top-level t
+          projectile-enable-idle-timer t
+          projectile-current-project-on-switch 'move-to-end)
+  (projectile-mode 1))
 
 (use-package diff-hl
   :ensure t
-  :pin melpa)
+  :demand t
+  :pin melpa
+  :bind (:map diff-hl-command-map
+              ("g" . diff-hl-diff-goto-hunk)
+              ("r" . diff-hl-revert-hunk)
+              ("p" . diff-hl-previous-hunk)
+              ("n" . diff-hl-next-hunk)
+              ("o" . diff-hl-show-hunk)
+              ("C-p" . diff-hl-show-previous-hunk)
+              ("C-n" . diff-hl-show-next-hunk)
+              ("s" . diff-hl-stage-dwim))
+  :config
+  (setopt diff-hl-command-prefix (kbd "C-x v"))
+  (setopt diff-hl-global-modes '(not term-mode image-mode doc-view-mode pdf-view-mode))
+  (setopt diff-hl-update-async t)
+
+  (setq-default diff-hl-lighter " DiffHL")
+  (global-diff-hl-mode 1))
 
 (use-package magit
   :ensure t
@@ -1008,7 +1089,7 @@
          :map magit-mode-map
          ("C-v" . magit-visit-thing)
          ("C-t" . magit-copy-section-value)
-         ("C-T" . magit-copy-buffer-revision)
+         ("C-S-t" . magit-copy-buffer-revision)
          ("C-c C-t" . magit-copy-thing)
          ("C-w" . nil)
          ("M-w" . nil)
@@ -1134,10 +1215,9 @@
   (setopt org-default-notes-file (file-name-concat ORG_DIR ".notes"))
   (setopt org-support-shift-select t))
 
-
 ;;;; Note, proof-general itself might never actually be loaded
 ;;;; because individual proof assistants only trigger their own mode
-;;;; and might only load proof.el or proof-site.el instead of proof-general.e
+;;;; and might only load proof.el or proof-site.el instead of proof-general.el
 ;;;; As such, we simply put (almost) all necessary config in :init directly
 (use-package proof-general
   :ensure t
@@ -1210,6 +1290,7 @@
   (setopt doom-themes-enable-bold t
           doom-themes-enable-italic t)
   (doom-themes-visual-bell-config)
+
   (doom-themes-set-faces nil
     '(vertico-current :foreground 'unspecified :background 'unspecified
                       :inherit 'highlight)
@@ -1248,6 +1329,8 @@
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(trailing-whitespace :background magenta)
+    '(aw-background-face :inherit 'avy-background-face)
+    '(aw-leading-char-face :inherit 'avy-lead-face)
     '(proof-queue-face :background magenta)
     '(proof-locked-face :background base4)
     '(proof-script-sticky-error-face :background red :underline yellow)
