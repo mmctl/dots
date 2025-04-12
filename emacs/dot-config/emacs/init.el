@@ -206,6 +206,7 @@
 (setopt global-hl-line-sticky-flag nil)
 
 (setopt shift-select-mode t)
+(repeat-mode 1)
 
 ;;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)
@@ -225,10 +226,15 @@
 (keymap-set function-key-map "C-M-S-<iso-lefttab>" "C-M-<backtab>")
 
 ;;; Movement
-(keymap-global-set "M-H" #'windmove-left)
-(keymap-global-set "M-J" #'windmove-down)
-(keymap-global-set "M-K" #'windmove-up)
-(keymap-global-set "M-L" #'windmove-right)
+(keymap-global-set "C-M-h" #'windmove-left)
+(keymap-global-set "C-M-j" #'windmove-down)
+(keymap-global-set "C-M-k" #'windmove-up)
+(keymap-global-set "C-M-l" #'windmove-right)
+
+(keymap-global-set "M-H" #'windmove-swap-states-left)
+(keymap-global-set "M-J" #'windmove-swap-states-down)
+(keymap-global-set "M-K" #'windmove-swap-states-up)
+(keymap-global-set "M-L" #'windmove-swap-states-right)
 
 (keymap-global-set "<left>" #'left-char)
 (keymap-global-set "<right>" #'right-char)
@@ -264,6 +270,9 @@
 (keymap-global-set "C-S-n" #'forward-sentence)
 
 (keymap-global-set "C-w" #'other-window)
+
+(keymap-global-set "M-m" #'pop-to-mark-command)
+(keymap-global-set "M-M" #'pop-global-mark)
 
 ;;; Selection
 (keymap-global-set "C-SPC" #'set-mark-command)
@@ -350,13 +359,24 @@
 (keymap-global-set "C-x ^" 'a-frame-map-prefix)
 
 ;;;; Windows
+(defvar-keymap a-window-resize-repeat-map
+  :doc "Keymap (repeatable) for resizing windows"
+  :repeat (:hints ((shrink-window . "h: Shrink window height")
+                   (enlarge-window . "H: Enlarge window height")
+                   (shrink-window-horizontally . "w: Shrink window width")
+                   (enlarge-window-horizontally . "W: Enlarge window width")))
+  "h" #'shrink-window
+  "H" #'enlarge-window
+  "w" #'shrink-window-horizontally
+  "W" #'enlarge-window-horizontally)
+
 (defvar-keymap a-window-map
   :doc "Keymap for window management"
   :prefix 'a-window-map-prefix
-  "-" #'shrink-window
-  "+" #'enlarge-window
-  ">" #'shrink-window-horizontally
-  "<" #'enlarge-window-horizontally
+  "h" #'shrink-window
+  "H" #'enlarge-window
+  "w" #'shrink-window-horizontally
+  "W" #'enlarge-window-horizontally
   "b" #'balance-windows
   "k" #'delete-window
   "K" #'delete-other-windows
@@ -406,13 +426,11 @@
   "C-b" #'switch-to-buffer-other-frame
   "c" #'goto-char
   "f" #'other-frame
-  "l" #'goto-line
   "i" #'imenu
-  "w g" #'other-window
-  "w h" #'windmove-left
-  "w j" #'windmove-down
-  "w k" #'windmove-up
-  "w l" #'windmove-right)
+  "l" #'goto-line
+  "m" #'pop-to-mark-command
+  "M" #'pop-global-mark
+  "w" #'other-window)
 
 (keymap-global-set "C-c g" 'a-goto-map-prefix)
 
@@ -817,7 +835,6 @@
   :demand t
   :pin melpa
   :bind (("<remap> <kill-line>" . crux-smart-kill-line)
-         ("<remap> <kill-whole-line>" . crux-kill-whole-line)
          ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
          ("M-a" . crux-kill-line-backwards)
          ("M-d" . crux-duplicate-current-line-or-region)
@@ -850,10 +867,11 @@
     "f s" #'crux-find-shell-init-file
     "f l" #'crux-find-current-directory-dir-locals-file
     "F" #'crux-recentf-find-file
-    "k" #'crux-delete-file-and-buffer
     "i" #'crux-indent-rigidly-and-copy-to-clipboard
     "j" #'crux-top-join-line
     "J" #'crux-kill-and-join-forward
+    "k" #'crux-delete-file-and-buffer
+    "l" #'crux-kill-whole-line
     "r" #'crux-rename-file-and-buffer
     "s" #'crux-sudo-edit
     "u" #'crux-view-url
@@ -869,7 +887,8 @@
   :bind (("C-w" . ace-window)
          ("C-S-w" . other-window)
          :map a-goto-map
-         ("W" . ace-window))
+         ("w" . ace-window)
+         ("W" . other-window))
   :config
   (setopt aw-keys '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
   (setopt aw-scope 'visible
@@ -1042,7 +1061,35 @@
   :init
   (setopt projectile-mode-line-prefix " Ptile"
           projective-keymap-prefix "C-c p")
-  :bind ("C-c p" . projectile-command-map)
+  :bind (("C-c p" . projectile-command-map)
+         :map projectile-command-map
+         ("e" . projectile-run-project)
+         ("p" . projectile-switch-project)
+         ("P" . projectile-switch-open-project)
+         ("q" . projectile-compile-project)
+         ("r" . projectile-recentf)
+         ("R" . projectile-replace)
+         ("C-r" . projectile-regenerate-tags)
+         ("w f" . projectile-find-file-other-window)
+         ("w F" . projectile-find-other-file-other-window)
+         ("w d" . projectile-find-dir-other-window)
+         ("w D" . projectile-dired-other-window)
+         ("w g" . projectile-find-file-dwim-other-window)
+         ("w t" . projectile-find-implementation-or-test-other-window)
+         ("w b" . projectile-switch-to-buffer-other-window)
+         ("w B" . projectile-display-buffer)
+         ("^ f" . projectile-find-file-other-frame)
+         ("^ F" . projectile-find-other-file-other-frame)
+         ("^ d" . projectile-find-dir-other-frame)
+         ("^ D" . projectile-dired-other-frame)
+         ("^ g" . projectile-find-file-dwim-other-frame)
+         ("^ t" . projectile-find-implementation-or-test-other-frame)
+         ("^ b" . projectile-switch-to-buffer-other-frame)
+         ("s g" . projectile-ripgrep)
+         ("s G" . projectile-grep)
+         ("s s" . projectile-ag)
+         ("s r" . projectile-find-references)
+         ("x w" . projectile-run-vterm-other-window))
   :config
   ;; Create and store projectile known projects file
   (defconst PTILE_FILE (file-name-concat EMACS_DATA_DIR "projectile-bookmarks.eld")
@@ -1067,8 +1114,8 @@
               ("p" . diff-hl-previous-hunk)
               ("n" . diff-hl-next-hunk)
               ("o" . diff-hl-show-hunk)
-              ("C-p" . diff-hl-show-previous-hunk)
-              ("C-n" . diff-hl-show-next-hunk)
+              ("C-p" . diff-hl-show-hunk-previous)
+              ("C-n" . diff-hl-show-hunk-next)
               ("s" . diff-hl-stage-dwim))
   :config
   (setopt diff-hl-command-prefix (kbd "C-x v"))
@@ -1260,11 +1307,12 @@
     (keymap-set proof-mode-map "C-<next>" #'proof-goto-command-end)
     (keymap-set proof-mode-map "C-<end>" #'proof-goto-end-of-locked)
     (keymap-set proof-mode-map "C-c C-v" #'proof-goto-point)
-    (keymap-set proof-mode-map "C-c C-d" #'proof-undo-and-delete-successful-command)
+    (keymap-set proof-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
     (keymap-set proof-mode-map "C-c C-a" #'proof-goto-command-start)
     (keymap-set proof-mode-map "C-c C-e" #'proof-goto-command-end)
     (keymap-set proof-mode-map "C-c C-l" #'proof-goto-end-of-locked)
-    (keymap-set proof-mode-map "C-c C-w" #'proof-display-some-buffers)
+    (keymap-set proof-mode-map "C-c C-w" #'proof-layout-windows)
+    (keymap-set proof-mode-map "C-c C-o" #'proof-display-some-buffers)
     (keymap-set proof-mode-map "C-c C-k" #'pg-response-clear-displays)
     (keymap-set proof-mode-map "C-c C-x" #'proof-minibuffer-cmd)
     (keymap-set proof-mode-map "C-c C-q" #'proof-shell-exit)
@@ -1276,7 +1324,19 @@
     (keymap-set proof-mode-map "C-c C-y n" #'pg-next-matching-input-from-input)
     (keymap-set proof-mode-map "C-c C-y P" #'pg-previous-matching-input)
     (keymap-set proof-mode-map "C-c C-y N" #'pg-next-matching-input))
+(defun setup-a-proof-other-mode-map ()
+    (keymap-set proof-response-mode-map "C-q" #'bury-buffer)
+    (keymap-set proof-response-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
+    (keymap-set proof-response-mode-map "C-c C-e" #'proof-next-error)
+    (keymap-set proof-response-mode-map "C-c C-w" #'proof-layout-windows)
+    (keymap-set proof-response-mode-map "C-c C-o" #'proof-display-some-buffers)
+    (keymap-set proof-response-mode-map "C-c C-k" #'pg-response-clear-displays)
+    (keymap-set proof-response-mode-map "C-c C-x" #'proof-minibuffer-cmd)
+    (keymap-set proof-response-mode-map "C-c C-q" #'proof-shell-exit))
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
+  (add-hook 'proof-response-mode-hook #'setup-a-proof-other-mode-map)
+  (add-hook 'proof-goals-mode-hook #'setup-a-proof-other-mode-map)
+  ;;(add-hook 'proof-mode-hook #'setup-a-proof-goal-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
   ;;;;;; EasyCrypt
   (add-hook 'easycrypt-mode-hook #'(lambda () (setq-local electric-indent-inhibit t))))
