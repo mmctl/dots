@@ -1052,8 +1052,9 @@
           projectile-sort-order 'recently-active
           projectile-dirconfig-comment-prefix ?\#
           projectile-find-dir-includes-top-level t
-          projectile-enable-idle-timer nil
+          projectile-enable-idle-timer t
           projectile-current-project-on-switch 'move-to-end)
+  (setopt tags-revert-without-query t)
   (projectile-mode 1))
 
 (use-package diff-hl

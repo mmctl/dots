@@ -1,0 +1,6 @@
+"xdotool key Return"
+    m:0x0 + b:9
+
+"xdotool key Tab"
+    m:0x0 + b:8
+

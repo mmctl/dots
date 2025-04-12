@@ -98,6 +98,9 @@ image_bound      = [ 0, 0 ]
 
 ## Plugin
 [plugin]
+append_previewers = [
+    { name = "*", run = 'piper -- hexyl --terminal-width "$w" -g 2 "$1"'}
+]
 
 
 ## Input
