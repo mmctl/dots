@@ -1324,7 +1324,7 @@
     (keymap-set proof-mode-map "C-c C-y n" #'pg-next-matching-input-from-input)
     (keymap-set proof-mode-map "C-c C-y P" #'pg-previous-matching-input)
     (keymap-set proof-mode-map "C-c C-y N" #'pg-next-matching-input))
-(defun setup-a-proof-other-mode-map ()
+  (defun setup-a-proof-other-mode-map ()
     (keymap-set proof-response-mode-map "C-q" #'bury-buffer)
     (keymap-set proof-response-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
     (keymap-set proof-response-mode-map "C-c C-e" #'proof-next-error)
@@ -1339,7 +1339,20 @@
   ;;(add-hook 'proof-mode-hook #'setup-a-proof-goal-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
   ;;;;;; EasyCrypt
-  (add-hook 'easycrypt-mode-hook #'(lambda () (setq-local electric-indent-inhibit t))))
+  (defun setup-an-easycrypt-indentation ()
+    (setq-local electric-indent-mode nil)
+    (setq-local electric-indent-inhibit t)
+    (setq-local indent-line-function #'easycrypt-indent-line)
+    (keymap-local-set "RET" #'newline-and-indent)
+    (keymap-local-set "<return>" #'newline-and-indent)
+    (keymap-local-set "S-RET" #'newline)
+    (keymap-local-set "S-<return>" #'newline)
+    (keymap-local-set "TAB" #'a-basic-indent)
+    (keymap-local-set "<tab>" #'a-basic-indent)
+    (keymap-local-set "<backtab>" #'a-basic-deindent)
+    (keymap-local-set "M-<tab>" #'indent-for-tab-command)
+    (keymap-local-set "C-M-i" #'indent-for-tab-command))
+  (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation))
 
 ;;; Themes
 ;;;; Doom-themes general

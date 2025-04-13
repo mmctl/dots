@@ -58,7 +58,7 @@
                 (setq indent-level (current-column)))
                ;; Else, align to indentation of opener + tab
                (t
-                (setq indent-level (+ (current-column) 1 tab-width))))))
+                (setq indent-level (+ (current-column) tab-width))))))
         ;; Else, default to aligning with previous non-blank line
         (progn
           (forward-line -1)
