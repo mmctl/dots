@@ -75,6 +75,13 @@
   (interactive "p")
   (a-basic-indent (- arg)))
 
+;;; Hooks
+;;;; Indent when last input was }, ), or ] (meant for post-self-insert-hook)
+(defun indent-on-insertion-closer ()
+  (when (memq last-command-event '(?\} ?\) ?\]))
+    (save-excursion
+      (indent-according-to-mode))))
+
 
 (provide 'func-utils)
 

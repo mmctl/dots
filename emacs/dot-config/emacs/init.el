@@ -1116,7 +1116,10 @@
               ("o" . diff-hl-show-hunk)
               ("C-p" . diff-hl-show-hunk-previous)
               ("C-n" . diff-hl-show-hunk-next)
-              ("s" . diff-hl-stage-dwim))
+              ("s" . diff-hl-stage-current-hunk)
+              ("S" . diff-hl-stage-dwim)
+              ("m" . diff-hl-stage-some)
+              ("u" . diff-hl-unstage-file))
   :config
   (setopt diff-hl-command-prefix (kbd "C-x v"))
   (setopt diff-hl-global-modes '(not term-mode image-mode doc-view-mode pdf-view-mode))
@@ -1351,7 +1354,8 @@
     (keymap-local-set "<tab>" #'a-basic-indent)
     (keymap-local-set "<backtab>" #'a-basic-deindent)
     (keymap-local-set "M-<tab>" #'indent-for-tab-command)
-    (keymap-local-set "C-M-i" #'indent-for-tab-command))
+    (keymap-local-set "C-M-i" #'indent-for-tab-command)
+    (add-hook 'post-self-insert-hook #'indent-on-insertion-closer))
   (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation))
 
 ;;; Themes
