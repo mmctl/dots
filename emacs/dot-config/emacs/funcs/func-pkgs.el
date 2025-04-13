@@ -44,18 +44,25 @@
             (progn
               (goto-char (nth 1 (syntax-ppss)))
               (cond
+               ;; If first char on our line is }...
                (brexp
+                ;; Then, if a { opened current expression (i.e., we are closing with })
                 (if (looking-at "{" t)
+                    ;; Then align to indentation opener
                     (setq indent-level (current-indentation))
+                  ;; Else align to indentation of opener + tab
                   (setq indent-level (+ (current-indentation) tab-width))))
+               ;; Else, if first char is ]/) and current expression is opened by [/(...
                ((or (and btexp (looking-at "[[]" t)) (and prexp (looking-at "(" t)))
+                ;; Then, match indentation to opener
                 (setq indent-level (current-column)))
+               ;; Else, align to indentation of opener + tab
                (t
                 (setq indent-level (+ (current-column) 1 tab-width))))))
         ;; Else, default to aligning with previous non-blank line
         (progn
           (forward-line -1)
-          (while (and (not (bobp)) (looking-at "^[[:space:]]*$"))
+          (while (and (not (bobp)) (looking-at "^[[:space:]]*$" t))
             (forward-line -1))
           (back-to-indentation)
           (setq indent-level (current-indentation)))))

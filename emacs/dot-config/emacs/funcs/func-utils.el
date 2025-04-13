@@ -26,7 +26,7 @@
 ;; Basic rigid indentation
 (defun a-basic-indent (arg)
   "Indent (or de-indent) region by (prefix) arg *`tab-width`, or otherwise insert tab at position."
-  (interactive "P")
+  (interactive "p")
   (if (use-region-p)
       (indent-rigidly (region-beginning) (region-end) (* arg tab-width))
     (insert-tab arg)))

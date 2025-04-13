@@ -794,7 +794,7 @@
   :after cape
   :ensure nil ; provided by cape
   :config
-  (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ec-keyword-list)))
+  (add-to-list 'cape-keyword-list (cons 'easycrypt-mode cst-easycrypt-keywords)))
 
 (use-package tempel
   :ensure t
