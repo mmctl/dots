@@ -196,6 +196,9 @@ bindsym $mod+$A+f exec --no-startup-id "alacritty --class FileManager,Yazi -e ya
 #### Run Thunderbird
 bindsym $mod+$A+m exec thunderbird
 
+### Run Signal
+bindsym $mod+$A+c exec --no-startup-id signal-desktop
+
 ### Terminals (and terminal-based applications)
 #### Run alacritty
 bindsym $mod+$A+t exec --no-startup-id alacritty
@@ -360,6 +363,9 @@ for_window [class="(?i)FileManager"] focus
 ## Socials
 assign [class="(?i)Thunderbird"] $wssocial
 for_window [class="(?i)Thunderbird"] focus
+
+assign [class="(?i)Signal"] $wssocial
+for_window [class="(?i)Signal"] focus
 
 ## Terminals
 assign [class="(?i)Terminal"] $wsterm
