@@ -52,12 +52,12 @@
     ;; Else (no region is active), if prefix argument is negative...
     (if (< arg 0)
         ;; Then, take stock of whitespace behind point, and
-        ;; if there is at least some whitespace...
         (let* ((orig-point (point))
-               (del-ub (* (abs arg) tab-width))
+               (del-ub (min (* (abs arg) tab-width) (- orig-point (line-beginning-position))))
                (del (save-excursion
                       (skip-chars-backward "[:space:]" (- orig-point del-ub))
                       (- orig-point (point)))))
+          ;; if there is at least some whitespace...
           (if (< 0 del)
               ;; Then, delete ARG * tab-width of white-space
               ;; (at most until first non-whitespace character)

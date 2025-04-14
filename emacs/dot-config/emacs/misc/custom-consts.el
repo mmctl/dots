@@ -11,14 +11,13 @@
 
 (defconst cst-easycrypt-meta-keywords
   (list "as" "clone" "from" "hint" "export" "import"
-        "include" "remove" "rename" "require" "Self" "Top"
-        "with"))
+        "include" "remove" "rename" "require" "with"))
 
 (defconst cst-easycrypt-scope-keywords
   (list "declare" "local"))
 
 (defconst cst-easycrypt-structural-keywords
-  (list "proof" "qed" "section" "realize"))
+  (list "proof" "qed" "section" "realize" "Self" "Top"))
 
 ;;;; Specification keywords
 (defconst cst-easycrypt-functional-spec-start-keywords
@@ -78,6 +77,7 @@
                        cst-easycrypt-tactics-dangerous-keywords
                        cst-easycrypt-tactics-tactical-keywords)))
 
+
 ;;;; All keywords
 (defconst cst-easycrypt-keywords
   (delete-dups (append cst-easycrypt-internal-keywords
@@ -86,6 +86,15 @@
                        cst-easycrypt-scope-keywords
                        cst-easycrypt-spec-keywords
                        cst-easycrypt-tactics-keywords)))
+
+;;;; All "start" keywords (i.e., regularly starting a sentence, excluding proof and programs)
+(defconst cst-easycrypt-start-keywords
+  (delete-dups (append cst-easycrypt-internal-keywords
+                       cst-easycrypt-functionality-keywords
+                       cst-easycrypt-meta-keywords
+                       cst-easycrypt-scope-keywords
+                       cst-easycrypt-functional-spec-start-keywords)))
+
 
 (provide 'custom-consts)
 

@@ -826,7 +826,29 @@
     "Directory where tempel templates are stored.")
   (unless (file-directory-p TEMPEL_DIR)
     (make-directory TEMPEL_DIR t))
+
+  ;; Define slight adjustment of regular placeholder element
+  ;; so that a prompt form evaluating to a string is inserted as
+  ;; default value in the same way as a literal string prompt
+  (defun a-tempel-placeholder-form-as-lit (elt)
+    (pcase elt
+      (`(po ,prompt . ,rest)
+       (let ((evprompt (eval prompt)))
+         (if (stringp evprompt)
+             `(p ,evprompt ,@rest)
+           `('p ,prompt ,@rest))))))
+  (add-to-list 'tempel-user-elements #'a-tempel-placeholder-form-as-lit)
+
+  ;; Define "include" element (taken and slightly adjusted from TempEL github repo)
+  ;; that allows to include other templates by their name
+  (defun a-tempel-include (elt)
+    (when (eq (car-safe elt) 'i)
+      (when-let (template (alist-get (cadr elt) (tempel--templates)))
+        (cons 'l template))))
+  (add-to-list 'tempel-user-elements #'a-tempel-include)
+
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
+  (setopt tempel-mark #("_" 0 1 (display (space :width (2)) face tempel-field)))
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
@@ -920,6 +942,8 @@
          ("C-j" . nil)
          ("C-S-j" . #'avy-isearch)
          :map minibuffer-mode-map
+         ("C-j" . nil)
+         :map read-expression-map
          ("C-j" . nil))
   :config
   (defvar-keymap an-avy-map
@@ -939,7 +963,7 @@
   (keymap-global-set "C-c a" 'an-avy-map-prefix)
   (setopt avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?e ?r ?u ?i)
           avy-style 'at-full
-          avy-all-windows t
+          avy-all-windows 'all-frames
           avy-case-fold-search t
           avy-single-candidate-jump nil)
   (setq-default avy-dispatch-alist '((?q . avy-action-kill-move)
@@ -1278,7 +1302,7 @@
           proof-toolbar-enable nil)
   (setopt proof-delete-empty-windows t
           proof-output-tooltips t)
-  (setopt proof-electric-terminator-enable t
+  (setopt proof-electric-terminator-enable nil
           proof-sticky-errors t
           proof-prog-name-ask nil
           proof-minibuffer-messages t
@@ -1379,9 +1403,9 @@
     '(corfu-current :foreground 'unspecified :background 'unspecified
                     :inherit 'secondary-selection)
     '(tempel-default :foreground 'unspecified :background 'unspecified
-                     :inherit 'lazy-highlight :slant 'italic)
+                     :inherit 'secondary-selection :slant 'italic)
     '(tempel-field :foreground 'unspecified :background 'unspecified
-                   :inherit 'highlight)
+                   :inherit 'lazy-highlight)
     '(tempel-form :foreground 'unspecified :background 'unspecified
                   :inherit 'match)
     '(proof-mouse-highlight-face :inherit 'lazy-highlight)
