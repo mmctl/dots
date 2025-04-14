@@ -97,8 +97,7 @@ keymap = [
 
     # Meta-level operation (cd, sort, tabs, etc.)
     ## Copy/Cut/Paste (to/from clipboard)
-    { on = [ "<C-x>", "<C-t>" ], run = 'shell -- cb copy -nc -np "$@"', desc = "Copy files (raw) to clipboard" },
-    { on = [ "<C-x>", "<A-t>" ], run = 'shell -- cb cut -nc -np "$@"', desc = "Cut files (raw) to clipboard" },
+    { on = [ "<C-x>", "<C-t>" ], run = "plugin copy-file-contents", desc = "Copy files (raw) to clipboard" },
     { on = [ "<C-x>", "<C-y>" ], run = 'shell -- dragon -x -f -a -T "$@"', desc = "Drag files to other application" },
     ## CD (goto)
     { on = [ "g", "h" ], run = "cd $HOME", desc = "Go to user home directory"},
@@ -130,8 +129,8 @@ keymap = [
     ## Archive
     { on = [ "a", "c" ], run = "plugin compress", desc = "Archive (compress) file(s)" },
     { on = [ "a", "d" ], run = "plugin augment-command -- extract", desc = "Extract archive(s)" },
-    { on = [ "a", "m" ], run = "plugin fuse-archive mount", desc = "Mount and enter archive" },
-    { on = [ "a", "u" ], run = "plugin fuse-archive unmount", desc = "Unmount and leave archive" },
+    { on = [ "a", "m" ], run = "plugin archivemount mount", desc = "Mount archive" },
+    { on = [ "a", "u" ], run = "plugin archivemount unmount", desc = "Unmount archive" },
     ## Filter
     { on = "f", run = "plugin smart-filter", desc = "Filter files" },
     ## Tabs
@@ -149,7 +148,9 @@ keymap = [
     ## Hidden files
     { on = [ "<C-c>", "h" ], run = "hidden --toggle", desc = "Toggle visibility of hidden files" },
     ## Task manager
-    { on = [ "<C-x>", "m" ], run = "tasks_show", desc = "Show task manager" },
+    { on = [ "<C-x>", "t" ], run = "tasks_show", desc = "Show task manager" },
+    ## Mount manager
+    { on = [ "<C-x>", "m" ], run = "plugin mount", desc = "Show (disk) mount manager" },
     ## Shell execution
     { on = [ "<C-x>",  "s" ], run = "shell --interactive", desc = "Run shell interactively" },
     { on = [ "<C-x>",  "S" ], run = "shell --interactive --block", desc = "Run shell interactively, blocking" },
