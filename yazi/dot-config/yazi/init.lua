@@ -34,10 +34,14 @@ require("augment-command"):setup({
     wraparound_file_navigation = false,
 })
 
----- Archives
-require("fuse-archive"):setup({
-  smart_enter = true,
+---- Clipboard
+require("copy-file-contents"):setup({
+	append_char = "\n",
+	notification = true,
 })
+
+---- Archives
+require("archivemount"):setup()
 
 --- Custom Functions
 ---- Linemode showing both size and modification time

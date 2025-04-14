@@ -4,7 +4,7 @@ ZSH_THEME=""
 # Add completion functions
 fpath+="$ZSH_CUSTOM/plugins/zsh-completions/src"
 
-# Source FZF zsh scripts (widgets for history, file, 
+# Source FZF zsh scripts (widgets for history, file,
 # and completion search)
 . <(fzf --zsh)
 
