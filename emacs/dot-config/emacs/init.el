@@ -832,7 +832,7 @@
   ;; default value in the same way as a literal string prompt
   (defun a-tempel-placeholder-form-as-lit (elt)
     (pcase elt
-      (`(po ,prompt . ,rest)
+      (`(pfl ,prompt . ,rest)
        (let ((evprompt (eval prompt)))
          (if (stringp evprompt)
              `(p ,evprompt ,@rest)
@@ -1378,7 +1378,7 @@
     (keymap-local-set "<backtab>" #'a-basic-deindent)
     (keymap-local-set "M-<tab>" #'indent-for-tab-command)
     (keymap-local-set "C-M-i" #'indent-for-tab-command)
-    (add-hook 'post-self-insert-hook #'easycrypt-indent-on-insertion-closer))
+    (add-hook 'post-self-insert-hook #'easycrypt-indent-on-insertion-closer nil t))
   (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation))
 
 ;;; Themes
