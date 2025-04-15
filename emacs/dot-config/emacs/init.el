@@ -1363,7 +1363,6 @@
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
   (add-hook 'proof-response-mode-hook #'setup-a-proof-other-mode-map)
   (add-hook 'proof-goals-mode-hook #'setup-a-proof-other-mode-map)
-  ;;(add-hook 'proof-mode-hook #'setup-a-proof-goal-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
   ;;;;;; EasyCrypt
   (defun setup-an-easycrypt-indentation ()
@@ -1379,7 +1378,7 @@
     (keymap-local-set "<backtab>" #'a-basic-deindent)
     (keymap-local-set "M-<tab>" #'indent-for-tab-command)
     (keymap-local-set "C-M-i" #'indent-for-tab-command)
-    (add-hook 'post-self-insert-hook #'indent-on-insertion-closer))
+    (add-hook 'post-self-insert-hook #'easycrypt-indent-on-insertion-closer))
   (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation))
 
 ;;; Themes
