@@ -116,7 +116,7 @@ Meant for `post-self-insert-hook`."
     (let* ((orig-col (current-column))
            (indent-level (easycrypt-indent-level))
            (indent-diff (- (current-indentation) indent-level)))
-      ;; If 0 < indent-diff, i.e., we de-indent
+      ;; If 0 < indent-diff, i.e., we are de-indenting
       (when (< 0 indent-diff)
         ;; Go to the computed indent level
         (indent-line-to indent-level)
@@ -124,42 +124,78 @@ Meant for `post-self-insert-hook`."
         ;; (`indent-line-to` moves it to end of indentation)
         (move-to-column (- orig-col indent-diff))))))
 
-
 ;;; Extra functionality
-(defun an-easycrypt-func-at-point (command)
+(defun an-easycrypt-is-supported-shell-command (command)
+  "Checks if the provided `command` is a valid/supported EasyCrypt shell command
+(in the sense that a command below is implemented for it).
+Prints a message informing the user if that is not the case."
+  (or (member command '("print" "search" "locate"))
+      (progn ((message "Unknown/Unsupported command: `%s`." command) nil))))
+
+(defun an-easycrypt-shell-command (command &rest args)
+  "Combines `command` and `args` into a command for the EasyCrypt shell, and
+directly calls the shell with it."
+  (if args
+      (proof-shell-invisible-command (concat command " " (string-join args " ")))
+    (proof-shell-invisible-command command)))
+
+(defun an-easycrypt-command-at-point (command)
   "Takes the active region or tries to find a (reasonable) thing at point,
 and uses the result as an argument to the `command` command of EasyCrypt.
 If nothing (reasonable) is found, or the provided `command` is not valid,
 prints a message informing the user."
-  (if (memq command '("print" "search" "locate"))
-      (let ((arg (if (use-region-p)
-                     (buffer-substring-no-properties (region-beginning) (region-end))
-                   (or (thing-at-point 'sexp t)
-                       (thing-at-point 'word t)
-                       (thing-at-point 'symbol t)))))
-        (if arg
-            (let ((command (concat command " " arg)))
-              (proof-shell-invisible-command command))
-          (message "No valid region or reasonable thing at point found for command `%s`." command)))
-    (message "Unknown/Unsupported command: `%s`." command)))
+  (when (an-easycrypt-is-supported-shell-command command)
+    (let ((arg (if (use-region-p)
+                   (buffer-substring-no-properties (region-beginning) (region-end))
+                 (or (thing-at-point 'sexp t)
+                     (thing-at-point 'word t)
+                     (thing-at-point 'symbol t)))))
+      (if arg
+          (an-easycrypt-shell-command command arg)
+        (message "No valid region or reasonable thing at point found for command `%s`." command)))))
 
 (defun an-easycrypt-print-at-point ()
   "Takes the active region or tries to find a (reasonable) thing at point,
 and uses the result as an argument to the `print` command of EasyCrypt."
   (interactive)
-  (an-easycrypt-func-at-point "print"))
+  (an-easycrypt-command-at-point "print"))
 
 (defun an-easycrypt-search-at-point ()
-  "Takes the active region or tries to find a (reasonable) thing at point,
-and uses the result as an argument to the `search` command of EasyCrypt."
+  "Like `an-easycrypt-print-at-point`, but issues the search command."
   (interactive)
-  (an-easycrypt-func-at-point "search"))
+  (an-easycrypt-command-at-point "search"))
 
 (defun an-easycrypt-locate-at-point ()
-  "Takes the active region or tries to find a (reasonable) thing at point,
-and uses the result as an argument to the `locate` command of EasyCrypt."
+  "Like `an-easycrypt-print-at-point`, but issues the locate command."
   (interactive)
-  (an-easycrypt-func-at-point "locate"))
+  (an-easycrypt-command-at-point "locate"))
+
+(defun an-easycrypt-command-at-mouse (event command)
+  "Like `an-easycrypt-command-at-point`, but tries to find thing at mouse
+instead of point. Also doesn't consider regions."
+  (when (an-easycrypt-is-supported-shell-command command)
+    (let ((arg (or (thing-at-mouse event 'sexp t)
+                   (thing-at-mouse event 'word t)
+                   (thing-at-mouse event 'symbol t))))
+      (if arg
+          (an-easycrypt-shell-command command arg)
+        (message "No valid region or reasonable thing at mouse found for command `%s`." command)))))
+
+(defun an-easycrypt-print-at-mouse (event)
+  "Tries to find a (reasonable) thing at mouse, and uses the result
+as an argument to the `print` command of EasyCrypt."
+  (interactive "e")
+  (an-easycrypt-command-at-mouse event "print"))
+
+(defun an-easycrypt-search-at-mouse (event)
+  "Like `an-easycrypt-print-at-mouse`, but issues the search command."
+  (interactive "e")
+  (an-easycrypt-command-at-mouse event "search"))
+
+(defun an-easycrypt-locate-at-mouse (event)
+  "Like `an-easycrypt-print-at-mouse`, but issues the locate command."
+  (interactive "e")
+  (an-easycrypt-command-at-mouse event "locate"))
 
 (provide 'func-pkgs)
 

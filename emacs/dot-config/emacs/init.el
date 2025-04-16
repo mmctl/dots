@@ -506,6 +506,12 @@
               ("C-n" . #'dired-next-marked-file)
               ("C-<prior>" . #'dired-up-directory)))
 
+(use-package dabbrev
+  :init
+  (setopt dabbrev-upcase-means-case-search t)
+  (setopt dabbrev-case-distinction nil)
+  (setopt dabbrev-case-replace nil))
+
 ;;; Helpers
 (use-package which-key
   :ensure t
