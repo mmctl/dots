@@ -1302,8 +1302,20 @@
   :ensure t
   :pin melpa
   :init
-  ;;;;; Options
-  ;;;;;; General
+  ;; Keymaps
+  (defvar-keymap a-proof-mode-process-repeat-map
+    :doc "Keymap (repeatable) for processing proof commands"
+    :repeat (:hints ((proof-undo-last-successful-command . "Undo last succesful command")
+                     (proof-assert-next-command-interactive . "Assert next command")
+                     (proof-undo-and-delete-last-successful-command . "Undo and delete last successful command")))
+    "p" #'proof-undo-last-successful-command
+    "C-p" #'proof-undo-last-successful-command
+    "n" #'proof-assert-next-command-interactive
+    "C-n" #'proof-assert-next-command-interactive
+    "d" #'proof-undo-and-delete-last-successful-command
+    "C-d" #'proof-undo-and-delete-last-successful-command)
+  ;; Options
+  ;;; General
   (setopt proof-splash-enable nil
           proof-toolbar-enable nil)
   (setopt proof-delete-empty-windows t
@@ -1318,12 +1330,12 @@
           proof-follow-mode 'locked
           proof-auto-action-when-deactivating-scripting 'retract)
   (setopt bufhist-ring-size 32)
-  ;;;;;; EasyCrypt
+  ;;; EasyCrypt
   (setopt easycrypt-script-indent nil
           easycrypt-one-command-per-line nil)
   (setopt easycrypt-prog-name "easycrypt")
-  ;;;;; Hooks
-  ;;;;;; General
+  ;; Hooks
+  ;;; General
   (defun setup-a-bufhist-map ()
     (keymap-set bufhist-mode-map "C-p" #'bufhist-prev)
     (keymap-set bufhist-mode-map "C-n" #'bufhist-next)
@@ -1370,7 +1382,7 @@
   (add-hook 'proof-response-mode-hook #'setup-a-proof-other-mode-map)
   (add-hook 'proof-goals-mode-hook #'setup-a-proof-other-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
-  ;;;;;; EasyCrypt
+  ;;; EasyCrypt
   (defun setup-an-easycrypt-indentation ()
     (setq-local electric-indent-mode nil)
     (setq-local electric-indent-inhibit t)
@@ -1385,7 +1397,32 @@
     (keymap-local-set "M-<tab>" #'indent-for-tab-command)
     (keymap-local-set "C-M-i" #'indent-for-tab-command)
     (add-hook 'post-self-insert-hook #'easycrypt-indent-on-insertion-closer nil t))
-  (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation))
+  (defun setup-an-easycrypt-mode-map ()
+    (keymap-set easycrypt-mode-map "C-c l x" #'proof-minibuffer-cmd)
+    (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
+    (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
+    (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
+    (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
+    (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
+    (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
+    (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
+    (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
+    (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
+  (defun setup-an-easycrypt-other-mode-map ()
+    (keymap-set easycrypt-mode-map "C-c l x" #'proof-minibuffer-cmd)
+    (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
+    (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
+    (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
+    (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
+    (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
+    (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
+    (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
+    (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
+    (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
+  (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation)
+  (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-mode-map)
+  (add-hook 'easycrypt-response-mode-hook #'setup-an-easycrypt-other-mode-map)
+  (add-hook 'easycrypt-goals-mode-hook #'setup-an-easycrypt-other-mode-map))
 
 ;;; Themes
 ;;;; Doom-themes general

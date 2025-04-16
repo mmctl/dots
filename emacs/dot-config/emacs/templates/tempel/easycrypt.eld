@@ -1,17 +1,13 @@
 ;; easycrypt.eld
 ;; Tempel templates for easycrypt mode
+;; Doesn't include possibilities that are too close to single keywords
+;; (as these should be covered by another mechanism)
 
 easycrypt-mode
 
 ;; Internal
-(pragma "pragma " q ".")
 (pragmap "pragma +" q ".")
 (pragmam "pragma -" q ".")
-
-;; (Extra) Functionality (e.g., print, locate, search)
-(locate "locate " q ".")
-(print "print " q ".")
-(search "search " q ".")
 
 ;; Comments and documentation
 ;;; Regular comments
@@ -22,7 +18,7 @@ easycrypt-mode
 
 ;;;; Aliases
 (com (i comment))
-(com (i commentn))
+(comn (i commentn))
 
 
 ;;; Documentation comments
@@ -88,71 +84,54 @@ easycrypt-mode
 
 
 ;; Scope
-(declare "declare " q ".")
-(local "local " q ".")
-
-;;; Aliases
-(dec (i declare))
-(loc (i local))
-
 
 ;; Functional specification
 (type "type " p " = " q ".")
 (typen "type " p " =" n>
        q "." >)
-(typeabs "type " q ".")
 
 (op "op " p " : " p " = " q ".")
-(opn "op " p " : " p " = " n>
+(opn "op " p " : " p " =" n>
      q "." >)
 (opabs "op " p " : " q ".")
 
 (const "const " p " : " p " = " q ".")
-(constn "const " p " : " p " = " n>
-     q "." >)
+(constn "const " p " : " p " =" n>
+        q "." >)
 (constabs "const " p " : " q ".")
 
 (abbrev "abbrev " p " = " q ".")
 (abbrevn "abbrev " p " =" n>
          q "." >)
 
-(abstract "abstract " p ".")
-(abstracttheory "abstract theory " (p "" thname)  "." n>
-                q n>
-                "end " (s thname) "." >)
-
-(axiom "axiom " p " : " q ".")
-(axiomn "axiom " p " :" n>
-        q "." >)
-(declareaxiom "declare " (i axiom))
-(declareaxiomn "declare " (i axiomn))
-
-(lemma "lemma " p " : " p "." n>
-       "proof." n>
+(theory "theory " (p "" thid)  "." n>
         q n>
-        "qed." >)
-(lemmaby "lemma " p " : " p " by " q ".")
-(lemmapq "lemma " p " : " p "." n>
-         "proof." q "qed.")
-(lemman "lemma " p " :" n>
-        q "." n>
-        "proof." n>
-        n>
-        "qed." >)
-(lemmanpq "lemma " p " :" n>
-          p "." n>
-          "proof." q "qed.")
-(locallemma "local " (i lemma))
-(locallemmaby "local " (i lemmaby))
-(locallemmapq "local " (i lemmapq))
-(locallemman "local " (i lemman))
-(locallemmanpq "local " (i lemmanpq))
+        "end " (s thid) "." >)
+(abstracttheory "abstract " (i theory))
+
+(section "section." n>
+         q >
+         "end section." >)
+(sectionid "section" (p "" secid) "." n>
+           q >
+           "end section " (s secid) >)
+
+(pr "Pr[" p " @ " p " : " q "]")
+(prn "Pr[" p " @ " p " :" n>
+     q "]" >)
+(prns "Pr[" n>
+      p " @ " p " :" n>
+      q "]" >)
+(prm "Pr[" q " @ &m : " q "]")
+(prmn "Pr[" q " @ &m : " n>
+      q "]" >)
+(prdef "Pr[" q " @ &m : res]")
 
 (hoare "hoare[" p " : " p " ==> " q "]")
 (hoaren "hoare[" n>
-           p " :" n>
-           p " ==> " p n>
-           "]" >)
+        p " :" n>
+        p " ==> " p n>
+        "]" >)
 (hoarens "hoare[" n>
          p " :" n>
          p n>
@@ -173,9 +152,9 @@ easycrypt-mode
           "] = " q >)
 (phoare1 "phoare[" p " : " p " ==> " q "] = 1%r")
 (phoare1n "phoare[" n>
-         p " :" n>
-         p " ==> " q n>
-         "] = 1%r" >)
+          p " :" n>
+          p " ==> " q n>
+          "] = 1%r" >)
 (phoare1ns "phoare[" n>
            p " :" n>
            p n>
@@ -192,56 +171,200 @@ easycrypt-mode
          p n>
          "~" n>
          p " :" n>
-         p "==>" p "]")
-(equivnlongs "equiv[" n>
-           p " ~ " p n>
-           p n>
-           "==>" n>
-           p "]")
-(equivlongps "equiv[" n>
-             p "." p n>
-             "~" n>
-             p "." p " :" n>
-             p n>
-             "==>" n>
-             p "]")
+         p "==>" q n>
+         "]" >)
+(equivnsp "equiv[" n>
+          p " ~ " p n>
+          p n>
+          "==>" n>
+          q "]" >)
 
-(hoarelemma "hoare " p " :" n>
-            p "." p " : " p " ==> " p ".")
+(axiom "axiom " p " : " q ".")
+(axiomn "axiom " p " :" n>
+        q "." >)
 
-(equivlemma "equiv " p)
+(proof "proof." n>
+       q n>
+       "qed." >)
+(proofl "proof." q "qed.")
 
+(lemma "lemma " p " : " p "." n>
+       (i proof))
+(lemmaby "lemma " p " : " p " by " q ".")
+(lemmapq "lemma " p " : " p "." n>
+         (i proofl) >)
+(lemman "lemma " p " :" n>
+        p "." n>
+        (i proof))
+(lemmanpq "lemma " p " :" n>
+          p "." n>
+          (i proofl))
 
-;; Imperative specification
+(hoarelemma "hoare " p " : " p " : " p " ==> " p "." n>
+            (i proof))
+(hoarelemmapq "hoare " p " : " p " : " p " ==> " p "." n>
+              (i proofl))
+(hoarelemman "hoare " p " :" n>
+             p " : " p " ==> " q "." n>
+             (i proof))
+(hoarenlemman "hoare " p " :" n>
+              p " :" n>
+              p " ==> " q "." n>
+              (i proof))
+(hoarenslemman "hoare " p " :" n>
+               p " :" n>
+               p n>
+               "==>" n>
+               q "." n>
+               (i proof))
 
-
-;; (pr "Pr[" (p "Mod") "." (p "Proc") "(" (p "Args") ")" " @ " (p "Mem") " : " (p "Event") "]")
-;;(prdefault "Pr[" (p "Mod") "." (p "Proc") "(" (p "Args") ")" " @ &m : res]")
-(pr "Pr[" p "." p "(" p ")" " @ " p " : " q "]")
-(prdef "Pr[" p "." p "(" q ") @ &m : res]")
+(equivlemma "equiv " p " : " p " ~ " p " : " p " ==> " q "." n>
+            (i proof))
+(equivlemmapq "equiv " p " : " p " ~ " p " : " p " ==> " q "." n>
+              (i proofl))
+(equivlemman "equiv " p " :" n>
+             p " ~ " p " : " p " ==> " q "." n>
+             (i proof))
+(equivnlemman "equiv " p " :" n>
+              p " ~ " p " :" n>
+              p " ==> " q "." n>
+              (i proof))
+(equivnslemman "equiv " p " :" n>
+               p " ~ " p " :" n>
+               p n>
+               "==>" n>
+               q "." n>
+               (i proof))
+(equivnsplemman "equiv " p " :" n>
+                p n>
+                "~" n>
+                p " :" n>
+                p n>
+                "==>" n>
+                q "."
+                (i proof))
 
 ;;; Aliases
 (abv (i abbrev))
-(abs (i abstract))
 (absth (i abstractheory))
 
 
 ;; Imperative specification
+(procsig "proc " p " : " q)
+(procsiglim "proc " p " : " q " { " q " }")
+
+(proc "proc " p " : " p " = {" n>
+      q n>
+      "}" >)
+(procnt "proc " p " = {" n>
+        q n>
+        "}" >)
+(procl "proc " p " : " p " = { " q " }")
+(proclnt "proc " p " = { " q " }")
+
+(moduletype "module type " p " = {" n>
+            q
+            "}." >)
+(moduletypep "module type " p " (" p ") = {" n>
+             q
+             "}." >)
+
+;; (moduletype1 "module type " p " = {" n>
+;;              (i procsig) n>
+;;              "}." >)
+;; (moduletype2 "module type " p " = {" n>
+;;              (i procsig) n>
+;;              (i procsig) n>
+;;              "}." >)
+;; (moduletype3 "module type " p " = {" n>
+;;              (i procsig) n>
+;;              (i procsig) n>
+;;              (i procsig) n>
+;;              "}." >)
+
+(module "module " p " = {" n>
+        q
+        "}." >)
+(modulep "module " p "(" p ") = {" n>
+         q
+         "}." >)
+
+;; (module1 "module " p " = {" n>
+;;            (i proc) n>
+;;            "}." >)
+;; (module2 "module " p " = {" n>
+;;            (i proc) n
+;;            n>
+;;            (i proc) n
+;;            "}." >)
+;; (module3 "module " p " = {" n>
+;;            (i proc) n
+;;            n>
+;;            (i proc) n
+;;            n>
+;;            (i proc) n
+;;            "}." >)
 
 
+(modulet "module " p " : " p " = {" n>
+         q
+         "}." >)
 
+(modulept "module " p " (" p ") : " p " = {" n>
+          q
+          "}." >)
+
+
+;; (modulet1 "module " p " : " p " = {" n>
+;;          (i proc) n>
+;;          "}." >)
+;; (modulet2 "module " p " : " p " = {" n>
+;;          (i proc) n>
+;;          (i proc) n>
+;;          "}." >)
+;; (modulet3 "module " p " : " p " = {" n>
+;;          (i proc) n>
+;;          (i proc) n>
+;;          (i proc) n>
+;;          "}." >)
+
+;; Tactics
 
 ;; Advanced/Specific
 (prub (i pr) n>
       "<=" n>
       (i pr))
+(prnub (i prn) n>
+       "<=" n>
+       (i prn))
+(prnsub (i prns) n>
+        "<=" n>
+        (i prns))
+(prmub (i prm) n>
+       "<=" n>
+       (i prm))
+(prmnub (i prmn) n>
+        "<=" n>
+        (i prmn))
 (prubdef (i prdef) n>
          "<=" n>
          (i prdef))
-(lemprub (i lemma)
-         (i pr) n>
-         "<=" n>
-         (i pr))
-(lemprubdef (i prdef) n>
-            "<=" n>
-            (i prdef))
+
+(preq (i pr) n>
+      "=" n>
+      (i pr))
+(prneq (i prn) n>
+       "=" n>
+       (i prn))
+(prnseq (i prns) n>
+        "=" n>
+        (i prns))
+(prmeq (i prm) n>
+       "=" n>
+       (i prm))
+(prmneq (i prmn) n>
+        "=" n>
+        (i prmn))
+(preqdef (i prdef) n>
+         "=" n>
+         (i prdef))

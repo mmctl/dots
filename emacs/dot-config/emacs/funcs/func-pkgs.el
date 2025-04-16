@@ -152,7 +152,9 @@ prints a message informing the user."
                      (thing-at-point 'symbol t)))))
       (if arg
           (an-easycrypt-shell-command command arg)
-        (message "No valid region or reasonable thing at point found for command `%s`." command)))))
+        (message (concat "No valid region or reasonable thing at point found for command `%s`."
+                         " Try highlighting the thing if automatic detection doesn't work.")
+                 command)))))
 
 (defun an-easycrypt-print-at-point ()
   "Takes the active region or tries to find a (reasonable) thing at point,
@@ -160,15 +162,15 @@ and uses the result as an argument to the `print` command of EasyCrypt."
   (interactive)
   (an-easycrypt-command-at-point "print"))
 
-(defun an-easycrypt-search-at-point ()
-  "Like `an-easycrypt-print-at-point`, but issues the search command."
-  (interactive)
-  (an-easycrypt-command-at-point "search"))
-
 (defun an-easycrypt-locate-at-point ()
   "Like `an-easycrypt-print-at-point`, but issues the locate command."
   (interactive)
   (an-easycrypt-command-at-point "locate"))
+
+(defun an-easycrypt-search-at-point ()
+  "Like `an-easycrypt-print-at-point`, but issues the search command."
+  (interactive)
+  (an-easycrypt-command-at-point "search"))
 
 (defun an-easycrypt-command-at-mouse (event command)
   "Like `an-easycrypt-command-at-point`, but tries to find thing at mouse
@@ -179,7 +181,7 @@ instead of point. Also doesn't consider regions."
                    (thing-at-mouse event 'symbol t))))
       (if arg
           (an-easycrypt-shell-command command arg)
-        (message "No valid region or reasonable thing at mouse found for command `%s`." command)))))
+        (message "No reasonable thing at mouse found for command `%s`." command)))))
 
 (defun an-easycrypt-print-at-mouse (event)
   "Tries to find a (reasonable) thing at mouse, and uses the result
@@ -187,15 +189,15 @@ as an argument to the `print` command of EasyCrypt."
   (interactive "e")
   (an-easycrypt-command-at-mouse event "print"))
 
-(defun an-easycrypt-search-at-mouse (event)
-  "Like `an-easycrypt-print-at-mouse`, but issues the search command."
-  (interactive "e")
-  (an-easycrypt-command-at-mouse event "search"))
-
 (defun an-easycrypt-locate-at-mouse (event)
   "Like `an-easycrypt-print-at-mouse`, but issues the locate command."
   (interactive "e")
   (an-easycrypt-command-at-mouse event "locate"))
+
+(defun an-easycrypt-search-at-mouse (event)
+  "Like `an-easycrypt-print-at-mouse`, but issues the search command."
+  (interactive "e")
+  (an-easycrypt-command-at-mouse event "search"))
 
 (provide 'func-pkgs)
 

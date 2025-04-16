@@ -148,7 +148,7 @@ keymap = [
     ## Hidden files
     { on = [ "<C-c>", "h" ], run = "hidden --toggle", desc = "Toggle visibility of hidden files" },
     ## Task manager
-    { on = [ "<C-x>", "t" ], run = "tasks_show", desc = "Show task manager" },
+    { on = [ "<C-x>", "t" ], run = "tasks:show", desc = "Show task manager" },
     ## Mount manager
     { on = [ "<C-x>", "m" ], run = "plugin mount", desc = "Show (disk) mount manager" },
     ## Shell execution
