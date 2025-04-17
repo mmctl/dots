@@ -738,7 +738,7 @@
           corfu-left-margin-width 0.5
           corfu-right-margin-width 0.5
           corfu-bar-width 0.25
-          corfu-auto-prefix 3
+          corfu-auto-prefix 2
           corfu-auto-delay 0.25
           ;; Auto mode
           corfu-preselect 'valid
@@ -766,27 +766,27 @@
 
   (defun setup-a-cape-text-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (list (cape-capf-super #'cape-abbrev
                                        #'cape-dict-prefix-2
                                        #'cape-dabbrev-prefix-2))))
   (defun setup-a-cape-mix-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (list (cape-capf-super #'cape-abbrev
                                        #'cape-keyword-prefix-2 #'cape-dict-prefix-2
                                        #'cape-dabbrev-prefix-2))))
   (defun setup-a-cape-code-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (list (cape-capf-super #'cape-abbrev
                                        #'cape-keyword-prefix-2
                                        #'cape-dabbrev-prefix-2))))
   (defun setup-a-cape-minibuffer ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (list (cape-capf-super #'cape-abbrev
                                        #'cape-history-prefix-2 #'cape-file-prefix-2
                                        #'cape-dabbrev-prefix-2))))
 
   ;; Global
-  (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev-prefix-2 #'cape-dabbrev-prefix-2))
+  (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev #'cape-dabbrev-prefix-2))
 
   ;; Local
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
@@ -827,6 +827,8 @@
     "e" #'tempel-expand
     "i" #'tempel-insert)
   (keymap-global-set "C-c t" 'a-tempel-map-prefix)
+  (tempel-key "f" fixme a-tempel-map)
+  (tempel-key "t" todo a-tempel-map)
   ;; Create and store templates directory
   (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/"))
     "Directory where tempel templates are stored.")
@@ -854,7 +856,7 @@
   (add-to-list 'tempel-user-elements #'a-tempel-include)
 
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
-  (setopt tempel-mark #("_" 0 1 (display (space :width (2)) face tempel-field)))
+  (setopt tempel-mark #(" " 0 1 (display (space :width (2)) face tempel-field)))
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
@@ -942,15 +944,13 @@
 
 (use-package avy
   :ensure t
+  :demand t
   :pin melpa
+  :hook (minibuffer-setup . (lambda () (keymap-local-set "C-j" nil)))
   :bind (("C-j" . avy-goto-char)
          :map isearch-mode-map
          ("C-j" . nil)
-         ("C-S-j" . #'avy-isearch)
-         :map minibuffer-mode-map
-         ("C-j" . nil)
-         :map read-expression-map
-         ("C-j" . nil))
+         ("C-S-j" . #'avy-isearch))
   :config
   (defvar-keymap an-avy-map
     :doc "Keymap for avy"
@@ -1314,6 +1314,21 @@
     "C-n" #'proof-assert-next-command-interactive
     "d" #'proof-undo-and-delete-last-successful-command
     "C-d" #'proof-undo-and-delete-last-successful-command)
+  (defvar-keymap a-bufhist-repeat-map
+    :doc "Keymap (repeatable) for browsing and managing buffer history"
+    :repeat (:hints ((bufhist-prev . "Go to previous history element")
+                     (bufhist-next . "Go to next history element")
+                     (bufhist-first . "Go to first history element")
+                     (bufhist-last . "Go to last history element")
+                     (bufhist-delete . "Delete current history element")))
+    "p" #'bufhist-prev
+    "n" #'bufhist-next
+    "f" #'bufhist-first
+    "l" #'bufhist-last
+    "d" #'bufhist-delete)
+  (defvar-keymap an-easycrypt-template-map
+    :doc "Keymap for EasyCrypt templates"
+    :prefix 'an-easycrypt-template-map-prefix)
   ;; Options
   ;;; General
   (setopt proof-splash-enable nil
@@ -1381,48 +1396,7 @@
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
   (add-hook 'proof-response-mode-hook #'setup-a-proof-other-mode-map)
   (add-hook 'proof-goals-mode-hook #'setup-a-proof-other-mode-map)
-  (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
-  ;;; EasyCrypt
-  (defun setup-an-easycrypt-indentation ()
-    (setq-local electric-indent-mode nil)
-    (setq-local electric-indent-inhibit t)
-    (setq-local indent-line-function #'easycrypt-indent-line)
-    (keymap-local-set "RET" #'newline-and-indent)
-    (keymap-local-set "<return>" #'newline-and-indent)
-    (keymap-local-set "S-RET" #'newline)
-    (keymap-local-set "S-<return>" #'newline)
-    (keymap-local-set "TAB" #'a-basic-indent)
-    (keymap-local-set "<tab>" #'a-basic-indent)
-    (keymap-local-set "<backtab>" #'a-basic-deindent)
-    (keymap-local-set "M-<tab>" #'indent-for-tab-command)
-    (keymap-local-set "C-M-i" #'indent-for-tab-command)
-    (add-hook 'post-self-insert-hook #'easycrypt-indent-on-insertion-closer nil t))
-  (defun setup-an-easycrypt-mode-map ()
-    (keymap-set easycrypt-mode-map "C-c l x" #'proof-minibuffer-cmd)
-    (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
-    (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
-    (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
-    (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
-    (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
-    (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
-    (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
-  (defun setup-an-easycrypt-other-mode-map ()
-    (keymap-set easycrypt-mode-map "C-c l x" #'proof-minibuffer-cmd)
-    (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
-    (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
-    (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
-    (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
-    (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
-    (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
-    (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
-  (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation)
-  (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-mode-map)
-  (add-hook 'easycrypt-response-mode-hook #'setup-an-easycrypt-other-mode-map)
-  (add-hook 'easycrypt-goals-mode-hook #'setup-an-easycrypt-other-mode-map))
+  (add-hook 'proof-mode-hook #'setup-a-bufhist-map))
 
 ;;; Themes
 ;;;; Doom-themes general
@@ -1494,7 +1468,7 @@
   (enable-theme 'doom-nord))
 
 
-;; Cross-package enhancements
+;; Post/Cross-package enhancements
 ;;; Custom functions/functionalities (with package dependencies)
 (require 'func-pkgs)
 
@@ -1502,16 +1476,65 @@
 (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
 (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t)
 
-;; Corfu + Orderless
+;;; Corfu + Orderless
 (add-hook 'corfu-mode-hook
           (lambda ()
             (setq-local completion-styles '(orderless-literal-only basic))))
 
-;; Corfu + Vertico
+;;; Corfu + Vertico
 (setopt global-corfu-minibuffer
         (lambda ()
           (not (or (bound-and-true-p vertico--input)
                    (eq (current-local-map) read-passwd-map)))))
+
+;;; Tempel
+(keymap-global-set "M-o" #'tempel-expand-or-complete)
+
+;;; EasyCrypt
+(defun setup-an-easycrypt-indentation ()
+  (setq-local electric-indent-mode nil)
+  (setq-local electric-indent-inhibit t)
+  (setq-local indent-line-function #'easycrypt-indent-line)
+  (keymap-local-set "RET" #'newline-and-indent)
+  (keymap-local-set "<return>" #'newline-and-indent)
+  (keymap-local-set "S-RET" #'newline)
+  (keymap-local-set "S-<return>" #'newline)
+  (keymap-local-set "TAB" #'a-basic-indent)
+  (keymap-local-set "<tab>" #'a-basic-indent)
+  (keymap-local-set "<backtab>" #'a-basic-deindent)
+  (keymap-local-set "M-<tab>" #'indent-for-tab-command)
+  (keymap-local-set "C-M-i" #'indent-for-tab-command)
+  (add-hook 'post-self-insert-hook #'easycrypt-indent-on-insertion-closer nil t))
+(defun setup-an-easycrypt-mode-map ()
+  (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
+  (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
+  (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
+  (keymap-set easycrypt-mode-map "C-c l t" 'an-easycrypt-template-map-prefix)
+  (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
+  (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
+  (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
+  (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
+  (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
+  (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
+(defun setup-an-easycrypt-other-mode-map ()
+  (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
+  (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
+  (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
+  (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
+  (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
+  (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
+  (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
+  (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
+  (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
+
+(add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation)
+(add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-mode-map)
+(add-hook 'easycrypt-response-mode-hook #'setup-an-easycrypt-other-mode-map)
+(add-hook 'easycrypt-goals-mode-hook #'setup-an-easycrypt-other-mode-map)
+
+
+;(tempel-key )
+
 
 ;; Hooks
 ;;; Frames/windows

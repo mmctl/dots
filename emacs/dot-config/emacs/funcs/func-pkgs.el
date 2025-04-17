@@ -25,6 +25,18 @@
      (cdr (ring-ref avy-ring 0))))
   t)
 
+
+;; Tempel
+(defun tempel-expand-or-complete ()
+  "Try `tempel-expand', then fall back to `tempel-complete`."
+  (interactive)
+  (unless (condition-case nil
+                (tempel-expand t)
+            (user-error nil))
+    ;; Only reached if `tempel-expand` failed
+    (tempel-complete t)))
+
+
 ;; EasyCrypt
 ;;; Indentation
 (defun easycrypt-indent-level ()
@@ -100,10 +112,15 @@
   "Indent line of EasyCrypt code."
   (interactive)
   ;; Indent accordingly
-  (indent-line-to (easycrypt-indent-level))
-  ;; Adjust point if it's inside indentation
-  (when (< (current-column) (current-indentation))
-    (move-to-column indent-level)))
+  (let ((indent-level (easycrypt-indent-level)))
+    ;; `indent-line-to`would move point to new indentation, and
+    ;; we prevent this by `save-excursion` so point position remains consistent
+    ;; (making templates more consistent as well)
+    (save-excursion
+      (indent-line-to indent-level))
+    ;; Still adjust point if it's inside indentation
+    (when (< (current-column) (current-indentation))
+      (move-to-column indent-level))))
 
 (defun easycrypt-indent-on-insertion-closer ()
   "Indent when last input was }, ), ], or \", but only
@@ -130,7 +147,7 @@ Meant for `post-self-insert-hook`."
 (in the sense that a command below is implemented for it).
 Prints a message informing the user if that is not the case."
   (or (member command '("print" "search" "locate"))
-      (progn ((message "Unknown/Unsupported command: `%s`." command) nil))))
+      (progn ((user-error "Unknown/Unsupported command: `%s`." command) nil))))
 
 (defun an-easycrypt-shell-command (command &rest args)
   "Combines `command` and `args` into a command for the EasyCrypt shell, and
@@ -152,9 +169,8 @@ prints a message informing the user."
                      (thing-at-point 'symbol t)))))
       (if arg
           (an-easycrypt-shell-command command arg)
-        (message (concat "No valid region or reasonable thing at point found for command `%s`."
-                         " Try highlighting the thing if automatic detection doesn't work.")
-                 command)))))
+        (user-error "No valid region or reasonable thing at point found for command `%s`. Try highlighting the thing if automatic detection doesn't work."
+                    command)))))
 
 (defun an-easycrypt-print-at-point ()
   "Takes the active region or tries to find a (reasonable) thing at point,
@@ -181,7 +197,7 @@ instead of point. Also doesn't consider regions."
                    (thing-at-mouse event 'symbol t))))
       (if arg
           (an-easycrypt-shell-command command arg)
-        (message "No reasonable thing at mouse found for command `%s`." command)))))
+        (user-error "No reasonable thing at mouse found for command `%s`." command)))))
 
 (defun an-easycrypt-print-at-mouse (event)
   "Tries to find a (reasonable) thing at mouse, and uses the result
