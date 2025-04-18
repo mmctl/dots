@@ -16,10 +16,23 @@
 (defconst cst-easycrypt-scope-keywords
   (list "declare" "local"))
 
+(defconst cst-easycrypt-proof-start-keywords
+  (list "proof"))
+
+(defconst cst-easycrypt-proof-end-keywords
+  (list "qed"))
+
+(defconst cst-easycrypt-proof-delimit-keywords
+  (append cst-easycrypt-proof-start-keywords
+          cst-easycrypt-proof-end-keywords))
+
 (defconst cst-easycrypt-structural-keywords
-  (list "proof" "qed" "section" "realize" "Self" "Top"))
+  (list "section" "realize" "Self" "Top"))
 
 ;;;; Specification keywords
+(defconst cst-easycrypt-proof-spec-keywords
+  (list "equiv" "hoare" "lemma"))
+
 (defconst cst-easycrypt-functional-spec-start-keywords
   (list "abbrev" "abstract" "axiom" "class" "const" "eager"
         "ehoare" "equiv" "hoare" "inductive" "instance" "lemma"
@@ -32,8 +45,9 @@
         "Pr" "res" "then"))
 
 (defconst cst-easycrypt-functional-spec-keywords
-  (append cst-easycrypt-functional-spec-start-keywords
-          cst-easycrypt-functional-spec-other-keywords))
+  (delete-dups (append cst-easycrypt-proof-spec-keywords
+                       cst-easycrypt-functional-spec-start-keywords
+                       cst-easycrypt-functional-spec-other-keywords)))
 
 (defconst cst-easycrypt-imperative-spec-keywords
   (list "assert" "elif" "else" "for" "if" "import"
@@ -87,12 +101,15 @@
                        cst-easycrypt-spec-keywords
                        cst-easycrypt-tactics-keywords)))
 
-;;;; All "start" keywords (i.e., regularly starting a sentence, excluding proof and programs)
+;;;; All "start" keywords (i.e., regularly starting a sentence, excluding inside proof and programs)
 (defconst cst-easycrypt-start-keywords
   (delete-dups (append cst-easycrypt-internal-keywords
                        cst-easycrypt-functionality-keywords
                        cst-easycrypt-meta-keywords
                        cst-easycrypt-scope-keywords
+                       cst-easycrypt-proof-start-keywords
+                       cst-easycrypt-proof-end-keywords
+                       cst-easycrypt-proof-spec-keywords
                        cst-easycrypt-functional-spec-start-keywords)))
 
 

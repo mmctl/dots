@@ -10,18 +10,10 @@ easycrypt-mode
 (pragmam "pragma -" q ".")
 
 ;; Comments and documentation
-;;; Regular comments
 (comment "(* " q " *)")
 (commentn "(*" n>
           q n
           "*)" >)
-
-;;;; Aliases
-(com (i comment))
-(comn (i commentn))
-
-
-;;; Documentation comments
 (doccomment "(** " q " **)")
 (doccommentn "(**" n>
              q n
@@ -37,9 +29,11 @@ easycrypt-mode
              "^*)" >)
 
 ;;;; Aliases
-(dc (i doccomment))
-(dcn (i doccommentn))
-(dcf (i doccommentf))
+(com (i comment))
+(comn (i commentn))
+(doc (i doccomment))
+(docn (i doccommentn))
+(docf (i doccommentf))
 
 
 ;; Meta
@@ -47,7 +41,9 @@ easycrypt-mode
 (import "import " q ".")
 (requireimport "require import " q ".")
 
+(fromrequire "from " p " require " q)
 (fromrequireimport "from " p " require import " q)
+(fromjasminrequire "from Jasmin " p " require " q)
 (fromjasminrequireimport "from Jasmin " p " require import " q)
 
 (clone "clone " q ".")
@@ -71,84 +67,85 @@ easycrypt-mode
 
 ;;; Aliases
 (req (i require))
-(im (i import))
-(rim (i requireimport))
+(imp (i import))
+(reqim (i requireimport))
 
-(frim (i fromimport))
-(frjim (i fromimport))
+(froreq (i fromrequire))
+(frojasreq (i fromjasminrequire))
+(froreqim (i fromrequireimport))
+(frojasreqim (i fromjasminrequireimport))
 
-(cl (i clone))
-(cla (i cloneas))
-(clim (i cloneimport))
-(clima (i cloneimportas))
-(climw (i cloneimportwith))
-(climaw (i cloneimportaswith))
-(clin (i cloneinclude))
-(clina (i cloneincludeas))
-(clinw (i cloneincludewith))
-(clinaw (i cloneincludeaswith))
+(clo (i clone))
+(cloa (i cloneas))
+(cloim (i cloneimport))
+(cloima (i cloneimportas))
+(cloimw (i cloneimportwith))
+(cloimaw (i cloneimportaswith))
+(cloin (i cloneinclude))
+(cloina (i cloneincludeas))
+(cloinw (i cloneincludewith))
+(cloinaw (i cloneincludeaswith))
 
 
 ;; Scope
 
 ;; Functional specification
 (type "type " p " = " q ".")
-(typeinfo "type " (p "Name") " = " (p "Definition") ".")
+(typeinfo "type " (p "Name") " = " (p "Def") ".")
 (typen "type " p " =" n>
        q "." >)
 
 (op "op " p " : " p " = " q ".")
-(opinfo "op " (p "OpName") " (" (p "ArgName") " : " (p "ArgType") ") : " (p "OpType") " = " (p "Definition") ".")
+(opinfo "op " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Type") " = " (p "Def") ".")
 (opn "op " p " : " p " =" n>
      q "." >)
-(opabs "op " p " : " q ".")
 (opas "op " p " : { " p " | " p " } as " q ".")
-(opasinfo "op " (p "OpName") " : { " (p "OpType") " | " (p "AxiomStatement") " } as " (p "AxiomName") ".")
+(opasinfo "op " (p "Name (Op)") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : { " (p "Type") " | " (p "AxiomStatement") " } as " (p "Name (Axiom)") ".")
 
 (const "const " p " : " p " = " q ".")
+(constinfo "const "  (p "Name") " (" (p "Param") " : " (p "Type") ") : " (p "Type") " = " (p "Def") ".")
 (constn "const " p " : " p " =" n>
         q "." >)
-(constabs "const " p " : " q ".")
 
 (abbrev "abbrev " p " = " q ".")
+(abbrevinfo "abbrev "  (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Type") " = " (p "Def") ".")
+(abbrevt "abbrev " p " : " p " = " q ".")
 (abbrevn "abbrev " p " =" n>
          q "." >)
 
 (theory "theory " (p "" thid)  "." n>
         q n>
         "end " (s thid) "." >)
+(theoryinfo "theory " (p "Name" thid)  "." n>
+            (p "Body") n>
+            "end " (s thid) "." >)
 (abstracttheory "abstract " (i theory))
 
 (section "section." n>
          q >
          "end section." >)
+(sectioninfo "section" (p "Name" secid) "." n>
+           (p "Body") >
+           "end section " (s secid) "." >)
 (sectionid "section" (p "" secid) "." n>
            q >
            "end section " (s secid) "." >)
 
 (declaremodule "declare module " p " <: " p "{ " q " }.")
-(declaremoduleinfo "declare module " (p "Name")  " <: " (p "Type")  "{ " (p "+/- Module") " }.")
+(declaremoduleinfo "declare module " (p "Name")  " <: " (p "ModType")  "{ " (p "+/- Mod1(ModArg11, ..., ModArg1N), ..., +/- ModN(ModArgN1, ..., ModArgNN)") " }.")
 (declaremodulenm "declare module " p " <: " q ".")
 
-(pr "Pr[" p " @ " p " : " q "]")
-(prinfo "Pr[" (p "Mod.Proc(Args)") " @ " (p "Memory") " : " (p "Event") "]")
-(prn "Pr[" p " @ " p " :" n>
-     q "]" >)
-(prns "Pr[" n>
+(Pr "Pr[" p " @ " p " : " q "]")
+(Prinfo "Pr[" (p "Mod.Proc(Arg1, ..., ArgN)") " @ " (p "Memory") " : " (p "Event") "]")
+(Prn "Pr[" n>
       p " @ " p " :" n>
       q "]" >)
-(prm "Pr[" q " @ &m : " q "]")
-(prmn "Pr[" q " @ &m : " n>
-      q "]" >)
-(prdef "Pr[" q " @ &m : res]")
+(Prm "Pr[" p " @ &m : " q "]")
+(Prmr "Pr[" q " @ &m : res]")
 
 (hoare "hoare[" p " : " p " ==> " q "]")
 (hoareinfo "hoare[" (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "]")
 (hoaren "hoare[" n>
-        p " :" n>
-        p " ==> " p n>
-        "]" >)
-(hoarens "hoare[" n>
          p " :" n>
          p n>
          "==>" n>
@@ -158,10 +155,6 @@ easycrypt-mode
 (phoare "phoare[" p " : " p " ==> " p "] = " q)
 (phoareinfo "phoare[" (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "] = " (p "Prob"))
 (phoaren "phoare[" n>
-         p " :" n>
-         p " ==> " p n>
-         "] = " q >)
-(phoarens "phoare[" n>
           p " :" n>
           p n>
           "==>" n>
@@ -169,10 +162,6 @@ easycrypt-mode
           "] = " q >)
 (phoare1 "phoare[" p " : " p " ==> " q "] = 1%r")
 (phoare1n "phoare[" n>
-          p " :" n>
-          p " ==> " q n>
-          "] = 1%r" >)
-(phoare1ns "phoare[" n>
            p " :" n>
            p n>
            "==>" n>
@@ -180,103 +169,79 @@ easycrypt-mode
            "] = 1%r" >)
 
 (equiv "equiv[" p " ~ " p " : " p " ==> " q "]")
+(equivinfo "equiv[" (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "]")
 (equivn "equiv[" n>
-        p " ~ " p " :" n>
-        p " ==> " q n>
+        p " ~ " p ":" n>
+        p n>
+        "==>" n>
+        q n>
         "]" >)
-(equivns "equiv[" n>
-         p n>
-         "~" n>
-         p " :" n>
-         p "==>" q n>
-         "]" >)
-(equivnsp "equiv[" n>
-          p " ~ " p n>
-          p n>
-          "==>" n>
-          q "]" >)
 
 (axiom "axiom " p " : " q ".")
-(axiominfo "axiom " (p "AxiomName") " (" (p "ArgName") " : " (p "ArgType") ") : " (p "Statement") ".")
+(axiominfo "axiom " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Statement") ".")
 (axiomn "axiom " p " :" n>
         q "." >)
 
-(proof "proof." n>
+(proof "proof." > n>
        q n>
        "qed." >)
-(proofinfo "proof." n>
+(proofinfo "proof." > n>
         (p "Proof") n>
         "qed." >)
-(proofl "proof." q "qed.")
+(proofpq "proof." q "qed." >)
 
 (lemma "lemma " p " : " p "." n>
        (i proof))
-(lemmainfo "lemma " (p "LemmaName") " (" (p "ArgName") " : " (p "ArgType") ") : " (p "Statement") "." n>
+(lemmainfo "lemma " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Statement") "." n>
         (i proofi))
 (lemmaby "lemma " p " : " p " by " q ".")
 (lemmapq "lemma " p " : " p "." n>
-         (i proofl) >)
+         (i proofpq) >)
 (lemman "lemma " p " :" n>
         p "." n>
         (i proof))
 (lemmanpq "lemma " p " :" n>
           p "." n>
-          (i proofl))
-
-(lemmahoare "hoare " p " : " p " : " p " ==> " p "." n>
-             (i proof))
-(lemmahoarei "hoare " (p "Name") " : " (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "." n>
-             (i proofi))
-(lemmapqhoare "hoare " p " : " p " : " p " ==> " p "." n>
-              (i proofl))
-(lemmanhoare "hoare " p " :" n>
-             p " : " p " ==> " p "." n>
-             (i proof))
-(lemmanhoaren "hoare " p " :" n>
-              p " :" n>
-              p " ==> " p "." n>
-              (i proof))
-(lemmanhoarens "hoare " p " :" n>
-               p " :" n>
-               p n>
-               "==>" n>
-               p "." n>
-               (i proof))
+          (i proofpq))
 
 (lemmall "lemma " p " : islossless " p "." n>
          (i proof))
 (lemmallinfo "lemma " (p "Name") " : islossless " (p "Mod.Proc") "." n>
           (i proofi))
-(lemmapqll "lemma " p " : islossless " p "." n>
-           (i proofl))
+(lemmallpq "lemma " p " : islossless " p "." n>
+           (i proofpq))
 
-(lemmaequiv "equiv Eqv_" p " : " p " ~ " p " : " p " ==> "p "." n>
+(hoarelemma "hoare " p " : " p " : " p " ==> " p "." n>
+             (i proof))
+(hoarelemmainfo "hoare " (p "Name") " : " (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "." n>
+                (i proofinfo))
+(hoarelemmapq "hoare " p " : " p " : " p " ==> " p "." n>
+              (i proofpq))
+(hoarelemman "hoare " p " :" n>
+             p " : " p " ==> " p "." n>
+             (i proof))
+(hoarenlemman "hoare " p " :" n>
+              p " :" n>
+              p n>
+              "==>" n>
+              p "." n>
+              (i proof))
+
+(equivlemma "equiv Eqv_" p " : " p " ~ " p " : " p " ==> "p "." n>
             (i proof))
-(lemmaequivinfo "equiv " (p "Name") " : " (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "." n>
+(equivlemmainfo "equiv " (p "Name") " : " (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "." n>
                 (i proofi))
-(lemmapqequiv "equiv Eqv_" p " : " p " ~ " p " : " p " ==> "p "." n>
-              (i proofl))
-(lemmanequiv "equiv Eqv_" p " :" n>
+(equivlemmapq "equiv Eqv_" p " : " p " ~ " p " : " p " ==> "p "." n>
+              (i proofpq))
+(equivlemman "equiv Eqv_" p " :" n>
              p " ~ " p " : " p " ==> "p "." n>
              (i proof))
-(lemmanequivn "equiv Eqv_" p " :" n>
-              p " ~ " p " :" n>
-              p " ==> "p "." n>
-              (i proof))
-(lemmanequivns "equiv Eqv_" p " :" n>
+(equivnlemman "equiv Eqv_" p " :" n>
                p " ~ " p " :" n>
                p n>
                "==>" n>
                p "." n>
                (i proof))
-(lemmanequivnsp "equiv Eqv_" p " :" n>
-                p n>
-                "~" n>
-                p " :" n>
-                p n>
-                "==>" n>
-                p "."
-                (i proof))
 
 (fun "fun (" p ") => " q)
 (funn "fun (" p ") =>" n>
@@ -287,10 +252,10 @@ easycrypt-mode
 (exists "exists (" p "), " q)
 (existsn "exists (" p ")," n>
          q)
-(ite "if " p " then " p " else " q)
-(iten "if " p n>
-      "then " p n>
-      "else " q)
+(ifthenelse "if " p " then " p " else " q)
+(ifthenelsen "if " p n>
+             "then " p n>
+             "else " q)
 (ge0 "0 <= " q)
 (gt0 "0 < " q)
 (rngin p " <= " p " <= " q)
@@ -308,31 +273,29 @@ easycrypt-mode
 (opi (i opinfo))
 (opa (i opabs))
 (abv (i abbrev))
+(abvi (i abbrevinfo))
 (abvn (i abbrevn))
 (th (i theory))
+(thi (i theoryinfo))
 (absth (i abstractheory))
 (sec (i section))
+(seci (i sectioninfo))
 (secid (i sectionid))
 (decm (i declaremodule))
 (decmi (i declaremoduleinfo))
 (decmnm (i declaremodulenm))
 
-(ho (i hoare))
-(hoi (i hoareinfo))
-(hon (i hoaren))
-(hons (i hoaren))
+(hoa (i hoare))
+(hoai (i hoareinfo))
+(hoan (i hoaren))
 (ph (i phoare))
 (phi (i phoareinfo))
 (phn (i phoaren))
-(phn (i phoarens))
 (ph1 (i phoare1))
 (ph1n (i phoare1n))
-(ph1ns (i phoare1ns))
-(eq (i equiv))
-(eqi (i equivinfo))
-(eqn (i equivn))
-(eqns (i equivn))
-(eqnsp (i equivn))
+(eqv (i equiv))
+(eqvi (i equivinfo))
+(eqvn (i equivn))
 
 (ax (i axiom))
 (axi (i axiominfo))
@@ -343,49 +306,48 @@ easycrypt-mode
 (lempq (i lemmapq))
 (lemn (i lemman))
 
-(lemho (i lemmahoare))
-(lemhoi (i lemmahoareinfo))
-(lempqho (i lemmapqhoare))
-(lemnho (i lemmanhoare))
-(lemnhon (i lemmanhoaren))
-(lemnhons (i lemmanhoarens))
 (lemll (i lemmall))
 (lemlli (i lemmallinfo))
-(lempqll (i  lemmapqll))
-(lemeq (i lemmaequiv))
-(lemeqi (i lemmaequivinfo))
-(lempqeq (i lemmapqequiv))
-(lemneq (i lemmanequiv))
-(lemneqn (i lemmanequivn))
-(lemneqns (i lemmanequivns))
-(lemneqnsp (i lemmanequivnsp))
+(lemllpq (i lemmallpq))
 
+(hoalem (i hoarelemma))
+(hoalemi (i hoarelemmainfo))
+(hoalempq (i hoarelemmapq))
+(hoalemn (i hoarelemman))
+(hoanlemn (i hoarenlemman))
+(eqvlem (i equivlemma))
+(eqvlemi (i equivlemmainfo))
+(eqvlempq (i equivlemmapq))
+(eqvlemn (i equivlemman))
+(eqvnlemn (i equivlemman))
+
+(ifte (i ifthenelse))
+(iften (i ifthenelsen))
 
 ;; Imperative specification
 (procsig "proc " p "(" p ") : " q)
-(procsiginfo "proc " (p "ProcName") "(" (p "ArgName") " : " (p "ArgType") ") : " (p "ProcType"))
+(procsiginfo "proc " (p "Name") "(" (p "Param1 : Type1, ..., ParamN : TypeN") ") : " (p "Type") " { " (p "ModParam1.Proc11, ... ModParam1.Proc1N, ..., ModParamN.ProcNN") " }")
 (procsiglim "proc " p "(" p ") : " q " { " q " }")
 
 (var "var " p " : " q)
-(varinfo "var " (p "VarName") " : " (p "VarType"))
+(varinfo "var " (p "Name") " : " (p "Type"))
 (varp (i var) ";")
 (varpinfo (i varinfo) ";")
 
 (proc "proc " p "(" p ") : " p " = {" n>
       q n>
       "}" >)
-(procinfo "proc " (p "ProcName") "(" (p "ArgName") " : " (p "ArgType") ") : " (p "ProcType") " = {" n>
+(procinfo "proc " (p "Name") "(" (p "Param1 : Type1, ..., ParamN : TypeN") ") : " (p "Type") " = {" n>
           (i varpinfo) n>
           (p "Body") n>
           "}" >)
-
 (procnt "proc " p "(" p ") = {" n>
         q n>
         "}" >)
 (procl "proc " p "(" p ") : " p " = { " q " }")
 (proclnt "proc " p "(" p ") = { " q " }")
 (procalias "proc " p " = " q)
-(procaliasinfo "proc " (p "Name") " = " (p "Mod.Proc"))
+(procaliasnfo "proc " (p "Name") " = " (p "Mod.Proc"))
 
 (moduletype "module type " p " = {" n>
             q n>
@@ -393,14 +355,14 @@ easycrypt-mode
 (moduletypep "module type " p " (" p ") = {" n>
              q n>
              "}." >)
-(moduletypeinfo "module type " (p "ModTypeName") " (" (p "ArgName") " : " (p "ArgType") ") = {" n>
+(moduletypeinfo "module type " (p "Name") " " (p "(ModParam1 : ModType1) ... (ModParamN : ModTypeN)") " = {" n>
                 (i procsiginfo) n>
                 "}." >)
 
 (module "module " p " = {" n>
         q n>
         "}." >)
-(moduleinfo "module " (p "ModName") " (" (p "ArgName") " : " (p "ArgType") ") : " (p "ModType") " = {" n>
+(moduleinfo "module " (p "Name") " "  (p "(ModParam1 : ModType1) ... (ModParamN : ModTypeN)") " : " (p "ModType") " = {" n>
             (i varinfo) n>
             (i procinfo) n>
             "}." >)
@@ -414,9 +376,9 @@ easycrypt-mode
           q n>
           "}." >)
 
-(modulealias "module " p " = " q ".")
-(modulealiasinfo "module " (p "ModAliasName") " = " (p "Mod(Args)") ".")
-(modulepalias "module " p " = " p "(" q ").")
+(modulealias "module " p " = " p "(" q ").")
+(modulealiasinfo "module " (p "Name") " = " (p "Mod(ModArg1, ..., ModArgN)") ".")
+(modulenpalias "module " p " = " q ".")
 
 (if "if (" p ") {" n>
     q n>
@@ -434,26 +396,23 @@ easycrypt-mode
             q n>
             "}" >)
 
-(while "while (" p ") {" n>
-       q
-       "}" >)
+(whiles "while (" p ") {" n>
+        q
+        "}" >)
 
 (assign p "<-" q ";")
-(call p "<@" q ";")
+(calls p "<@" q ";")
 (sample p "<$" q ";")
 
 ;;; Aliases
-(prcs (i procsig))
-(prcsi (i procsiginfo))
-(prcsl (i procsiglim))
+(procs (i procsig))
+(prcosi (i procsiginfo))
+(prcosl (i procsiglim))
 
-(prc (i proc))
-(prci (i procinfo))
-(prcnt (i procnt))
-(prcl (i procl))
-(prclnt (i proclnt))
-(prca (i procalias))
-(prcai (i procaliasinfo))
+(proci (i procinfo))
+
+(proca (i procalias))
+(procai (i procaliasinfo))
 
 (modty (i moduletype))
 (modtyi (i moduletypeinfo))
@@ -467,25 +426,24 @@ easycrypt-mode
 
 (moda (i modulealias))
 (modai (i modulealiasinfo))
-(modpa (i modulepalias))
+(modnpa (i modulenpalias))
 
-(vi (i varinfo))
-(vp (i varp))
-(vpi (i varpinfo))
+(vari (i varinfo))
+(varpi (i varpinfo))
 
 (ife (i ifelse))
 (ifee (i ifelifelse))
 
-(wh (i while))
+(whis (i whiles))
 
-(ca (i call))
+(assn (i assign))
 (sam (i sample))
 
 
 ;; Tactics
 ;;; Ambient
 (smt "smt(" q ")")
-(smtinfo "smt(" (p "LemmaName or @TheoryName") ")")
+(smtinfo "smt(" (p "Lemma1 or @Theory1, ..., LemmaN or @TheoryN") ")")
 
 (movein "move=> " q)
 (movegen "move: " q)
@@ -506,92 +464,174 @@ easycrypt-mode
 (rewritein "rewrite " p " in " q)
 
 ;;;; Aliases
-(mvin (i movein))
-(mvgn (i movegen))
-
-(ps (i pose))
-
-(hv (i have))
-(hvby (i haveby))
-(hvr (i haveby))
-(hvl (i havel))
-(hvs (i haves))
+(movi (i movein))
+(movg (i movegen))
 
 (appin (i applyin))
 
-(rwd (i rewrited))
-(rwr (i rewriter))
-(rwl (i rewritel))
-(rwin (i rewritein))
+(rewd (i rewrited))
+(rewr (i rewriter))
+(rewl (i rewritel))
+(rewin (i rewritein))
 
 
 ;;; Program
+(proct "proc (" p ")")
 (proctinfo "proc (" (p "Invariant") ")")
-(procubinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ")")
-(procubeinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ") (" (p "InvariantAfterBad") ")")
+(proctub "proc (" p ") (" p ")")
+(proctubinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ")")
+(proctube "proc (" p ") (" p ") (" p ")")
+(proctubeinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ") (" (p "InvariantAfterBad") ")")
 
-(seqe "seq " p " " p " :  (" q ")")
-(seqeinfo "seq " (p "LineNumLeft") " " (p "LineNumRight") " :  (" (p "Predicate") ")")
-(seqp "seq " p " : (" p ") (" p ") (" p ") (" p ") (" p ") (" q ")")
-(seqpinfo "seq " (p "LineNum") " : (" (p "Event") ") (" (p "ProbTrueBegMid") ") (" (p "ProbTrueMidEnd") ") (" (p "ProbFalseBegMid") ") (" (p "ProbFalseMidEnd") ") (" (p "InvariantMid") ")")
-(seqh "seq " p " :  (" q ")")
-(seqhinfo "seq " (p "LineNum") " :  (" (p "Predicate") ")")
+(seq "seq " p " " p " :  (" q ")")
+(seqinfo "seq " (p "LineNumLeft") " " (p "LineNumRight") " :  (" (p "MidCondition") ")")
+(seqhoa "seq " p " :  (" q ")")
+(seqhoainfo "seq " (p "LineNum") " :  (" (p "MidCondition") ")")
+(seqph "seq " p " : (" p ") (" p ") (" p ") (" p ") (" p ") (" q ")")
+(seqphinfo "seq " (p "LineNum") " : (" (p "Event") ") (" (p "ProbEventTrueBeginMid") ") (" (p "ProbEventTrueMidEnd") ") (" (p "ProbEventFalseBeginMid") ") (" (p "ProbEventFalseMidEnd") ") (" (p "InvariantMid") ")")
 
+(spinfo "sp " (p "LineNumLeft") " " (p "LineNumRight"))
 (sp1 "sp{1} " q)
+(sp1info "sp{1} " (p "LineNumLeft"))
 (sp2 "sp{2} " q)
+(sp2info "sp{2} " (p "LineNumRight"))
+(wpinfo "wp " (p "LineNumLeft") " " (p "LineNumRight"))
 (wp1 "wp{1} " q)
+(wp1info "wp{1} " (p "LineNumLeft"))
 (wp2 "wp{2} " q)
+(wp1info "wp{2} " (p "LineNumRight"))
 
 (rnd1 "rnd{1} " q)
 (rnd2 "rnd{2} " q)
 
-(if1 "if{1} " q)
-(if2 "if{1} " q)
+(if1 "if{1}")
+(if2 "if{2}")
 
 (while1 "while{1} (" p ") (" q ")")
 (while2 "while{1} (" p ") (" q ")")
 (while1info "while{1} " (p "Invariant") (p "TerminationVariant")) ; TODO: ask PY if this is correct
 (while2info "while{2} " (p "Invariant") (p "TerminationVariant"))
-(whilehinfo "while " (p "Invariant"))
-(whilepinfo "while " (p "Invariant") (p "TerminationVariant") (p "UpperBndTermVar") (p "ProbDecreaseTermVar")) ; TODO: ask PY if correct
-(whileeinfo "while " (p "Invariant"))
 
+(while "while (" q ")")
+(whileinfo "while " (p "Invariant"))
+(whileph "while (" p ") (" p ") (" p ") (" q ")")
+(whilephinfo "while " (p "Invariant") (p "TerminationVariant") (p "UpperBoundTermVar") (p "ProbDecreaseTermVar")) ; TODO: ask PY if correct
+
+(callcont "call (_: " p " ==> " q ")")
+(callcontinfo "call (_: " (p "Pre") " ==> " (p "Post") ")")
+(callpt "call (" q ")")
+(callptinfo "call (" (p "Proofterm") ")")
+
+(call1cont "call{1} (_: " p " ==> " q ")")
+(call1continfo "call{1} (_: " (p "Pre") " ==> " (p "Post") ")")
+(call1pt "call{1} (" q ")")
+(call1ptinfo "call{1} (" (p "Proofterm") ")")
+(call2cont "call{2} (_: " p " ==> " q ")")
+(call2continfo "call{2} (_: " (p "Pre") " ==> " (p "Post") ")")
+(call2pt "call{2} (" q ")")
+(call2ptinfo "call{2} (" (p "Proofterm") ")")
+
+(callinv "call (_:" q ")")
+(callinvinfo "call (_:" (p "Invariant") ")")
+
+(callub "call (_: " p ", " q ")")
+(callubinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ")")
+(callube "call (_: " p ", " p ", " q ")")
+(callubeinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ", " (p "InvariantAfterBad") ")")
+
+(swapbl "swap [" p ".." p "] " q)
+(swapblinfo "swap [" (p "LineNumStart") ".." (p "LineNumEnd") "] " (p "(-)MoveAmount"))
+(swaplinfo "swap " (p "LineNum") " " (p "(-)MoveAmount"))
+(swapminfo "swap " (p "(-)MoveAmount"))
+(swapsinfo "swap " (p "LineNumBegin") " " (p "LineNumMid") " " (p "LineNumEnd"))
+
+(swap1bl "swap{1} [" p ".." p "] " q)
+(swap1blinfo "swap{1} [" (p "LineNumStart") ".." (p "LineNumEnd") "] " (p "(-)e MoveAmount"))
+(swap1l "swap{1} " p " " q )
+(swap1linfo "swap{1} " (p "LineNum") (p "(-)MoveAmount"))
+(swap1m "swap{1} " q)
+(swap1minfo "swap{1} " (p "(-)MoveAmount"))
+(swap1s "swap{1} " p " " p " " q)
+(swap1sinfo "swap{1} " (p "LineNumBegin") " " (p "LineNumMid") " " (p "LineNumEnd"))
+(swap2bl "swap{2} [" p ".." p "] " q)
+(swap2blinfo "swap{2} [" (p "LineNumStart") ".." (p "LineNumEnd") "] " (p "(-)e MoveAmount"))
+(swap2l "swap{2} " p " " q )
+(swap2linfo "swap{2} " (p "LineNum") (p "(-)MoveAmount"))
+(swap2m "swap{2} " q)
+(swap2minfo "swap{2} " (p "(-)MoveAmount"))
+(swap2s "swap{2} " p " " p " " q)
+(swap2sinfo "swap{2} " (p "LineNumBegin") " " (p "LineNumMid") " " (p "LineNumEnd"))
+
+(inlines "inline *")
+(inlineo "inline (" p ") " q)
+(inlineoinfo "inline (" (p "LineNumOccur1 ... LineNumOccurN") ") " (p "Mod.Proc"))
+(inlinepinfo "inline " (p "Mod1.Proc1, ..., Modn.Procn"))
+(inlineninfo "inline " (p "LineNum"))
+
+(inline1 "inline{1} " q)
+(inline1s "inline{1} *")
+(inline1o "inline{1} (" p ") " q)
+(inline1oinfo "inline{1} (" (p "LineNumOccur1 ... LineNumOccurN") ") " (p "Mod.Proc"))
+(inline1pinfo "inline{1} " (p "Mod1.Proc1, ..., Modn.Procn"))
+(inline1ninfo "inline{1} " (p "LineNum"))
+(inline2 "inline{2} " q)
+(inline2s "inline{2} *")
+(inline2o "inline{2} (" p ") " q)
+(inline2oinfo "inline{2} (" (p "LineNumOccur1 ... LineNumOccurN") ") " (p "Mod.Proc"))
+(inline2pinfo "inline{2} " (p "Mod1.Proc1, ..., Modn.Procn"))
+(inline2ninfo "inline{2} " (p "LineNum"))
+
+(rcondt1 "rcondt{1} " q)
 
 ;; Advanced/Specific
-(prub (i pr) n>
+(Prub (i Pr) n>
       "<=" n>
-      (i pr))
-(prnub (i prn) n>
+      (i Pr))
+(Prnub (i Prn) n>
        "<=" n>
-       (i prn))
-(prnsub (i prns) n>
-        "<=" n>
-        (i prns))
-(prmub (i prm) n>
+       (i Prn))
+(Prmub (i prm) n>
        "<=" n>
        (i prm))
-(prmnub (i prmn) n>
+(Prmrub (i prmr) n>
         "<=" n>
-        (i prmn))
-(prubdef (i prdef) n>
-         "<=" n>
-         (i prdef))
+        (i prmr))
 
-(preq (i pr) n>
+(Preq (i Pr) n>
       "=" n>
-      (i pr))
-(prneq (i prn) n>
+      (i Pr))
+(Prneq (i Prn) n>
        "=" n>
-       (i prn))
-(prnseq (i prns) n>
-        "=" n>
-        (i prns))
-(prmeq (i prm) n>
+       (i Prn))
+(Prmeq (i prm) n>
        "=" n>
        (i prm))
-(prmneq (i prmn) n>
+(Prmreq (i prmr) n>
         "=" n>
-        (i prmn))
-(preqdef (i prdef) n>
-         "=" n>
-         (i prdef))
+        (i prmr))
+
+(Prublem "lemma " p " :" n>
+         (i Prub) "." n>
+         (i proof))
+(Prnublem "lemma " p " :" n>
+          (i Prnub) "." n>
+          (i proof))
+(Prmublem "lemma " p " &m :" n>
+          (i Prmub) "." n>
+          (i proof))
+(Prmrublem "lemma " p " &m :" n>
+           (i Prmrub) "." n>
+           (i proof))
+
+(Preqlem "lemma " p " :" n>
+         (i Preq) "." n>
+         (i proof))
+(Prneqlem "lemma " p " :" n>
+          (i Prneq) "." n>
+          (i proof))
+(Prmeqlem "lemma " p " &m :" n>
+          (i Prmeq) "." n>
+          (i proof))
+(Prmreqlem "lemma " p " &m :" n>
+           (i Prmreq) "." n>
+           (i proof))

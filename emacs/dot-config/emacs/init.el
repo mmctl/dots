@@ -275,7 +275,7 @@
 (keymap-global-set "M-M" #'pop-global-mark)
 
 ;;; Selection
-(keymap-global-set "C-SPC" #'set-mark-command)
+(keymap-global-set "M-SPC" #'set-mark-command)
 
 ;;; Manipulation
 ;;;; Copying
@@ -805,20 +805,22 @@
 (use-package tempel
   :ensure t
   :demand t
-  :bind (:map tempel-map
-              ("<remap> <beginning-of-buffer>" . nil)
-              ("<remap> <end-of-buffer>" . nil)
-              ("<remap> <backward-paragraph>" . nil)
-              ("<remap> <forward-paragraph>" . nil)
-              ("C-<backtab>" . tempel-previous)
-              ("C-<tab>" . tempel-next)
-              ("<prior>" . tempel-previous)
-              ("<next>" . tempel-next)
-              ("<home>" . tempel-beginning)
-              ("<end>" . tempel-end)
-              ("M-k" . tempel-kill)
-              ("C-v" . tempel-done)
-              ("C-q" . tempel-abort))
+  :bind (("M-o" . tempel-complete)
+         :map tempel-map
+         ("<remap> <beginning-of-buffer>" . nil)
+         ("<remap> <end-of-buffer>" . nil)
+         ("<remap> <backward-paragraph>" . nil)
+         ("<remap> <forward-paragraph>" . nil)
+         ("C-<backspace>" . tempel-previous)
+         ("C-DEL" . tempel-previous)
+         ("C-SPC" . tempel-next)
+         ("<prior>" . tempel-previous)
+         ("<next>" . tempel-next)
+         ("<home>" . tempel-beginning)
+         ("<end>" . tempel-end)
+         ("M-k" . tempel-kill)
+         ("C-v" . tempel-done)
+         ("C-q" . tempel-abort))
   :config
   (defvar-keymap a-tempel-map
     :doc "Keymap for tempel (outside templates)"
@@ -856,7 +858,7 @@
   (add-to-list 'tempel-user-elements #'a-tempel-include)
 
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
-  (setopt tempel-mark #(" " 0 1 (display (space :width (2)) face tempel-field)))
+  (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
@@ -1486,9 +1488,6 @@
         (lambda ()
           (not (or (bound-and-true-p vertico--input)
                    (eq (current-local-map) read-passwd-map)))))
-
-;;; Tempel
-(keymap-global-set "M-o" #'tempel-expand-or-complete)
 
 ;;; EasyCrypt
 (defun setup-an-easycrypt-indentation ()
