@@ -145,6 +145,12 @@
 (line-number-mode 1)
 (column-number-mode 1)
 
+(setopt display-time-24hr-format t)
+(setopt display-time-default-load-average nil)
+(setopt display-time-default-load-average nil)
+
+(display-time-mode 1)
+
 (unless (daemonp)
   (when (fboundp 'setup-a-global-frame)
     (setup-a-global-frame)))
@@ -1401,7 +1407,7 @@
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map))
 
 ;;; Themes
-;;;; Doom-themes general
+;;;; Doom-themes (general)
 (use-package doom-themes
   :ensure t
   :config
@@ -1435,8 +1441,9 @@
 ;;;;; Nord <3
 (use-package doom-nord-theme
   :after doom-themes
-  :ensure nil ; provided by doom-themes
+  :ensure nil ; Provided by doom-themes
   :demand t ; Use this theme
+  ;; :disabled t ; Don't use this theme
   :config
   (setopt doom-nord-brighter-modeline t
           doom-nord-brighter-comments nil
@@ -1469,9 +1476,73 @@
     '(easycrypt-tactics-dangerous-face :foreground red))
   (enable-theme 'doom-nord))
 
+(use-package doom-nord-light-theme
+  :after doom-themes
+  :ensure nil ; Provided by doom-themes
+  ;; :demand t ; Use this theme
+  :disabled t ; Don't use this theme
+  :config
+  (setopt doom-nord-light-brighter-modeline t
+          doom-nord-light-brighter-comments nil
+          doom-nord-light-padded-modeline nil
+          doom-nord-light-comment-bg t
+          doom-nord-light-region-highlight 'frost)
+  (load-theme 'doom-nord-light t)
+  (doom-themes-set-faces 'doom-nord-light
+    '(trailing-whitespace :background magenta)
+    '(aw-background-face :inherit 'avy-background-face)
+    '(aw-leading-char-face :inherit 'avy-lead-face)
+    '(proof-queue-face :background magenta)
+    '(proof-locked-face :background base4)
+    '(proof-script-sticky-error-face :background red :underline yellow)
+    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                        :weight 'semi-bold :slant 'italic)
+    '(proof-highlight-dependent-name-face :foreground magenta)
+    '(proof-highlight-dependency-name-face :foreground violet)
+    '(proof-declaration-name-face :foreground cyan)
+    '(proof-tacticals-name-face :foreground green)
+    '(proof-tactics-name-face :foreground teal)
+    '(proof-error-face :foreground red :weight 'semi-bold)
+    '(proof-warning-face :foreground yellow :weight 'semi-bold)
+    '(proof-debug-message-face :foreground orange)
+    '(proof-boring-face :foreground base5)
+    '(proof-eager-annotation-face :inherit 'proof-warning-face :weight 'normal)
+    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
+    '(easycrypt-tactics-closing-face :foreground yellow)
+    '(easycrypt-tactics-dangerous-face :foreground red))
+  (enable-theme 'doom-nord-light))
+
+(use-package solaire-mode
+  :ensure t
+  :demand t
+  :config
+  (solaire-global-mode 1))
+
+(use-package nerd-icons
+  :ensure t
+  :config
+  (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
+
+(use-package doom-modeline
+  :ensure t
+  :demand t
+  :config
+  (setopt doom-modeline-height (+ (frame-char-height) 4)
+          doom-modeline-bar-width 4
+          doom-modeline-width-limit 100
+          doom-modeline-icon t
+          doom-modeline-major-mode-icon t
+          doom-modeline-minor-modes t
+          doom-modeline-enable-word-count t
+          doom-modeline-buffer-encoding t
+          doom-modeline-default-coding-system 'utf-8
+          doom-modeline-total-line-number t
+          doom-modeline-time t
+          doom-modeline-vcs-max-length 20)
+  (doom-modeline-mode 1))
 
 ;; Post/Cross-package enhancements
-;;; Custom functions/functionalities (with package dependencies)
+;;; Custom functionalities (with package dependencies)
 (require 'func-pkgs)
 
 ;;; Avy + Embark
@@ -1532,7 +1603,6 @@
 (add-hook 'easycrypt-goals-mode-hook #'setup-an-easycrypt-other-mode-map)
 
 
-;(tempel-key )
 
 
 ;; Hooks

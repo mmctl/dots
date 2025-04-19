@@ -24,7 +24,9 @@
     (set-face-attribute 'mode-line frame :family "Monaspace Argon")
     (set-face-attribute 'mode-line-active frame :family "Monaspace Argon")
     (set-face-attribute 'mode-line-inactive frame :family "Monaspace Argon")
-    (set-face-attribute 'minibuffer-prompt frame :family "Monaspace Argon")))
+    (set-face-attribute 'minibuffer-prompt frame :family "Monaspace Argon"))
+   (t
+    (set-face-attribute 'default '(:family "Monospace" :height 110))))
   (cond
    ((member "MonaspiceNe Nerd Font" (font-family-list))
     (set-face-attribute 'line-number frame :family "MonaspiceNe Nerd Font")
