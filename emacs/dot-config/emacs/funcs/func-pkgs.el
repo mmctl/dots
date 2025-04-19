@@ -234,14 +234,17 @@
       (move-to-column indent-level))))
 
 (defun easycrypt-indent-on-insertion-closer ()
-  "Indent when last input was one of }, ), ], \", or
-. if the current line starts/ends a proof. However, only
+  "Indent when last input was one of }, ), ], \" and it is the
+first character on current line, or if the last input was . and
+the current line starts/ends a proof. However, only
 allow de-indents (to prevent automatically indenting
 code that has been manually de-indented; this is a hack
 and a limitation of the localized ad-hoc computation
 of the indent level).
 Meant for `post-self-insert-hook`."
-  (when (or (memq last-command-event '(?\} ?\) ?\] ?\"))
+  (when (or (and (memq last-command-event '(?\} ?\) ?\] ?\"))
+                 (let ((line-before (buffer-substring-no-properties (line-beginning-position) (- (point) 1))))
+                   (string-match-p "^[[:blank:]]*$" line-before)))
             (and (eq last-command-event ?\.)
                  (save-excursion
                    (back-to-indentation)
@@ -257,25 +260,6 @@ Meant for `post-self-insert-hook`."
         ;; Keep point in same relative position
         ;; (`indent-line-to` moves it to end of indentation)
         (move-to-column (- orig-col indent-diff))))))
-
-;; (defun easycrypt-indent-on-insertion-closer ()
-;;   "Indent when last input was }, ), ], or \", but only
-;; allow de-indents (to prevent automatically indenting
-;; code that has been manually de-indented; this is a hack
-;; and a limitation of the localized ad-hoc computation
-;; of the indent level).
-;; Meant for `post-self-insert-hook`."
-;;   (when (memq last-command-event '(?\} ?\) ?\] ?\"))
-;;     (let* ((orig-col (current-column))
-;;            (indent-level (easycrypt-indent-level))
-;;            (indent-diff (- (current-indentation) indent-level)))
-;;       ;; If 0 < indent-diff, i.e., we are de-indenting
-;;       (when (< 0 indent-diff)
-;;         ;; Go to the computed indent level
-;;         (indent-line-to indent-level)
-;;         ;; Keep point in same relative position
-;;         ;; (`indent-line-to` moves it to end of indentation)
-;;         (move-to-column (- orig-col indent-diff))))))
 
 ;;; Extra functionality
 (defun an-easycrypt-is-supported-shell-command (command)
