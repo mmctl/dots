@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t -*-
 ;; func-modes.el (functions/hooks)
 
 ;; Text
