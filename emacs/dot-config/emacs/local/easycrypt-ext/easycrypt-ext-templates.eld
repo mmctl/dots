@@ -352,7 +352,7 @@ easycrypt-mode
 
 ;;; Aliases
 (procs (i procsig))
-(prcosl (i procsiglim))
+(procsl (i procsiglim))
 
 (proca (i procalias))
 
@@ -393,9 +393,9 @@ easycrypt-mode
 
 (applyin "apply " p " in " q)
 
-(rewrited "rewrite (:" q ")")
-(rewriter "rewrite (:" p " = " q ")")
-(rewritel "rewrite -(:" p " = " q ")")
+(rewrited "rewrite (: " q ")")
+(rewriter "rewrite (: " p " = " q ")")
+(rewritel "rewrite -(: " p " = " q ")")
 (rewritein "rewrite " p " in " q)
 
 ;;;; Aliases
@@ -434,7 +434,7 @@ easycrypt-mode
 (while "while (" q ")")
 (whileph "while (" p ") (" p ") (" p ") (" q ")")
 (while1 "while{1} (" p ") (" q ")")
-(while2 "while{1} (" p ") (" q ")")
+(while2 "while{2} (" p ") (" q ")")
 
 (call "call (_:" q ")")
 
@@ -520,7 +520,7 @@ easycrypt-mode
 (byequiv "byequiv (_: " p " ==> " q ")")
 (byequivpt "byequiv (" q ")")
 (byequivub "byequiv (_: " p " ==> " p ") : " q)
-(byequivpt "byequiv (" p ") : " q)
+(byequivubpt "byequiv (" p ") : " q)
 
 (byphoare "byphoare (_: " p " ==> " q ")")
 (byphoarept "byphoare (" q ")")

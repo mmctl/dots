@@ -77,7 +77,7 @@
 (load CUSTOM_FILE)
 
 ;;; Load path/pointers
-;;;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones (starting with `.`)
+;;;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones
 (add-to-list 'load-path LOCAL_DIR)
 (dolist (file (directory-files-recursively LOCAL_DIR "[^.].*" t t))
   (when (file-directory-p file)
@@ -85,7 +85,7 @@
 
 (add-to-list 'load-path MISC_DIR)
 
-(add-to-list 'load-path "/home/mm/.config/emacs/funcs/")
+;(add-to-list 'load-path "/home/mm/.config/emacs/funcs/")
 
 (setopt custom-theme-directory THEMES_DIR)
 
@@ -114,11 +114,10 @@
 (setopt lock-file-name-transforms `((".*" ,(file-name-concat LOCKS_DIR "\\1") t))
         create-lockfiles t)
 
-;;; Custom constants and functions/functionalities (without package dependencies)
-(require 'custom-consts)
-(require 'func-frames)
-(require 'func-modes)
-(require 'func-utils)
+;;; Custom local functionalities
+(require 'loc-frames)
+(require 'loc-modes)
+(require 'loc-utils)
 
 ;;; Package system
 (require 'package)
@@ -158,8 +157,7 @@
 (display-time-mode 1)
 
 (unless (daemonp)
-  (when (fboundp 'setup-a-global-frame)
-    (setup-a-global-frame)))
+  (loc-setup-global-frame))
 
 ;;; (Mini)Buffers
 (setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -492,7 +490,7 @@
           lazy-count-suffix-format " [%s of %s]")
 
   ;; Keybindings
-  (keymap-set isearch-mode-map "C-w" nil)
+  (keymap-unset isearch-mode-map "C-w")
   (keymap-set isearch-mode-map "C-v" #'isearch-exit)
   (keymap-set isearch-mode-map "C-t" #'isearch-yank-word-or-char)
   (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill))
@@ -555,7 +553,7 @@
   (keymap-set which-key-mode-map "C-x <f3>" #'which-key-C-h-dispatch)
 
   ;; Hooks
-  (add-hook 'which-key-init-buffer-hook #'setup-a-mini-mix-mode)
+  (add-hook 'which-key-init-buffer-hook #'loc-setup-mini-mix-mode)
 
   ;; Activation
   (which-key-mode 1))
@@ -759,7 +757,6 @@
           corfu-min-width 15
           corfu-max-width 80
           corfu-cycle nil
-          corfu-on-exact-match 'insert
           corfu-quit-at-boundary 'separator
           corfu-quit-no-match 'separator
           corfu-left-margin-width 0.5
@@ -768,6 +765,7 @@
           corfu-auto-prefix 2
           corfu-auto-delay 0.25
           ;; Auto mode
+          corfu-on-exact-match nil
           corfu-preselect 'valid
           corfu-auto t)
   (setopt text-mode-ispell-word-completion nil)
@@ -851,14 +849,6 @@
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
   (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
 
-(use-package cape-keyword
-  :ensure nil ; provided by cape
-
-  :after cape
-
-  :config
-  (add-to-list 'cape-keyword-list (cons 'easycrypt-mode cst-easycrypt-keywords)))
-
 (use-package tempel
   :ensure t
 
@@ -907,10 +897,10 @@
   (keymap-set tempel-map "C-v" #'tempel-done)
   (keymap-set tempel-map "C-q" #'tempel-abort)
 
-  ;; Define slight adjustment of regular placeholder element
-  ;; so that a prompt form evaluating to a string is inserted as
-  ;; default value in the same way as a literal string prompt
   (defun a-tempel-placeholder-form-as-lit (elt)
+    "Define slight adjustment of regular placeholder element
+so that a prompt form evaluating to a string is inserted as
+default value in the same way as a literal string prompt."
     (pcase elt
       (`(pfl ,prompt . ,rest)
        (let ((evprompt (eval prompt)))
@@ -919,9 +909,9 @@
            `('p ,prompt ,@rest))))))
   (add-to-list 'tempel-user-elements #'a-tempel-placeholder-form-as-lit)
 
-  ;; Define "include" element (taken and slightly adjusted from TempEL github repo)
-  ;; that allows to include other templates by their name
   (defun a-tempel-include (elt)
+    "Define 'include' element (taken and slightly adjusted from TempEL github repo)
+that allows to include other templates by their name."
     (when (eq (car-safe elt) 'i)
       (when-let (template (alist-get (cadr elt) (tempel--templates)))
         (cons 'l template))))
@@ -1016,10 +1006,10 @@
                   (?? aw-show-dispatch-help)))
 
   ;; Keybindings
-  (keymap-global-set "C-S-w" other-window)
+  (keymap-global-set "C-S-w" #'other-window)
 
-  (keymap-set a-goto-map "w" ace-window)
-  (keymap-set a-goto-map "W" other-window))
+  (keymap-set a-goto-map "w" #'ace-window)
+  (keymap-set a-goto-map "W" #'other-window))
 
 (use-package avy
   :ensure t
@@ -1034,6 +1024,7 @@
   :bind ((:map an-avy-map
                ("c" . avy-goto-char)
                ("C" . avy-goto-char-2)
+               ("t" . avy-goto-char-timer)
                ("w" . avy-goto-word-1)
                ("W" . avy-goto-word-0)
                ("s" . avy-goto-subword-1)
@@ -1426,12 +1417,12 @@
   (keymap-unset "C->" #'org-calendar-scroll-three-months-right)
 
   ;; Hooks
-  (add-hook 'org-mode-hook #'setup-a-mix-mode))
+  (add-hook 'org-mode-hook #'loc-setup-mix-mode))
 
 ;;;; Note, proof.el (which is provided by the proof-general package) is what is
 ;;;; actually loaded by the proof assistants, not proof-general.el.
-;;;; Hence, we use `use-package proof :ensure proof-general` to still make
-;;;; use of deferred loading as usual
+;;;; Hence, we use `use-package proof :ensure proof-general` to
+;;;; use deferred loading as usual
 (use-package proof
   :ensure proof-general
   :pin melpa
@@ -1484,9 +1475,6 @@
     "f" #'bufhist-first
     "l" #'bufhist-last
     "d" #'bufhist-delete)
-  (defvar-keymap an-easycrypt-template-map
-    :doc "Keymap for EasyCrypt templates"
-    :prefix 'an-easycrypt-template-map-prefix)
 
   (defun setup-a-bufhist-map ()
     (keymap-set bufhist-mode-map "C-p" #'bufhist-prev)
@@ -1521,7 +1509,7 @@
     (keymap-set proof-mode-map "C-c C-y n" #'pg-next-matching-input-from-input)
     (keymap-set proof-mode-map "C-c C-y P" #'pg-previous-matching-input)
     (keymap-set proof-mode-map "C-c C-y N" #'pg-next-matching-input))
-  (defun setup-a-proof-other-mode-map ()
+  (defun setup-a-proof-response-mode-map ()
     (keymap-set proof-response-mode-map "C-q" #'bury-buffer)
     (keymap-set proof-response-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
     (keymap-set proof-response-mode-map "C-c C-e" #'proof-next-error)
@@ -1530,12 +1518,21 @@
     (keymap-set proof-response-mode-map "C-c C-k" #'pg-response-clear-displays)
     (keymap-set proof-response-mode-map "C-c C-x" #'proof-minibuffer-cmd)
     (keymap-set proof-response-mode-map "C-c C-q" #'proof-shell-exit))
+  (defun setup-a-proof-goals-mode-map ()
+    (keymap-set proof-goals-mode-map "C-q" #'bury-buffer)
+    (keymap-set proof-goals-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
+    (keymap-set proof-goals-mode-map "C-c C-e" #'proof-next-error)
+    (keymap-set proof-goals-mode-map "C-c C-w" #'proof-layout-windows)
+    (keymap-set proof-goals-mode-map "C-c C-o" #'proof-display-some-buffers)
+    (keymap-set proof-goals-mode-map "C-c C-k" #'pg-response-clear-displays)
+    (keymap-set proof-goals-mode-map "C-c C-x" #'proof-minibuffer-cmd)
+    (keymap-set proof-goals-mode-map "C-c C-q" #'proof-shell-exit))
 
   ;; Hooks
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
-  (add-hook 'proof-response-mode-hook #'setup-a-proof-other-mode-map)
-  (add-hook 'proof-goals-mode-hook #'setup-a-proof-other-mode-map)
-  (add-hook 'proof-mode-hook #'setup-a-bufhist-map))
+  (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
+  (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode-map)
+  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode-map))
 
 ;;; Themes
 ;;;; Doom-themes (general)
@@ -1613,7 +1610,7 @@
     '(easycrypt-tactics-dangerous-face :foreground red))
 
   ;; Hooks
-  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord))))
+  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord) (message "Enabled theme"))))
 
 (use-package doom-nord-light-theme
   :ensure nil ; Provided by doom-themes
@@ -1634,8 +1631,8 @@
     '(trailing-whitespace :background magenta)
     '(aw-background-face :inherit 'avy-background-face)
     '(aw-leading-char-face :inherit 'avy-lead-face)
-    '(proof-queue-face :background magenta)
-    '(proof-locked-face :background base4)
+    '(proof-queue-face :background base6)
+    '(proof-locked-face :background base3)
     '(proof-script-sticky-error-face :background red :underline yellow)
     '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
                                         :weight 'semi-bold :slant 'italic)
@@ -1663,6 +1660,7 @@
 
 (use-package nerd-icons
   :ensure t
+
   :init
   ;; Setup
   (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
@@ -1678,7 +1676,7 @@
           doom-modeline-bar-width 4
           doom-modeline-width-limit 100
           doom-modeline-icon t
-          doom-modeline-major-mode-icon t
+          doom-modeline-major-mode-icon nil
           doom-modeline-minor-modes t
           doom-modeline-enable-word-count t
           doom-modeline-buffer-encoding t
@@ -1687,84 +1685,65 @@
           doom-modeline-time t
           doom-modeline-vcs-max-length 20))
 
-;; Post/Cross-package enhancements
-;;; Custom functionalities (with package dependencies)
-;; (require 'func-pkgs)
+;; Local/cross-package enhancements
+(use-package loc-avy
+  :ensure nil ; Provided locally
 
-;; ;;; Avy + Embark
-;; (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
-;; (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t)
+  :after avy
 
-;; ;;; Corfu + Orderless
-;; (add-hook 'corfu-mode-hook
-;;           (lambda ()
-;;             (setq-local completion-styles '(orderless-literal-only basic))))
+  :commands (avy-action-embark-act avy-action-embark-dwim)
 
-;; ;;; Corfu + Vertico
-;; (setopt global-corfu-minibuffer
-;;         (lambda ()
-;;           (not (or (bound-and-true-p vertico--input)
-;;                    (eq (current-local-map) read-passwd-map)))))
-
-;; ;;; EasyCrypt
-;; (defun setup-an-easycrypt-indentation ()
-;;   (setq-local electric-indent-mode nil)
-;;   (setq-local electric-indent-inhibit t)
-;;   (setq-local indent-line-function #'easycrypt-indent-line)
-;;   (keymap-local-set "RET" #'newline-and-indent)
-;;   (keymap-local-set "<return>" #'newline-and-indent)
-;;   (keymap-local-set "S-RET" #'newline)
-;;   (keymap-local-set "S-<return>" #'newline)
-;;   (keymap-local-set "TAB" #'a-basic-indent)
-;;   (keymap-local-set "<tab>" #'a-basic-indent)
-;;   (keymap-local-set "<backtab>" #'a-basic-deindent)
-;;   (keymap-local-set "M-<tab>" #'indent-for-tab-command)
-;;   (keymap-local-set "C-M-i" #'indent-for-tab-command)
-;;   (add-hook 'post-self-insert-hook #'easycrypt-indent-on-insertion-closer nil t))
-;; (defun setup-an-easycrypt-mode-map ()
-;;   (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
-;;   (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
-;;   (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
-;;   (keymap-set easycrypt-mode-map "C-c l t" 'an-easycrypt-template-map-prefix)
-;;   (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
-;;   (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
-;;   (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
-;;   (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
-;;   (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
-;;   (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
-;; (defun setup-an-easycrypt-other-mode-map ()
-;;   (keymap-set easycrypt-mode-map "C-c l p" #'an-easycrypt-print-at-point)
-;;   (keymap-set easycrypt-mode-map "C-c l l" #'an-easycrypt-locate-at-point)
-;;   (keymap-set easycrypt-mode-map "C-c l s" #'an-easycrypt-search-at-point)
-;;   (keymap-set easycrypt-mode-map "<mouse-3>" #'an-easycrypt-print-at-mouse)
-;;   (keymap-set easycrypt-mode-map "C-<mouse-3>" #'an-easycrypt-locate-at-mouse)
-;;   (keymap-set easycrypt-mode-map "M-<mouse-3>" #'an-easycrypt-search-at-mouse)
-;;   (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
-;;   (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
-;;   (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore))
-
-;; (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation)
-;; (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-mode-map)
-;; (add-hook 'easycrypt-response-mode-hook #'setup-an-easycrypt-other-mode-map)
-;; (add-hook 'easycrypt-goals-mode-hook #'setup-an-easycrypt-other-mode-map)
+  :init
+  (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
+  (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t))
 
 
+;;; Corfu + Orderless
+(use-package corfu
+  :after orderless
+
+  :config
+  (add-hook 'corfu-mode-hook
+            (lambda ()
+              (setq-local completion-styles '(orderless-literal-only basic)))))
+
+;;; Corfu + Vertico
+(use-package corfu
+  :after vertico
+
+  :config
+  (setopt global-corfu-minibuffer
+          (lambda ()
+            (not (or (bound-and-true-p vertico--input)
+                     (eq (current-local-map) read-passwd-map))))))
+
+;;; EasyCrypt (extension)
+(use-package easycrypt-ext
+  :ensure nil ; Provided locally
+
+  :after proof
+
+  :hook (easycrypt-mode . ece-setup)
+
+  :init
+  (setopt ece-enable-templates-info nil)
+  (setopt ece-enable-theme nil))
 
 
 ;; Hooks
 ;;; Frames/windows
 (when (daemonp)
-  (add-hook 'server-after-make-frame-hook #'setup-a-client-frame)
-  (add-hook 'after-make-frame-functions #'setup-a-frame))
+  (add-hook 'server-after-make-frame-hook #'loc-setup-client-frame)
+  (add-hook 'after-make-frame-functions #'loc-setup-frame))
 
-(add-hook 'minibuffer-setup-hook #'setup-a-mini-mix-mode)
+(add-hook 'minibuffer-setup-hook #'loc-setup-mini-mix-mode)
 
 ;;; Modes
-(add-hook 'text-mode-hook #'setup-a-text-mode)
+(add-hook 'text-mode-hook #'loc-setup-text-mode)
 
-(add-hook 'log-edit-mode-hook #'setup-a-mix-mode)
-(add-hook 'tex-mode-hook #'setup-a-mix-mode)
-(add-hook 'TeX-mode-hook #'setup-a-mix-mode)
-(add-hook 'conf-mode-hook #'setup-a-mix-mode)
+(add-hook 'log-edit-mode-hook #'loc-setup-mix-mode)
+(add-hook 'tex-mode-hook #'loc-setup-mix-mode)
+(add-hook 'TeX-mode-hook #'loc-setup-mix-mode)
+(add-hook 'conf-mode-hook #'loc-setup-mix-mode)
 
-(add-hook 'prog-mode-hook #'setup-a-code-mode)
+(add-hook 'prog-mode-hook #'loc-setup-code-mode)

@@ -1,14 +1,15 @@
 ;; -*- lexical-binding: t -*-
-;; func-frames.el (functions/hooks)
+;; loc-frames.el (functions/hooks)
+
 ;; Setup
 ;;; TTY
-(defun setup-a-tty-frame (frame)
+(defun loc-setup-tty-frame (frame)
   "Setup TTY frame."
   (set-face-attribute 'default frame :background "unspecified")
   (setopt display-line-numbers-width 3))
 
 ;;; GUI
-(defun setup-a-gui-frame (frame)
+(defun loc-setup-gui-frame (frame)
   "Setup GUI frame."
   ;;;; Faces
   (cond
@@ -45,31 +46,31 @@
 
 
 ;; General
-(defun setup-a-frame (&optional frame)
+(defun loc-setup-frame (&optional frame)
   "Setup any (TTY or GUI) frame. Assumes no global/default setup."
   (if (display-graphic-p frame)
-      (setup-a-gui-frame frame)
-    (setup-a-tty-frame frame)))
+      (loc-setup-gui-frame frame)
+    (loc-setup-tty-frame frame)))
 
-(defun setup-a-frame-after (&optional frame)
+(defun loc-setup-frame-after (&optional frame)
   "Setup any (TTY or GUI) frame. Assumes global/default setup.")
 
 
 ;; Client
-(defun setup-a-client-frame ()
+(defun loc-setup-client-frame ()
   "Setup inital client frame created by daemon/server. Assumes no global/default setup."
-  (setup-a-frame (selected-frame)))
+  (loc-setup-frame (selected-frame)))
 
-(defun setup-a-client-frame-after ()
+(defun loc-setup-client-frame-after ()
   "Setup inital client frame created by daemon/server. Assumes global/default setup.")
 
 
 ;; Global/Default
-(defun setup-a-global-frame ()
+(defun loc-setup-global-frame ()
   "Setup global/default frame for whole session."
-  (setup-a-frame))
+  (loc-setup-frame))
 
 
-(provide 'func-frames)
+(provide 'loc-frames)
 
-;;; func-frames.el ends here
+;;; loc-frames.el ends here

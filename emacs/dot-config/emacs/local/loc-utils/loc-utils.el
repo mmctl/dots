@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t -*-
-;; func-utils.el
+;; loc-utils.el
+
 ;; Quitting
 (defun save-buffers-kill-terminal-silent ()
   "Execute save-buffers-kill-terminal, automatically saving all buffers without asking."
@@ -84,6 +85,6 @@ Meant for `post-self-insert-hook`."
       (indent-according-to-mode))))
 
 
-(provide 'func-utils)
+(provide 'loc-utils)
 
-;;; func-utils.el ends here
+;;; loc-utils.el ends here

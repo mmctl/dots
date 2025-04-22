@@ -1,8 +1,8 @@
 ;; -*- lexical-binding: t -*-
-;; func-modes.el (functions/hooks)
+;; loc-modes.el (functions/hooks)
 
 ;; Text
-(defun setup-a-text-mode ()
+(defun loc-setup-text-mode ()
   "Setup modes mainly dealing with text."
   (when (display-graphic-p)
     (cond
@@ -15,7 +15,7 @@
   (visual-line-mode 1))
 
 ;; Code/Prog
-(defun setup-a-code-mode ()
+(defun loc-setup-code-mode ()
   "Setup modes mainly dealing with code."
   (when (display-graphic-p)
     (cond
@@ -39,7 +39,7 @@
   (hl-line-mode 1))
 
 ;; Mix of text and code (e.g., latex or configuration files)
-(defun setup-a-mix-mode ()
+(defun loc-setup-mix-mode ()
   "Setup modes dealing with a (somewhat even) mix of text and code."
   (when (display-graphic-p)
     (cond
@@ -64,7 +64,7 @@
   (hl-line-mode 1))
 
 ;; Mix of text and code in small buffers (e.g., minibuffer or pop-up)
-(defun setup-a-mini-mix-mode ()
+(defun loc-setup-mini-mix-mode ()
   "Setup modes dealing with a (somewhat even) mix of text and code in more transient buffers."
   (when (display-graphic-p)
     (cond
@@ -82,5 +82,7 @@
      (t
       (face-remap-add-relative 'default '(:family "Monospace" :height 110))))))
 
-(provide 'func-modes)
-;;; func-modes.el ends here
+
+(provide 'loc-modes)
+
+;;; loc-modes.el ends here
