@@ -24,17 +24,27 @@
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-templates t
-  "Enable code templates (snippets) for EasyCrypt (depends on `tempel`)."
+  "Enable code templates for EasyCrypt (depends on `tempel`).
+If you set this to a non-nil value, it is recommended to also
+set `ece-enable-indentation` to a non-nil value if, as template insertion relies
+on indentation according to mode (which is altered to the behavior the templates were
+made with by setting `ece-enable-indentation` to a non-nil value)."
   :type 'boolean
   :group 'easycrypt-ext)
 
-(defcustom ece-enable-templates-keybindings t
-  "Enable keybindings for inserting EasyCrypt templates (depends `tempel`)."
+(defcustom ece-enable-templates-keybindings 'ece-enable-templates
+  "Enable keybindings for inserting EasyCrypt (regualr) templates (depends on `tempel`).
+Does not make much sense to set this to a non-nil value with `ece-enable-templates`
+set to nil."
   :type 'boolean
   :group 'easycrypt-ext)
 
-(defcustom ece-enable-templates-info t
-  "Enable informative code templates for EasyCrypt (depends on `tempel`)."
+(defcustom ece-enable-templates-info 'ece-enable-templates
+  "Enable informative code templates for EasyCrypt (depends on `tempel`).
+If you set this to a non-nil value, it is recommended to also
+set `ece-enable-indentation` to a non-nil value if, as template insertion relies
+on indentation according to mode (which is altered to the behavior the templates were
+made with by setting `ece-enable-indentation` to a non-nil value)."
   :type 'boolean
   :group 'easycrypt-ext)
 
@@ -52,6 +62,7 @@ Can be 'dark, 'light, or nil."
           (const :tag "No theme" nil))
   :group 'easycrypt-ext)
 
+
 ;; Constants
 (defconst ece--dir
   (file-name-directory (or load-file-name buffer-file-name))
@@ -63,7 +74,7 @@ Can be 'dark, 'light, or nil."
 ;;;###autoload
 (defun ece-basic-indent (arg)
   "Indent all lines touched by the active region by ARG * `tab-width`.
-   If no region is active, insert ARG tabs at point or un-tab current line (ARG times)."
+If no region is active, insert ARG tabs at point or un-tab current line (ARG times)."
   (interactive "p")
   ;; If region is active,...
   (if (use-region-p)
@@ -109,9 +120,9 @@ Can be 'dark, 'light, or nil."
 ;;;###autoload
 (defun ece-basic-deindent (arg)
   "De-indent all lines touched by the active region by ARG * `tab-width`.
-   If no region is active, un-tab current line by ARG * `tab-width`."
+If no region is active, un-tab current line by ARG * `tab-width`."
   (interactive "p")
-  (a-basic-indent (- arg)))
+  (ece-basic-indent (- arg)))
 
 ;;; Contextual indentation
 (defun ece--indent-level-fallback ()
@@ -264,7 +275,8 @@ and a limitation of the localized ad-hoc computation
 of the indent level).
 Meant for `post-self-insert-hook`."
   (when (or (and (memq last-command-event '(?\} ?\) ?\] ?\"))
-                 (let ((line-before (buffer-substring-no-properties (line-beginning-position) (- (point) 1))))
+                 (let ((line-before (buffer-substring-no-properties (line-beginning-position)
+                                                                    (- (point) 1))))
                    (string-match-p "^[[:blank:]]*$" line-before)))
             (and (eq last-command-event ?\.)
                  (save-excursion
@@ -403,20 +415,19 @@ as an argument to the `print` command of EasyCrypt."
   (when ece-enable-indentation
     (setq-local electric-indent-mode nil)
     (setq-local electric-indent-inhibit t)
+    (setq-local tab-width 2)
     (setq-local indent-line-function #'ece-indent-line)
     (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t)))
 
 (defun ece--setup-indentation-keybindings ()
   (when ece-enable-indentation-keybindings
     (keymap-local-set "RET" #'newline-and-indent)
-    (keymap-local-set "<return>" #'newline-and-indent)
-    (keymap-local-set "S-RET" #'newline)
+    (keymap-local-set "<return>" "RET")
     (keymap-local-set "S-<return>" #'newline)
-    (keymap-local-set "TAB" #'a-basic-indent)
-    (keymap-local-set "<tab>" #'a-basic-indent)
-    (keymap-local-set "<backtab>" #'a-basic-deindent)
-    (keymap-local-set "M-<tab>" #'indent-for-tab-command)
-    (keymap-local-set "C-M-i" #'indent-for-tab-command)))
+    (keymap-local-set "TAB" #'ece-basic-indent)
+    (keymap-local-set "<tab>" "TAB")
+    (keymap-local-set "<backtab>" #'ece-basic-deindent)
+    (keymap-local-set "M-i" #'indent-for-tab-command)))
 
 ;;; Auxiliary functionality
 (defun ece--setup-auxiliary-functionality-keybindings ()
@@ -548,9 +559,7 @@ that allows to include other templates by their name."
       (tempel-key "Y" phoare1n ece-template-map)
       (tempel-key "z" theory ece-template-map)
       (tempel-key "Z" abstracttheory ece-template-map))
-    (keymap-set easycrypt-mode-map "C-c l t" 'ece-template-map-prefix)
-    (keymap-set easycrypt-response-mode-map "C-c l t" 'ece-template-map-prefix)
-    (keymap-set easycrypt-goals-mode-map "C-c l t" 'ece-template-map-prefix)))
+    (keymap-set easycrypt-mode-map "C-c l t" 'ece-template-map-prefix)))
 
 ;; Themes
 (defun ece--setup-theme ()

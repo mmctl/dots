@@ -46,7 +46,6 @@
 (defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
   "Directory where lock files are stored.")
 
-
 ;; Bootstrap
 ;;; Directories
 (unless (file-directory-p THEMES_DIR)
@@ -84,8 +83,6 @@
     (add-to-list 'load-path file)))
 
 (add-to-list 'load-path MISC_DIR)
-
-;(add-to-list 'load-path "/home/mm/.config/emacs/funcs/")
 
 (setopt custom-theme-directory THEMES_DIR)
 
@@ -797,6 +794,21 @@
   ;; Activation
   (global-corfu-mode 1))
 
+(use-package corfu-quick
+  :ensure nil ; Provided by Corfu
+
+  :after corfu
+
+  :config
+  ;; Settings
+  (setopt corfu-quick1 "asdfjkl")
+  (setopt corfu-quick2 "gerhui")
+  ;; Keybindings
+  (keymap-set corfu-map "C-q" #'corfu-quick-insert)
+  (keymap-set corfu-map "C-S-q" #'corfu-quick-complete)
+  (keymap-set corfu-map "C-S-j" #'corfu-quick-jump))
+
+
 (use-package cape
   :ensure t
 
@@ -821,26 +833,26 @@
 
   (defun setup-a-cape-text-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev
+                (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-dict-prefix-2
                                        #'cape-dabbrev-prefix-2))))
   (defun setup-a-cape-mix-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev
+                (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-keyword-prefix-2 #'cape-dict-prefix-2
                                        #'cape-dabbrev-prefix-2))))
   (defun setup-a-cape-code-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev
+                (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-keyword-prefix-2
                                        #'cape-dabbrev-prefix-2))))
   (defun setup-a-cape-minibuffer ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev
+                (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-history-prefix-2 #'cape-file-prefix-2
                                        #'cape-dabbrev-prefix-2))))
   ;; Hooks
-  (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev #'cape-dabbrev-prefix-2))
+  (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev-prefix-2 #'cape-dabbrev-prefix-2))
 
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
   (add-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
@@ -1438,6 +1450,7 @@ that allows to include other templates by their name."
           proof-output-tooltips t)
   (setopt proof-electric-terminator-enable nil
           proof-sticky-errors t
+          proof-disappearing-proofs t
           proof-prog-name-ask nil
           proof-minibuffer-messages t
           proof-next-command-insert-space nil
@@ -1556,8 +1569,10 @@ that allows to include other templates by their name."
                    :inherit 'vertical-border)
     '(corfu-bar :foreground 'unspecified :background 'unspecified
                 :inherit 'scroll-bar)
-    '(corfu-current :foreground 'unspecified :background 'unspecified
-                    :inherit 'secondary-selection)
+    '(corfu-quick1 :foreground 'unspecified :background 'unspecified
+                   :inherit 'avy-lead-face)
+    '(corfu-quick2 :foreground 'unspecified :background 'unspecified
+                    :inherit 'avy-lead-face-1)
     '(tempel-default :foreground 'unspecified :background 'unspecified
                      :inherit 'secondary-selection :slant 'italic)
     '(tempel-field :foreground 'unspecified :background 'unspecified
@@ -1610,7 +1625,7 @@ that allows to include other templates by their name."
     '(easycrypt-tactics-dangerous-face :foreground red))
 
   ;; Hooks
-  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord) (message "Enabled theme"))))
+  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord))))
 
 (use-package doom-nord-light-theme
   :ensure nil ; Provided by doom-themes
