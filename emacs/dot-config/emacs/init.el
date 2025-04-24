@@ -126,6 +126,8 @@
                                      ("nongnu" . 5)
                                      ("melpa" . 1)))
 
+(unless package-archive-contents
+  (package-refresh-contents))
 
 ;; Settings (general/UI)
 ;;; Launching

@@ -1,7 +1,7 @@
 # SSH Configuration (User-specific)
 ## Git-related
-Host github.com
-    HostName github.com
+Host github.com gitlab.com
+    HostName %h
     User MM45
     IdentityFile "%d/.ssh/git_ed25519"
 
