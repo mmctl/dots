@@ -3,8 +3,8 @@
 [init]
 	defaultBranch = main
 [user]
-	name = mmctl
-	email = kernel@mmeijers.com
+	name = MM45
+	email = research@mmeijers.com
 # [core] Use environment variables for editors/pagers
 [color]
 	ui = auto

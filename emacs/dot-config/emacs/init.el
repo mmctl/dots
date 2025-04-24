@@ -1431,6 +1431,11 @@ that allows to include other templates by their name."
   ;; Hooks
   (add-hook 'org-mode-hook #'loc-setup-mix-mode))
 
+;; Markdown
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode))
+
 ;;;; Note, proof.el (which is provided by the proof-general package) is what is
 ;;;; actually loaded by the proof assistants, not proof-general.el.
 ;;;; Hence, we use `use-package proof :ensure proof-general` to
