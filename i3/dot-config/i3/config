@@ -187,7 +187,7 @@ bindsym $mod+$A+d exec atril
 
 ### Editors
 #### Run emacsclient (creating a new frame)
-bindsym $mod+$A+e exec --no-startup-id emacsclient -c -s 'gui' -n --alternate-editor=
+bindsym $mod+$A+e exec --no-startup-id emacsclient -c -n --alternate-editor=
 
 ### Files
 bindsym $mod+$A+f exec --no-startup-id "alacritty --class FileManager,Yazi -e yazi"
@@ -374,9 +374,3 @@ for_window [class="(?i)Terminal"] focus
 ## Web (browsers)
 assign [class="(?i)Firefox"] $wsweb
 for_window [class="(?i)Firefox"] focus
-
-
-# Initial setup
-## Emacs daemons (don't kill/restart when reloading config)
-exec --no-startup-id COLORTERM=truecolor emacs --bg-daemon='tty'
-exec --no-startup-id emacs --bg-daemon='gui'

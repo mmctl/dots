@@ -5,5 +5,5 @@ alias ls='ls --color=tty'
 alias y='yazi'
 
 # Emacs
-alias ect='emacsclient -t -s tty --alternate-editor='
-alias ecc='emacsclient -c -s gui -n --alternate-editor='
+alias ect='emacsclient -t --alternate-editor='
+alias ecc='emacsclient -c -n --alternate-editor='

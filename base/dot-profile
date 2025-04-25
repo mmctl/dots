@@ -42,7 +42,7 @@ export OPAMROOT="$XDG_DATA_HOME/opam"
 export PAGER='less'
 export MANPAGER='less'
 export SUDO_EDITOR='vi'
-export EDITOR='emacsclient -t -s tty --alternate-editor='
+export EDITOR='emacsclient -t --alternate-editor='
 export ALTERNATE_EDITOR='' # This will spawn an emacs daemon upon running emacsclient (if no daemon is running yet)
 
 

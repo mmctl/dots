@@ -2,7 +2,7 @@
 ## Default programs (GUI)
 export TERMCMD='alacritty'
 export BROWSER='firefox'
-export VISUAL='emacsclient -c -s gui --alternate-editor='
+export VISUAL='emacsclient -c --alternate-editor='
 
 ## Themes
 export GTK_THEME='Nordic-darker'
