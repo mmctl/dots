@@ -9,52 +9,56 @@
   :group 'easycrypt)
 
 (defcustom ece-enable-indentation t
-  "Enable enhanced (but still ad-hoc) indentation support in EasyCrypt."
+  "Non-nil (resp. `nil`) to enable (resp. disable) enhanced
+(but still ad-hoc) indentation in EasyCrypt."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-indentation-keybindings t
-  "Enable suggested keybindings for indentation-related commands in EasyCrypt."
+  "Non-nil (resp. `nil`) to enable (resp. disable) suggested keybindings
+for indentation-related commands in EasyCrypt."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-keywords-completion t
-  "Enable completion for EasyCrypt keywords (depends on `cape`)."
+  "Non-nil (resp. `nil`) to enable (resp. disable) completion for
+EasyCrypt keywords (depends on `cape`)."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-templates t
-  "Enable code templates for EasyCrypt (depends on `tempel`).
-If you set this to a non-nil value, it is recommended to also
-set `ece-enable-indentation` to a non-nil value if, as template insertion relies
-on indentation according to mode (which is altered to the behavior the templates were
-made with by setting `ece-enable-indentation` to a non-nil value)."
+  "Non-nil (resp. `nil`) to enable (resp. disable) code templates for
+EasyCrypt (depends on `tempel`). If you enable this, it is recommended to
+also enable enhanced indentation (see `ece-enable-indentation`),
+since the templates use indentation and were made with the enhanced
+EasyCrypt indentation in mind."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-templates-keybindings 'ece-enable-templates
-  "Enable keybindings for inserting EasyCrypt (regualr) templates (depends on `tempel`).
-Does not make much sense to set this to a non-nil value with `ece-enable-templates`
-set to nil."
+  "Non-nil (resp. `nil`) to enable (resp. disable) keybindings for inserting
+EasyCrypt (regular) templates (depends on `tempel`). Does not make much sense
+to enable this when you have disabled templates themselves (see `ece-enable-templates`)."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-templates-info 'ece-enable-templates
-  "Enable informative code templates for EasyCrypt (depends on `tempel`).
-If you set this to a non-nil value, it is recommended to also
-set `ece-enable-indentation` to a non-nil value if, as template insertion relies
-on indentation according to mode (which is altered to the behavior the templates were
-made with by setting `ece-enable-indentation` to a non-nil value)."
+  "Non-nil (resp. `nil`) to enable (resp. disable) informative code templates
+for EasyCrypt (depends on `tempel`). If you enable this, it is recommended to also
+enable enhanced indentation (see `ece-enable-indentation`), since the
+templates use indentation and were made with the enhanced EasyCrypt indentation in mind."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-auxiliary-functionality-keybindings t
-  "Enable keybindings for additional EasyCrypt functionality (e.g., printing/searching with mouse click)."
+  "Non-nil (resp. `nil`) to enable (resp. disable) keybindings for additional
+EasyCrypt functionality (e.g., printing/searching with mouse click)."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-theme nil
-  "Enable EasyCrypt theme extension (depends on `doom-themes`).
+  "`'dark`, `'light`, or `nil` to enable the dark mode EasyCrypt theme,
+light EasyCrypt theme, or no EasyCrypt theme, respectively (depends on `doom-themes`).
 Can be 'dark, 'light, or nil."
   :type '(choice
           (const :tag "Dark theme" dark)
@@ -296,108 +300,106 @@ Meant for `post-self-insert-hook`."
 
 
 ;; Shell commands
-(defun ece--is-supported-shell-command (command)
+(defun ece--validate-shell-command (command)
   "Checks if the provided `command` is a valid/supported EasyCrypt shell command
 (in the sense that a command below is implemented for it).
 Prints a message informing the user if that is not the case."
   (or (member command '("print" "search" "locate"))
       (user-error "Unknown/Unsupported command: `%s`." command)))
 
-(defun ece--shell-command (command &rest args)
+(defun ece--exec-shell-command (command &rest args)
   "Combines `command` and `args` into a command for the EasyCrypt shell, and
 directly calls the shell with it."
-  (if (fboundp 'proof-shell-invisible-command)
-      (if args
-          (proof-shell-invisible-command (concat command " " (string-join args " ")))
-        (proof-shell-invisible-command command))
-    (user-error "Command for executing proof commands not found. Did you load Proof General?")))
+  (if (and (fboundp 'proof-shell-ready-prover)
+           (fboundp 'proof-shell-invisible-command))
+      (progn
+        (proof-shell-ready-prover)
+        (if args
+            (proof-shell-invisible-command (concat command " " (string-join args " ")))
+          (proof-shell-invisible-command command)))
+    (user-error "Necessary functionality for executing proof commands not found. Did you load Proof General?")))
 
-(defun ece-command-at-point (command)
-  "Takes the active region or tries to find a (reasonable) thing at point,
-and uses the result as an argument to the `command` command of EasyCrypt.
-If nothing (reasonable) is found, or the provided `command` is not valid,
-prints a message informing the user."
-  (when (ece--is-supported-shell-command command)
-    (let ((arg (if (use-region-p)
-                   (buffer-substring-no-properties (region-beginning) (region-end))
-                 (or (thing-at-point 'sexp t)
-                     (thing-at-point 'word t)
-                     (thing-at-point 'symbol t)))))
+(defun ece--thing-at (event)
+  "If `event` is a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point."
+  (if (mouse-event-p event)
+      (or (thing-at-mouse event 'sexp t)
+          (thing-at-mouse event 'word t)
+          (thing-at-mouse event 'symbol t))
+    (if (use-region-p)
+        (buffer-substring-no-properties (region-beginning) (region-end))
+      (or (thing-at-point 'sexp t)
+          (thing-at-point 'word t)
+          (thing-at-point 'symbol t)))))
+
+(defun ece--command (command event)
+  "If `event` is a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point. The result is used as an
+argument to the `command` command of EasyCrypt. If nothing (reasonable) is
+found, or the provided `command` is not valid, prints a message informing
+the user (see `ece--validate-shell-command`)."
+  (when (ece--validate-shell-command command)
+    (let ((arg (ece--thing-at event)))
       (if arg
-          (ece--shell-command command arg)
-        (user-error "No valid region or reasonable thing at point found for command `%s`. Try selecting the thing if automatic detection doesn't work."
-                    command)))))
+          (ece--exec-shell-command command arg)
+        (user-error "No reasonable thing at %s found for command `%s`.%s"
+                    (if (mouse-event-p event) "mouse" "point")
+                    command
+                    (if (mouse-event-p event) "" " Try selecting the thing if automatic detection doesn't work."))))))
 
 ;;;###autoload
-(defun ece-print-at-point ()
-  "Takes the active region or tries to find a (reasonable) thing at point,
-and uses the result as an argument to the `print` command of EasyCrypt."
-  (interactive)
-  (ece-command-at-point "print"))
+(defun ece-print (&optional event)
+  "If called with a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point. Uses the result as an
+argument to the `print` command in EasyCrypt."
+  (interactive (list (if (mouse-event-p last-input-event)
+                         last-input-event
+                       nil)))
+  (ece--command "print" event))
 
 ;;;###autoload
-(defun ece-locate-at-point ()
-  "Like `an-easycrypt-print-at-point`, but issues the locate command."
-  (interactive)
-  (ece-command-at-point "locate"))
+(defun ece-search (&optional event)
+  "If called with a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point. Uses the result as an
+argument to the `search` command in EasyCrypt."
+  (interactive (list (if (mouse-event-p last-input-event)
+                         last-input-event
+                       nil)))
+  (ece--command "search" event))
 
 ;;;###autoload
-(defun ece-search-at-point ()
-  "Like `an-easycrypt-print-at-point`, but issues the search command."
-  (interactive)
-  (ece-command-at-point "search"))
-
-(defun ece-command-at-mouse (event command)
-  "Like `an-easycrypt-command-at-point`, but tries to find thing at mouse
-instead of point. Also doesn't consider regions."
-  (when (ece-is-supported--shell-command command)
-    (let ((arg (or (thing-at-mouse event 'sexp t)
-                   (thing-at-mouse event 'word t)
-                   (thing-at-mouse event 'symbol t))))
-      (if arg
-          (ece--shell-command command arg)
-        (user-error "No reasonable thing at mouse found for command `%s`." command)))))
-
-;;;###autoload
-(defun ece-print-at-mouse (event)
-  "Tries to find a (reasonable) thing at mouse, and uses the result
-as an argument to the `print` command of EasyCrypt."
-  (interactive "e")
-  (ece-command-at-mouse event "print"))
-
-;;;###autoload
-(defun ece-locate-at-mouse (event)
-  "Like `an-easycrypt-print-at-mouse`, but issues the locate command."
-  (interactive "e")
-  (ece-command-at-mouse event "locate"))
-
-;;;###autoload
-(defun ece-search-at-mouse (event)
-  "Like `an-easycrypt-print-at-mouse`, but issues the search command."
-  (interactive "e")
-  (ece-command-at-mouse event "search"))
+(defun ece-locate (&optional event)
+  "If called with a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point. Uses the result as an
+argument to the `locate` command in EasyCrypt."
+  (interactive (list (if (mouse-event-p last-input-event)
+                         last-input-event
+                       nil)))
+  (ece--command "locate" event))
 
 
 ;; Key maps
 (defvar-keymap ece-proof-mode-process-repeat-map
   :doc "Keymap (repeatable) for processing proof commands"
-  :repeat (:hints ((proof-undo-last-successful-command . "Undo last succesful command")
-                   (proof-assert-next-command-interactive . "Assert next command")
-                   (proof-undo-and-delete-last-successful-command . "Undo and delete last successful command")))
+  :repeat (:hints ((proof-undo-last-successful-command . "p: Undo last succesful command")
+                   (proof-assert-next-command-interactive . "n: Assert next command")
+                   (proof-undo-and-delete-last-successful-command . "d: Undo and delete last successful command")))
   "p" #'proof-undo-last-successful-command
-  "C-p" #'proof-undo-last-successful-command
   "n" #'proof-assert-next-command-interactive
-  "C-n" #'proof-assert-next-command-interactive
-  "d" #'proof-undo-and-delete-last-successful-command
-  "C-d" #'proof-undo-and-delete-last-successful-command)
+  "d" #'proof-undo-and-delete-last-successful-command)
 
 (defvar-keymap ece-bufhist-repeat-map
   :doc "Keymap (repeatable) for browsing and managing buffer history"
-  :repeat (:hints ((bufhist-prev . "Go to previous history element")
-                   (bufhist-next . "Go to next history element")
-                   (bufhist-first . "Go to first history element")
-                   (bufhist-last . "Go to last history element")
-                   (bufhist-delete . "Delete current history element")))
+  :repeat (:hints ((bufhist-prev . "p: Go to previous history element")
+                   (bufhist-next . "n: Go to next history element")
+                   (bufhist-first . "f: Go to first history element")
+                   (bufhist-last . "l: Go to last history element")
+                   (bufhist-delete . "d: Delete current history element")))
   "p" #'bufhist-prev
   "n" #'bufhist-next
   "f" #'bufhist-first
@@ -432,33 +434,24 @@ as an argument to the `print` command of EasyCrypt."
 ;;; Auxiliary functionality
 (defun ece--setup-auxiliary-functionality-keybindings ()
   (when ece-enable-auxiliary-functionality-keybindings
-    (keymap-set easycrypt-mode-map "C-c l p" #'ece-print-at-point)
-    (keymap-set easycrypt-mode-map "C-c l l" #'ece-locate-at-point)
-    (keymap-set easycrypt-mode-map "C-c l s" #'ece-search-at-point)
-    (keymap-set easycrypt-mode-map "<mouse-3>" #'ece-print-at-mouse)
-    (keymap-set easycrypt-mode-map "C-<mouse-3>" #'ece-locate-at-mouse)
-    (keymap-set easycrypt-mode-map "M-<mouse-3>" #'ece-search-at-mouse)
-    (keymap-set easycrypt-mode-map "<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-response-mode-map "C-c l p" #'ece-print-at-point)
-    (keymap-set easycrypt-response-mode-map "C-c l l" #'ece-locate-at-point)
-    (keymap-set easycrypt-response-mode-map "C-c l s" #'ece-search-at-point)
-    (keymap-set easycrypt-response-mode-map "<mouse-3>" #'ece-print-at-mouse)
-    (keymap-set easycrypt-response-mode-map "C-<mouse-3>" #'ece-locate-at-mouse)
-    (keymap-set easycrypt-response-mode-map "M-<mouse-3>" #'ece-search-at-mouse)
-    (keymap-set easycrypt-response-mode-map "<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-response-mode-map "C-<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-response-mode-map "M-<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-goals-mode-map "C-c l p" #'ece-print-at-point)
-    (keymap-set easycrypt-goals-mode-map "C-c l l" #'ece-locate-at-point)
-    (keymap-set easycrypt-goals-mode-map "C-c l s" #'ece-search-at-point)
-    (keymap-set easycrypt-goals-mode-map "<mouse-3>" #'ece-print-at-mouse)
-    (keymap-set easycrypt-goals-mode-map "C-<mouse-3>" #'ece-locate-at-mouse)
-    (keymap-set easycrypt-goals-mode-map "M-<mouse-3>" #'ece-search-at-mouse)
-    (keymap-set easycrypt-goals-mode-map "<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-goals-mode-map "C-<down-mouse-3>" #'ignore)
-    (keymap-set easycrypt-goals-mode-map "M-<down-mouse-3>" #'ignore)))
+    (keymap-set easycrypt-mode-map "C-c C-y p" #'ece-print)
+    (keymap-set easycrypt-mode-map "C-c C-y l" #'ece-locate)
+    (keymap-set easycrypt-mode-map "C-c C-y s" #'ece-search)
+    (keymap-set easycrypt-mode-map "S-<down-mouse-3>" #'ece-print)
+    (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ece-locate)
+    (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ece-search)
+    (keymap-set easycrypt-response-mode-map "C-c C-y p" #'ece-print)
+    (keymap-set easycrypt-response-mode-map "C-c C-y l" #'ece-locate)
+    (keymap-set easycrypt-response-mode-map "C-c C-y s" #'ece-search)
+    (keymap-set easycrypt-response-mode-map "S-<down-mouse-3>" #'ece-print)
+    (keymap-set easycrypt-response-mode-map "C-<down-mouse-3>" #'ece-locate)
+    (keymap-set easycrypt-response-mode-map "M-<down-mouse-3>" #'ece-search-at-mouse)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y p" #'ece-print-at-point)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y l" #'ece-locate-at-point)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y s" #'ece-search-at-point)
+    (keymap-set easycrypt-goals-mode-map "S-<down-mouse-3>" #'ece-print-at-mouse)
+    (keymap-set easycrypt-goals-mode-map "C-<down-mouse-3>" #'ece-locate-at-mouse)
+    (keymap-set easycrypt-goals-mode-map "M-<down-mouse-3>" #'ece-search-at-mouse)))
 
 ;;; Keywords
 (defun ece--setup-keywords-completion ()
@@ -559,7 +552,7 @@ that allows to include other templates by their name."
       (tempel-key "Y" phoare1n ece-template-map)
       (tempel-key "z" theory ece-template-map)
       (tempel-key "Z" abstracttheory ece-template-map))
-    (keymap-set easycrypt-mode-map "C-c l t" 'ece-template-map-prefix)))
+    (keymap-set easycrypt-mode-map "C-c C-y t" 'ece-template-map-prefix)))
 
 ;; Themes
 (defun ece--setup-theme ()
@@ -576,7 +569,7 @@ that allows to include other templates by their name."
         '(aw-background-face :inherit 'avy-background-face)
         '(aw-leading-char-face :inherit 'avy-lead-face)
         '(proof-queue-face :background magenta)
-        '(proof-locked-face :background base4)
+        '(proof-locked-face :background base3)
         '(proof-script-sticky-error-face :background red :underline yellow)
         '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
                                             :weight 'semi-bold :slant 'italic)
@@ -610,7 +603,8 @@ that allows to include other templates by their name."
         '(aw-background-face :inherit 'avy-background-face)
         '(aw-leading-char-face :inherit 'avy-lead-face)
         '(proof-queue-face :background base6)
-        '(proof-locked-face :background base3)'(proof-script-sticky-error-face :background red :underline yellow)
+        '(proof-locked-face :background base3)
+        '(proof-script-sticky-error-face :background red :underline yellow)
         '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
                                             :weight 'semi-bold :slant 'italic)
         '(proof-highlight-dependent-name-face :foreground magenta)

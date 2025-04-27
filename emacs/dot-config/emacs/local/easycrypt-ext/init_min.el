@@ -116,7 +116,7 @@ You can find the value of this directory by launching Emacs, pressing `C-h v` (i
 
   ;; Enable enhanced (but still ad-hoc) indentation support for EasyCrypt.
   ;; By default, aligns a line to the first non-blank preceding line.
-  ;; Give or take, indents (by `tab-width`) if (1) inside an code/expression enclosure
+  ;; Roughly speaking, indents (by `tab-width`) if (1) inside an code/expression enclosure
   ;; (e.g., between ( and ), [ and ], or { and }), or (2) inside an
   ;; unfinished specification (e.g., lemma statement that wasn't yet terminated with a `.`).
   ;; Also, automatically de-indents upon insertion of (1) a }, ), or ] if it is the first char
