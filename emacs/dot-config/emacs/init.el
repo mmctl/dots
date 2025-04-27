@@ -116,7 +116,7 @@
 (require 'loc-modes)
 (require 'loc-utils)
 
-;;; Package system
+;; Package system
 (require 'package)
 
 (setopt package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
@@ -126,8 +126,11 @@
                                      ("nongnu" . 5)
                                      ("melpa" . 1)))
 
+(package-initialize t)
+
 (unless package-archive-contents
   (package-refresh-contents))
+
 
 ;; Settings (general/UI)
 ;;; Launching
@@ -469,16 +472,10 @@
         use-package-always-pin nil
         use-package-always-demand nil)
 
-(when (and (< emacs-major-version 30) (not (package-installed-p 'vc-use-package)))
-  (package-vc-install
-   '(vc-use-package :url "https://github.com/slotThe/vc-use-package"
-                    :vc-backend Git))
-  (require 'vc-use-package))
-
 ;;; Base/Built-in
 (use-package isearch
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt search-exit-option t)
   (setopt isearch-repeat-on-direction-change t
           isearch-lazy-count t
@@ -488,6 +485,7 @@
   (setopt lazy-count-prefix-format nil
           lazy-count-suffix-format " [%s of %s]")
 
+  :config
   ;; Keybindings
   (keymap-unset isearch-mode-map "C-w")
   (keymap-set isearch-mode-map "C-v" #'isearch-exit)
@@ -495,8 +493,8 @@
   (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill))
 
 (use-package dired
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt dired-listing-switches (purecopy "-lahF")
           dired-maybe-use-globstar t
           dired-mouse-drag-files t
@@ -508,6 +506,7 @@
           dired-switches-in-mode-line 'as-is
           dired-recursive-copies 'top)
 
+  :config
   ;; Keybindings
   (keymap-set dired-mode-map "C-v" #'dired-find-file)
   (keymap-set dired-mode-map "RET" #'dired-find-file)
@@ -520,8 +519,8 @@
   (keymap-set dired-mode-map "C-q" #'dired-up-directory))
 
 (use-package dabbrev
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt dabbrev-upcase-means-case-search t
           dabbrev-case-distinction nil
           dabbrev-case-replace nil))
@@ -530,8 +529,8 @@
 (use-package which-key
   :ensure t
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt which-key-idle-delay 0.5
           which-key-popup-type 'side-window
           which-key-side-window-location 'bottom
@@ -548,6 +547,7 @@
           which-key-paging-prefixes '("C-x")
           which-key-paging-key "<f3>")
 
+  :config
   ;; Keybindings
   (keymap-set which-key-mode-map "C-x <f3>" #'which-key-C-h-dispatch)
 
@@ -563,8 +563,8 @@
   :bind (("<remap> <kill-ring-save>" . #'easy-kill)
          ("<remap> <mark-word>" . #'easy-mark))
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt easy-kill-alist '((?w word           " ")
                             (?s sexp           "\n")
                             (?h list           "\n")
@@ -577,6 +577,7 @@
           easy-kill-try-things '(url email word line)
           easy-mark-try-things '(url email word sexp))
 
+  :config
   ;; Keybindings
   (keymap-set easy-kill-base-map "<remap> <kill-ring-save>" #'easy-kill-cycle)
   (keymap-set easy-kill-base-map "<" #'easy-kill-shrink)
@@ -593,8 +594,8 @@
 
   :bind ("C->" . #'er/expand-region)
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt expand-region-fast-keys-enabled t
           expand-region-contract-fast-key "<"
           expand-region-reset-fast-key "r"))
@@ -603,7 +604,7 @@
   :ensure t
 
   :init
-  ;; Setup
+  ;; Setup and settings
   ;;; Create and store undo history directory
   (defconst UNDO_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "undos/"))
     "Directory where (automatically generated) undo (history) files are stored.")
@@ -611,14 +612,13 @@
     (make-directory UNDO_DIR t))
   (setopt undo-tree-history-directory-alist `(("." . ,UNDO_DIR)))
 
-  :config
-  ;; Settings
   (setopt undo-tree-mode-lighter " UT")
   (setopt undo-tree-incompatible-major-modes '(term-mode image-mode doc-view-mode pdf-view-mode))
   (setopt undo-tree-auto-save-history t
           undo-tree-enable-undo-in-region t
           undo-tree-visualizer-diff t)
 
+  :config
   ;; Keybindings
   (keymap-set undo-tree-map "<remap> <undo-redo>" #'undo-tree-redo)
 
@@ -641,10 +641,11 @@
 
   :hook minibuffer-setup
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt marginalia-field-width 100)
 
+  :config
   ;; Keybindings
   (keymap-set minibuffer-mode-map "C-r" #'marginalia-cycle)
   (keymap-set minibuffer-local-map "C-r" #'marginalia-cycle))
@@ -656,8 +657,8 @@
          ("C-M-$" . jinx-languages))
   :hook (text-mode prog-mode conf-mode)
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings
   (setopt jinx-languages "en_US")
   (setopt jinx-include-faces '((prog-mode font-lock-comment-face
                                           font-lock-doc-face)
@@ -665,7 +666,9 @@
                                           font-lock-doc-face)
                                (yaml-mode . conf-mode)
                                (yaml-ts-mode . conf-mode)))
-  ;; Keybindings
+
+  :config
+    ;; Keybindings
   (keymap-set jinx-overlay-map "C-p" #'jinx-previous)
   (keymap-set jinx-overlay-map "C-n" #'jinx-next)
   (keymap-set jinx-repeat-map "C-p" #'jinx-previous)
@@ -677,15 +680,19 @@
 (use-package orderless
   :ensure t
 
-  :config
-  ;; Settings
-  (setopt orderless-matching-styles (list #'orderless-literal #'orderless-flex #'orderless-regexp)
-          orderless-smart-case t
+  :init
+  ;; Setup and settings (before load)
+  (setopt orderless-smart-case t
           orderless-expand-substring 'prefix)
   (setopt completion-styles '(orderless basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles basic partial-completion))))
-  ;;; Additional completion styles
+
+  :config
+  ;; Setup and settings (after load)
+  (setopt orderless-matching-styles (list #'orderless-literal #'orderless-flex #'orderless-regexp))
+
+  ;; Custom functionality
   (orderless-define-completion-style orderless-flex-only
     (orderless-style-dispatchers nil)
     (orderless-matching-styles '(orderless-flex)))
@@ -693,16 +700,18 @@
     (orderless-style-dispatchers nil)
     (orderless-matching-styles '(orderless-literal))))
 
+
 (use-package vertico
   :ensure t
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt vertico-count 15
           vertico-preselect 'first
           vertico-scroll-margin 2
           vertico-cycle nil)
 
+  :config
   ;; Keybindings
   (keymap-set vertico-map "C-o" #'vertico-insert)
   (keymap-set vertico-map "C-v" #'vertico-exit)
@@ -721,7 +730,7 @@
   (vertico-mode 1))
 
 (use-package vertico-directory
-  :ensure nil ; included with vertico
+  :ensure nil ; Provided by vertico
 
   :after vertico
 
@@ -735,7 +744,7 @@
   (add-hook 'rfn-eshadow-update-overlay #'vertico-directory-tidy))
 
 (use-package vertico-mouse
-  :ensure nil ; included with vertico
+  :ensure nil ; Provided by vertico
 
   :after vertico
 
@@ -746,11 +755,27 @@
   (keymap-set vertico-mouse-map "<mouse-1>" (vertico-mouse--click "C-v"))
   (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-o")))
 
+(use-package vertico-quick
+  :ensure nil ; Provided by vertico
+
+  :after vertico
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt vertico-quick1 "asdfjkl")
+  (setopt vertico-quick2 "gerhui")
+
+  :config
+  ;; Keybindings
+  (keymap-set vertico-map "C-y" #'vertico-quick-exit)
+  (keymap-set vertico-map "C-S-y" #'vertico-quick-insert)
+  (keymap-set vertico-map "C-S-j" #'vertico-quick-jump))
+
 (use-package corfu
   :ensure t
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt corfu-count 10
           corfu-scroll-margin 2
           corfu-min-width 15
@@ -769,6 +794,7 @@
           corfu-auto t)
   (setopt text-mode-ispell-word-completion nil)
 
+  :config
   ;; Keybindings
   ;;; All modes
   (keymap-set corfu-map "C-o" #'corfu-complete)
@@ -801,26 +827,29 @@
 
   :after corfu
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt corfu-quick1 "asdfjkl")
   (setopt corfu-quick2 "gerhui")
+
+  :config
   ;; Keybindings
-  (keymap-set corfu-map "C-q" #'corfu-quick-insert)
-  (keymap-set corfu-map "C-S-q" #'corfu-quick-complete)
+  (keymap-set corfu-map "C-y" #'corfu-quick-insert)
+  (keymap-set corfu-map "C-S-y" #'corfu-quick-complete)
   (keymap-set corfu-map "C-S-j" #'corfu-quick-jump))
 
 
 (use-package cape
   :ensure t
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt cape-dict-limit 50
           cape-dabbrev-check-other-buffers #'cape--buffers-major-mode
           cape-file-prefix '("file:" "f:")
           cape-file-directory-must-exist t)
 
+  :config
   ;; Keybindings
   (keymap-global-set "C-c c"  #'cape-prefix-map)
 
@@ -874,16 +903,15 @@
   (keymap-global-set "C-c t" 'a-tempel-map-prefix)
 
   :init
-  ;; Setup
-  ;; Create and store templates directory
+  ;; Setup and settings (before load)
+  ;;; Create and store templates directory
   (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/"))
     "Directory where tempel templates are stored.")
   (unless (file-directory-p TEMPEL_DIR)
     (make-directory TEMPEL_DIR t))
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
 
-  (tempel-key "f" fixme a-tempel-map)
-  (tempel-key "t" todo a-tempel-map)
+  (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
 
   :bind (("M-o" . tempel-complete)
          (:map a-tempel-map
@@ -892,10 +920,10 @@
                ("i" . tempel-insert)))
 
   :config
-  ;; Settings
-  (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
-
   ;; Keybindings
+  (tempel-key "f" fixme a-tempel-map)
+  (tempel-key "t" todo a-tempel-map)
+
   (keymap-unset tempel-map "<remap> <beginning-of-buffer>")
   (keymap-unset tempel-map "<remap> <end-of-buffer>")
   (keymap-unset tempel-map "<remap> <backward-paragraph>")
@@ -988,15 +1016,15 @@ that allows to include other templates by their name."
                ("K" . crux-kill-other-buffers)
                ("p" . crux-switch-to-previous-buffer))
          (:map a-window-map
-               ("e" . crux-transpose-windows))))
+               ("z" . crux-transpose-windows))))
 
 (use-package ace-window
   :ensure t
 
   :bind ("C-w" . ace-window)
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt aw-keys '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
   (setopt aw-scope 'visible
           aw-minibuffer-flag nil
@@ -1019,6 +1047,7 @@ that allows to include other templates by their name."
                   (?t aw-transpose-frame "Transpose frames")
                   (?? aw-show-dispatch-help)))
 
+  :config
   ;; Keybindings
   (keymap-global-set "C-S-w" #'other-window)
 
@@ -1052,8 +1081,8 @@ that allows to include other templates by their name."
                ("C-S-j" . avy-isearch)))
   :bind* ("C-j" . avy-goto-char)
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?e ?r ?u ?i)
           avy-style 'at-full
           avy-all-windows 'all-frames
@@ -1125,8 +1154,8 @@ that allows to include other templates by their name."
                ("M-s" . consult-history)
                ("M-r" . consult-history)))
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt consult-narrow-key "C-<"
           consult-widen-key "C->")
   (setopt consult-async-refresh-delay 0.1
@@ -1143,11 +1172,12 @@ that allows to include other templates by their name."
          ("C-." . embark-dwim)
          ("C-h C-b" . embark-bindings))
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt embark-confirm-act-all t)
   (setq-default prefix-help-command #'embark-prefix-help-command)
 
+  :config
   ;; Keybindings
   (keymap-unset embark-general-map "SPC")
 
@@ -1187,7 +1217,7 @@ that allows to include other templates by their name."
   :ensure t
 
   :init
-  ;; Setup
+  ;; Setup and settings (before load)
   ;; Create and store projectile known projects file
   (defconst PTILE_FILE (file-name-concat EMACS_DATA_DIR "projectile-bookmarks.eld")
     "File where projectile's known projects are stored.")
@@ -1195,8 +1225,6 @@ that allows to include other templates by their name."
   (setopt projectile-keymap-prefix (kbd "C-c p")
           projectile-mode-line-prefix " Ptile")
 
-  :config
-  ;; Settings
   (setopt tags-revert-without-query t)
   (setopt projectile-enable-caching t
           projectile-sort-order 'recently-active
@@ -1205,6 +1233,7 @@ that allows to include other templates by their name."
           projectile-enable-idle-timer t
           projectile-current-project-on-switch 'move-to-end)
 
+  :config
   ;; Keybindings
   (keymap-set projectile-command-map "e" #'projectile-run-project)
   (keymap-set projectile-command-map "p" #'projectile-switch-project)
@@ -1242,18 +1271,13 @@ that allows to include other templates by their name."
   :pin melpa
 
   :init
-  ;; Settings
+  ;; Setup and settings (before load)
   (setopt diff-hl-global-modes '(not term-mode image-mode doc-view-mode pdf-view-mode))
-  (setq-default diff-hl-lighter " DiffHL")
-
-  ;; Activation
-  (global-diff-hl-mode 1)
-
-  :config
-  ;; Settings
   (setopt diff-hl-command-prefix (kbd "C-x v"))
   (setopt diff-hl-update-async t)
+  (setq-default diff-hl-lighter " DiffHL")
 
+  :config
   ;; Keybindings
   (keymap-set diff-hl-command-map "g" #'diff-hl-diff-goto-hunk)
   (keymap-set diff-hl-command-map "r" #'diff-hl-revert-hunk)
@@ -1265,21 +1289,21 @@ that allows to include other templates by their name."
   (keymap-set diff-hl-command-map "s" #'diff-hl-stage-current-hunk)
   (keymap-set diff-hl-command-map "S" #'diff-hl-stage-dwim)
   (keymap-set diff-hl-command-map "m" #'diff-hl-stage-some)
-  (keymap-set diff-hl-command-map "u" #'diff-hl-unstage-file))
+  (keymap-set diff-hl-command-map "u" #'diff-hl-unstage-file)
+
+  ;; Activation
+  (global-diff-hl-mode 1))
 
 (use-package magit
   :ensure t
-
-  :init
-  ;; Settings
-  (setopt magit-define-global-key-bindings nil)
 
   :bind (("C-x m" . magit-status)
          ("C-c m" . magit-dispatch)
          ("C-c f" . magit-file-dispatch))
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
+  (setopt magit-define-global-key-bindings nil)
   (setopt magit-verbose-messages t)
   (setopt magit-auto-revert-mode t
           magit-auto-revert-immediately t
@@ -1290,9 +1314,13 @@ that allows to include other templates by their name."
           auto-revert-buffer-list-filter 'magit-auto-revert-repository-buffer-p)
   (setopt magit-delete-by-moving-to-trash t)
   (setopt git-commit-major-mode #'log-edit-mode)
+
+  :config
+  ;; Setup and settings (after load)
   (add-to-list 'magit-no-confirm 'trash)
   (add-to-list 'magit-no-confirm 'safe-with-wip)
 
+  ;; Keybindings
   (keymap-unset magit-mode-map "C-w" )
   (keymap-unset magit-mode-map "M-w")
   (keymap-unset magit-mode-map "C-c C-w")
@@ -1316,8 +1344,8 @@ that allows to include other templates by their name."
 
   :defer t
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt TeX-view-program-selection
           '(((output-dvi has-no-display-manager) "dvi2tty")
             ((output-dvi style-pstricks) "dvips and gv")
@@ -1334,6 +1362,7 @@ that allows to include other templates by their name."
           TeX-auto-regexp-list 'TeX-auto-full-regexp-list
           TeX-auto-untabify t)
 
+  :config
   ;; Hooks
   (add-hook 'TeX-language-en-hook (lambda () (jinx-languages "en_US")))
   (add-hook 'TeX-language-nl-hook (lambda () (jinx-languages "nl")))
@@ -1346,16 +1375,16 @@ that allows to include other templates by their name."
   :defer t
 
   :init
-  ;; Setup
+  ;; Setup and settings (before load)
   (setopt pdf-tools-handle-upgrades nil)
-  (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode)
+  (setopt pdf-view-display-size 'fit-page)
+  (setopt pdf-view-use-unicode-ligther nil)
 
   (pdf-loader-install)
 
   :config
-  ;; Settings
-  (setopt pdf-view-display-size 'fit-page)
-  (setopt pdf-view-use-unicode-ligther nil)
+  ;; Setup and settings (after load)
+  (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode)
 
   ;; Keybindings
   (keymap-set pdf-view-mode-map "q" #'kill-this-buffer)
@@ -1404,7 +1433,7 @@ that allows to include other templates by their name."
   :defer t
 
   :init
-  ;; Setup
+  ;; Setup and settings (before load)
   ;; Create and store templates directory
   (defconst ORG_DIR (file-name-as-directory
                      (if (getenv "XDG_DATA_HOME")
@@ -1420,23 +1449,51 @@ that allows to include other templates by their name."
   (setopt org-return-follows-link t)
 
   :config
-  ;; Settings
+  ;; Setup and settings (after load)
   (setopt org-support-shift-select t)
 
   ;; Keybindings
   (keymap-set org-mode-map "S-RET" #'org-return-and-maybe-indent)
 
   (keymap-unset org-read-date-minibuffer-local-map "C-v")
-  (keymap-unset "C-<"  #'org-calendar-scroll-three-months-left)
-  (keymap-unset "C->" #'org-calendar-scroll-three-months-right)
+  (keymap-unset org-read-date-minibuffer-local-map "M-v")
+  (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
+  (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right)
 
   ;; Hooks
   (add-hook 'org-mode-hook #'loc-setup-mix-mode))
 
-;; Markdown
 (use-package markdown-mode
   :ensure t
-  :mode ("README\\.md\\'" . gfm-mode))
+
+  :defer t
+
+  :mode ("README\\.md\\'" . gfm-mode)
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt markdown-enable-math t
+          markdown-enable-html t
+          markdown-enable-highlighting-syntax t)
+  (setopt markdown-footnote-location 'immediately)
+  (setopt markdown-gfm-use-electric-backquote nil)
+  (setopt markdown-edit-code-block-default-mode 'prog-mode
+          markdown-fontify-code-blocks-natively t
+          markdown-fontify-code-block-default-mode 'python-mode)
+  (setopt markdown-fontify-whole-heading-line t
+          markdown-header-scaling t
+          markdown-header-scaling t)
+  (setopt markdown-special-ctrl-a/e t)
+
+  :config
+  ;; Keybindings
+  (keymap-set markdown-mode-command-map "t" #'markdown-kill-ring-save)
+  (keymap-set markdown-mode-command-map "z" #'markdown-table-transpose)
+
+  (keymap-set markdown-view-mode-map "<prior>" #'scroll-up-command)
+  (keymap-set markdown-view-mode-map "<next>" #'scroll-down-command)
+  (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
+  (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
 ;;;; Note, proof.el (which is provided by the proof-general package) is what is
 ;;;; actually loaded by the proof assistants, not proof-general.el.
@@ -1448,8 +1505,8 @@ that allows to include other templates by their name."
 
   :defer t
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   ;;; General
   (setopt proof-splash-enable nil
           proof-toolbar-enable nil)
@@ -1471,6 +1528,7 @@ that allows to include other templates by their name."
           easycrypt-one-command-per-line nil)
   (setopt easycrypt-prog-name "easycrypt")
 
+  :config
   ;; Keybindings
   (defvar-keymap a-proof-mode-process-repeat-map
     :doc "Keymap (repeatable) for processing proof commands"
@@ -1478,11 +1536,8 @@ that allows to include other templates by their name."
                      (proof-assert-next-command-interactive . "Assert next command")
                      (proof-undo-and-delete-last-successful-command . "Undo and delete last successful command")))
     "p" #'proof-undo-last-successful-command
-    "C-p" #'proof-undo-last-successful-command
     "n" #'proof-assert-next-command-interactive
-    "C-n" #'proof-assert-next-command-interactive
-    "d" #'proof-undo-and-delete-last-successful-command
-    "C-d" #'proof-undo-and-delete-last-successful-command)
+    "d" #'proof-undo-and-delete-last-successful-command)
   (defvar-keymap a-bufhist-repeat-map
     :doc "Keymap (repeatable) for browsing and managing buffer history"
     :repeat (:hints ((bufhist-prev . "Go to previous history element")
@@ -1506,6 +1561,8 @@ that allows to include other templates by their name."
     (keymap-set bufhist-mode-map "M-c" #'bufhist-clear)
     (keymap-set bufhist-mode-map "M-d" #'bufhist-delete))
   (defun setup-a-proof-mode-map ()
+    (keymap-unset proof-mode-map "M-a")
+    (keymap-unset proof-mode-map "M-e")
     (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
     (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive)
     (keymap-set proof-mode-map "C-<prior>" #'proof-goto-command-start)
@@ -1525,10 +1582,8 @@ that allows to include other templates by their name."
     (keymap-set proof-mode-map "M-n" #'pg-next-matching-input-from-input)
     (keymap-set proof-mode-map "C-M-p" #'pg-previous-input)
     (keymap-set proof-mode-map "C-M-n" #'pg-next-input)
-    (keymap-set proof-mode-map "C-c C-y p" #'pg-previous-matching-input-from-input)
-    (keymap-set proof-mode-map "C-c C-y n" #'pg-next-matching-input-from-input)
-    (keymap-set proof-mode-map "C-c C-y P" #'pg-previous-matching-input)
-    (keymap-set proof-mode-map "C-c C-y N" #'pg-next-matching-input))
+    (keymap-set proof-mode-map "C-M-S-p" #'pg-previous-matching-input)
+    (keymap-set proof-mode-map "C-M-S-n" #'pg-next-matching-input))
   (defun setup-a-proof-response-mode-map ()
     (keymap-set proof-response-mode-map "C-q" #'bury-buffer)
     (keymap-set proof-response-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
@@ -1552,7 +1607,14 @@ that allows to include other templates by their name."
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
   (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode-map)
-  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode-map))
+  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode-map)
+
+  ;; Custom functionality
+  ;;; Remove bufhist buttons
+  (defun silence-bufhist-insert-buttons (orig-fun &rest args)
+    (setq-local bufhist-top-point (point-min)))
+
+  (advice-add 'bufhist-insert-buttons :around #'silence-bufhist-insert-buttons))
 
 ;;; Themes
 ;;;; Doom-themes (general)
@@ -1561,10 +1623,13 @@ that allows to include other templates by their name."
 
   :defer t
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt doom-themes-enable-bold t
           doom-themes-enable-italic t)
+
+  :config
+  ;; Setup and settings (after load)
   (doom-themes-visual-bell-config)
 
   (doom-themes-set-faces nil
@@ -1572,6 +1637,10 @@ that allows to include other templates by their name."
                       :inherit 'highlight)
     '(vertico-mouse :foreground 'unspecified :background 'unspecified
                     :inherit 'lazy-highlight)
+    '(vertico-quick1 :foreground 'unspecified :background 'unspecified
+                   :inherit 'avy-lead-face)
+    '(vertico-quick2 :foreground 'unspecified :background 'unspecified
+                   :inherit 'avy-lead-face-1)
     '(corfu-border :foreground 'unspecified :background 'unspecified
                    :inherit 'vertical-border)
     '(corfu-bar :foreground 'unspecified :background 'unspecified
@@ -1579,7 +1648,7 @@ that allows to include other templates by their name."
     '(corfu-quick1 :foreground 'unspecified :background 'unspecified
                    :inherit 'avy-lead-face)
     '(corfu-quick2 :foreground 'unspecified :background 'unspecified
-                    :inherit 'avy-lead-face-1)
+                   :inherit 'avy-lead-face-1)
     '(tempel-default :foreground 'unspecified :background 'unspecified
                      :inherit 'secondary-selection :slant 'italic)
     '(tempel-field :foreground 'unspecified :background 'unspecified
@@ -1599,29 +1668,31 @@ that allows to include other templates by their name."
   ;; :disabled t ; Don't use this theme
   :demand t ; Use this theme
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt doom-nord-brighter-modeline t
           doom-nord-brighter-comments nil
           doom-nord-comment-bg nil
           doom-nord-padded-modeline nil
           doom-nord-region-highlight 'snowstorm)
 
+  :config
+  ;; Setup and settings (after load)
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(trailing-whitespace :background magenta)
     '(aw-background-face :inherit 'avy-background-face)
     '(aw-leading-char-face :inherit 'avy-lead-face)
     '(proof-queue-face :background magenta)
-    '(proof-locked-face :background base4)
+    '(proof-locked-face :background base3)
     '(proof-script-sticky-error-face :background red :underline yellow)
     '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
                                         :weight 'semi-bold :slant 'italic)
     '(proof-highlight-dependent-name-face :foreground magenta)
-    '(proof-highlight-dependency-name-face :foreground violet)
+    '(proof-highlight-dependency-name-face :foreground orange)
     '(proof-declaration-name-face :foreground cyan)
     '(proof-tacticals-name-face :foreground green)
-    '(proof-tactics-name-face :foreground teal)
+    '(proof-tactics-name-face :foreground violet)
     '(proof-error-face :foreground red :weight 'semi-bold)
     '(proof-warning-face :foreground yellow :weight 'semi-bold)
     '(proof-debug-message-face :foreground orange)
@@ -1640,14 +1711,16 @@ that allows to include other templates by their name."
   :disabled t ; Don't use this theme
   ;; :demand t ; Use this theme
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt doom-nord-light-brighter-modeline t
           doom-nord-light-brighter-comments nil
           doom-nord-light-padded-modeline nil
           doom-nord-light-comment-bg t
           doom-nord-light-region-highlight 'frost)
 
+  :config
+  ;; Setup and settings (after load)
   (load-theme 'doom-nord-light t)
   (doom-themes-set-faces 'doom-nord-light
     '(trailing-whitespace :background magenta)
@@ -1659,10 +1732,10 @@ that allows to include other templates by their name."
     '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
                                         :weight 'semi-bold :slant 'italic)
     '(proof-highlight-dependent-name-face :foreground magenta)
-    '(proof-highlight-dependency-name-face :foreground violet)
+    '(proof-highlight-dependency-name-face :foreground orange)
     '(proof-declaration-name-face :foreground cyan)
     '(proof-tacticals-name-face :foreground green)
-    '(proof-tactics-name-face :foreground teal)
+    '(proof-tactics-name-face :foreground violet)
     '(proof-error-face :foreground red :weight 'semi-bold)
     '(proof-warning-face :foreground yellow :weight 'semi-bold)
     '(proof-debug-message-face :foreground orange)
@@ -1684,7 +1757,7 @@ that allows to include other templates by their name."
   :ensure t
 
   :init
-  ;; Setup
+  ;; Setup and settings (before load)
   (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 (use-package doom-modeline
@@ -1692,8 +1765,8 @@ that allows to include other templates by their name."
 
   :hook after-init
 
-  :config
-  ;; Settings
+  :init
+  ;; Setup and settings (before load)
   (setopt doom-modeline-height (+ (frame-char-height) 4)
           doom-modeline-bar-width 4
           doom-modeline-width-limit 100
@@ -1716,6 +1789,7 @@ that allows to include other templates by their name."
   :commands (avy-action-embark-act avy-action-embark-dwim)
 
   :init
+  ;; Setup and settings (before load of this package, but after load of packages listed in `:after`)
   (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
   (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t))
 
@@ -1725,6 +1799,7 @@ that allows to include other templates by their name."
   :after orderless
 
   :config
+  ;; Hooks
   (add-hook 'corfu-mode-hook
             (lambda ()
               (setq-local completion-styles '(orderless-literal-only basic)))))
@@ -1733,7 +1808,8 @@ that allows to include other templates by their name."
 (use-package corfu
   :after vertico
 
-  :config
+  :init
+  ;; Setup and settings (before load of this package, but after load of packages listed in `:after`)
   (setopt global-corfu-minibuffer
           (lambda ()
             (not (or (bound-and-true-p vertico--input)
@@ -1763,9 +1839,9 @@ that allows to include other templates by their name."
 ;;; Modes
 (add-hook 'text-mode-hook #'loc-setup-text-mode)
 
-(add-hook 'log-edit-mode-hook #'loc-setup-mix-mode)
 (add-hook 'tex-mode-hook #'loc-setup-mix-mode)
 (add-hook 'TeX-mode-hook #'loc-setup-mix-mode)
 (add-hook 'conf-mode-hook #'loc-setup-mix-mode)
+(add-hook 'log-edit-mode-hook #'loc-setup-mix-mode)
 
 (add-hook 'prog-mode-hook #'loc-setup-code-mode)
