@@ -17,7 +17,7 @@
   (list "declare" "local"))
 
 (defconst ece-proof-start-keywords
-  (list "proof"))
+  (list "proof" "realize"))
 
 (defconst ece-proof-end-keywords
   (list "qed"))
@@ -27,11 +27,11 @@
           ece-proof-end-keywords))
 
 (defconst ece-structural-keywords
-  (list "section" "realize" "Self" "Top"))
+  (list "section" "Self" "Top"))
 
 ;; Specification keywords
 (defconst ece-proof-spec-keywords
-  (list "equiv" "hoare" "lemma"))
+  (list "equiv" "hoare" "lemma" "clone"))
 
 (defconst ece-functional-spec-start-keywords
   (list "abbrev" "abstract" "axiom" "class" "const" "eager"

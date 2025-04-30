@@ -9,56 +9,56 @@
   :group 'easycrypt)
 
 (defcustom ece-enable-indentation t
-  "Non-nil (resp. `nil`) to enable (resp. disable) enhanced
+  "Non-nil (resp. `nil') to enable (resp. disable) enhanced
 (but still ad-hoc) indentation in EasyCrypt."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-indentation-keybindings t
-  "Non-nil (resp. `nil`) to enable (resp. disable) suggested keybindings
+  "Non-nil (resp. `nil') to enable (resp. disable) suggested keybindings
 for indentation-related commands in EasyCrypt."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-keywords-completion t
-  "Non-nil (resp. `nil`) to enable (resp. disable) completion for
-EasyCrypt keywords (depends on `cape`)."
+  "Non-nil (resp. `nil') to enable (resp. disable) completion for
+EasyCrypt keywords (depends on `cape')."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-templates t
-  "Non-nil (resp. `nil`) to enable (resp. disable) code templates for
-EasyCrypt (depends on `tempel`). If you enable this, it is recommended to
-also enable enhanced indentation (see `ece-enable-indentation`),
+  "Non-nil (resp. `nil') to enable (resp. disable) code templates for
+EasyCrypt (depends on `tempel'). If you enable this, it is recommended to
+also enable enhanced indentation (see `ece-enable-indentation'),
 since the templates use indentation and were made with the enhanced
 EasyCrypt indentation in mind."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-templates-keybindings 'ece-enable-templates
-  "Non-nil (resp. `nil`) to enable (resp. disable) keybindings for inserting
-EasyCrypt (regular) templates (depends on `tempel`). Does not make much sense
-to enable this when you have disabled templates themselves (see `ece-enable-templates`)."
+  "Non-nil (resp. `nil') to enable (resp. disable) keybindings for inserting
+EasyCrypt (regular) templates (depends on `tempel'). Does not make much sense
+to enable this when you have disabled templates themselves (see `ece-enable-templates')."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-templates-info 'ece-enable-templates
-  "Non-nil (resp. `nil`) to enable (resp. disable) informative code templates
-for EasyCrypt (depends on `tempel`). If you enable this, it is recommended to also
-enable enhanced indentation (see `ece-enable-indentation`), since the
+  "Non-nil (resp. `nil') to enable (resp. disable) informative code templates
+for EasyCrypt (depends on `tempel'). If you enable this, it is recommended to also
+enable enhanced indentation (see `ece-enable-indentation'), since the
 templates use indentation and were made with the enhanced EasyCrypt indentation in mind."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-auxiliary-functionality-keybindings t
-  "Non-nil (resp. `nil`) to enable (resp. disable) keybindings for additional
+  "Non-nil (resp. `nil') to enable (resp. disable) keybindings for additional
 EasyCrypt functionality (e.g., printing/searching with mouse click)."
   :type 'boolean
   :group 'easycrypt-ext)
 
 (defcustom ece-enable-theme nil
-  "`'dark`, `'light`, or `nil` to enable the dark mode EasyCrypt theme,
-light EasyCrypt theme, or no EasyCrypt theme, respectively (depends on `doom-themes`).
+  "`'dark', `'light', or `nil' to enable the dark mode EasyCrypt theme,
+light EasyCrypt theme, or no EasyCrypt theme, respectively (depends on `doom-themes').
 Can be 'dark, 'light, or nil."
   :type '(choice
           (const :tag "Dark theme" dark)
@@ -77,7 +77,7 @@ Can be 'dark, 'light, or nil."
 ;;; Basic rigid indentation
 ;;;###autoload
 (defun ece-basic-indent (arg)
-  "Indent all lines touched by the active region by ARG * `tab-width`.
+  "Indent all lines touched by the active region by ARG * `tab-width'.
 If no region is active, insert ARG tabs at point or un-tab current line (ARG times)."
   (interactive "p")
   ;; If region is active,...
@@ -123,8 +123,8 @@ If no region is active, insert ARG tabs at point or un-tab current line (ARG tim
 
 ;;;###autoload
 (defun ece-basic-deindent (arg)
-  "De-indent all lines touched by the active region by ARG * `tab-width`.
-If no region is active, un-tab current line by ARG * `tab-width`."
+  "De-indent all lines touched by the active region by ARG * `tab-width'.
+If no region is active, un-tab current line by ARG * `tab-width'."
   (interactive "p")
   (ece-basic-indent (- arg)))
 
@@ -142,11 +142,13 @@ If no region is active, un-tab current line by ARG * `tab-width`."
                      (line-end-position)))
     (back-to-indentation)
     ;; If previous non-blank line is an unfinished non-proof/non-proc spec
-    ;; (E.g., starts with `lemma` but does not end with a `.`)
+    ;; (E.g., starts with `lemma' but does not end with a `.')
+    ;; Here, we also count a comma as ending a spec to deal with the case of cloning
+    ;; (And hope it shouldn't be as common to end a line with a comma outside of clone)
     (if (and (seq-some (lambda (kw)
                          (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
                        ece-start-keywords)
-             (not (string-match-p "\\.[[:blank:]]*$" prev-line)))
+             (not (string-match-p "[\\.,][[:blank:]]*$" prev-line)))
         ;; Then, align with previous non-blank line + tab
         (+ (current-indentation) tab-width)
       ;; Else, align with previous non-blank line (default)
@@ -188,8 +190,8 @@ If no region is active, un-tab current line by ARG * `tab-width`."
                 (if brcl
                     ;; Then, align to indentation of opener
                     (setq indent-level (current-indentation))
-                  ;; Else, align to indentation of opener + tab
-                  (setq indent-level (+ (current-indentation) tab-width)))
+                  ;; Else, align to indentation of opener + 1
+                  (setq indent-level (+ (current-indentation) 1)))
               ;; Else, if first char on our line is ] or )
               ;; and current expression is opened by [ or (...
               (if (or (and btcl (looking-at-p "[[]"))
@@ -197,7 +199,7 @@ If no region is active, un-tab current line by ARG * `tab-width`."
                   ;; Then, align to indentation to opener
                   (setq indent-level (current-column))
                 ;; Else, align to indentation of opener + tab
-                (setq indent-level (+ (current-column) tab-width))))))
+                (setq indent-level (+ (current-column) 1))))))
          ;; Else, if we are looking at a proof starter (i.e., "proof")
          ((seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
                     ece-proof-start-keywords)
@@ -259,8 +261,8 @@ If no region is active, un-tab current line by ARG * `tab-width`."
   (interactive)
   ;; Indent accordingly
   (let ((indent-level (ece--indent-level)))
-    ;; `indent-line-to`would move point to new indentation, and
-    ;; we prevent this by `save-excursion` so point position remains consistent
+    ;; `indent-line-to'would move point to new indentation, and
+    ;; we prevent this by `save-excursion' so point position remains consistent
     ;; (making templates more consistent as well)
     (save-excursion
       (indent-line-to indent-level))
@@ -277,7 +279,7 @@ allow de-indents (to prevent automatically indenting
 code that has been manually de-indented; this is a hack
 and a limitation of the localized ad-hoc computation
 of the indent level).
-Meant for `post-self-insert-hook`."
+Meant for `post-self-insert-hook'."
   (when (or (and (memq last-command-event '(?\} ?\) ?\] ?\"))
                  (let ((line-before (buffer-substring-no-properties (line-beginning-position)
                                                                     (- (point) 1))))
@@ -295,32 +297,60 @@ Meant for `post-self-insert-hook`."
         ;; Go to the computed indent level
         (indent-line-to indent-level)
         ;; Keep point in same relative position
-        ;; (`indent-line-to` moves it to end of indentation)
+        ;; (`indent-line-to' moves it to end of indentation)
         (move-to-column (- orig-col indent-diff))))))
 
 
 ;; Shell commands
 (defun ece--validate-shell-command (command)
-  "Checks if the provided `command` is a valid/supported EasyCrypt shell command
+  "Checks if the provided `command' is a valid/supported EasyCrypt shell command
 (in the sense that a command below is implemented for it).
 Prints a message informing the user if that is not the case."
   (or (member command '("print" "search" "locate"))
-      (user-error "Unknown/Unsupported command: `%s`." command)))
+      (user-error "Unknown/Unsupported command: `%s'." command)))
 
 (defun ece--exec-shell-command (command &rest args)
-  "Combines `command` and `args` into a command for the EasyCrypt shell, and
+  "Combines `command' and `args' into a command for the EasyCrypt shell, and
 directly calls the shell with it."
-  (if (and (fboundp 'proof-shell-ready-prover)
-           (fboundp 'proof-shell-invisible-command))
+  (if (fboundp 'proof-shell-invisible-command)
       (progn
-        (proof-shell-ready-prover)
+        ;; proof-shell-ready-prover called inside proof-shell-invisible-command
         (if args
             (proof-shell-invisible-command (concat command " " (string-join args " ")))
           (proof-shell-invisible-command command)))
     (user-error "Necessary functionality for executing proof commands not found. Did you load Proof General?")))
 
+(defun ece--prompt-command (command)
+  "Prompts user for arguments that are passed to the `command' command of EasyCrypt.
+If `command' is not valid, prints a message informing
+the user (see 'ece--validate-shell-command`)."
+  (when (ece--validate-shell-command command)
+    (let ((arg (read-string (format "Provide arguments for '%s': " command))))
+      (if arg
+          (ece--exec-shell-command command arg)
+        (user-error "Please provide an argument.")))))
+
+
+;;;###autoload
+(defun ece-prompt-print ()
+  "Prompts user for arguments that are passed to the `print' command of EasyCrypt."
+  (interactive)
+  (ece--prompt-command "print"))
+
+;;;###autoload
+(defun ece-prompt-search ()
+  "Prompts user for arguments that are passed to the `search' command of EasyCrypt."
+  (interactive)
+  (ece--prompt-command "search"))
+
+;;;###autoload
+(defun ece-prompt-locate ()
+  "Prompts user for arguments that are passed to the `locate' command of EasyCrypt."
+  (interactive)
+  (ece--prompt-command "locate"))
+
 (defun ece--thing-at (event)
-  "If `event` is a mouse event, tries to find a (reasonable) thing at mouse
+  "If `event' is a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region
 or tries to find a (reasonable) thing at point."
   (if (mouse-event-p event)
@@ -334,17 +364,17 @@ or tries to find a (reasonable) thing at point."
           (thing-at-point 'symbol t)))))
 
 (defun ece--command (command event)
-  "If `event` is a mouse event, tries to find a (reasonable) thing at mouse
+  "If `event' is a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region
 or tries to find a (reasonable) thing at point. The result is used as an
-argument to the `command` command of EasyCrypt. If nothing (reasonable) is
-found, or the provided `command` is not valid, prints a message informing
-the user (see `ece--validate-shell-command`)."
+argument to the `command' command of EasyCrypt. If nothing (reasonable) is
+found, or the provided `command' is not valid, prints a message informing
+the user (see `ece--validate-shell-command')."
   (when (ece--validate-shell-command command)
     (let ((arg (ece--thing-at event)))
       (if arg
           (ece--exec-shell-command command arg)
-        (user-error "No reasonable thing at %s found for command `%s`.%s"
+        (user-error "No reasonable thing at %s found for command `%s'.%s"
                     (if (mouse-event-p event) "mouse" "point")
                     command
                     (if (mouse-event-p event) "" " Try selecting the thing if automatic detection doesn't work."))))))
@@ -354,7 +384,7 @@ the user (see `ece--validate-shell-command`)."
   "If called with a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region
 or tries to find a (reasonable) thing at point. Uses the result as an
-argument to the `print` command in EasyCrypt."
+argument to the `print' command in EasyCrypt."
   (interactive (list (if (mouse-event-p last-input-event)
                          last-input-event
                        nil)))
@@ -365,7 +395,7 @@ argument to the `print` command in EasyCrypt."
   "If called with a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region
 or tries to find a (reasonable) thing at point. Uses the result as an
-argument to the `search` command in EasyCrypt."
+argument to the `search' command in EasyCrypt."
   (interactive (list (if (mouse-event-p last-input-event)
                          last-input-event
                        nil)))
@@ -376,7 +406,7 @@ argument to the `search` command in EasyCrypt."
   "If called with a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region
 or tries to find a (reasonable) thing at point. Uses the result as an
-argument to the `locate` command in EasyCrypt."
+argument to the `locate' command in EasyCrypt."
   (interactive (list (if (mouse-event-p last-input-event)
                          last-input-event
                        nil)))
@@ -435,23 +465,41 @@ argument to the `locate` command in EasyCrypt."
 (defun ece--setup-auxiliary-functionality-keybindings ()
   (when ece-enable-auxiliary-functionality-keybindings
     (keymap-set easycrypt-mode-map "C-c C-y p" #'ece-print)
+    (keymap-set easycrypt-mode-map "C-c C-y P" #'ece-prompt-print)
     (keymap-set easycrypt-mode-map "C-c C-y l" #'ece-locate)
+    (keymap-set easycrypt-mode-map "C-c C-y L" #'ece-prompt-locate)
     (keymap-set easycrypt-mode-map "C-c C-y s" #'ece-search)
+    (keymap-set easycrypt-mode-map "C-c C-y S" #'ece-prompt-search)
     (keymap-set easycrypt-mode-map "S-<down-mouse-3>" #'ece-print)
+    (keymap-set easycrypt-mode-map "S-<mouse-3>" #'ignore)
     (keymap-set easycrypt-mode-map "C-<down-mouse-3>" #'ece-locate)
+    (keymap-set easycrypt-mode-map "C-<mouse-3>" #'ignore)
     (keymap-set easycrypt-mode-map "M-<down-mouse-3>" #'ece-search)
+    (keymap-set easycrypt-mode-map "M-<mouse-3>" #'ignore)
     (keymap-set easycrypt-response-mode-map "C-c C-y p" #'ece-print)
+    (keymap-set easycrypt-response-mode-map "C-c C-y P" #'ece-prompt-print)
     (keymap-set easycrypt-response-mode-map "C-c C-y l" #'ece-locate)
+    (keymap-set easycrypt-response-mode-map "C-c C-y L" #'ece-prompt-locate)
     (keymap-set easycrypt-response-mode-map "C-c C-y s" #'ece-search)
+    (keymap-set easycrypt-response-mode-map "C-c C-y S" #'ece-prompt-search)
     (keymap-set easycrypt-response-mode-map "S-<down-mouse-3>" #'ece-print)
+    (keymap-set easycrypt-response-mode-map "S-<mouse-3>" #'ignore)
     (keymap-set easycrypt-response-mode-map "C-<down-mouse-3>" #'ece-locate)
-    (keymap-set easycrypt-response-mode-map "M-<down-mouse-3>" #'ece-search-at-mouse)
-    (keymap-set easycrypt-goals-mode-map "C-c C-y p" #'ece-print-at-point)
-    (keymap-set easycrypt-goals-mode-map "C-c C-y l" #'ece-locate-at-point)
-    (keymap-set easycrypt-goals-mode-map "C-c C-y s" #'ece-search-at-point)
-    (keymap-set easycrypt-goals-mode-map "S-<down-mouse-3>" #'ece-print-at-mouse)
-    (keymap-set easycrypt-goals-mode-map "C-<down-mouse-3>" #'ece-locate-at-mouse)
-    (keymap-set easycrypt-goals-mode-map "M-<down-mouse-3>" #'ece-search-at-mouse)))
+    (keymap-set easycrypt-response-mode-map "C-<mouse-3>" #'ignore)
+    (keymap-set easycrypt-response-mode-map "M-<down-mouse-3>" #'ece-search)
+    (keymap-set easycrypt-response-mode-map "M-<mouse-3>" #'ignore)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y p" #'ece-print)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y P" #'ece-prompt-print)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y l" #'ece-locate)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y L" #'ece-prompt-locate)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y s" #'ece-search)
+    (keymap-set easycrypt-goals-mode-map "C-c C-y S" #'ece-prompt-search)
+    (keymap-set easycrypt-goals-mode-map "S-<down-mouse-3>" #'ece-print)
+    (keymap-set easycrypt-goals-mode-map "S-<mouse-3>" #'ignore)
+    (keymap-set easycrypt-goals-mode-map "C-<down-mouse-3>" #'ece-locate)
+    (keymap-set easycrypt-goals-mode-map "C-<mouse-3>" #'ignore)
+    (keymap-set easycrypt-goals-mode-map "M-<down-mouse-3>" #'ece-search)
+    (keymap-set easycrypt-goals-mode-map "M-<mouse-3>" #'ignore)))
 
 ;;; Keywords
 (defun ece--setup-keywords-completion ()
@@ -628,7 +676,7 @@ that allows to include other templates by their name."
 
 ;;;###autoload
 (defun ece-setup ()
-  "Setup EasyCrypt extensions (meant as hook for `easycrypt-mode`)"
+  "Setup EasyCrypt extensions (meant as hook for `easycrypt-mode')"
   (ece--setup-indentation)
   (ece--setup-indentation-keybindings)
   (ece--setup-templates)

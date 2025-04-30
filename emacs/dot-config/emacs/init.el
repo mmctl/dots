@@ -140,7 +140,7 @@
 
 ;;; Frames/Windows
 (setopt frame-resize-pixelwise t)
-(setopt window-resize-pixelwise nil)
+(setopt window-resize-pixelwise t)
 
 (setopt indicate-buffer-boundaries nil)
 (setopt indicate-empty-lines nil)
@@ -902,6 +902,13 @@
     :prefix 'a-tempel-map-prefix)
   (keymap-global-set "C-c t" 'a-tempel-map-prefix)
 
+  :bind (("M-o" . tempel-complete)
+         ("M-v" . tempel-expand)
+         (:map a-tempel-map
+               ("c" . tempel-complete)
+               ("e" . tempel-expand)
+               ("i" . tempel-insert)))
+
   :init
   ;; Setup and settings (before load)
   ;;; Create and store templates directory
@@ -912,12 +919,6 @@
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
 
   (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
-
-  :bind (("M-o" . tempel-complete)
-         (:map a-tempel-map
-               ("c" . tempel-complete)
-               ("e" . tempel-expand)
-               ("i" . tempel-insert)))
 
   :config
   ;; Keybindings
@@ -1230,7 +1231,7 @@ that allows to include other templates by their name."
           projectile-sort-order 'recently-active
           projectile-dirconfig-comment-prefix ?\#
           projectile-find-dir-includes-top-level t
-          projectile-enable-idle-timer t
+          projectile-enable-idle-timer nil
           projectile-current-project-on-switch 'move-to-end)
 
   :config
@@ -1510,7 +1511,8 @@ that allows to include other templates by their name."
   ;;; General
   (setopt proof-splash-enable nil
           proof-toolbar-enable nil)
-  (setopt proof-delete-empty-windows t
+  (setopt proof-delete-empty-windows nil
+          proof-shrink-windows-tofit nil
           proof-output-tooltips t)
   (setopt proof-electric-terminator-enable nil
           proof-sticky-errors t
@@ -1529,6 +1531,14 @@ that allows to include other templates by their name."
   (setopt easycrypt-prog-name "easycrypt")
 
   :config
+  ;; Setup and settings (after load)
+  (defun setup-a-proof-response-mode ()
+    (toggle-truncate-lines -1)
+    (toggle-word-wrap 1))
+  (defun setup-a-proof-goals-mode ()
+    (toggle-truncate-lines -1)
+    (toggle-word-wrap -1))
+
   ;; Keybindings
   (defvar-keymap a-proof-mode-process-repeat-map
     :doc "Keymap (repeatable) for processing proof commands"
@@ -1606,7 +1616,11 @@ that allows to include other templates by their name."
   ;; Hooks
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
+
+  (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode)
   (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode-map)
+
+  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode)
   (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode-map)
 
   ;; Custom functionality
@@ -1841,6 +1855,7 @@ that allows to include other templates by their name."
 
 (add-hook 'tex-mode-hook #'loc-setup-mix-mode)
 (add-hook 'TeX-mode-hook #'loc-setup-mix-mode)
+(add-hook 'markdown-mode-hook #'loc-setup-mix-mode)
 (add-hook 'conf-mode-hook #'loc-setup-mix-mode)
 (add-hook 'log-edit-mode-hook #'loc-setup-mix-mode)
 

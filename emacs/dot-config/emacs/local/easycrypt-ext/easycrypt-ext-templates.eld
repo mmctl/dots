@@ -281,7 +281,7 @@ easycrypt-mode
 (eqvlem (i equivlemma))
 (eqvlempq (i equivlemmapq))
 (eqvlemn (i equivlemman))
-(eqvnlemn (i equivlemman))
+(eqvnlemn (i equivnlemman))
 
 (ifte (i ifthenelse))
 (iften (i ifthenelsen))
@@ -415,8 +415,8 @@ easycrypt-mode
 (proctub "proc (" p ") (" p ")")
 (proctube "proc (" p ") (" p ") (" p ")")
 
-(seq "seq " p " " p " :  (" q ")")
-(seqhoa "seq " p " :  (" q ")")
+(seq "seq " p " " p " : (" q ")")
+(seqhoa "seq " p " : (" q ")")
 (seqph "seq " p " : (" p ") (" p ") (" p ") (" p ") (" p ") (" q ")")
 
 (sp1 "sp{1} " q)

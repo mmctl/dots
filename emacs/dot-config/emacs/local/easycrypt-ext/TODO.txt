@@ -1,0 +1,4 @@
+- Bug: Auto-closing comment does not work when typing `*)`
+- Bug: Comment might be after ending sentence with `.`, in which case current indentation thinks the sentence wasn't terminated (because line doesn't end with a `.`), and indents next line instead of aligning.
+- Maybe: In comment, have align with previous non-empty line override indent by tab width
+- Maybe: have regular indent do indent rigidly, even when no region is active (currently does to tab stop)
