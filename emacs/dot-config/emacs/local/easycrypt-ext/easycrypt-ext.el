@@ -129,22 +129,26 @@ If no region is active, un-tab current line by ARG * `tab-width'."
   (ece-basic-indent (- arg)))
 
 ;;; Contextual indentation
+(defun ece--goto-previous-nonblank-line ()
+  "Moves point to start of previous non-blank line,
+or beginning of buffer if there is no such line."
+    (forward-line -1)
+    (while (and (not (bobp)) (looking-at-p "^[[:blank:]]*$"))
+      (forward-line -1)))
+
 (defun ece--indent-level-fallback ()
   "Returns fallback indentation level for EasyCrypt code
 (i.e., when no 'special indentation' case is detected)."
   (save-excursion
-    ;; Find previous non-blank line
-    (forward-line -1)
-    (while (and (not (bobp)) (looking-at-p "^[[:blank:]]*$"))
-      (forward-line -1))
+    ;; Get previous non-blank line
+    (ece--goto-previous-nonblank-line)
     (setq prev-line (buffer-substring-no-properties
                      (line-beginning-position)
                      (line-end-position)))
-    (back-to-indentation)
     ;; If previous non-blank line is an unfinished non-proof/non-proc spec
     ;; (E.g., starts with `lemma' but does not end with a `.')
     ;; Here, we also count a comma as ending a spec to deal with the case of cloning
-    ;; (And hope it shouldn't be as common to end a line with a comma outside of clone)
+    ;; (And hope it shouldn't be as common to end a line with a comma outside of `clone')
     (if (and (seq-some (lambda (kw)
                          (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
                        ece-start-keywords)
@@ -166,41 +170,57 @@ If no region is active, un-tab current line by ARG * `tab-width'."
              (incom (nth 4 synps))
              (csop (nth 8 synps)))
         (cond
-         ;; If we are in a comment or string...
-         ((or incom instr)
-          (let ((comcl (looking-at-p "[\\^\\*]?\\*)"))
-                (strcl (looking-at-p "\"")))
-            (goto-char csop)
-            ;; Then, if our line closes the comment or string...
-            (if (or (and incom comcl) (and instr strcl))
+         ;; If we are in a comment...
+         (incom
+          (let ((comcl (looking-at-p "[\\^\\*]?\\*)")))
+            ;; (goto-char csop) ; Go to opener
+            ;; Then, if our line closes the comment...
+            (if (and incom comcl)
                 ;; Then, align closer with the opener
-                (setq indent-level (current-column))
-              ;; Else, align with the opener + tab
-              (setq indent-level (+ (current-column) tab-width)))))
+                (progn (goto-char csop)
+                       (setq indent-level (current-column)))
+              ;; Else,...
+              (ece--goto-previous-nonblank-line) ; Go to beginning of previous non-blank line
+              (back-to-indentation) ; Go to indentation of found line
+              ;; If there is a previous non-blank line within the comment...
+              (if (< csop (point))
+                  ;; Then, align with indentation of that line
+                  (setq indent-level (current-column))
+                ;; Else, align with opener + tab
+                (setq indent-level (+ (current-column) tab-width))))))
+         ;; Else, if we are in a string...
+         (instr
+          ;; Then, set indent-level to 0 (because indentation affects value of string)
+          (setq indent-level 0))
          ;; Else, if we are in an opened or enclosed expression...
          ;; (E.g., between { and }, or ( and ), or after { or ( with no closing counterpart)
          (exprop
-          (let ((brcl (looking-at "}" t))
-                (btcl (looking-at "]" t))
-                (prcl (looking-at ")" t)))
-            (goto-char exprop)
-            ;; If opener is {...
-            (if (looking-at-p "{")
-                ;; Then, if first char on our line is }...
-                (if brcl
-                    ;; Then, align to indentation of opener
-                    (setq indent-level (current-indentation))
-                  ;; Else, align to indentation of opener + 1
-                  (setq indent-level (+ (current-indentation) 1)))
-              ;; Else, if first char on our line is ] or )
-              ;; and current expression is opened by [ or (...
-              (if (or (and btcl (looking-at-p "[[]"))
-                      (and prcl (looking-at-p "(")))
-                  ;; Then, align to indentation to opener
-                  (setq indent-level (current-column))
-                ;; Else, align to indentation of opener + tab
-                (setq indent-level (+ (current-column) 1))))))
-         ;; Else, if we are looking at a proof starter (i.e., "proof")
+          (let ((btcl (looking-at-p (regexp-quote "]")))
+                (prcl (looking-at-p (regexp-quote ")")))
+                (brcl (looking-at-p (regexp-quote "}"))))
+            (goto-char exprop) ; Go to opener
+            (let ((btop (looking-at-p (regexp-quote "[")))
+                  (prop (looking-at-p (regexp-quote "(")))
+                  (brop (looking-at-p (regexp-quote "{"))))
+              ;; Then, if opener is [ or (...
+              (if (or btop prop)
+                  ;; Then, if first char on our line is a matching closer...
+                  (if (or (and btop btcl) (and prop prcl))
+                      ;; Then, align to column of opener
+                      (setq indent-level (current-column))
+                    ;; Else, align to column of opener + 1
+                    (setq indent-level (+ (current-column) 1)))
+                ;; Else, if opener is {...
+                (if brop
+                    (if brcl
+                        ;; Then, align to indentation of opener
+                        (setq indent-level (current-indentation))
+                      ;; Else, align to indentation of opener + tab
+                      (setq indent-level (+ (current-indentation) tab-width)))
+                  ;; Else, parsing indicates we are in an expression that has
+                  ;; an opener different from (, [, or {, which shouldn't be possible
+                  (error "ece--indent-level: parsing indicates expression with unknown delimiter."))))))
+         ;; Else, if we are looking at a proof starter (e.g., proof or realize)
          ((seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
                     ece-proof-start-keywords)
           (let ((bob nil))
@@ -261,7 +281,7 @@ If no region is active, un-tab current line by ARG * `tab-width'."
   (interactive)
   ;; Indent accordingly
   (let ((indent-level (ece--indent-level)))
-    ;; `indent-line-to'would move point to new indentation, and
+    ;; `indent-line-to' would move point to new indentation, and
     ;; we prevent this by `save-excursion' so point position remains consistent
     ;; (making templates more consistent as well)
     (save-excursion
@@ -270,35 +290,70 @@ If no region is active, un-tab current line by ARG * `tab-width'."
     (when (< (current-column) (current-indentation))
       (move-to-column indent-level))))
 
+
 ;;;###autoload
 (defun ece-indent-on-insertion-closer ()
-  "Indent when last input was one of }, ), ], \" and it is the
-first character on current line, or if the last input was . and
-the current line starts/ends a proof. However, only
+  "Indent when (1) last input was one of }, ), ], and it is the
+first character on current line (except for `)`, which may also directly
+be preceded by a `*` to from a comment closer), or (2) the last
+input was . and the current line starts/ends a proof. However, only
 allow de-indents (to prevent automatically indenting
 code that has been manually de-indented; this is a hack
 and a limitation of the localized ad-hoc computation
 of the indent level).
 Meant for `post-self-insert-hook'."
-  (when (or (and (memq last-command-event '(?\} ?\) ?\] ?\"))
-                 (let ((line-before (buffer-substring-no-properties (line-beginning-position)
-                                                                    (- (point) 1))))
-                   (string-match-p "^[[:blank:]]*$" line-before)))
-            (and (eq last-command-event ?\.)
-                 (save-excursion
-                   (back-to-indentation)
-                   (seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
-                             ece-proof-delimit-keywords))))
-    (let* ((orig-col (current-column))
-           (indent-level (ece--indent-level))
-           (indent-diff (- (current-indentation) indent-level)))
-      ;; If 0 < indent-diff, i.e., we are de-indenting
-      (when (< 0 indent-diff)
-        ;; Go to the computed indent level
-        (indent-line-to indent-level)
-        ;; Keep point in same relative position
-        ;; (`indent-line-to' moves it to end of indentation)
-        (move-to-column (- orig-col indent-diff))))))
+  (when-let* ((line-before (buffer-substring-no-properties (line-beginning-position)
+                                                           (- (point) 1)))
+              ((or (and (memq last-command-event '(?\} ?\]))
+                       (string-match-p "^[[:blank:]]*$" line-before))
+                  (and (eq last-command-event ?\))
+                       (string-match-p "^[[:blank:]]*\\*?$" line-before))
+                  (and (eq last-command-event ?\.)
+                       (save-excursion
+                         (back-to-indentation)
+                         (seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
+                                   ece-proof-delimit-keywords)))))
+              (orig-col (current-column))
+              (indent-level (ece--indent-level))
+              (indent-diff (- (current-indentation) indent-level)))
+    ;; If 0 < indent-diff, i.e., we are de-indenting
+    (when (< 0 indent-diff)
+      ;; Go to the computed indent level
+      (indent-line-to indent-level)
+      ;; Keep point in same relative position
+      ;; (`indent-line-to' moves it to end of indentation)
+      (move-to-column (- orig-col indent-diff)))))
+
+;; ;;;###autoload
+;; (defun ece-indent-on-insertion-closer ()
+;;   "Indent when (1) last input was one of }, ), ], and it is the
+;; first character on current line, or (2) the last input was . and
+;; the current line starts/ends a proof. However, only
+;; allow de-indents (to prevent automatically indenting
+;; code that has been manually de-indented; this is a hack
+;; and a limitation of the localized ad-hoc computation
+;; of the indent level).
+;; Meant for `post-self-insert-hook'."
+;;   (when (or (and (memq last-command-event '(?\} ?\) ?\]))
+;;                  (let ((line-before (buffer-substring-no-properties (line-beginning-position)
+;;                                                                     (- (point) 1))))
+;;                    (string-match-p "^[[:blank:]]*$" line-before)))
+;;             (and (eq last-command-event ?\.)
+;;                  (save-excursion
+;;                    (back-to-indentation)
+;;                    (seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
+;;                              ece-proof-delimit-keywords))))
+;;     (let* ((orig-col (current-column))
+;;            (indent-level (ece--indent-level))
+;;            (indent-diff (- (current-indentation) indent-level)))
+;;       ;; If 0 < indent-diff, i.e., we are de-indenting
+;;       (when (< 0 indent-diff)
+;;         ;; Go to the computed indent level
+;;         (indent-line-to indent-level)
+;;         ;; Keep point in same relative position
+;;         ;; (`indent-line-to' moves it to end of indentation)
+;;         (move-to-column (- orig-col indent-diff))))))
+
 
 
 ;; Shell commands
@@ -416,7 +471,7 @@ argument to the `locate' command in EasyCrypt."
 ;; Key maps
 (defvar-keymap ece-proof-mode-process-repeat-map
   :doc "Keymap (repeatable) for processing proof commands"
-  :repeat (:hints ((proof-undo-last-successful-command . "p: Undo last succesful command")
+  :repeat (:hints ((proof-undo-last-successful-command . "p: Undo last successful command")
                    (proof-assert-next-command-interactive . "n: Assert next command")
                    (proof-undo-and-delete-last-successful-command . "d: Undo and delete last successful command")))
   "p" #'proof-undo-last-successful-command

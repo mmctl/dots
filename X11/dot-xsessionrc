@@ -12,3 +12,5 @@ usrsrcs="$XDG_CONFIG_HOME/X11/.Xresources"
 if [ -f "$usrsrcs" ]; then
     xrdb -load -I${XDG_CONFIG_HOME}/X11 "$usrsrcs"
 fi
+
+# xmodmap "$XDG_CONFIG_HOME/X11/.xmodmaprc"

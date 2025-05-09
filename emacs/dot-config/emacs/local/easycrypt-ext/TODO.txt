@@ -1,4 +1,24 @@
 - Bug: Auto-closing comment does not work when typing `*)`
 - Bug: Comment might be after ending sentence with `.`, in which case current indentation thinks the sentence wasn't terminated (because line doesn't end with a `.`), and indents next line instead of aligning.
+- Bug: Indentation inside actual code blocks (between `{` and `}`) should be indented
+separately from other enclosures, and should be indented by tab-width 
 - Maybe: In comment, have align with previous non-empty line override indent by tab width
 - Maybe: have regular indent do indent rigidly, even when no region is active (currently does to tab stop)
+- Fix: repeat map also triggered by undoing/deleting, not just by processing
+- Fix: Call template: Spacing of field start after colon 
+- Bug: Cfold template parse error
+- Fix: proc template auto exit on entering last field (body)
+- Bug: indentation in following case, both on second line (i.e., after newline + indent on first),  and third line (i.e., after newline + indent on second)
+```
+module (R_EUFCMA_XMSSTW_XMSSTWRFC (A : DSS_AL_PRF.KeyUpdatingROM.Adv_EUFCMA_RO) : DSS_RFC.KeyUpdatingROM.Adv_EUFCMA_RO)
+       (RO : RO.POracle) (O : DSS.KeyUpdating.SOracle_CMA) = {
+```
+
+- Keywords:
+   - outline
+- Templates:
+  - rewrite equiv
+  - proc rewrite
+  - proc change
+  - code positions
+   
