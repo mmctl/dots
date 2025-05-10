@@ -298,11 +298,9 @@
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
 (keymap-global-set "M-<deletechar>" #'kill-word)
 
+(keymap-global-set "M-a" #'backward-kill-line)
 (keymap-global-set "M-e" #'kill-line)
 (keymap-global-set "M-l" #'kill-whole-line)
-
-(keymap-global-set "M-b" #'backward-kill-sentence)
-(keymap-global-set "M-f" #'kill-sentence)
 
 (keymap-global-set "M-p" #'backward-kill-sexp)
 (keymap-global-set "M-n" #'kill-sexp)
@@ -322,6 +320,10 @@
 (keymap-global-set "C-M-y" #'yank-pop)
 
 ;;;; Deleting
+;;(keymap-global-set "M-b" #'backward-delete-line)
+;;(keymap-global-set "M-f" #'forward-delete-line)
+;;(keymap-global-set "M-k" #'delete-whole-line)
+
 (keymap-global-set "M-D" #'delete-region)
 
 ;;; Management
@@ -975,8 +977,7 @@ that allows to include other templates by their name."
     :prefix 'a-crux-map-prefix)
   (keymap-global-set "C-c x" 'a-crux-map-prefix)
 
-  :bind (("<remap> <kill-line>" . crux-smart-kill-line)
-         ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
+  :bind (("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
          ("M-a" . crux-kill-line-backwards)
          ("M-d" . crux-duplicate-current-line-or-region)
          (:map a-crux-map
@@ -1109,6 +1110,7 @@ that allows to include other templates by their name."
 
   :bind (("C-l" . consult-line)
          ("C-;" . consult-goto-line)
+         ("C-M-y" . consult-yank-pop)
          (:map a-consult-map
                ("x" . consult-mode-command)
                ("h" . consult-history)

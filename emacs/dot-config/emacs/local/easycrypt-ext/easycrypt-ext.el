@@ -243,7 +243,7 @@ or beginning of buffer if there is no such line."
                               ;; Else, align to indentation of opening brace's line + tab
                               (setq indent-level (+ (current-indentation) tab-width)))
                           ;; Else, if first char on our line is *not* a matching closer...
-                          (when (not (eq chcl (matching-paren chop)))
+                          (unless (eq chcl (matching-paren chop))
                             ;; Then, add tab to recorded indentation of imperative spec opener
                             (setq indent-level (+ indent-level tab-width))))))
                   ;; Else, parsing indicates we are in an expression that has

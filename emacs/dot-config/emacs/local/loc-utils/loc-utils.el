@@ -1,6 +1,17 @@
 ;; -*- lexical-binding: t -*-
 ;; loc-utils.el
 
+;; Killing
+(defun backward-kill-line (&optional arg)
+  (interactive "P")
+  (if arg
+      (kill-line (- arg))
+    (if (bolp)
+        (delete-backward-char 1 t)
+      (kill-line 0))))
+
+;; Deleting
+
 ;; Quitting
 (defun save-buffers-kill-terminal-silent ()
   "Execute save-buffers-kill-terminal, automatically saving all buffers without asking."
