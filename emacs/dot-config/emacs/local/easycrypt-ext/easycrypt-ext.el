@@ -78,7 +78,9 @@ Can be 'dark, 'light, or nil."
 ;;;###autoload
 (defun ece-basic-indent (arg)
   "Indent all lines touched by the active region by ARG * `tab-width'.
-If no region is active, insert ARG tabs at point or un-tab current line (ARG times)."
+If no region is active, insert (ARG > 0) or delete (ARG < 0) tabs at point
+(respecting tab stops when inserting). If ARG < 0 and there is no whitespace
+behind point, remove ARG tabs worth of whitespace from indentation of current line."
   (interactive "p")
   ;; If region is active,...
   (if (use-region-p)
@@ -124,7 +126,9 @@ If no region is active, insert ARG tabs at point or un-tab current line (ARG tim
 ;;;###autoload
 (defun ece-basic-deindent (arg)
   "De-indent all lines touched by the active region by ARG * `tab-width'.
-If no region is active, un-tab current line by ARG * `tab-width'."
+If no region is active, remove ARG tabs worth of whitespace behind point.
+If there is no whitespace behind point, remove ARG tabs from indentation
+of current line."
   (interactive "p")
   (ece-basic-indent (- arg)))
 
@@ -147,12 +151,13 @@ or beginning of buffer if there is no such line."
                      (line-end-position)))
     ;; If previous non-blank line is an unfinished non-proof/non-proc spec
     ;; (E.g., starts with `lemma' but does not end with a `.')
-    ;; Here, we also count a comma as ending a spec to deal with the case of cloning
-    ;; (And hope it shouldn't be as common to end a line with a comma outside of `clone')
+    ;; Here, we also count a comma as ending a spec to deal with the case of
+    ;; instantiation in `clone' (and hope it isn't common to end a line
+    ;; with a comma outside of `clone').
     (if (and (seq-some (lambda (kw)
                          (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
-                       ece-start-keywords)
-             (not (string-match-p "[\\.,][[:blank:]]*$" prev-line)))
+                       ece-keywords-start)
+             (not (string-match-p "[\\.,][[:blank:]]*\\(?:(\\*.*\\*)\\)?[[:blank:]]*$" prev-line)))
         ;; Then, align with previous non-blank line + tab
         (+ (current-indentation) tab-width)
       ;; Else, align with previous non-blank line (default)
@@ -161,9 +166,10 @@ or beginning of buffer if there is no such line."
 (defun ece--indent-level ()
   "Returns desired indentation level of EasyCrypt code."
   (let ((indent-level 0))
-    ;; Compute desired level of indentation
     (save-excursion
-      (back-to-indentation) ; Base decision on beginning of line
+      ;; Base decision on context of line's first non-whitespace character
+      ;; (or beginning of line if empty)
+      (back-to-indentation)
       (let* ((synps (syntax-ppss))
              (exprop (nth 1 synps))
              (instr (nth 3 synps))
@@ -173,7 +179,6 @@ or beginning of buffer if there is no such line."
          ;; If we are in a comment...
          (incom
           (let ((comcl (looking-at-p "[\\^\\*]?\\*)")))
-            ;; (goto-char csop) ; Go to opener
             ;; Then, if our line closes the comment...
             (if (and incom comcl)
                 ;; Then, align closer with the opener
@@ -187,6 +192,7 @@ or beginning of buffer if there is no such line."
                   ;; Then, align with indentation of that line
                   (setq indent-level (current-column))
                 ;; Else, align with opener + tab
+                (goto-char csop)
                 (setq indent-level (+ (current-column) tab-width))))))
          ;; Else, if we are in a string...
          (instr
@@ -195,34 +201,63 @@ or beginning of buffer if there is no such line."
          ;; Else, if we are in an opened or enclosed expression...
          ;; (E.g., between { and }, or ( and ), or after { or ( with no closing counterpart)
          (exprop
-          (let ((btcl (looking-at-p (regexp-quote "]")))
-                (prcl (looking-at-p (regexp-quote ")")))
-                (brcl (looking-at-p (regexp-quote "}"))))
+          (let ((chcl (char-after)))
             (goto-char exprop) ; Go to opener
-            (let ((btop (looking-at-p (regexp-quote "[")))
-                  (prop (looking-at-p (regexp-quote "(")))
-                  (brop (looking-at-p (regexp-quote "{"))))
-              ;; Then, if opener is [ or (...
-              (if (or btop prop)
+            (let ((chop (char-after)))
+              ;; Then, if opener is an expression opener (`[` or `(`)...
+              (if (memq chop ece-delimiters-expression-open)
                   ;; Then, if first char on our line is a matching closer...
-                  (if (or (and btop btcl) (and prop prcl))
+                  (if (eq chcl (matching-paren chop))
                       ;; Then, align to column of opener
                       (setq indent-level (current-column))
                     ;; Else, align to column of opener + 1
                     (setq indent-level (+ (current-column) 1)))
-                ;; Else, if opener is {...
-                (if brop
-                    (if brcl
-                        ;; Then, align to indentation of opener
-                        (setq indent-level (current-indentation))
-                      ;; Else, align to indentation of opener + tab
-                      (setq indent-level (+ (current-indentation) tab-width)))
+                ;; Else, if opener is a code opener (i.e., `{`)...
+                (if (memq chop ece-delimiters-code-open)
+                    ;; Then,...
+                    (let ((bob nil))
+                      (progn
+                        ;; Find "imperative spec opener" (i.e., a keyword
+                        ;; opening a code block such as module or proc)
+                        ;; Note: point is at opening brace, so the imperative spec
+                        ;; opener might already be on the current line
+                        (save-excursion
+                          (forward-line 0)
+                          (while (and (not (bobp))
+                                      (not (seq-some (lambda (kw) (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b")))
+                                                     ece-keywords-imperative-spec-open)))
+                            (forward-line -1))
+                          ;; If we didn't find such a line (i.e., we are at the beginning of a buffer)...
+                          (if (bobp)
+                              ;; Then, record this fact
+                              (setq bob t)
+                            ;; Else, record indentation of imperative spec opener's line
+                            (setq indent-level (current-indentation))))
+                        ;; If we didn't find a imperative spec opener,...
+                        (if bob
+                            ;; Then, fallback to indenting relative to opening brace instead
+                            ;; So, if first char on our line is a matching closing brace...
+                            (if (eq chcl (matching-paren chop))
+                                ;; Then, align to indentation of opening brace's line
+                                (setq indent-level (current-indentation))
+                              ;; Else, align to indentation of opening brace's line + tab
+                              (setq indent-level (+ (current-indentation) tab-width)))
+                          ;; Else, if first char on our line is *not* a matching closer...
+                          (when (not (eq chcl (matching-paren chop)))
+                            ;; Then, add tab to recorded indentation of imperative spec opener
+                            (setq indent-level (+ indent-level tab-width))))))
                   ;; Else, parsing indicates we are in an expression that has
-                  ;; an opener different from (, [, or {, which shouldn't be possible
-                  (error "ece--indent-level: parsing indicates expression with unknown delimiter."))))))
+                  ;; an unknown opener, which shouldn't be possible.
+                  ;; Although this is a bug and should be fixed, don't annoy user
+                  ;; by throwing an error. Instead, log and use fallback.
+                  (message "%s %s %s"
+                           "ece--indent-level: parsing indicates expression with unknown delimiter."
+                           "This should not be possible, please report."
+                           "Using fallback indentation.")
+                  (setq indent-level (ece--indent-level-fallback)))))))
          ;; Else, if we are looking at a proof starter (e.g., proof or realize)
          ((seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
-                    ece-proof-start-keywords)
+                    ece-keywords-proof-start)
           (let ((bob nil))
             (progn
               (save-excursion
@@ -235,7 +270,7 @@ or beginning of buffer if there is no such line."
                                   (lambda (kw)
                                     (and (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b"))
                                          (not (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b[[:space:]]*\\[")))))
-                                  ece-proof-spec-keywords)))
+                                  ece-keywords-proof-spec-start)))
                   (forward-line -1))
                 ;; If we didn't find such a line (i.e., we are at the beginning of a buffer)...
                 (if (bobp)
@@ -249,7 +284,7 @@ or beginning of buffer if there is no such line."
                 (setq indent-level (ece--indent-level-fallback))))))
          ;; Else, if we are looking at a proof ender (i.e., "qed")
          ((seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
-                    ece-proof-end-keywords)
+                    ece-keywords-proof-end)
           (let ((bob nil))
             (progn
               (save-excursion
@@ -257,7 +292,7 @@ or beginning of buffer if there is no such line."
                 (forward-line -1)
                 (while (and (not (bobp))
                             (not (seq-some (lambda (kw) (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b")))
-                                           ece-proof-start-keywords)))
+                                           ece-keywords-proof-start)))
                   (forward-line -1))
                 ;; If we didn't find such a line (i.e., we are at the beginning of a buffer)...
                 (if (bobp)
@@ -294,8 +329,8 @@ or beginning of buffer if there is no such line."
 ;;;###autoload
 (defun ece-indent-on-insertion-closer ()
   "Indent when (1) last input was one of }, ), ], and it is the
-first character on current line (except for `)`, which may also directly
-be preceded by a `*` to from a comment closer), or (2) the last
+first character on current line (as an exception, `)` may also directly
+be preceded by a `*` to form a comment closer), or (2) the last
 input was . and the current line starts/ends a proof. However, only
 allow de-indents (to prevent automatically indenting
 code that has been manually de-indented; this is a hack
@@ -305,55 +340,24 @@ Meant for `post-self-insert-hook'."
   (when-let* ((line-before (buffer-substring-no-properties (line-beginning-position)
                                                            (- (point) 1)))
               ((or (and (memq last-command-event '(?\} ?\]))
-                       (string-match-p "^[[:blank:]]*$" line-before))
-                  (and (eq last-command-event ?\))
-                       (string-match-p "^[[:blank:]]*\\*?$" line-before))
-                  (and (eq last-command-event ?\.)
-                       (save-excursion
-                         (back-to-indentation)
-                         (seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
-                                   ece-proof-delimit-keywords)))))
+                        (string-match-p "^[[:blank:]]*$" line-before))
+                   (and (eq last-command-event ?\))
+                        (string-match-p "^[[:blank:]]*\\*?$" line-before))
+                   (and (eq last-command-event ?\.)
+                        (save-excursion
+                          (back-to-indentation)
+                          (seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
+                                    ece-keywords-proof-delimit)))))
               (orig-col (current-column))
               (indent-level (ece--indent-level))
               (indent-diff (- (current-indentation) indent-level)))
-    ;; If 0 < indent-diff, i.e., we are de-indenting
+    ;; If 0 < indent-diff, i.e., we are de-indenting...
     (when (< 0 indent-diff)
-      ;; Go to the computed indent level
+      ;; Go to the computed indent level...
       (indent-line-to indent-level)
-      ;; Keep point in same relative position
+      ;; And keep point in same relative position
       ;; (`indent-line-to' moves it to end of indentation)
       (move-to-column (- orig-col indent-diff)))))
-
-;; ;;;###autoload
-;; (defun ece-indent-on-insertion-closer ()
-;;   "Indent when (1) last input was one of }, ), ], and it is the
-;; first character on current line, or (2) the last input was . and
-;; the current line starts/ends a proof. However, only
-;; allow de-indents (to prevent automatically indenting
-;; code that has been manually de-indented; this is a hack
-;; and a limitation of the localized ad-hoc computation
-;; of the indent level).
-;; Meant for `post-self-insert-hook'."
-;;   (when (or (and (memq last-command-event '(?\} ?\) ?\]))
-;;                  (let ((line-before (buffer-substring-no-properties (line-beginning-position)
-;;                                                                     (- (point) 1))))
-;;                    (string-match-p "^[[:blank:]]*$" line-before)))
-;;             (and (eq last-command-event ?\.)
-;;                  (save-excursion
-;;                    (back-to-indentation)
-;;                    (seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
-;;                              ece-proof-delimit-keywords))))
-;;     (let* ((orig-col (current-column))
-;;            (indent-level (ece--indent-level))
-;;            (indent-diff (- (current-indentation) indent-level)))
-;;       ;; If 0 < indent-diff, i.e., we are de-indenting
-;;       (when (< 0 indent-diff)
-;;         ;; Go to the computed indent level
-;;         (indent-line-to indent-level)
-;;         ;; Keep point in same relative position
-;;         ;; (`indent-line-to' moves it to end of indentation)
-;;         (move-to-column (- orig-col indent-diff))))))
-
 
 
 ;; Shell commands
@@ -471,9 +475,10 @@ argument to the `locate' command in EasyCrypt."
 ;; Key maps
 (defvar-keymap ece-proof-mode-process-repeat-map
   :doc "Keymap (repeatable) for processing proof commands"
-  :repeat (:hints ((proof-undo-last-successful-command . "p: Undo last successful command")
+  :repeat (:hints ((proof-undo-last-successful-command . "p/u: Undo last successful command")
                    (proof-assert-next-command-interactive . "n: Assert next command")
                    (proof-undo-and-delete-last-successful-command . "d: Undo and delete last successful command")))
+  "u" #'proof-undo-last-successful-command
   "p" #'proof-undo-last-successful-command
   "n" #'proof-assert-next-command-interactive
   "d" #'proof-undo-and-delete-last-successful-command)

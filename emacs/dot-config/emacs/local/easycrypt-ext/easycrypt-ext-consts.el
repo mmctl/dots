@@ -1,69 +1,97 @@
 ;; -*- lexical-binding: t -*-
 ;; easycrypt-ext-consts.el
+;; Note: extracting these from source would be more robust
+;; (E.g., extract syntax elements from syntax table and keywords from parser)
+
+;; Syntax
+(defconst ece-delimiters-expression-open
+  (list ?\[ ?\())
+
+(defconst ece-delimiters-expression-close
+  (list ?\] ?\)))
+
+(defconst ece-delimiters-code-open
+  (list ?\{))
+
+(defconst ece-delimiters-code-close
+  (list ?\}))
+
+(defconst ece-delimiters-open
+  (append ece-delimiters-expression-open ece-delimiters-code-open))
+
+(defconst ece-delimiters-close
+  (append ece-delimiters-expression-close ece-delimiters-code-close))
+
+(defconst ece-delimiters
+  (append ece-delimiters-open ece-delimiters-close))
 
 ;; "Special" keywords
-(defconst ece-internal-keywords
+(defconst ece-keywords-internal
   (list "debug" "fail" "pragma" "prover" "time" "timeout"
         "undo"))
 
-(defconst ece-functionality-keywords
+(defconst ece-keywords-functionality
   (list "exit" "goal" "locate" "print" "search" "why3"))
 
-(defconst ece-meta-keywords
+(defconst ece-keywords-meta
   (list "as" "clone" "from" "hint" "export" "import"
         "include" "remove" "rename" "require" "with"))
 
-(defconst ece-scope-keywords
+(defconst ece-keywords-scope
   (list "declare" "local"))
 
-(defconst ece-proof-start-keywords
+(defconst ece-keywords-proof-start
   (list "proof" "realize"))
 
-(defconst ece-proof-end-keywords
+(defconst ece-keywords-proof-end
   (list "qed"))
 
-(defconst ece-proof-delimit-keywords
-  (append ece-proof-start-keywords
-          ece-proof-end-keywords))
+(defconst ece-keywords-proof-delimit
+  (append ece-keywords-proof-start
+          ece-keywords-proof-end))
 
-(defconst ece-structural-keywords
+(defconst ece-keywords-structural
   (list "section" "Self" "Top"))
 
 ;; Specification keywords
-(defconst ece-proof-spec-keywords
+(defconst ece-keywords-proof-spec-start
   (list "equiv" "hoare" "lemma" "clone"))
 
-(defconst ece-functional-spec-start-keywords
+(defconst ece-keywords-functional-spec-start
   (list "abbrev" "abstract" "axiom" "class" "const" "eager"
         "ehoare" "equiv" "hoare" "inductive" "instance" "lemma"
         "nosmt" "notation" "op" "phoare" "pred" "subtype"
         "theory" "type"))
 
-(defconst ece-functional-spec-other-keywords
+(defconst ece-keywords-functional-spec-other
   (list "axiomatized" "else" "end" "exists" "forall" "fun"
         "glob" "if" "in" "islossless" "let" "of"
         "Pr" "res" "then"))
 
-(defconst ece-functional-spec-keywords
-  (delete-dups (append ece-proof-spec-keywords
-                       ece-functional-spec-start-keywords
-                       ece-functional-spec-other-keywords)))
+(defconst ece-keywords-functional-spec
+  (delete-dups (append ece-keywords-functional-spec-start
+                       ece-keywords-functional-spec-other)))
 
-(defconst ece-imperative-spec-keywords
-  (list "assert" "elif" "else" "for" "if" "import"
-        "include" "is" "match" "module" "proc" "return"
-        "var" "while"))
+(defconst ece-keywords-imperative-spec-open
+  (list "elif" "else" "if" "match" "module" "proc" "while"))
 
-(defconst ece-spec-keywords
-  (delete-dups (append ece-functional-spec-keywords
-                       ece-imperative-spec-keywords)))
+(defconst ece-keywords-imperative-spec-other
+  (list "assert" "for" "import" "include" "is" "return" "var"))
+
+(defconst ece-keywords-imperative-spec
+  (delete-dups (append ece-keywords-imperative-spec-open
+                       ece-keywords-imperative-spec-other)))
+
+(defconst ece-keywords-spec
+  (delete-dups (append ece-keywords-functional-spec
+                       ece-keywords-imperative-spec)))
 
 ;;;; Tactics keywords
-(defconst ece-tactics-regular-keywords
+(defconst ece-keywords-tactic-regular
   (list "algebra" "alias" "apply" "async" "auto" "beta" "byequiv"
         "byphoare" "bypr" "byupto" "call" "case" "cbv" "cfold"
         "change" "clear" "congr" "conseq" "cut" "delta"
-        "dump" "eager" "ecall" "elim" "eta" "exfalso"
+        "dump" "eager" "ecall" "ehoare" "elim" "eta" "exfalso"
         "exlim" "fel" "field" "fieldeq" "fission" "fusion"
         "gen" "have" "hoare" "idtac" "inline" "interleave"
         "iota" "kill" "left" "logic" "modpath" "move"
@@ -74,43 +102,43 @@
         "symmetry" "transitivity" "trivial" "unroll" "weakmem" "while"
         "wlog" "wp" "zeta"))
 
-(defconst ece-tactics-closing-keywords
+(defconst ece-keywords-tactic-close
   (list "admit" "admitted" "assumption" "by"
         "check" "done" "edit" "exact" "fix" "reflexivity"
         "smt" "solve"))
 
-(defconst ece-tactics-dangerous-keywords
+(defconst ece-keywords-tactic-dangerous
   (list "admit" "admitted"))
 
-(defconst ece-tactics-tactical-keywords
+(defconst ece-keywords-tactic-tactical
   (list "do" "expect" "first" "last" "strict" "try"))
 
-(defconst ece-tactics-keywords
-  (delete-dups (append ece-tactics-regular-keywords
-                       ece-tactics-closing-keywords
-                       ece-tactics-dangerous-keywords
-                       ece-tactics-tactical-keywords)))
+(defconst ece-keywords-tactic
+  (delete-dups (append ece-keywords-tactic-regular
+                       ece-keywords-tactic-close
+                       ece-keywords-tactic-dangerous
+                       ece-keywords-tactic-tactical)))
 
 
 ;; All keywords
 (defconst ece-keywords
-  (delete-dups (append ece-internal-keywords
-                       ece-functionality-keywords
-                       ece-meta-keywords
-                       ece-scope-keywords
-                       ece-spec-keywords
-                       ece-tactics-keywords)))
+  (delete-dups (append ece-keywords-internal
+                       ece-keywords-functionality
+                       ece-keywords-meta
+                       ece-keywords-scope
+                       ece-keywords-spec
+                       ece-keywords-tactic)))
 
 ;; All "start" keywords (i.e., regularly starting a sentence, excluding inside proof and programs)
-(defconst ece-start-keywords
-  (delete-dups (append ece-internal-keywords
-                       ece-functionality-keywords
-                       ece-meta-keywords
-                       ece-scope-keywords
-                       ece-proof-start-keywords
-                       ece-proof-end-keywords
-                       ece-proof-spec-keywords
-                       ece-functional-spec-start-keywords)))
+(defconst ece-keywords-start
+  (delete-dups (append ece-keywords-internal
+                       ece-keywords-functionality
+                       ece-keywords-meta
+                       ece-keywords-scope
+                       ece-keywords-proof-start
+                       ece-keywords-proof-end
+                       ece-keywords-proof-spec-start
+                       ece-keywords-functional-spec-start)))
 
 
 (provide 'easycrypt-ext-consts)

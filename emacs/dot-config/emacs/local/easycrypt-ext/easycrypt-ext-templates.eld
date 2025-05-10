@@ -22,7 +22,6 @@ easycrypt-mode
              (file-name-nondirectory (or (buffer-file-name) (buffer-name))) n
              n>
              "Author: " p n>
-             "Maintainer: " p n>
              "Date: " (pfl (format-time-string "%Y-%m-%d")) n>
              "Description:" n>
              q n
@@ -288,7 +287,7 @@ easycrypt-mode
 
 ;; Imperative specification
 (procsig "proc " p "(" p ") : " q)
-(procsiglim "proc " p "(" p ") : " q " { " q " }")
+(procsiglim "proc " p "(" p ") : " p " { " q " }")
 
 (var "var " p " : " q)
 (varp (i var) ";")
@@ -411,9 +410,9 @@ easycrypt-mode
 
 
 ;;; Program
-(proct "proc (" p ")")
-(proctub "proc (" p ") (" p ")")
-(proctube "proc (" p ") (" p ") (" p ")")
+(proct "proc (" q ")")
+(proctub "proc (" p ") (" q ")")
+(proctube "proc (" p ") (" p ") (" q ")")
 
 (seq "seq " p " " p " : (" q ")")
 (seqhoa "seq " p " : (" q ")")
@@ -436,7 +435,7 @@ easycrypt-mode
 (while1 "while{1} (" p ") (" q ")")
 (while2 "while{2} (" p ") (" q ")")
 
-(call "call (_:" q ")")
+(call "call (_: " q ")")
 
 (callcont "call (_: " p " ==> " q ")")
 (call1cont "call{1} (_: " p " ==> " q ")")
