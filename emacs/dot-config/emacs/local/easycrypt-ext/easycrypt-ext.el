@@ -89,11 +89,9 @@ behind point, remove ARG tabs worth of whitespace from indentation of current li
       (let* ((orig-region-start (region-beginning))
              (orig-region-stop (region-end))
              (new-region-start (save-excursion (goto-char orig-region-start)
-                                               (line-beginning-position)))
+                                               (pos-bol)))
              (new-region-stop (save-excursion (goto-char orig-region-stop)
-                                              (if (= orig-region-stop (line-beginning-position))
-                                                  orig-region-stop
-                                                (line-end-position))))
+                                              (pos-eol)))
              (region-forward (<= orig-region-start orig-region-stop)))
         ;; Expand visual region to new region positions
         (if region-forward
@@ -107,7 +105,7 @@ behind point, remove ARG tabs worth of whitespace from indentation of current li
     (if (< arg 0)
         ;; Then, take stock of whitespace behind point, and
         (let* ((orig-point (point))
-               (del-ub (min (* (abs arg) tab-width) (- orig-point (line-beginning-position))))
+               (del-ub (min (* (abs arg) tab-width) (- orig-point (pos-bol))))
                (del (save-excursion
                       (skip-chars-backward "[:space:]" (- orig-point del-ub))
                       (- orig-point (point)))))
@@ -117,9 +115,7 @@ behind point, remove ARG tabs worth of whitespace from indentation of current li
               ;; (at most until first non-whitespace character)
               (delete-region (- orig-point del) orig-point)
             ;; Else, un-tab current line (at most) ARG times
-            (indent-rigidly (line-beginning-position)
-                            (line-end-position)
-                            (* arg tab-width))))
+            (indent-rigidly (pos-bol) (pos-eol) (* arg tab-width))))
       ;; Else, insert ARG tabs at point
       (insert-tab arg))))
 
@@ -146,9 +142,7 @@ or beginning of buffer if there is no such line."
   (save-excursion
     ;; Get previous non-blank line
     (ece--goto-previous-nonblank-line)
-    (setq prev-line (buffer-substring-no-properties
-                     (line-beginning-position)
-                     (line-end-position)))
+    (setq prev-line (buffer-substring-no-properties (pos-bol) (pos-eol)))
     ;; If previous non-blank line is an unfinished non-proof/non-proc spec
     ;; (E.g., starts with `lemma' but does not end with a `.')
     ;; Here, we also count a comma as ending a spec to deal with the case of
@@ -337,7 +331,7 @@ code that has been manually de-indented; this is a hack
 and a limitation of the localized ad-hoc computation
 of the indent level).
 Meant for `post-self-insert-hook'."
-  (when-let* ((line-before (buffer-substring-no-properties (line-beginning-position)
+  (when-let* ((line-before (buffer-substring-no-properties (pos-bol)
                                                            (- (point) 1)))
               ((or (and (memq last-command-event '(?\} ?\]))
                         (string-match-p "^[[:blank:]]*$" line-before))

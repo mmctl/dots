@@ -217,8 +217,15 @@
 (setopt hl-line-sticky-flag nil)
 (setopt global-hl-line-sticky-flag nil)
 
+(setopt cycle-spacing-actions '(delete-all-space
+                                (delete-space-before 0)
+                                (delete-space-after 0)
+                                (delete-all-space -)
+                                restore))
+
 (setopt shift-select-mode t)
 (repeat-mode 1)
+
 
 ;;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)
@@ -294,6 +301,10 @@
 (keymap-global-set "C-t" #'kill-ring-save)
 (keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
+;;;; Joining
+(keymap-global-set "M-b" #'join-line)
+(keymap-global-set "M-f" #'join-line-forward)
+
 ;;;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
 (keymap-global-set "M-<deletechar>" #'kill-word)
@@ -320,11 +331,12 @@
 (keymap-global-set "C-M-y" #'yank-pop)
 
 ;;;; Deleting
-;;(keymap-global-set "M-b" #'backward-delete-line)
-;;(keymap-global-set "M-f" #'forward-delete-line)
-;;(keymap-global-set "M-k" #'delete-whole-line)
+(keymap-global-set "C-k" #'cycle-spacing)
+(keymap-global-set "M-k" #'delete-all-space)
 
-(keymap-global-set "M-D" #'delete-region)
+(keymap-global-set "M-A" #'backward-delete-line)
+(keymap-global-set "M-E" #'forward-delete-line)
+(keymap-global-set "M-D" #'delete-whole-line-or-region)
 
 ;;; Management
 ;;;; Quitting
@@ -512,7 +524,7 @@
   ;; Keybindings
   (keymap-set dired-mode-map "C-v" #'dired-find-file)
   (keymap-set dired-mode-map "RET" #'dired-find-file)
-  (keymap-set dired-mode-map "<return>" #'dired-find-file)
+  (keymap-set dired-mode-map "<return>" "RET")
   (keymap-set dired-mode-map "C-o" #'dired-display-file)
   (keymap-set dired-mode-map "C-<up>" #'dired-prev-dirline)
   (keymap-set dired-mode-map "C-<down>" #'dired-next-dirline)
@@ -719,7 +731,7 @@
   (keymap-set vertico-map "C-v" #'vertico-exit)
   (keymap-set vertico-map "C-M-v" #'vertico-exit-input)
   (keymap-set vertico-map "TAB" #'minibuffer-complete)
-  (keymap-set vertico-map "<tab>" #'minibuffer-complete)
+  (keymap-set vertico-map "<tab>" "TAB")
   (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
   (keymap-set vertico-map "C-p" #'previous-history-element)
   (keymap-set vertico-map "C-n" #'next-history-element)
@@ -801,7 +813,7 @@
   ;;; All modes
   (keymap-set corfu-map "C-o" #'corfu-complete)
   (keymap-set corfu-map "TAB" #'corfu-complete)
-  (keymap-set corfu-map "<tab>" #'corfu-complete)
+  (keymap-set corfu-map "<tab>" "TAB")
   (keymap-set corfu-map "C-v" #'corfu-send)
   (keymap-set corfu-map "S-SPC" #'corfu-insert-separator)
   ;;; Auto mode
@@ -932,7 +944,6 @@
   (keymap-unset tempel-map "<remap> <backward-paragraph>")
   (keymap-unset tempel-map "<remap> <forward-paragraph>")
   (keymap-set tempel-map "C-<backspace>" #'tempel-previous)
-  (keymap-set tempel-map "C-DEL" #'tempel-previous)
   (keymap-set tempel-map "C-SPC" #'tempel-next)
   (keymap-set tempel-map "<prior>" #'tempel-previous)
   (keymap-set tempel-map "<next>" #'tempel-next)
@@ -955,7 +966,7 @@ default value in the same way as a literal string prompt."
   (add-to-list 'tempel-user-elements #'a-tempel-placeholder-form-as-lit)
 
   (defun a-tempel-include (elt)
-    "Define 'include' element (taken and slightly adjusted from TempEL github repo)
+    "Define `include' element (taken and slightly adjusted from TempEL github repo)
 that allows to include other templates by their name."
     (when (eq (car-safe elt) 'i)
       (when-let (template (alist-get (cadr elt) (tempel--templates)))
@@ -978,12 +989,10 @@ that allows to include other templates by their name."
   (keymap-global-set "C-c x" 'a-crux-map-prefix)
 
   :bind (("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
-         ("M-a" . crux-kill-line-backwards)
          ("M-d" . crux-duplicate-current-line-or-region)
          (:map a-crux-map
                ("RET" . crux-smart-open-line)
-               ("<return>" . crux-smart-open-line)
-               ("S-RET" . crux-smart-open-line-above)
+               ("<return>" . "RET")
                ("S-<return>" . crux-smart-open-line-above)
                ("c" . crux-copy-file-preserve-attributes)
                ("C" . crux-cleanup-buffer-or-region)
@@ -1401,7 +1410,7 @@ that allows to include other templates by their name."
   (keymap-set pdf-view-mode-map "C-p" #'pdf-view-scroll-up-or-previous-page)
   (keymap-set pdf-view-mode-map "SPC" #'pdf-view-scroll-down-or-next-page)
   (keymap-set pdf-view-mode-map "DEL" #'pdf-view-scroll-up-or-previous-page)
-  (keymap-set pdf-view-mode-map "<backspace>" #'pdf-view-scroll-up-or-previous-page)
+  (keymap-set pdf-view-mode-map "<backspace>" "DEL")
   (keymap-set pdf-view-mode-map "<end>" #'pdf-view-last-page)
   (keymap-set pdf-view-mode-map "<home>" #'pdf-view-first-page)
   (keymap-set pdf-view-mode-map "C-l" #'pdf-goto-label)
@@ -1456,7 +1465,7 @@ that allows to include other templates by their name."
   (setopt org-support-shift-select t)
 
   ;; Keybindings
-  (keymap-set org-mode-map "S-RET" #'org-return-and-maybe-indent)
+  (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
 
   (keymap-unset org-read-date-minibuffer-local-map "C-v")
   (keymap-unset org-read-date-minibuffer-local-map "M-v")
@@ -1544,19 +1553,20 @@ that allows to include other templates by their name."
   ;; Keybindings
   (defvar-keymap a-proof-mode-process-repeat-map
     :doc "Keymap (repeatable) for processing proof commands"
-    :repeat (:hints ((proof-undo-last-successful-command . "Undo last succesful command")
-                     (proof-assert-next-command-interactive . "Assert next command")
-                     (proof-undo-and-delete-last-successful-command . "Undo and delete last successful command")))
+    :repeat (:hints ((proof-undo-last-successful-command . "p/u: Undo last succesful command")
+                     (proof-assert-next-command-interactive . "n: Assert next command")
+                     (proof-undo-and-delete-last-successful-command . "d: Undo and delete last successful command")))
     "p" #'proof-undo-last-successful-command
+    "u" #'proof-undo-last-successful-command
     "n" #'proof-assert-next-command-interactive
     "d" #'proof-undo-and-delete-last-successful-command)
   (defvar-keymap a-bufhist-repeat-map
     :doc "Keymap (repeatable) for browsing and managing buffer history"
-    :repeat (:hints ((bufhist-prev . "Go to previous history element")
-                     (bufhist-next . "Go to next history element")
-                     (bufhist-first . "Go to first history element")
-                     (bufhist-last . "Go to last history element")
-                     (bufhist-delete . "Delete current history element")))
+    :repeat (:hints ((bufhist-prev . "p: Go to previous history element")
+                     (bufhist-next . "n: Go to next history element")
+                     (bufhist-first . "f: Go to first history element")
+                     (bufhist-last . "l: Go to last history element")
+                     (bufhist-delete . "d: Delete current history element")))
     "p" #'bufhist-prev
     "n" #'bufhist-next
     "f" #'bufhist-first
