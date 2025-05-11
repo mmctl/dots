@@ -1,0 +1,9 @@
+- Bug: Cfold template parse error
+
+- Templates:
+   - ehoare
+  - rewrite equiv
+  - proc rewrite
+  - proc change
+  - code positions
+   

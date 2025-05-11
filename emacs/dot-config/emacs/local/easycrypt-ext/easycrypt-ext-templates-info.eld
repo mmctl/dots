@@ -1,0 +1,158 @@
+;; easycrypt-info.eld
+;; Tempel informative templates for easycrypt mode
+
+easycrypt-mode
+
+;; Meta
+(requireinfo "require " (p "Theory1, ..., TheoryN") ".")
+(importinfo "import " (p "Theory1, ..., TheoryN") ".")
+
+;; TODO: Clone info
+
+;; Functional specification
+(typeinfo "type " (p "Name") " = " (p "Def") ".")
+
+(opinfo "op " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Type") " = " (p "Def") ".")
+(opasinfo "op " (p "Name (Op)") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : { " (p "Type") " | " (p "AxiomStatement") " } as " (p "Name (Axiom)") ".")
+(constinfo "const "  (p "Name") " (" (p "Param") " : " (p "Type") ") : " (p "Type") " = " (p "Def") ".")
+(abbrevinfo "abbrev "  (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Type") " = " (p "Def") ".")
+
+(theoryinfo "theory " (p "Name" thid)  "." n>
+            (p "Body") n>
+            "end " (s thid) "." >)
+(sectioninfo "section" (p "Name" secid) "." n>
+           (p "Body") >
+           "end section " (s secid) "." >)
+
+(declaremoduleinfo "declare module " (p "Name")  " <: " (p "ModType")  "{ " (p "+/- Mod1(ModArg11, ..., ModArg1N), ..., +/- ModN(ModArgN1, ..., ModArgNN)") " }.")
+
+(Prinfo "Pr[" (p "Mod.Proc(Arg1, ..., ArgN)") " @ " (p "Memory") " : " (p "Event") "]")
+
+(hoareinfo "hoare[" (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "]")
+(phoareinfo "phoare[" (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "] = " (p "Prob"))
+(equivinfo "equiv[" (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "]")
+
+(axiominfo "axiom " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Statement") ".")
+
+(proofinfo "proof." > n>
+           (p "Proof") n>
+           "qed." >)
+
+(lemmainfo "lemma " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Statement") "." n>
+           (i proofinfo))
+(lemmallinfo "lemma " (p "Name") " : islossless " (p "Mod.Proc") "." n>
+             (i proofinfo))
+
+(hoarelemmainfo "hoare " (p "Name") " : " (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "." n>
+                (i proofinfo))
+(equivlemmainfo "equiv " (p "Name") " : " (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "." n>
+                (i proofinfo))
+
+;; Imperative specification
+(procsiginfo "proc " (p "Name") "(" (p "Param1 : Type1, ..., ParamN : TypeN") ") : " (p "Type") " { " (p "ModParam1.Proc11, ... ModParam1.Proc1N, ..., ModParamN.ProcNN") " }")
+
+(varinfo "var " (p "Name") " : " (p "Type"))
+(varpinfo (i varinfo) ";")
+
+(procinfo "proc " (p "Name") "(" (p "Param1 : Type1, ..., ParamN : TypeN") ") : " (p "Type") " = {" n>
+          (i varpinfo) n>
+          (p "Body") n>
+          "}" >)
+(procaliasnfo "proc " (p "Name") " = " (p "Mod.Proc"))
+
+(moduletypeinfo "module type " (p "Name") " " (p "(ModParam1 : ModType1) ... (ModParamN : ModTypeN)") " = {" n>
+                (i procsiginfo) n>
+                "}." >)
+(moduleinfo "module " (p "Name") " "  (p "(ModParam1 : ModType1) ... (ModParamN : ModTypeN)") " : " (p "ModType") " = {" n>
+            (i varinfo) n>
+            (i procinfo) n>
+            "}." >)
+(modulealiasinfo "module " (p "Name") " = " (p "Mod(ModArg1, ..., ModArgN)") ".")
+
+;; Tactics
+(smtinfo "smt(" (p "Lemma1 OR @Theory1, ..., LemmaN OR @TheoryN") ")")
+
+(poseinfo "pose " (p "Name") " := " (p "Expr"))
+(haveinfo "have " (p "IntroPattern") ": " (p "Statement"))
+
+(proctinfo "proc (" (p "Invariant") ")")
+(proctubinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ")")
+(proctubeinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ") (" (p "InvariantAfterBad") ")")
+
+(seqinfo "seq " (p "LineNumCutLeft") " " (p "LineNumCutRight") " :  (" (p "ConditionAtCut") ")")
+(seqhoainfo "seq " (p "LineNumCut") " :  (" (p "ConditionAtCut") ")")
+(seqphinfo "seq " (p "LineNumCut") " : (" (p "Event") ") (" (p "ProbEventTrueAtCut") ") (" (p "ProbPostTrueWhenEventTrue") ") (" (p "ProbEventFalseAtCut") ") (" (p "ProbPostTrueWhenEventFalse") ") (" (p "InvariantAtCut") ")")
+
+(spinfo "sp " (p "LineNumLeft") " " (p "LineNumRight"))
+(wpinfo "wp " (p "LineNumLeft") " " (p "LineNumRight"))
+
+(rndinfo "rnd " (p "Fun") " " (p "InverseFun"))
+(rndinvinfo "rnd " (p "InvolutiveFun"))
+
+(whileinfo "while " (p "Invariant"))
+(whilephinfo "while " (p "Invariant") (p "TerminationVariant") (p "UpperBndTermVar") (p "ProbTermVarDecrease")) ; TODO: ask PY if correct
+(while1info "while{1} " (p "Invariant") (p "TerminationVariant")) ; TODO: ask PY if this is correct
+(while2info "while{2} " (p "Invariant") (p "TerminationVariant"))
+
+(callinfo "call (_:" (p "Invariant") ")")
+(callcontinfo "call (_: " (p "Pre") " ==> " (p "Post") ")")
+(callptinfo "call (" (p "Proofterm") ")")
+(callubinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ")")
+(callubeinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ", " (p "InvariantAfterBad") ")")
+
+(swapblinfo "swap [" (p "LineNumStart") ".." (p "LineNumEnd") "] " (p "(-)MoveAmount"))
+(swaplinfo "swap " (p "LineNum") " " (p "(-)MoveAmount"))
+(swapsinfo "swap " (p "LineNumBegin") " " (p "LineNumMid") " " (p "LineNumEnd"))
+
+(inlineinfo "inline " (p "Mod1.Proc1, ..., Modn.Procn OR LineNumProc"))
+(inlineoinfo "inline (" (p "LineNumOccur1 ... LineNumOccurN") ") " (p "Mod.Proc"))
+
+(rcondtinfo "rcondt " (p "LineNumIfOrWhile"))
+(rcondfinfo "rcondf " (p "LineNumIfOrWhile"))
+
+(unrollinfo "unroll " (p "LineNumWhile"))
+
+(splitwhileinfo "splitwhile " (p "LineNumWhile") " : (" (p "WhileCondition") ")")
+
+(fissioninfo "fission " (p "LineNumWhile") "!" (p "NumLinesBeforeWhile") " @ " (p "LineNumEndBlock1") ", " (p "LineNumEndBlock2"))
+(fusioninfo "fusion " (p "LineNumWhile") "!" (p "NumLinesBeforeWhile") " @ " (p "LineNumEndBlock1") ", " (p "LineNumEndBlock2"))
+
+(aliasinfo "alias " (p "LineNumAssignment") " with " (p "VarName"))
+(aliaseinfo "alias " (p "LineNumAssignment") " " (p "VarName") " = " (p "Expr"))
+
+(cfoldinfo "cfold " (p "LineNumAssignment") " ! " (p "LineNumEndBlock"))
+
+(killinfo "kill " (p "LineNumStartBlock") " ! " (p "LenghtBlock"))
+
+(transivityinfo "transitivity " (p "Mod.Proc") " (" (p "PreLeft") " ==> " (p "PostLeft") ") (" (p "PreRight") " ==> " (p "PostRight") ")")
+(transivitycodeinfo "transitivity{" (p "Side (1/2)") "} { " (p "ProgStatement1; ...; ProgStatementN;") " } (" (p "PreLeft") " ==> " (p "PostLeft") ") (" (p "PreRight") " ==> " (p "PostRight") ")")
+
+(conseqinfo "conseq (_: " (p "Pre") " ==> " (p "Post") ")")
+(conseqptinfo "conseq (" (p "Proofterm") ")")
+(conseqehhinfo "conseq (_: " (p "PreEquiv") " ==> " (p "PostEquiv") ") (_: " (p "PreHoareLeft") " ==> " (p "PostHoareLeft") ") (_: " (p "PreHoareRight") " ==> " (p "PostHoareRight") ")")
+(conseqphhinfo "conseq (_: " (p "PrePhoare") " ==> " (p "PostPhoare") ": " (p "ProbBndOrEq (ex: =1%r)") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
+(conseqeh "conseq (" (p "ProoftermEquiv") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
+
+(byequivinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ")")
+(byequivptinfo "byequiv (" (p "Proofterm") ")")
+(byequivubinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ") : " (p "BadEvent"))
+(byequivubptinfo "byequiv (" (p "Proofterm") ") : " (p "BadEvent"))
+
+(byphoareinfo "byphoare (_: " (p "Pre") " ==> " (p "Post") ")")
+(byphoareptinfo "byphoare (" (p "Proofterm") ")")
+
+(bypr "bypr (" (p "ExprLeft") ") (" (p "ExprRight") ")")
+
+(existssinfo "exists* " (p "Expr1, ..., ExprN"))
+(exliminfo "exlim " (p "Expr1, ..., ExprN"))
+
+(phoaresplitjuncinfo "phoare split " (p "ProbPostClause1") " " (p "ProbPostClause2") " " (p "ProbPostDualJunction"))
+(phoaresplitneginfo "phoare split ! " (p "ProbPostTrue") " " (p "ProbPostNegation"))
+
+(siminfo "sim : (" (p "VarEqualities") ")")
+(siminvinfo "sim / " (p "InvariantGlobVars") " : (" (p "VarEqualities") ")")
+(simprinvinfo "sim " (p "(Mod11.Proc11 ~ Mod12.Proc12 : GlobVarEqualities1) ... (ModN1.ProcN1 ~ ModN2.ProcN2 : GlobalVarEqualitiesN)") " / " (p "InvariantGlobalVars") " : (" (p "VarEqualities") ")")
+
+(felinfo "fel " (p "LineNumEndInit") " (" (p "CntrExpr") ") (" (p "StepUpperBndFun") ") (" (p "CntrBndExpr") ") (" (p "BadEvent")") [ " (p "Mod1.Proc1 : IncCntrPre1; ...; ModN.ProcN : IncCntrPreN") " ] " (p "Invariant"))
+
+; ecall

@@ -1,37 +1,37 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:full-border"
-rev = "b88fe73"
+rev = "55bf699"
 hash = "1f3dad061209081a6b04dd6ff2cb06c7"
 
 [[plugin.deps]]
 use = "imsi32/yatline"
-rev = "90e0284"
-hash = "8d4cb2dfadcbda045ddaa5c274441f9c"
+rev = "2ecf715"
+hash = "38e2ea4703ea606d4eef574e8e8b8fd7"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:smart-filter"
-rev = "b88fe73"
+rev = "55bf699"
 hash = "f0c4b41b5d19a3144958383333eff6e7"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:jump-to-char"
-rev = "b88fe73"
+rev = "55bf699"
 hash = "a670c03eb3760812e044a24f94cedc55"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:toggle-pane"
-rev = "b88fe73"
-hash = "5c9dda1a587b8f5b6f63e3d5375bda88"
+rev = "55bf699"
+hash = "f3853bbdd1da2fad09d059ab5464abfd"
 
 [[plugin.deps]]
 use = "hankertrix/augment-command"
-rev = "adebde0"
-hash = "eef0510c86fa6400f59ad03e0206e817"
+rev = "15a75d8"
+hash = "374139554462a9dfc10dc8bfd0b01b19"
 
 [[plugin.deps]]
 use = "boydaihungst/restore"
-rev = "328dd88"
-hash = "ad406e4a5ada589211e6ffe8bad3c983"
+rev = "539aad5"
+hash = "fd162085ec09fef4b4060c92bba31994"
 
 [[plugin.deps]]
 use = "Ape/open-with-cmd"
@@ -40,8 +40,8 @@ hash = "86e0312b01bc5762813c6c1d0517f073"
 
 [[plugin.deps]]
 use = "boydaihungst/compress"
-rev = "6327ef4"
-hash = "6a5c7635015d985a2a6b28a55929d85e"
+rev = "f9d7adb"
+hash = "3c578c90c1cae2a1954768f52c9f9e22"
 
 [[plugin.deps]]
 use = "AnirudhG07/archivemount"
@@ -50,7 +50,7 @@ hash = "6141b947d98b435a960045a8fd1c3690"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:mount"
-rev = "b88fe73"
+rev = "55bf699"
 hash = "dd97eede8e20e59cd2604e8006e470e2"
 
 [[plugin.deps]]
@@ -60,10 +60,10 @@ hash = "27c50e6bc15c09096505b805b238ade0"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:piper"
-rev = "7a9f5b1"
-hash = "f5dded29c557c9e8e2dc3ffee9f7756a"
+rev = "55bf699"
+hash = "5cf6118259765a267f3e2717acc79095"
 
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-macchiato"
-rev = "68326b4"
+rev = "02f3fc6"
 hash = "3ec21bcfd2735cfcbab61faaf43e59e4"

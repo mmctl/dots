@@ -355,7 +355,7 @@ bar {
 # Nonprimary
 bar {
     id bar-secondary
-    output onprimary
+    output nonprimary
     i3bar_command i3bar
     status_command i3status-rs "$XDG_CONFIG_HOME/i3status-rust/config-np.toml"
     mode dock

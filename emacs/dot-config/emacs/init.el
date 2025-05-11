@@ -11,8 +11,8 @@
 (defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
   "Directory where (custom) themes are stored.")
 
-(defconst FUNCS_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "funcs/"))
-  "Directory where (custom) functions/functionalities are defined.")
+(defconst LOCAL_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "local/"))
+  "Directory where (custom) local functionalities/packages are defined.")
 
 (defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
   "Directory where (custom) templates are defined.")
@@ -46,14 +46,13 @@
 (defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
   "Directory where lock files are stored.")
 
-
 ;; Bootstrap
 ;;; Directories
 (unless (file-directory-p THEMES_DIR)
   (make-directory THEMES_DIR t))
 
-(unless (file-directory-p FUNCS_DIR)
-  (make-directory FUNCS_DIR t))
+(unless (file-directory-p LOCAL_DIR)
+  (make-directory LOCAL_DIR t))
 
 (unless (file-directory-p TEMPLATES_DIR)
   (make-directory TEMPLATES_DIR t))
@@ -77,8 +76,14 @@
 (load CUSTOM_FILE)
 
 ;;; Load path/pointers
-(add-to-list 'load-path FUNCS_DIR)
+;;;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones
+(add-to-list 'load-path LOCAL_DIR)
+(dolist (file (directory-files-recursively LOCAL_DIR "[^.].*" t t))
+  (when (file-directory-p file)
+    (add-to-list 'load-path file)))
+
 (add-to-list 'load-path MISC_DIR)
+
 (setopt custom-theme-directory THEMES_DIR)
 
 ;;; Backups
@@ -106,13 +111,12 @@
 (setopt lock-file-name-transforms `((".*" ,(file-name-concat LOCKS_DIR "\\1") t))
         create-lockfiles t)
 
-;;; Custom constants and functions/functionalities (without package dependencies)
-(require 'custom-consts)
-(require 'func-frames)
-(require 'func-modes)
-(require 'func-utils)
+;;; Custom local functionalities
+(require 'loc-frames)
+(require 'loc-modes)
+(require 'loc-utils)
 
-;;; Package system
+;; Package system
 (require 'package)
 
 (setopt package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
@@ -122,7 +126,10 @@
                                      ("nongnu" . 5)
                                      ("melpa" . 1)))
 
-(package-initialize)
+(package-initialize t)
+
+(unless package-archive-contents
+  (package-refresh-contents))
 
 
 ;; Settings (general/UI)
@@ -133,7 +140,7 @@
 
 ;;; Frames/Windows
 (setopt frame-resize-pixelwise t)
-(setopt window-resize-pixelwise nil)
+(setopt window-resize-pixelwise t)
 
 (setopt indicate-buffer-boundaries nil)
 (setopt indicate-empty-lines nil)
@@ -145,9 +152,14 @@
 (line-number-mode 1)
 (column-number-mode 1)
 
+(setopt display-time-24hr-format t)
+(setopt display-time-default-load-average nil)
+(setopt display-time-default-load-average nil)
+
+(display-time-mode 1)
+
 (unless (daemonp)
-  (when (fboundp 'setup-a-global-frame)
-    (setup-a-global-frame)))
+  (loc-setup-global-frame))
 
 ;;; (Mini)Buffers
 (setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -205,8 +217,15 @@
 (setopt hl-line-sticky-flag nil)
 (setopt global-hl-line-sticky-flag nil)
 
+(setopt cycle-spacing-actions '(delete-all-space
+                                (delete-space-before 0)
+                                (delete-space-after 0)
+                                (delete-all-space -)
+                                restore))
+
 (setopt shift-select-mode t)
 (repeat-mode 1)
+
 
 ;;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)
@@ -275,22 +294,24 @@
 (keymap-global-set "M-M" #'pop-global-mark)
 
 ;;; Selection
-(keymap-global-set "C-SPC" #'set-mark-command)
+(keymap-global-set "M-SPC" #'set-mark-command)
 
 ;;; Manipulation
 ;;;; Copying
 (keymap-global-set "C-t" #'kill-ring-save)
 (keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
+;;;; Joining
+(keymap-global-set "M-b" #'join-line)
+(keymap-global-set "M-f" #'join-line-forward)
+
 ;;;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
 (keymap-global-set "M-<deletechar>" #'kill-word)
 
+(keymap-global-set "M-a" #'backward-kill-line)
 (keymap-global-set "M-e" #'kill-line)
 (keymap-global-set "M-l" #'kill-whole-line)
-
-(keymap-global-set "M-b" #'backward-kill-sentence)
-(keymap-global-set "M-f" #'kill-sentence)
 
 (keymap-global-set "M-p" #'backward-kill-sexp)
 (keymap-global-set "M-n" #'kill-sexp)
@@ -310,7 +331,12 @@
 (keymap-global-set "C-M-y" #'yank-pop)
 
 ;;;; Deleting
-(keymap-global-set "M-D" #'delete-region)
+(keymap-global-set "C-k" #'cycle-spacing)
+(keymap-global-set "M-k" #'delete-all-space)
+
+(keymap-global-set "M-A" #'backward-delete-line)
+(keymap-global-set "M-E" #'forward-delete-line)
+(keymap-global-set "M-D" #'delete-whole-line-or-region)
 
 ;;; Management
 ;;;; Quitting
@@ -460,15 +486,10 @@
         use-package-always-pin nil
         use-package-always-demand nil)
 
-(when (and (not (package-installed-p 'vc-use-package)) (< emacs-major-version 30))
-  (package-vc-install
-   '(vc-use-package :url "https://github.com/slotThe/vc-use-package"
-                    :vc-backend Git))
-  (require 'vc-use-package))
-
 ;;; Base/Built-in
 (use-package isearch
   :init
+  ;; Setup and settings
   (setopt search-exit-option t)
   (setopt isearch-repeat-on-direction-change t
           isearch-lazy-count t
@@ -477,14 +498,17 @@
           isearch-allow-motion t)
   (setopt lazy-count-prefix-format nil
           lazy-count-suffix-format " [%s of %s]")
-  :bind (:map isearch-mode-map
-              ("C-w" . nil)
-              ("C-v" . #'isearch-exit)
-              ("C-t" . #'isearch-yank-word-or-char)
-              ("M-y" . #'isearch-yank-kill)))
+
+  :config
+  ;; Keybindings
+  (keymap-unset isearch-mode-map "C-w")
+  (keymap-set isearch-mode-map "C-v" #'isearch-exit)
+  (keymap-set isearch-mode-map "C-t" #'isearch-yank-word-or-char)
+  (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill))
 
 (use-package dired
   :init
+  ;; Setup and settings
   (setopt dired-listing-switches (purecopy "-lahF")
           dired-maybe-use-globstar t
           dired-mouse-drag-files t
@@ -495,25 +519,32 @@
           dired-recursive-deletes 'top
           dired-switches-in-mode-line 'as-is
           dired-recursive-copies 'top)
-  :bind (:map dired-mode-map
-              ("C-v" . #'dired-find-file)
-              ("RET" . #'dired-find-file)
-              ("<return>" . #'dired-find-file)
-              ("C-o" . #'dired-display-file)
-              ("C-<up>" . #'dired-prev-dirline)
-              ("C-<down>" . #'dired-next-dirline)
-              ("C-p" . #'dired-prev-marked-file)
-              ("C-n" . #'dired-next-marked-file)
-              ("C-<prior>" . #'dired-up-directory)))
+
+  :config
+  ;; Keybindings
+  (keymap-set dired-mode-map "C-v" #'dired-find-file)
+  (keymap-set dired-mode-map "RET" #'dired-find-file)
+  (keymap-set dired-mode-map "<return>" "RET")
+  (keymap-set dired-mode-map "C-o" #'dired-display-file)
+  (keymap-set dired-mode-map "C-<up>" #'dired-prev-dirline)
+  (keymap-set dired-mode-map "C-<down>" #'dired-next-dirline)
+  (keymap-set dired-mode-map "C-p" #'dired-prev-marked-file)
+  (keymap-set dired-mode-map "C-n" #'dired-next-marked-file)
+  (keymap-set dired-mode-map "C-q" #'dired-up-directory))
+
+(use-package dabbrev
+  :init
+  ;; Setup and settings
+  (setopt dabbrev-upcase-means-case-search t
+          dabbrev-case-distinction nil
+          dabbrev-case-replace nil))
 
 ;;; Helpers
 (use-package which-key
   :ensure t
-  :demand t
-  :bind (:map which-key-mode-map
-              ("C-x <f3>" . which-key-C-h-dispatch))
-  :hook (which-key-init-buffer . setup-a-mini-mix-mode)
-  :config
+
+  :init
+  ;; Setup and settings
   (setopt which-key-idle-delay 0.5
           which-key-popup-type 'side-window
           which-key-side-window-location 'bottom
@@ -529,23 +560,25 @@
           which-key-show-early-on-C-h nil
           which-key-paging-prefixes '("C-x")
           which-key-paging-key "<f3>")
+
+  :config
+  ;; Keybindings
+  (keymap-set which-key-mode-map "C-x <f3>" #'which-key-C-h-dispatch)
+
+  ;; Hooks
+  (add-hook 'which-key-init-buffer-hook #'loc-setup-mini-mix-mode)
+
+  ;; Activation
   (which-key-mode 1))
 
 (use-package easy-kill
   :ensure t
-  :demand t
+
   :bind (("<remap> <kill-ring-save>" . #'easy-kill)
-         ("<remap> <mark-word>" . #'easy-mark)
-         :map easy-kill-base-map
-         ("<remap> <kill-ring-save>" . #'easy-kill-cycle)
-         ("<" . #'easy-kill-shrink)
-         (">" . #'easy-kill-expand)
-         ("a" . #'easy-kill-append)
-         ("k" . #'easy-kill-region)
-         ("r" . #'easy-delete-region)
-         ("q" . #'easy-kill-abort)
-         ("p" . #'easy-kill-exchange-point-and-mark))
-  :config
+         ("<remap> <mark-word>" . #'easy-mark))
+
+  :init
+  ;; Setup and settings
   (setopt easy-kill-alist '((?w word           " ")
                             (?s sexp           "\n")
                             (?h list           "\n")
@@ -554,97 +587,126 @@
                             (?D defun-name     " ")
                             (?l line           "\n")
                             (?b buffer-file-name)))
-  (setopt easy-kill-cycle-ignored '(filename defun-name buffer-file-name))
-  (setopt easy-kill-try-things '(url email word line))
-  (setopt easy-mark-try-things '(url email word sexp)))
+  (setopt easy-kill-cycle-ignored '(filename defun-name buffer-file-name)
+          easy-kill-try-things '(url email word line)
+          easy-mark-try-things '(url email word sexp))
+
+  :config
+  ;; Keybindings
+  (keymap-set easy-kill-base-map "<remap> <kill-ring-save>" #'easy-kill-cycle)
+  (keymap-set easy-kill-base-map "<" #'easy-kill-shrink)
+  (keymap-set easy-kill-base-map ">" #'easy-kill-expand)
+  (keymap-set easy-kill-base-map "a"  #'easy-kill-append)
+  (keymap-set easy-kill-base-map "k"  #'easy-kill-region)
+  (keymap-set easy-kill-base-map "K"  #'easy-delete-region)
+  (keymap-set easy-kill-base-map "q"  #'easy-kill-abort)
+  (keymap-set easy-kill-base-map "p"  #'easy-kill-exchange-point-and-mark))
 
 (use-package expand-region
   :ensure t
   :pin melpa
+
   :bind ("C->" . #'er/expand-region)
-  :config
-  (setopt expand-region-fast-keys-enabled t)
-  (setopt expand-region-contract-fast-key "<")
-  (setopt expand-region-reset-fast-key "r"))
+
+  :init
+  ;; Setup and settings
+  (setopt expand-region-fast-keys-enabled t
+          expand-region-contract-fast-key "<"
+          expand-region-reset-fast-key "r"))
 
 (use-package undo-tree
   :ensure t
-  :demand t
-  :bind (:map undo-tree-map
-              ("<remap> <undo-redo>" . undo-tree-redo)
-              :map undo-tree-visualizer-mode-map
-              ("C-f" . nil)
-              ("C-b" . nil)
-              ("h" . #'undo-tree-visualizer-scroll-left)
-              ("j" . #'undo-tree-visualizer-scroll-down)
-              ("k" . #'undo-tree-visualizer-scroll-up)
-              ("l" . #'undo-tree-visualizer-scroll-right)
-              :map undo-tree-visualizer-selection-mode-map
-              ("C-f" . nil)
-              ("C-b" . nil)
-              ("C-v" . #'undo-tree-visualizer-set))
-  :config
-  ;; Create and store undo history directory
+
+  :init
+  ;; Setup and settings
+  ;;; Create and store undo history directory
   (defconst UNDO_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "undos/"))
     "Directory where (automatically generated) undo (history) files are stored.")
   (unless (file-directory-p UNDO_DIR)
     (make-directory UNDO_DIR t))
   (setopt undo-tree-history-directory-alist `(("." . ,UNDO_DIR)))
-  (setopt undo-tree-auto-save-history t)
 
   (setopt undo-tree-mode-lighter " UT")
   (setopt undo-tree-incompatible-major-modes '(term-mode image-mode doc-view-mode pdf-view-mode))
-  (setopt undo-tree-enable-undo-in-region t)
-  (setopt undo-tree-visualizer-diff t)
+  (setopt undo-tree-auto-save-history t
+          undo-tree-enable-undo-in-region t
+          undo-tree-visualizer-diff t)
 
+  :config
+  ;; Keybindings
+  (keymap-set undo-tree-map "<remap> <undo-redo>" #'undo-tree-redo)
+
+  (keymap-unset undo-tree-visualizer-mode-map "C-f")
+  (keymap-unset undo-tree-visualizer-mode-map "C-b")
+  (keymap-set undo-tree-visualizer-mode-map "h" #'undo-tree-visualizer-scroll-left)
+  (keymap-set undo-tree-visualizer-mode-map "j" #'undo-tree-visualizer-scroll-down)
+  (keymap-set undo-tree-visualizer-mode-map "k" #'undo-tree-visualizer-scroll-up)
+  (keymap-set undo-tree-visualizer-mode-map "l" #'undo-tree-visualizer-scroll-right)
+
+  (keymap-unset undo-tree-visualizer-selection-mode-map "C-f")
+  (keymap-unset undo-tree-visualizer-selection-mode-map "C-b")
+  (keymap-set undo-tree-visualizer-selection-mode-map "C-v" #'undo-tree-visualizer-set)
+
+  ;; Activation
   (global-undo-tree-mode 1))
 
 (use-package marginalia
   :ensure t
-  :demand t
-  :bind (:map minibuffer-local-map
-              ("C-r" . marginalia-cycle))
-  :config
+
+  :hook minibuffer-setup
+
+  :init
+  ;; Setup and settings
   (setopt marginalia-field-width 100)
-  (marginalia-mode 1))
+
+  :config
+  ;; Keybindings
+  (keymap-set minibuffer-mode-map "C-r" #'marginalia-cycle)
+  (keymap-set minibuffer-local-map "C-r" #'marginalia-cycle))
 
 (use-package jinx
   :ensure t
-  :hook ((text-mode . jinx-mode)
-         (prog-mode . jinx-mode)
-         (conf-mode . jinx-mode))
+
   :bind (("M-$" . jinx-correct)
-         ("C-M-$" . jinx-languages)
-         :map jinx-overlay-map
-         ("C-n" . jinx-next)
-         ("C-p" . jinx-previous)
-         :map jinx-repeat-map
-         ("C-n" . jinx-next)
-         ("C-p" . jinx-previous)
-         :map jinx-correct-map
-         ("C-n" . jinx-next)
-         ("C-p" . jinx-previous))
-  :config
+         ("C-M-$" . jinx-languages))
+  :hook (text-mode prog-mode conf-mode)
+
+  :init
+  ;; Setup and settings
   (setopt jinx-languages "en_US")
   (setopt jinx-include-faces '((prog-mode font-lock-comment-face
                                           font-lock-doc-face)
                                (conf-mode font-lock-comment-face
                                           font-lock-doc-face)
                                (yaml-mode . conf-mode)
-                               (yaml-ts-mode . conf-mode))))
+                               (yaml-ts-mode . conf-mode)))
 
+  :config
+    ;; Keybindings
+  (keymap-set jinx-overlay-map "C-p" #'jinx-previous)
+  (keymap-set jinx-overlay-map "C-n" #'jinx-next)
+  (keymap-set jinx-repeat-map "C-p" #'jinx-previous)
+  (keymap-set jinx-repeat-map "C-n" #'jinx-next)
+  (keymap-set jinx-correct-map "C-p" #'jinx-previous)
+  (keymap-set jinx-correct-map "C-n" #'jinx-next))
 
 ;;; Completion
 (use-package orderless
   :ensure t
-  :demand t
-  :config
-  (setopt orderless-matching-styles (list #'orderless-literal #'orderless-flex #'orderless-regexp)
-          orderless-smart-case t
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt orderless-smart-case t
           orderless-expand-substring 'prefix)
   (setopt completion-styles '(orderless basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles basic partial-completion))))
+
+  :config
+  ;; Setup and settings (after load)
+  (setopt orderless-matching-styles (list #'orderless-literal #'orderless-flex #'orderless-regexp))
+
+  ;; Custom functionality
   (orderless-define-completion-style orderless-flex-only
     (orderless-style-dispatchers nil)
     (orderless-matching-styles '(orderless-flex)))
@@ -652,104 +714,160 @@
     (orderless-style-dispatchers nil)
     (orderless-matching-styles '(orderless-literal))))
 
+
 (use-package vertico
   :ensure t
-  :demand t
-  :bind (:map vertico-map
-              ("C-o" . vertico-insert)
-              ("C-v" . vertico-exit)
-              ("C-M-v" . vertico-exit-input)
-              ("TAB" . minibuffer-complete)
-              ("<tab>" . minibuffer-complete)
-              ("C-?" . minibuffer-completion-help)
-              ("C-p" . previous-history-element)
-              ("C-n" . next-history-element)
-              ("C-<up>" . previous-history-element)
-              ("C-<down>" . next-history-element)
-              ("<prior>" . vertico-previous-group)
-              ("<next>" . vertico-next-group)
-              ("<home>" . vertico-first)
-              ("<end>" . vertico-last))
-  :config
+
+  :init
+  ;; Setup and settings (before load)
   (setopt vertico-count 15
           vertico-preselect 'first
           vertico-scroll-margin 2
           vertico-cycle nil)
+
+  :config
+  ;; Keybindings
+  (keymap-set vertico-map "C-o" #'vertico-insert)
+  (keymap-set vertico-map "C-v" #'vertico-exit)
+  (keymap-set vertico-map "C-M-v" #'vertico-exit-input)
+  (keymap-set vertico-map "TAB" #'minibuffer-complete)
+  (keymap-set vertico-map "<tab>" "TAB")
+  (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
+  (keymap-set vertico-map "C-p" #'previous-history-element)
+  (keymap-set vertico-map "C-n" #'next-history-element)
+  (keymap-set vertico-map "C-<up>" #'vertico-previous-group)
+  (keymap-set vertico-map "C-<down>" #'vertico-next-group)
+  (keymap-set vertico-map "C-<home>" #'vertico-first)
+  (keymap-set vertico-map "C-<end>" #'vertico-last)
+
+  ;; Activation
   (vertico-mode 1))
 
 (use-package vertico-directory
+  :ensure nil ; Provided by vertico
+
   :after vertico
-  :ensure nil ; included with vertico
-  :bind (:map vertico-map
-              ("C-d" . vertico-directory-enter)
-              ("<backspace>" . vertico-directory-delete-char)
-              ("M-<backspace>" . vertico-directory-delete-word))
-  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+  :config
+  ;; Keybindings
+  (keymap-set vertico-map "C-d" #'vertico-directory-enter)
+  (keymap-set vertico-map "<backspace>" #'vertico-directory-delete-char)
+  (keymap-set vertico-map "M-<backspace>" #'vertico-directory-delete-word)
+
+  ;; Hooks
+  (add-hook 'rfn-eshadow-update-overlay #'vertico-directory-tidy))
 
 (use-package vertico-mouse
+  :ensure nil ; Provided by vertico
+
   :after vertico
-  :ensure nil ; included with vertico
+
+  :hook vertico-mode
+
   :config
+  ;; Keybindings
   (keymap-set vertico-mouse-map "<mouse-1>" (vertico-mouse--click "C-v"))
-  (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-o"))
-  (vertico-mouse-mode 1))
+  (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-o")))
+
+(use-package vertico-quick
+  :ensure nil ; Provided by vertico
+
+  :after vertico
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt vertico-quick1 "asdfjkl")
+  (setopt vertico-quick2 "gerhui")
+
+  :config
+  ;; Keybindings
+  (keymap-set vertico-map "C-y" #'vertico-quick-exit)
+  (keymap-set vertico-map "C-S-y" #'vertico-quick-insert)
+  (keymap-set vertico-map "C-S-j" #'vertico-quick-jump))
 
 (use-package corfu
   :ensure t
-  :demand t
-  :bind (:map corfu-map
-              ;; Always
-              ("C-o" . corfu-complete)
-              ("TAB" . corfu-complete)
-              ("<tab>" . corfu-complete)
-              ("C-v" . corfu-send)
-              ("S-SPC" . corfu-insert-separator)
-              ;; Auto mode
-              ("<remap> <beginning-of-buffer>" . nil)
-              ("<remap> <end-of-buffer>" . nil)
-              ("<remap> <previous-line>" . nil)
-              ("<remap> <next-line>" . nil)
-              ("<remap> <move-beginning-of-line>" . nil)
-              ("<remap> <move-end-of-line>" . nil)
-              ("RET" . nil)
-              ("<up>" . nil)
-              ("<down>" . nil)
-              ("C-p" . corfu-previous)
-              ("C-n" . corfu-next)
-              ("C-<prior>" . corfu-scroll-up)
-              ("C-<next>" . corfu-scroll-down)
-              ("C-<home>" . corfu-first)
-              ("C-<end>" . corfu-last))
-  :config
+
+  :init
+  ;; Setup and settings (before load)
   (setopt corfu-count 10
           corfu-scroll-margin 2
           corfu-min-width 15
           corfu-max-width 80
           corfu-cycle nil
-          corfu-on-exact-match 'insert
           corfu-quit-at-boundary 'separator
           corfu-quit-no-match 'separator
           corfu-left-margin-width 0.5
           corfu-right-margin-width 0.5
           corfu-bar-width 0.25
-          corfu-auto-prefix 3
+          corfu-auto-prefix 2
           corfu-auto-delay 0.25
           ;; Auto mode
+          corfu-on-exact-match nil
           corfu-preselect 'valid
           corfu-auto t)
   (setopt text-mode-ispell-word-completion nil)
+
+  :config
+  ;; Keybindings
+  ;;; All modes
+  (keymap-set corfu-map "C-o" #'corfu-complete)
+  (keymap-set corfu-map "TAB" #'corfu-complete)
+  (keymap-set corfu-map "<tab>" "TAB")
+  (keymap-set corfu-map "C-v" #'corfu-send)
+  (keymap-set corfu-map "S-SPC" #'corfu-insert-separator)
+  ;;; Auto mode
+  (keymap-unset corfu-map "<remap> <beginning-of-buffer>")
+  (keymap-unset corfu-map "<remap> <end-of-buffer>")
+  (keymap-unset corfu-map "<remap> <previous-line>")
+  (keymap-unset corfu-map "<remap> <next-line>")
+  (keymap-unset corfu-map "<remap> <move-beginning-of-line>")
+  (keymap-unset corfu-map "<remap> <move-end-of-line>")
+  (keymap-unset corfu-map "RET")
+  (keymap-unset corfu-map "<up>")
+  (keymap-unset corfu-map "<down>")
+  (keymap-set corfu-map "C-p" #'corfu-previous)
+  (keymap-set corfu-map "C-n" #'corfu-next)
+  (keymap-set corfu-map "C-<prior>" #'corfu-scroll-up)
+  (keymap-set corfu-map "C-<next>" #'corfu-scroll-down)
+  (keymap-set corfu-map "C-<home>" #'corfu-first)
+  (keymap-set corfu-map "C-<end>" #'corfu-last)
+
+  ;; Activation
   (global-corfu-mode 1))
+
+(use-package corfu-quick
+  :ensure nil ; Provided by Corfu
+
+  :after corfu
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt corfu-quick1 "asdfjkl")
+  (setopt corfu-quick2 "gerhui")
+
+  :config
+  ;; Keybindings
+  (keymap-set corfu-map "C-y" #'corfu-quick-insert)
+  (keymap-set corfu-map "C-S-y" #'corfu-quick-complete)
+  (keymap-set corfu-map "C-S-j" #'corfu-quick-jump))
+
 
 (use-package cape
   :ensure t
-  :demand t
-  :bind ("C-c e" . cape-prefix-map)
-  :config
+
+  :init
+  ;; Setup and settings (before load)
   (setopt cape-dict-limit 50
           cape-dabbrev-check-other-buffers #'cape--buffers-major-mode
           cape-file-prefix '("file:" "f:")
           cape-file-directory-must-exist t)
 
+  :config
+  ;; Keybindings
+  (keymap-global-set "C-c c"  #'cape-prefix-map)
+
+  ;; Custom functionality
   (defalias 'cape-abbrev-prefix-2 (cape-capf-prefix-length #'cape-abbrev 2))
   (defalias 'cape-dabbrev-prefix-2 (cape-capf-prefix-length #'cape-dabbrev 2))
   (defalias 'cape-line-prefix-3 (cape-capf-prefix-length #'cape-line 3))
@@ -778,11 +896,9 @@
                 (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-history-prefix-2 #'cape-file-prefix-2
                                        #'cape-dabbrev-prefix-2))))
-
-  ;; Global
+  ;; Hooks
   (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev-prefix-2 #'cape-dabbrev-prefix-2))
 
-  ;; Local
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
   (add-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
@@ -790,106 +906,136 @@
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
   (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
 
-(use-package cape-keyword
-  :after cape
-  :ensure nil ; provided by cape
-  :config
-  (add-to-list 'cape-keyword-list (cons 'easycrypt-mode cst-easycrypt-keywords)))
-
 (use-package tempel
   :ensure t
-  :demand t
-  :bind (:map tempel-map
-              ("<remap> <beginning-of-buffer>" . nil)
-              ("<remap> <end-of-buffer>" . nil)
-              ("<remap> <backward-paragraph>" . nil)
-              ("<remap> <forward-paragraph>" . nil)
-              ("C-<backtab>" . tempel-previous)
-              ("C-<tab>" . tempel-next)
-              ("<prior>" . tempel-previous)
-              ("<next>" . tempel-next)
-              ("<home>" . tempel-beginning)
-              ("<end>" . tempel-end)
-              ("M-k" . tempel-kill)
-              ("C-v" . tempel-done)
-              ("C-q" . tempel-abort))
-  :config
+
+  :preface
+  ;; Keymaps
   (defvar-keymap a-tempel-map
     :doc "Keymap for tempel (outside templates)"
-    :prefix 'a-tempel-map-prefix
-    "c" #'tempel-complete
-    "e" #'tempel-expand
-    "i" #'tempel-insert)
+    :prefix 'a-tempel-map-prefix)
   (keymap-global-set "C-c t" 'a-tempel-map-prefix)
-  ;; Create and store templates directory
+
+  :bind (("M-o" . tempel-complete)
+         ("M-v" . tempel-expand)
+         (:map a-tempel-map
+               ("c" . tempel-complete)
+               ("e" . tempel-expand)
+               ("i" . tempel-insert)))
+
+  :init
+  ;; Setup and settings (before load)
+  ;;; Create and store templates directory
   (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/"))
     "Directory where tempel templates are stored.")
   (unless (file-directory-p TEMPEL_DIR)
     (make-directory TEMPEL_DIR t))
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
+
+  (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
+
+  :config
+  ;; Keybindings
+  (tempel-key "f" fixme a-tempel-map)
+  (tempel-key "t" todo a-tempel-map)
+
+  (keymap-unset tempel-map "<remap> <beginning-of-buffer>")
+  (keymap-unset tempel-map "<remap> <end-of-buffer>")
+  (keymap-unset tempel-map "<remap> <backward-paragraph>")
+  (keymap-unset tempel-map "<remap> <forward-paragraph>")
+  (keymap-set tempel-map "C-<backspace>" #'tempel-previous)
+  (keymap-set tempel-map "C-SPC" #'tempel-next)
+  (keymap-set tempel-map "<prior>" #'tempel-previous)
+  (keymap-set tempel-map "<next>" #'tempel-next)
+  (keymap-set tempel-map "<home>" #'tempel-beginning)
+  (keymap-set tempel-map "<end>" #'tempel-end)
+  (keymap-set tempel-map "M-k" #'tempel-kill)
+  (keymap-set tempel-map "C-v" #'tempel-done)
+  (keymap-set tempel-map "C-q" #'tempel-abort)
+
+  (defun a-tempel-placeholder-form-as-lit (elt)
+    "Define slight adjustment of regular placeholder element
+so that a prompt form evaluating to a string is inserted as
+default value in the same way as a literal string prompt."
+    (pcase elt
+      (`(pfl ,prompt . ,rest)
+       (let ((evprompt (eval prompt)))
+         (if (stringp evprompt)
+             `(p ,evprompt ,@rest)
+           `('p ,prompt ,@rest))))))
+  (add-to-list 'tempel-user-elements #'a-tempel-placeholder-form-as-lit)
+
+  (defun a-tempel-include (elt)
+    "Define `include' element (taken and slightly adjusted from TempEL github repo)
+that allows to include other templates by their name."
+    (when (eq (car-safe elt) 'i)
+      (when-let (template (alist-get (cadr elt) (tempel--templates)))
+        (cons 'l template))))
+  (add-to-list 'tempel-user-elements #'a-tempel-include)
+
+  ;; Activation
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
 (use-package crux
   :ensure t
-  :demand t
   :pin melpa
-  :bind (("<remap> <kill-line>" . crux-smart-kill-line)
-         ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
-         ("M-a" . crux-kill-line-backwards)
-         ("M-d" . crux-duplicate-current-line-or-region)
-         :map a-kill-map
-         ("B" . crux-kill-other-buffers)
-         :map a-buffer-map
-         ("c" . crux-create-scratch-buffer)
-         ("d" . crux-kill-buffer-truename)
-         ("K" . crux-kill-other-buffers)
-         ("p" . crux-switch-to-previous-buffer)
-         :map a-window-map
-         ("e" . crux-transpose-windows))
-  :config
+
+  :preface
+  ;; Keymaps
   (defvar-keymap a-crux-map
     :doc "Keymap for crux actions"
-    :prefix 'a-crux-map-prefix
-    "RET" #'crux-smart-open-line
-    "<return>" #'crux-smart-open-line
-    "S-RET" #'crux-smart-open-line-above
-    "S-<return>" #'crux-smart-open-line-above
-    "c" #'crux-copy-file-preserve-attributes
-    "C" #'crux-cleanup-buffer-or-region
-    "d" #'crux-duplicate-current-line-or-region
-    "D" #'crux-duplicate-and-comment-current-line-or-region
-    "e" #'crux-eval-and-replace
-    "f f" #'crux-recentf-find-file
-    "f d" #'crux-recentf-find-directory
-    "f i" #'crux-find-user-init-file
-    "f c" #'crux-find-user-custom-file
-    "f s" #'crux-find-shell-init-file
-    "f l" #'crux-find-current-directory-dir-locals-file
-    "F" #'crux-recentf-find-file
-    "i" #'crux-indent-rigidly-and-copy-to-clipboard
-    "j" #'crux-top-join-line
-    "J" #'crux-kill-and-join-forward
-    "k" #'crux-delete-file-and-buffer
-    "l" #'crux-kill-whole-line
-    "r" #'crux-rename-file-and-buffer
-    "s" #'crux-sudo-edit
-    "u" #'crux-view-url
-    "x" #'crux-visit-term-buffer
-    "X" #'crux-visit-shell-buffer
-    "C-u" #'crux-upcase-region
-    "C-l" #'crux-downcase-region
-    "C-c" #'crux-captialize-region)
-  (keymap-global-set "C-c x" 'a-crux-map-prefix))
+    :prefix 'a-crux-map-prefix)
+  (keymap-global-set "C-c x" 'a-crux-map-prefix)
+
+  :bind (("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
+         ("M-d" . crux-duplicate-current-line-or-region)
+         (:map a-crux-map
+               ("RET" . crux-smart-open-line)
+               ("<return>" . "RET")
+               ("S-<return>" . crux-smart-open-line-above)
+               ("c" . crux-copy-file-preserve-attributes)
+               ("C" . crux-cleanup-buffer-or-region)
+               ("d" . crux-duplicate-current-line-or-region)
+               ("D" . crux-duplicate-and-comment-current-line-or-region)
+               ("e" . crux-eval-and-replace)
+               ("f f" . crux-recentf-find-file)
+               ("f d" . crux-recentf-find-directory)
+               ("f i" . crux-find-user-init-file)
+               ("f c" . crux-find-user-custom-file)
+               ("f s" . crux-find-shell-init-file)
+               ("f l" . crux-find-current-directory-dir-locals-file)
+               ("F" . crux-recentf-find-file)
+               ("i" . crux-indent-rigidly-and-copy-to-clipboard)
+               ("j" . crux-top-join-line)
+               ("J" . crux-kill-and-join-forward)
+               ("k" . crux-delete-file-and-buffer)
+               ("l" . crux-kill-whole-line)
+               ("r" . crux-rename-file-and-buffer)
+               ("s" . crux-sudo-edit)
+               ("u" . crux-view-url)
+               ("x" . crux-visit-term-buffer)
+               ("X" . crux-visit-shell-buffer)
+               ("C-u" . crux-upcase-region)
+               ("C-l" . crux-downcase-region)
+               ("C-c" . crux-captialize-region))
+         (:map a-kill-map
+               ("B" . crux-kill-other-buffers))
+         (:map a-buffer-map
+               ("c" . crux-create-scratch-buffer)
+               ("d" . crux-kill-buffer-truename)
+               ("K" . crux-kill-other-buffers)
+               ("p" . crux-switch-to-previous-buffer))
+         (:map a-window-map
+               ("z" . crux-transpose-windows))))
 
 (use-package ace-window
   :ensure t
-  :bind (("C-w" . ace-window)
-         ("C-S-w" . other-window)
-         :map a-goto-map
-         ("w" . ace-window)
-         ("W" . other-window))
-  :config
+
+  :bind ("C-w" . ace-window)
+
+  :init
+  ;; Setup and settings (before load)
   (setopt aw-keys '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
   (setopt aw-scope 'visible
           aw-minibuffer-flag nil
@@ -910,36 +1056,47 @@
                   (?h aw-split-window-horz "Split window horizontally")
                   (?v aw-split-window-vert "Split window vertically")
                   (?t aw-transpose-frame "Transpose frames")
-                  (?? aw-show-dispatch-help))))
+                  (?? aw-show-dispatch-help)))
+
+  :config
+  ;; Keybindings
+  (keymap-global-set "C-S-w" #'other-window)
+
+  (keymap-set a-goto-map "w" #'ace-window)
+  (keymap-set a-goto-map "W" #'other-window))
 
 (use-package avy
   :ensure t
   :pin melpa
-  :bind (("C-j" . avy-goto-char)
-         :map isearch-mode-map
-         ("C-j" . nil)
-         ("C-S-j" . #'avy-isearch)
-         :map minibuffer-mode-map
-         ("C-j" . nil))
-  :config
+
+  :preface
   (defvar-keymap an-avy-map
     :doc "Keymap for avy"
-    :prefix 'an-avy-map-prefix
-    "c" #'avy-goto-char
-    "C" #'avy-goto-char-2
-    "w" #'avy-goto-word-1
-    "W" #'avy-goto-word-0
-    "s" #'avy-goto-subword-1
-    "S" #'avy-goto-subword-0
-    "l" #'avy-goto-line
-    "C-l" #'avy-kill-ring-save-whole-line
-    "C-t" #'avy-kill-ring-save-region
-    "M-l" #'avy-kill-whole-line
-    "M-t" #'avy-kill-region)
-  (keymap-global-set "C-c a" 'an-avy-map-prefix)
+    :prefix 'an-avy-map-prefix)
+  (keymap-global-set "C-c j" 'an-avy-map-prefix)
+
+  :bind ((:map an-avy-map
+               ("c" . avy-goto-char)
+               ("C" . avy-goto-char-2)
+               ("t" . avy-goto-char-timer)
+               ("w" . avy-goto-word-1)
+               ("W" . avy-goto-word-0)
+               ("s" . avy-goto-subword-1)
+               ("S" . avy-goto-subword-0)
+               ("l" . avy-goto-line)
+               ("C-l" . avy-kill-ring-save-whole-line)
+               ("C-t" . avy-kill-ring-save-region)
+               ("M-l" . avy-kill-whole-line)
+               ("M-t" . avy-kill-region))
+         (:map isearch-mode-map
+               ("C-S-j" . avy-isearch)))
+  :bind* ("C-j" . avy-goto-char)
+
+  :init
+  ;; Setup and settings (before load)
   (setopt avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?e ?r ?u ?i)
           avy-style 'at-full
-          avy-all-windows t
+          avy-all-windows 'all-frames
           avy-case-fold-search t
           avy-single-candidate-jump nil)
   (setq-default avy-dispatch-alist '((?q . avy-action-kill-move)
@@ -953,58 +1110,64 @@
 
 (use-package consult
   :ensure t
-  :demand t
-  :bind (("C-l" . consult-line)
-         ("C-;" . consult-goto-line)
-         :map a-buffer-map
-         ("g" . consult-buffer)
-         ("G" . consult-buffer-other-window)
-         ("M-g" . consult-buffer-other-frame)
-         :map a-goto-map
-         ("b" . consult-buffer)
-         ("B" . consult-buffer-other-window)
-         ("C-b" . consult-buffer-other-frame)
-         ("e" . consult-compile-error)
-         ("d" . consult-flymake)
-         ("l" . consult-goto-line)
-         ("o" . consult-outline)
-         ("m" . consult-mark)
-         ("M" . consult-global-mark)
-         ("i" . consult-imenu)
-         ("I" . consult-imenu-multi)
-         :map a-search-map
-         ("f" . find-file)
-         ("F" . find-file-other-window)
-         ("C-f" . consult-fd)
-         ("M-f" . consult-find)
-         ("r" . consult-recent-file)
-         ("c" . consult-locate)
-         ("g" . consult-ripgrep)
-         ("G" . consult-git-grep)
-         ("M-g" . consult-grep)
-         ("l" . consult-line)
-         ("L" . consult-line-multi)
-         ("k" . consult-keep-lines)
-         ("u" . consult-focus-lines)
-         ("h" . consult-isearch-history)
-         :map isearch-mode-map
-         ("M-s h" . consult-isearch-history)
-         ("M-s l" . consult-line)
-         ("M-s L" . consult-line-multi)
-         :map minibuffer-local-map
-         ("M-s" . consult-history)
-         ("M-r" . consult-history))
-  :config
+
+  :preface
   (defvar-keymap a-consult-map
     :doc "Keymap for consult (misc)"
-    :prefix 'a-consult-map-prefix
-    "x" #'consult-mode-command
-    "h" #'consult-history
-    "k" #'consult-kmacro
-    "m" #'consult-man
-    "i" #'consult-info
-    ":" #'consult-complex-command)
-  (keymap-global-set "C-c c" 'a-consult-map-prefix)
+    :prefix 'a-consult-map-prefix)
+  (keymap-global-set "C-c a" 'a-consult-map-prefix)
+
+  :bind (("C-l" . consult-line)
+         ("C-;" . consult-goto-line)
+         ("C-M-y" . consult-yank-pop)
+         (:map a-consult-map
+               ("x" . consult-mode-command)
+               ("h" . consult-history)
+               ("k" . consult-kmacro)
+               ("m" . consult-man)
+               ("i" . consult-info)
+               (":" . consult-complex-command))
+         (:map a-buffer-map
+               ("g" . consult-buffer)
+               ("G" . consult-buffer-other-window)
+               ("M-g" . consult-buffer-other-frame))
+         (:map a-goto-map
+               ("b" . consult-buffer)
+               ("B" . consult-buffer-other-window)
+               ("C-b" . consult-buffer-other-frame)
+               ("e" . consult-compile-error)
+               ("d" . consult-flymake)
+               ("l" . consult-goto-line)
+               ("o" . consult-outline)
+               ("m" . consult-mark)
+               ("M" . consult-global-mark)
+               ("i" . consult-imenu)
+               ("I" . consult-imenu-multi))
+         (:map a-search-map
+               ("f" . find-file)
+               ("F" . find-file-other-window)
+               ("C-f" . consult-fd)
+               ("M-f" . consult-find)
+               ("r" . consult-recent-file)
+               ("c" . consult-locate)
+               ("g" . consult-ripgrep)
+               ("G" . consult-git-grep)
+               ("M-g" . consult-grep)
+               ("l" . consult-line)
+               ("L" . consult-line-multi)
+               ("k" . consult-keep-lines)
+               ("u" . consult-focus-lines)
+               ("h" . consult-isearch-history))
+         (:map isearch-mode-map
+               ("M-s h" . consult-isearch-history)
+               ("M-s l" . consult-line)
+               ("M-s L" . consult-line-multi))
+         (:map minibuffer-local-map
+               ("M-s" . consult-history)
+               ("M-r" . consult-history)))
+
+  :init
+  ;; Setup and settings (before load)
   (setopt consult-narrow-key "C-<"
           consult-widen-key "C->")
   (setopt consult-async-refresh-delay 0.1
@@ -1016,143 +1179,143 @@
 (use-package embark
   :ensure t
   :pin melpa
+
   :bind (("C-," . embark-act)
          ("C-." . embark-dwim)
-         ("C-h C-b" . embark-bindings)
-         :map embark-general-map
-         ("t" . embark-copy-as-kill)
-         ("C-o" . embark-select)
-         :map embark-file-map
-         ("F" . find-file-other-window)
-         ("C-f" . find-file-other-frame)
-         ("l" . find-file-literally)
-         :map embark-library-map
-         ("F" . find-library-other-window)
-         ("C-f" . find-library-other-frame)
-         :map embark-buffer-map
-         ("g" . switch-to-buffer)
-         ("G" . switch-to-buffer-other-window)
-         ("M-g" . switch-to-buffer-other-frame)
-         :map embark-identifier-map
-         ("f" . xref-find-definitions)
-         ("F" . xref-find-definitions-other-window)
-         ("C-f" . xref-find-definitions-other-frame)
-         :map embark-symbol-map
-         ("f" . embark-find-definition)
-         :map embark-package-map
-         ("f" . describe-package)
-         :map embark-become-file+buffer-map
-         ("F" . find-file-other-window)
-         ("B" . switch-to-buffer-other-window))
-  :config
-  (keymap-unset embark-general-map "SPC")
+         ("C-h C-b" . embark-bindings))
+
+  :init
+  ;; Setup and settings (before load)
   (setopt embark-confirm-act-all t)
-  (setq-default prefix-help-command #'embark-prefix-help-command))
+  (setq-default prefix-help-command #'embark-prefix-help-command)
+
+  :config
+  ;; Keybindings
+  (keymap-unset embark-general-map "SPC")
+
+  (keymap-set embark-general-map "t" #'embark-copy-as-kill)
+  (keymap-set embark-general-map "C-o" #'embark-select)
+
+  (keymap-set embark-file-map "F" #'find-file-other-window)
+  (keymap-set embark-file-map "C-f" #'find-file-other-frame)
+  (keymap-set embark-file-map "l" #'find-file-literally)
+
+  (keymap-set embark-library-map "F" #'find-library-other-window)
+  (keymap-set embark-library-map "C-f" #'find-library-other-window)
+
+  (keymap-set embark-buffer-map "g" #'switch-to-buffer)
+  (keymap-set embark-buffer-map "G" #'switch-to-buffer-other-window)
+  (keymap-set embark-buffer-map "M-g" #'switch-to-buffer-other-frame)
+
+  (keymap-set embark-identifier-map "f" #'xref-find-definitions)
+  (keymap-set embark-identifier-map "F" #'xref-find-definitions-other-window)
+  (keymap-set embark-identifier-map "C-f" #'xref-find-definitions-other-frame)
+
+  (keymap-set embark-symbol-map "f" #'embark-find-definition)
+
+  (keymap-set embark-package-map "f" #'describe-package)
+
+  (keymap-set embark-become-file+buffer-map "F" #'find-file-other-window)
+  (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window))
+
 
 (use-package embark-consult
   :ensure t
-  :after embark
-  :after consult)
+
+  :after (embark consult))
 
 ;;; Tools
 (use-package projectile
   :ensure t
-  :demand t
+
   :init
-  (setopt projectile-mode-line-prefix " Ptile"
-          projective-keymap-prefix "C-c p")
-  :bind (("C-c p" . projectile-command-map)
-         :map projectile-command-map
-         ("e" . projectile-run-project)
-         ("p" . projectile-switch-project)
-         ("P" . projectile-switch-open-project)
-         ("q" . projectile-compile-project)
-         ("r" . projectile-recentf)
-         ("R" . projectile-replace)
-         ("C-r" . projectile-regenerate-tags)
-         ("w f" . projectile-find-file-other-window)
-         ("w F" . projectile-find-other-file-other-window)
-         ("w d" . projectile-find-dir-other-window)
-         ("w D" . projectile-dired-other-window)
-         ("w g" . projectile-find-file-dwim-other-window)
-         ("w t" . projectile-find-implementation-or-test-other-window)
-         ("w b" . projectile-switch-to-buffer-other-window)
-         ("w B" . projectile-display-buffer)
-         ("^ f" . projectile-find-file-other-frame)
-         ("^ F" . projectile-find-other-file-other-frame)
-         ("^ d" . projectile-find-dir-other-frame)
-         ("^ D" . projectile-dired-other-frame)
-         ("^ g" . projectile-find-file-dwim-other-frame)
-         ("^ t" . projectile-find-implementation-or-test-other-frame)
-         ("^ b" . projectile-switch-to-buffer-other-frame)
-         ("s g" . projectile-ripgrep)
-         ("s G" . projectile-grep)
-         ("s s" . projectile-ag)
-         ("s r" . projectile-find-references)
-         ("x w" . projectile-run-vterm-other-window))
-  :config
+  ;; Setup and settings (before load)
   ;; Create and store projectile known projects file
   (defconst PTILE_FILE (file-name-concat EMACS_DATA_DIR "projectile-bookmarks.eld")
     "File where projectile's known projects are stored.")
   (setopt projectile-known-projects-file PTILE_FILE)
+  (setopt projectile-keymap-prefix (kbd "C-c p")
+          projectile-mode-line-prefix " Ptile")
+
+  (setopt tags-revert-without-query t)
   (setopt projectile-enable-caching t
           projectile-sort-order 'recently-active
           projectile-dirconfig-comment-prefix ?\#
           projectile-find-dir-includes-top-level t
-          projectile-enable-idle-timer t
+          projectile-enable-idle-timer nil
           projectile-current-project-on-switch 'move-to-end)
-  (setopt tags-revert-without-query t)
+
+  :config
+  ;; Keybindings
+  (keymap-set projectile-command-map "e" #'projectile-run-project)
+  (keymap-set projectile-command-map "p" #'projectile-switch-project)
+  (keymap-set projectile-command-map "P" #'projectile-switch-open-project)
+  (keymap-set projectile-command-map "q" #'projectile-compile-project)
+  (keymap-set projectile-command-map "r" #'projectile-recentf)
+  (keymap-set projectile-command-map "R" #'projectile-replace)
+  (keymap-set projectile-command-map "C-r" #'projectile-regenerate-tags)
+  (keymap-set projectile-command-map "w f" #'projectile-find-file-other-window)
+  (keymap-set projectile-command-map "w F" #'projectile-find-other-file-other-window)
+  (keymap-set projectile-command-map "w d" #'projectile-find-dir-other-window)
+  (keymap-set projectile-command-map "w D" #'projectile-dired-other-window)
+  (keymap-set projectile-command-map "w g" #'projectile-find-file-dwim-other-window)
+  (keymap-set projectile-command-map "w t" #'projectile-find-implementation-or-test-other-window)
+  (keymap-set projectile-command-map "w b" #'projectile-switch-to-buffer-other-window)
+  (keymap-set projectile-command-map "w B" #'projectile-display-buffer)
+  (keymap-set projectile-command-map "^ f" #'projectile-find-file-other-frame)
+  (keymap-set projectile-command-map "^ F" #'projectile-find-other-file-other-frame)
+  (keymap-set projectile-command-map "^ d" #'projectile-find-dir-other-frame)
+  (keymap-set projectile-command-map "^ D" #'projectile-dired-other-frame)
+  (keymap-set projectile-command-map "^ g" #'projectile-find-file-dwim-other-frame)
+  (keymap-set projectile-command-map "^ t" #'projectile-find-implementation-or-test-other-frame)
+  (keymap-set projectile-command-map "^ b" #'projectile-switch-to-buffer-other-frame)
+  (keymap-set projectile-command-map "s g" #'projectile-ripgrep)
+  (keymap-set projectile-command-map "s G" #'projectile-grep)
+  (keymap-set projectile-command-map "s s" #'projectile-ag)
+  (keymap-set projectile-command-map "s r" #'projectile-find-references)
+  (keymap-set projectile-command-map "x w" #'projectile-run-vterm-other-window)
+
+  ;; Activation
   (projectile-mode 1))
 
 (use-package diff-hl
   :ensure t
-  :demand t
   :pin melpa
-  :bind (:map diff-hl-command-map
-              ("g" . diff-hl-diff-goto-hunk)
-              ("r" . diff-hl-revert-hunk)
-              ("p" . diff-hl-previous-hunk)
-              ("n" . diff-hl-next-hunk)
-              ("o" . diff-hl-show-hunk)
-              ("C-p" . diff-hl-show-hunk-previous)
-              ("C-n" . diff-hl-show-hunk-next)
-              ("s" . diff-hl-stage-current-hunk)
-              ("S" . diff-hl-stage-dwim)
-              ("m" . diff-hl-stage-some)
-              ("u" . diff-hl-unstage-file))
-  :config
-  (setopt diff-hl-command-prefix (kbd "C-x v"))
-  (setopt diff-hl-global-modes '(not term-mode image-mode doc-view-mode pdf-view-mode))
-  (setopt diff-hl-update-async t)
 
+  :init
+  ;; Setup and settings (before load)
+  (setopt diff-hl-global-modes '(not term-mode image-mode doc-view-mode pdf-view-mode))
+  (setopt diff-hl-command-prefix (kbd "C-x v"))
+  (setopt diff-hl-update-async t)
   (setq-default diff-hl-lighter " DiffHL")
+
+  :config
+  ;; Keybindings
+  (keymap-set diff-hl-command-map "g" #'diff-hl-diff-goto-hunk)
+  (keymap-set diff-hl-command-map "r" #'diff-hl-revert-hunk)
+  (keymap-set diff-hl-command-map "p" #'diff-hl-previous-hunk)
+  (keymap-set diff-hl-command-map "n" #'diff-hl-next-hunk)
+  (keymap-set diff-hl-command-map "o" #'diff-hl-show-hunk)
+  (keymap-set diff-hl-command-map "C-p" #'diff-hl-show-hunk-previous)
+  (keymap-set diff-hl-command-map "C-n" #'diff-hl-show-hunk-next)
+  (keymap-set diff-hl-command-map "s" #'diff-hl-stage-current-hunk)
+  (keymap-set diff-hl-command-map "S" #'diff-hl-stage-dwim)
+  (keymap-set diff-hl-command-map "m" #'diff-hl-stage-some)
+  (keymap-set diff-hl-command-map "u" #'diff-hl-unstage-file)
+
+  ;; Activation
   (global-diff-hl-mode 1))
 
 (use-package magit
   :ensure t
-  :init
-  (setopt magit-define-global-key-bindings nil)
+
   :bind (("C-x m" . magit-status)
          ("C-c m" . magit-dispatch)
-         ("C-c f" . magit-file-dispatch)
-         :map magit-mode-map
-         ("C-v" . magit-visit-thing)
-         ("C-t" . magit-copy-section-value)
-         ("C-S-t" . magit-copy-buffer-revision)
-         ("C-c C-t" . magit-copy-thing)
-         ("C-w" . nil)
-         ("M-w" . nil)
-         ("C-c C-w" . nil)
-         :map magit-diff-section-map
-         ("C-v" . magit-diff-visit-worktree-file)
-         ("C-j" . nil)
-         :map magit-module-section-map
-         ("C-v" . magit-submodule-visit)
-         ("C-j" . nil)
-         :map with-editor-mode-map
-         ("C-c C-v" . with-editor-finish)
-         ("C-c C-q" . with-editor-cancel))
-  :config
+         ("C-c f" . magit-file-dispatch))
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt magit-define-global-key-bindings nil)
   (setopt magit-verbose-messages t)
   (setopt magit-auto-revert-mode t
           magit-auto-revert-immediately t
@@ -1163,16 +1326,38 @@
           auto-revert-buffer-list-filter 'magit-auto-revert-repository-buffer-p)
   (setopt magit-delete-by-moving-to-trash t)
   (setopt git-commit-major-mode #'log-edit-mode)
+
+  :config
+  ;; Setup and settings (after load)
   (add-to-list 'magit-no-confirm 'trash)
   (add-to-list 'magit-no-confirm 'safe-with-wip)
+
+  ;; Keybindings
+  (keymap-unset magit-mode-map "C-w" )
+  (keymap-unset magit-mode-map "M-w")
+  (keymap-unset magit-mode-map "C-c C-w")
+  (keymap-set magit-mode-map "C-v" #'magit-visit-thing)
+  (keymap-set magit-mode-map "C-t" #'magit-copy-section-value)
+  (keymap-set magit-mode-map "C-S-t" #'magit-copy-buffer-revision)
+  (keymap-set magit-mode-map "C-c C-t" #'magit-copy-thing)
+
+  (keymap-set magit-diff-section-map "C-v" #'magit-diff-visit-worktree-file)
+
+  (keymap-set magit-module-section-map "C-v" #'magit-submodule-visit)
+
+  (keymap-set with-editor-mode-map "C-c C-v" #'with-editor-finish)
+  (keymap-set with-editor-mode-map "C-c C-q" #'with-editor-cancel)
+
+  ;; Activation
   (magit-wip-mode 1))
 
 (use-package tex
   :ensure auctex
-  :hook
-  (Tex-language-en . (lambda () (jinx-languages "en_US")))
-  (Tex-language-nl . (lambda () (jinx-languages "nl")))
-  :config
+
+  :defer t
+
+  :init
+  ;; Setup and settings (before load)
   (setopt TeX-view-program-selection
           '(((output-dvi has-no-display-manager) "dvi2tty")
             ((output-dvi style-pstricks) "dvips and gv")
@@ -1188,71 +1373,79 @@
           TeX-save-query t
           TeX-auto-regexp-list 'TeX-auto-full-regexp-list
           TeX-auto-untabify t)
+
+  :config
+  ;; Hooks
+  (add-hook 'TeX-language-en-hook (lambda () (jinx-languages "en_US")))
+  (add-hook 'TeX-language-nl-hook (lambda () (jinx-languages "nl")))
+
   (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))
 
 (use-package pdf-tools
   :ensure t
+
+  :defer t
+
   :init
+  ;; Setup and settings (before load)
   (setopt pdf-tools-handle-upgrades nil)
-  (pdf-loader-install)
-  :hook
-  ((pdf-view-mode . pdf-view-themed-minor-mode)
-   (pdf-tools-enabled . (lambda ()
-                          (keymap-set pdf-annot-edit-contents-minor-mode-map
-                                      "C-c C-v"
-                                      #'pdf-annot-edit-contents-commit)))
-   (pdf-tools-enabled . (lambda ()
-                          (keymap-set pdf-sync-minor-mode-map "<double-mouse-1>" nil))))
-  :bind (:map pdf-view-mode-map
-              ("q" . kill-this-buffer)
-              ("<down>" . pdf-view-next-line-or-next-page)
-              ("<up>" . pdf-view-previous-line-or-previous-page)
-              ("n" . pdf-view-next-page-command)
-              ("p" . pdf-view-previous-page-command)
-              ("<next>" . pdf-view-next-page-command)
-              ("<prior>" . pdf-view-previous-page-command)
-              ("C-n" . pdf-view-scroll-down-or-next-page)
-              ("C-p" . pdf-view-scroll-up-or-previous-page)
-              ("SPC" . pdf-view-scroll-down-or-next-page)
-              ("DEL" . pdf-view-scroll-up-or-previous-page)
-              ("<backspace>" . pdf-view-scroll-up-or-previous-page)
-              ("<end>" . pdf-view-last-page)
-              ("<home>" . pdf-view-first-page)
-              ("C-l" . pdf-goto-label)
-              ("C-;" . pdf-goto-page)
-              ("z" . pdf-view-enlarge)
-              ("Z" . pdf-view-shrink)
-              ("0" . pdf-view-scale-reset)
-              ("r" . pdf-view-rotate)
-              ("R" . revert-buffer)
-              ("a w" . pdf-view-fit-width-to-window)
-              ("a h" . pdf-view-fit-height-to-window)
-              ("a p" . pdf-view-fit-page-to-window)
-              ("m" . pdf-view-position-to-register)
-              ("M" . pdf-view-jump-to-register)
-              ("v d" . pdf-view-dark-minor-mode)
-              ("v m" . pdf-view-midnight-minor-mode)
-              ("v t" . pdf-view-themed-minor-mode)
-              ("v p" . pdf-view-printer-minor-mode))
-  :config
   (setopt pdf-view-display-size 'fit-page)
   (setopt pdf-view-use-unicode-ligther nil)
-  (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode))
+
+  (pdf-loader-install)
+
+  :config
+  ;; Setup and settings (after load)
+  (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode)
+
+  ;; Keybindings
+  (keymap-set pdf-view-mode-map "q" #'kill-this-buffer)
+  (keymap-set pdf-view-mode-map "<down>" #'pdf-view-next-line-or-next-page)
+  (keymap-set pdf-view-mode-map "<up>" #'pdf-view-previous-line-or-previous-page)
+  (keymap-set pdf-view-mode-map "n" #'pdf-view-next-page-command)
+  (keymap-set pdf-view-mode-map "p" #'pdf-view-previous-page-command)
+  (keymap-set pdf-view-mode-map "<next>" #'pdf-view-next-page-command)
+  (keymap-set pdf-view-mode-map "<prior>" #'pdf-view-previous-page-command)
+  (keymap-set pdf-view-mode-map "C-n" #'pdf-view-scroll-down-or-next-page)
+  (keymap-set pdf-view-mode-map "C-p" #'pdf-view-scroll-up-or-previous-page)
+  (keymap-set pdf-view-mode-map "SPC" #'pdf-view-scroll-down-or-next-page)
+  (keymap-set pdf-view-mode-map "DEL" #'pdf-view-scroll-up-or-previous-page)
+  (keymap-set pdf-view-mode-map "<backspace>" "DEL")
+  (keymap-set pdf-view-mode-map "<end>" #'pdf-view-last-page)
+  (keymap-set pdf-view-mode-map "<home>" #'pdf-view-first-page)
+  (keymap-set pdf-view-mode-map "C-l" #'pdf-goto-label)
+  (keymap-set pdf-view-mode-map "C-;" #'pdf-goto-page)
+  (keymap-set pdf-view-mode-map "z" #'pdf-view-enlarge)
+  (keymap-set pdf-view-mode-map "Z" #'pdf-view-shrink)
+  (keymap-set pdf-view-mode-map "0" #'pdf-view-scale-reset)
+  (keymap-set pdf-view-mode-map "r" #'pdf-view-rotate)
+  (keymap-set pdf-view-mode-map "R" #'revert-buffer)
+  (keymap-set pdf-view-mode-map "a w" #'pdf-view-fit-width-to-window)
+  (keymap-set pdf-view-mode-map "a h" #'pdf-view-fit-height-to-window)
+  (keymap-set pdf-view-mode-map "a p" #'pdf-view-fit-page-to-window)
+  (keymap-set pdf-view-mode-map "m" #'pdf-view-position-to-register)
+  (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
+  (keymap-set pdf-view-mode-map "v d" #'pdf-view-dark-minor-mode)
+  (keymap-set pdf-view-mode-map "v m" #'pdf-view-midnight-minor-mode)
+  (keymap-set pdf-view-mode-map "v t" #'pdf-view-themed-minor-mode)
+  (keymap-set pdf-view-mode-map "v p" #'pdf-view-printer-minor-mode)
+
+  ;; Hooks
+  (add-hook 'pdf-view-mode-hook #'pdf-view-themed-minor-mode)
+  (add-hook 'pdf-tools-enabled-hook #'(lambda ()
+                                        (keymap-set pdf-annot-edit-contents-minor-mode-map
+                                                    "C-c C-v"
+                                                    #'pdf-annot-edit-contents-commit)))
+  (add-hook 'pdf-tools-enabled-hook #'(lambda ()
+                                        (keymap-set pdf-sync-minor-mode-map "<double-mouse-1>" nil))))
 
 (use-package org
   :ensure t
+
+  :defer t
+
   :init
-  (setopt org-replace-disputed-keys t)
-  (setopt org-return-follows-link t)
-  :hook (org-mode . setup-a-mix-mode)
-  :bind (:map org-mode-map
-              ("C-j" . nil)
-              ("S-RET" . #'org-return-and-maybe-indent)
-              :map org-read-date-minibuffer-local-map
-              ("C-v" . nil)
-              ("C-<" . #'org-calendar-scroll-three-months-left)
-              ("C->" . #'org-calendar-scroll-three-months-right))
-  :config
+  ;; Setup and settings (before load)
   ;; Create and store templates directory
   (defconst ORG_DIR (file-name-as-directory
                      (if (getenv "XDG_DATA_HOME")
@@ -1261,25 +1454,80 @@
     "Directory used as default location for org files.")
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
-  (setopt org-default-notes-file (file-name-concat ORG_DIR ".notes"))
-  (setopt org-support-shift-select t))
 
-;;;; Note, proof-general itself might never actually be loaded
-;;;; because individual proof assistants only trigger their own mode
-;;;; and might only load proof.el or proof-site.el instead of proof-general.el
-;;;; As such, we simply put (almost) all necessary config in :init directly
-(use-package proof-general
+  (setopt org-default-notes-file (file-name-concat ORG_DIR ".notes"))
+
+  (setopt org-replace-disputed-keys t)
+  (setopt org-return-follows-link t)
+
+  :config
+  ;; Setup and settings (after load)
+  (setopt org-support-shift-select t)
+
+  ;; Keybindings
+  (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
+
+  (keymap-unset org-read-date-minibuffer-local-map "C-v")
+  (keymap-unset org-read-date-minibuffer-local-map "M-v")
+  (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
+  (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right)
+
+  ;; Hooks
+  (add-hook 'org-mode-hook #'loc-setup-mix-mode))
+
+(use-package markdown-mode
   :ensure t
-  :pin melpa
+
+  :defer t
+
+  :mode ("README\\.md\\'" . gfm-mode)
+
   :init
-  ;;;;; Options
-  ;;;;;; General
+  ;; Setup and settings (before load)
+  (setopt markdown-enable-math t
+          markdown-enable-html t
+          markdown-enable-highlighting-syntax t)
+  (setopt markdown-footnote-location 'immediately)
+  (setopt markdown-gfm-use-electric-backquote nil)
+  (setopt markdown-edit-code-block-default-mode 'prog-mode
+          markdown-fontify-code-blocks-natively t
+          markdown-fontify-code-block-default-mode 'python-mode)
+  (setopt markdown-fontify-whole-heading-line t
+          markdown-header-scaling t
+          markdown-header-scaling t)
+  (setopt markdown-special-ctrl-a/e t)
+
+  :config
+  ;; Keybindings
+  (keymap-set markdown-mode-command-map "t" #'markdown-kill-ring-save)
+  (keymap-set markdown-mode-command-map "z" #'markdown-table-transpose)
+
+  (keymap-set markdown-view-mode-map "<prior>" #'scroll-up-command)
+  (keymap-set markdown-view-mode-map "<next>" #'scroll-down-command)
+  (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
+  (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
+
+;;;; Note, proof.el (which is provided by the proof-general package) is what is
+;;;; actually loaded by the proof assistants, not proof-general.el.
+;;;; Hence, we use `use-package proof :ensure proof-general` to
+;;;; use deferred loading as usual
+(use-package proof
+  :ensure proof-general
+  :pin melpa
+
+  :defer t
+
+  :init
+  ;; Setup and settings (before load)
+  ;;; General
   (setopt proof-splash-enable nil
           proof-toolbar-enable nil)
-  (setopt proof-delete-empty-windows t
+  (setopt proof-delete-empty-windows nil
+          proof-shrink-windows-tofit nil
           proof-output-tooltips t)
-  (setopt proof-electric-terminator-enable t
+  (setopt proof-electric-terminator-enable nil
           proof-sticky-errors t
+          proof-disappearing-proofs t
           proof-prog-name-ask nil
           proof-minibuffer-messages t
           proof-next-command-insert-space nil
@@ -1288,12 +1536,43 @@
           proof-follow-mode 'locked
           proof-auto-action-when-deactivating-scripting 'retract)
   (setopt bufhist-ring-size 32)
-  ;;;;;; EasyCrypt
+  ;;; EasyCrypt
   (setopt easycrypt-script-indent nil
           easycrypt-one-command-per-line nil)
   (setopt easycrypt-prog-name "easycrypt")
-  ;;;;; Hooks
-  ;;;;;; General
+
+  :config
+  ;; Setup and settings (after load)
+  (defun setup-a-proof-response-mode ()
+    (toggle-truncate-lines -1)
+    (toggle-word-wrap 1))
+  (defun setup-a-proof-goals-mode ()
+    (toggle-truncate-lines -1)
+    (toggle-word-wrap -1))
+
+  ;; Keybindings
+  (defvar-keymap a-proof-mode-process-repeat-map
+    :doc "Keymap (repeatable) for processing proof commands"
+    :repeat (:hints ((proof-undo-last-successful-command . "p/u: Undo last succesful command")
+                     (proof-assert-next-command-interactive . "n: Assert next command")
+                     (proof-undo-and-delete-last-successful-command . "d: Undo and delete last successful command")))
+    "p" #'proof-undo-last-successful-command
+    "u" #'proof-undo-last-successful-command
+    "n" #'proof-assert-next-command-interactive
+    "d" #'proof-undo-and-delete-last-successful-command)
+  (defvar-keymap a-bufhist-repeat-map
+    :doc "Keymap (repeatable) for browsing and managing buffer history"
+    :repeat (:hints ((bufhist-prev . "p: Go to previous history element")
+                     (bufhist-next . "n: Go to next history element")
+                     (bufhist-first . "f: Go to first history element")
+                     (bufhist-last . "l: Go to last history element")
+                     (bufhist-delete . "d: Delete current history element")))
+    "p" #'bufhist-prev
+    "n" #'bufhist-next
+    "f" #'bufhist-first
+    "l" #'bufhist-last
+    "d" #'bufhist-delete)
+
   (defun setup-a-bufhist-map ()
     (keymap-set bufhist-mode-map "C-p" #'bufhist-prev)
     (keymap-set bufhist-mode-map "C-n" #'bufhist-next)
@@ -1304,6 +1583,8 @@
     (keymap-set bufhist-mode-map "M-c" #'bufhist-clear)
     (keymap-set bufhist-mode-map "M-d" #'bufhist-delete))
   (defun setup-a-proof-mode-map ()
+    (keymap-unset proof-mode-map "M-a")
+    (keymap-unset proof-mode-map "M-e")
     (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
     (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive)
     (keymap-set proof-mode-map "C-<prior>" #'proof-goto-command-start)
@@ -1323,11 +1604,9 @@
     (keymap-set proof-mode-map "M-n" #'pg-next-matching-input-from-input)
     (keymap-set proof-mode-map "C-M-p" #'pg-previous-input)
     (keymap-set proof-mode-map "C-M-n" #'pg-next-input)
-    (keymap-set proof-mode-map "C-c C-y p" #'pg-previous-matching-input-from-input)
-    (keymap-set proof-mode-map "C-c C-y n" #'pg-next-matching-input-from-input)
-    (keymap-set proof-mode-map "C-c C-y P" #'pg-previous-matching-input)
-    (keymap-set proof-mode-map "C-c C-y N" #'pg-next-matching-input))
-  (defun setup-a-proof-other-mode-map ()
+    (keymap-set proof-mode-map "C-M-S-p" #'pg-previous-matching-input)
+    (keymap-set proof-mode-map "C-M-S-n" #'pg-next-matching-input))
+  (defun setup-a-proof-response-mode-map ()
     (keymap-set proof-response-mode-map "C-q" #'bury-buffer)
     (keymap-set proof-response-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
     (keymap-set proof-response-mode-map "C-c C-e" #'proof-next-error)
@@ -1336,35 +1615,47 @@
     (keymap-set proof-response-mode-map "C-c C-k" #'pg-response-clear-displays)
     (keymap-set proof-response-mode-map "C-c C-x" #'proof-minibuffer-cmd)
     (keymap-set proof-response-mode-map "C-c C-q" #'proof-shell-exit))
+  (defun setup-a-proof-goals-mode-map ()
+    (keymap-set proof-goals-mode-map "C-q" #'bury-buffer)
+    (keymap-set proof-goals-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
+    (keymap-set proof-goals-mode-map "C-c C-e" #'proof-next-error)
+    (keymap-set proof-goals-mode-map "C-c C-w" #'proof-layout-windows)
+    (keymap-set proof-goals-mode-map "C-c C-o" #'proof-display-some-buffers)
+    (keymap-set proof-goals-mode-map "C-c C-k" #'pg-response-clear-displays)
+    (keymap-set proof-goals-mode-map "C-c C-x" #'proof-minibuffer-cmd)
+    (keymap-set proof-goals-mode-map "C-c C-q" #'proof-shell-exit))
+
+  ;; Hooks
   (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
-  (add-hook 'proof-response-mode-hook #'setup-a-proof-other-mode-map)
-  (add-hook 'proof-goals-mode-hook #'setup-a-proof-other-mode-map)
-  ;;(add-hook 'proof-mode-hook #'setup-a-proof-goal-mode-map)
   (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
-  ;;;;;; EasyCrypt
-  (defun setup-an-easycrypt-indentation ()
-    (setq-local electric-indent-mode nil)
-    (setq-local electric-indent-inhibit t)
-    (setq-local indent-line-function #'easycrypt-indent-line)
-    (keymap-local-set "RET" #'newline-and-indent)
-    (keymap-local-set "<return>" #'newline-and-indent)
-    (keymap-local-set "S-RET" #'newline)
-    (keymap-local-set "S-<return>" #'newline)
-    (keymap-local-set "TAB" #'a-basic-indent)
-    (keymap-local-set "<tab>" #'a-basic-indent)
-    (keymap-local-set "<backtab>" #'a-basic-deindent)
-    (keymap-local-set "M-<tab>" #'indent-for-tab-command)
-    (keymap-local-set "C-M-i" #'indent-for-tab-command)
-    (add-hook 'post-self-insert-hook #'indent-on-insertion-closer))
-  (add-hook 'easycrypt-mode-hook #'setup-an-easycrypt-indentation))
+
+  (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode)
+  (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode-map)
+
+  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode)
+  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode-map)
+
+  ;; Custom functionality
+  ;;; Remove bufhist buttons
+  (defun silence-bufhist-insert-buttons (orig-fun &rest args)
+    (setq-local bufhist-top-point (point-min)))
+
+  (advice-add 'bufhist-insert-buttons :around #'silence-bufhist-insert-buttons))
 
 ;;; Themes
-;;;; Doom-themes general
+;;;; Doom-themes (general)
 (use-package doom-themes
   :ensure t
-  :config
+
+  :defer t
+
+  :init
+  ;; Setup and settings (before load)
   (setopt doom-themes-enable-bold t
           doom-themes-enable-italic t)
+
+  :config
+  ;; Setup and settings (after load)
   (doom-themes-visual-bell-config)
 
   (doom-themes-set-faces nil
@@ -1372,16 +1663,22 @@
                       :inherit 'highlight)
     '(vertico-mouse :foreground 'unspecified :background 'unspecified
                     :inherit 'lazy-highlight)
+    '(vertico-quick1 :foreground 'unspecified :background 'unspecified
+                   :inherit 'avy-lead-face)
+    '(vertico-quick2 :foreground 'unspecified :background 'unspecified
+                   :inherit 'avy-lead-face-1)
     '(corfu-border :foreground 'unspecified :background 'unspecified
                    :inherit 'vertical-border)
     '(corfu-bar :foreground 'unspecified :background 'unspecified
                 :inherit 'scroll-bar)
-    '(corfu-current :foreground 'unspecified :background 'unspecified
-                    :inherit 'secondary-selection)
+    '(corfu-quick1 :foreground 'unspecified :background 'unspecified
+                   :inherit 'avy-lead-face)
+    '(corfu-quick2 :foreground 'unspecified :background 'unspecified
+                   :inherit 'avy-lead-face-1)
     '(tempel-default :foreground 'unspecified :background 'unspecified
-                     :inherit 'lazy-highlight :slant 'italic)
+                     :inherit 'secondary-selection :slant 'italic)
     '(tempel-field :foreground 'unspecified :background 'unspecified
-                   :inherit 'highlight)
+                   :inherit 'lazy-highlight)
     '(tempel-form :foreground 'unspecified :background 'unspecified
                   :inherit 'match)
     '(proof-mouse-highlight-face :inherit 'lazy-highlight)
@@ -1392,31 +1689,36 @@
 ;;;; Doom-themes specific
 ;;;;; Nord <3
 (use-package doom-nord-theme
-  :after doom-themes
-  :ensure nil ; provided by doom-themes
+  :ensure nil ; Provided by doom-themes
+
+  ;; :disabled t ; Don't use this theme
   :demand t ; Use this theme
-  :config
+
+  :init
+  ;; Setup and settings (before load)
   (setopt doom-nord-brighter-modeline t
           doom-nord-brighter-comments nil
           doom-nord-comment-bg nil
           doom-nord-padded-modeline nil
           doom-nord-region-highlight 'snowstorm)
 
+  :config
+  ;; Setup and settings (after load)
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(trailing-whitespace :background magenta)
     '(aw-background-face :inherit 'avy-background-face)
     '(aw-leading-char-face :inherit 'avy-lead-face)
     '(proof-queue-face :background magenta)
-    '(proof-locked-face :background base4)
+    '(proof-locked-face :background base3)
     '(proof-script-sticky-error-face :background red :underline yellow)
     '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
                                         :weight 'semi-bold :slant 'italic)
     '(proof-highlight-dependent-name-face :foreground magenta)
-    '(proof-highlight-dependency-name-face :foreground violet)
+    '(proof-highlight-dependency-name-face :foreground orange)
     '(proof-declaration-name-face :foreground cyan)
     '(proof-tacticals-name-face :foreground green)
-    '(proof-tactics-name-face :foreground teal)
+    '(proof-tactics-name-face :foreground violet)
     '(proof-error-face :foreground red :weight 'semi-bold)
     '(proof-warning-face :foreground yellow :weight 'semi-bold)
     '(proof-debug-message-face :foreground orange)
@@ -1425,42 +1727,148 @@
     '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
     '(easycrypt-tactics-closing-face :foreground yellow)
     '(easycrypt-tactics-dangerous-face :foreground red))
-  (enable-theme 'doom-nord))
+
+  ;; Hooks
+  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord))))
+
+(use-package doom-nord-light-theme
+  :ensure nil ; Provided by doom-themes
+
+  :disabled t ; Don't use this theme
+  ;; :demand t ; Use this theme
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt doom-nord-light-brighter-modeline t
+          doom-nord-light-brighter-comments nil
+          doom-nord-light-padded-modeline nil
+          doom-nord-light-comment-bg t
+          doom-nord-light-region-highlight 'frost)
+
+  :config
+  ;; Setup and settings (after load)
+  (load-theme 'doom-nord-light t)
+  (doom-themes-set-faces 'doom-nord-light
+    '(trailing-whitespace :background magenta)
+    '(aw-background-face :inherit 'avy-background-face)
+    '(aw-leading-char-face :inherit 'avy-lead-face)
+    '(proof-queue-face :background base6)
+    '(proof-locked-face :background base3)
+    '(proof-script-sticky-error-face :background red :underline yellow)
+    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                        :weight 'semi-bold :slant 'italic)
+    '(proof-highlight-dependent-name-face :foreground magenta)
+    '(proof-highlight-dependency-name-face :foreground orange)
+    '(proof-declaration-name-face :foreground cyan)
+    '(proof-tacticals-name-face :foreground green)
+    '(proof-tactics-name-face :foreground violet)
+    '(proof-error-face :foreground red :weight 'semi-bold)
+    '(proof-warning-face :foreground yellow :weight 'semi-bold)
+    '(proof-debug-message-face :foreground orange)
+    '(proof-boring-face :foreground base5)
+    '(proof-eager-annotation-face :inherit 'proof-warning-face :weight 'normal)
+    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
+    '(easycrypt-tactics-closing-face :foreground yellow)
+    '(easycrypt-tactics-dangerous-face :foreground red))
+
+  ;; Hooks
+  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord-light))))
+
+(use-package solaire-mode
+  :ensure t
+
+  :hook (after-init . solaire-global-mode))
+
+(use-package nerd-icons
+  :ensure t
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
+
+(use-package doom-modeline
+  :ensure t
+
+  :hook after-init
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt doom-modeline-height (+ (frame-char-height) 4)
+          doom-modeline-bar-width 4
+          doom-modeline-width-limit 100
+          doom-modeline-icon t
+          doom-modeline-major-mode-icon nil
+          doom-modeline-minor-modes t
+          doom-modeline-enable-word-count t
+          doom-modeline-buffer-encoding t
+          doom-modeline-default-coding-system 'utf-8
+          doom-modeline-total-line-number t
+          doom-modeline-time t
+          doom-modeline-vcs-max-length 20))
+
+;; Local/cross-package enhancements
+(use-package loc-avy
+  :ensure nil ; Provided locally
+
+  :after avy
+
+  :commands (avy-action-embark-act avy-action-embark-dwim)
+
+  :init
+  ;; Setup and settings (before load of this package, but after load of packages listed in `:after`)
+  (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
+  (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t))
 
 
-;; Cross-package enhancements
-;;; Custom functions/functionalities (with package dependencies)
-(require 'func-pkgs)
+;;; Corfu + Orderless
+(use-package corfu
+  :after orderless
 
-;;; Avy + Embark
-(add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
-(add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t)
+  :config
+  ;; Hooks
+  (add-hook 'corfu-mode-hook
+            (lambda ()
+              (setq-local completion-styles '(orderless-literal-only basic)))))
 
-;; Corfu + Orderless
-(add-hook 'corfu-mode-hook
+;;; Corfu + Vertico
+(use-package corfu
+  :after vertico
+
+  :init
+  ;; Setup and settings (before load of this package, but after load of packages listed in `:after`)
+  (setopt global-corfu-minibuffer
           (lambda ()
-            (setq-local completion-styles '(orderless-literal-only basic))))
+            (not (or (bound-and-true-p vertico--input)
+                     (eq (current-local-map) read-passwd-map))))))
 
-;; Corfu + Vertico
-(setopt global-corfu-minibuffer
-        (lambda ()
-          (not (or (bound-and-true-p vertico--input)
-                   (eq (current-local-map) read-passwd-map)))))
+;;; EasyCrypt (extension)
+(use-package easycrypt-ext
+  :ensure nil ; Provided locally
+
+  :after proof
+
+  :hook (easycrypt-mode . ece-setup)
+
+  :init
+  (setopt ece-enable-templates-info nil)
+  (setopt ece-enable-theme nil))
+
 
 ;; Hooks
 ;;; Frames/windows
 (when (daemonp)
-  (add-hook 'server-after-make-frame-hook #'setup-a-client-frame)
-  (add-hook 'after-make-frame-functions #'setup-a-frame))
+  (add-hook 'server-after-make-frame-hook #'loc-setup-client-frame)
+  (add-hook 'after-make-frame-functions #'loc-setup-frame))
 
-(add-hook 'minibuffer-setup-hook #'setup-a-mini-mix-mode)
+(add-hook 'minibuffer-setup-hook #'loc-setup-mini-mix-mode)
 
 ;;; Modes
-(add-hook 'text-mode-hook #'setup-a-text-mode)
+(add-hook 'text-mode-hook #'loc-setup-text-mode)
 
-(add-hook 'log-edit-mode-hook #'setup-a-mix-mode)
-(add-hook 'tex-mode-hook #'setup-a-mix-mode)
-(add-hook 'TeX-mode-hook #'setup-a-mix-mode)
-(add-hook 'conf-mode-hook #'setup-a-mix-mode)
+(add-hook 'tex-mode-hook #'loc-setup-mix-mode)
+(add-hook 'TeX-mode-hook #'loc-setup-mix-mode)
+(add-hook 'markdown-mode-hook #'loc-setup-mix-mode)
+(add-hook 'conf-mode-hook #'loc-setup-mix-mode)
+(add-hook 'log-edit-mode-hook #'loc-setup-mix-mode)
 
-(add-hook 'prog-mode-hook #'setup-a-code-mode)
+(add-hook 'prog-mode-hook #'loc-setup-code-mode)

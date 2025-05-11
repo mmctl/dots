@@ -27,6 +27,6 @@
           ;; Non-Lucid builds: (alpha-background . 0.9)))
           (alpha . 0.9)))
 
-; Garbage collection
+;; Garbage collection
 (setopt gc-cons-threshold 33554432
         gc-cons-percentage 0.15)
