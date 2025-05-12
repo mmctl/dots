@@ -91,23 +91,33 @@ again de-indent line |ARG| times (respecting tab stops)."
          (count (if neg (abs arg) arg)))
     ;; If region is active,...
     (if (use-region-p)
-        ;; Then, take stock of current region, point, and mark positions
-        ;; and compute new region positions
-        (let* ((orig-region-start (region-beginning))
-               (orig-region-stop (region-end))
-               (new-region-start (save-excursion (goto-char orig-region-start)
-                                                 (pos-bol)))
-               (new-region-stop (save-excursion (goto-char orig-region-stop)
-                                                (pos-eol)))
-               (region-forward (<= orig-region-start orig-region-stop)))
-          ;; Expand visual region to new region positions
-          (if region-forward
-              (progn (goto-char new-region-stop) (set-mark new-region-start))
-            (progn (goto-char new-region-start) (set-mark new-region-stop)))
-          ;; Indent visually expanded region
+        ;; Then, store start position of point and compute indentation region
+        (let ((pnt (point))
+              (curcol (current-column))
+              (curind (current-indentation))
+              (ind-region-start (save-excursion (goto-char (region-beginning))
+                                                (pos-bol)))
+              (ind-region-stop (save-excursion (goto-char (region-end))
+                                               (when (bolp) (forward-line -1))
+                                               (pos-eol))))
+          ;; If point is outside region to indent, move it to indentation
+          ;; closes line  inside this region
+          ;; If it is inside region to indent within margins of indentation,
+          ;; move to (end of) indentation
+          ;; (Otherwise, leave point as is)
+          (cond
+           ((< pnt ind-region-start)
+            (goto-char ind-region-start)
+            (back-to-indentation))
+           ((< ind-region-stop pnt)
+            (goto-char ind-region-stop)
+            (back-to-indentation))
+           ((< curcol curind)
+            (back-to-indentation)))
+          ;; Indent indentation region
           (if neg
-              (dotimes (_ count) (indent-rigidly-left-to-tab-stop new-region-start new-region-stop))
-            (dotimes (_ count) (indent-rigidly-right-to-tab-stop new-region-start new-region-stop)))
+              (dotimes (_ count) (indent-rigidly-left-to-tab-stop ind-region-start ind-region-stop))
+            (dotimes (_ count) (indent-rigidly-right-to-tab-stop ind-region-start ind-region-stop)))
           ;; Don't deactivate-mark, so we don't have to re-select region to repeat
           (setq-local deactivate-mark nil))
       ;; Else (no region is active), if prefix argument is negative...
@@ -339,7 +349,7 @@ or beginning of buffer if there is no such line."
       (indent-line-to indent-level))
     ;; Still adjust point if it's inside indentation
     (when (< (current-column) (current-indentation))
-      (move-to-column indent-level))))
+      (back-to-indentation))))
 
 
 ;;;###autoload
