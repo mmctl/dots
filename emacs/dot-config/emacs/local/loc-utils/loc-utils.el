@@ -1,39 +1,39 @@
 ;; -*- lexical-binding: t -*-
 ;; loc-utils.el
 
-;; Moving
-;; (defun move-word-forward ()
-;;   (interactive)
-;;   (let ((text (if (use-region-p)
-;;                   (delete-and-extract-region (region-beginning) (region-end))
-;;                 (let ((bnds (bounds-of-thing-at-point 'word)))
-;;                   (when bnds
-;;                     (delete-and-extract-region (car bnds) (cdr bnds))))))
-;;         (inhibit-modification-hooks t))
-;;     (when text
-;;       (forward-word 1)
-;;       (unless (looking-back "[[:space:]]")
-;;         (insert " "))
-;;       (insert text))))
+;; Exchanging
+(defun exchange-word (arg)
+  "Exchanges word at point or, if there is none,
+next word after point, with following (ARG > 0) or
+preceding (ARG < 0) word |ARG| times."
+  (interactive "p")
+  (unless (looking-at-p "\\>")
+    (forward-word 1))
+  (transpose-words arg))
+
+(defun exchange-word-backward (arg)
+  "Calls `exchange-word', which see, with ARG negated."
+  (interactive "p")
+  (exchange-word (- arg)))
 
 ;; Joining
 (defun join-line-stay ()
-  "Call `join-line', which see, but save excursion
-(i.e., keep point where it is)."
+  "Calls `join-line', which see, but keeps point
+in same relative position."
   (interactive)
   (save-excursion
     (join-line)))
 
 (defun join-line-forward ()
-  "Join current line to the following line and
+  "Joins current line to the following line and
 fix up whitespace at join. Simply calls `join-line'
 with a prefix argument internally, which see."
   (interactive)
   (join-line t))
 
 (defun join-line-forward-stay ()
-  "Call `join-line-forward', which see, but save excursion
-(i.e., keep point where it is)."
+  "Calls `join-line-forward', which see, but keeps point
+in same relative position."
   (interactive)
   (save-excursion
     (join-line-forward)))
@@ -41,7 +41,7 @@ with a prefix argument internally, which see."
 
 ;; Killing
 (defun backward-kill-line (&optional arg)
-  "Kill from point to beginning of line.
+  "Kills from point to beginning of line.
 If point is at beginning of line, then
 kill the preceding newline character and,
 if `show-trailing-whitespace' is nil,
@@ -61,7 +61,7 @@ corresponding negated numeric value."
 
 ;; Deleting
 (defun forward-delete-line (&optional arg)
-  "Delete from point to end of line.
+  "Deletes from point to end of line.
 If point is at end of line, then delete
 the succeeding newline character.
 If ARG is non-nil, delete from point to end
@@ -74,7 +74,7 @@ of ARG-th line after current line."
       (delete-region (point) (pos-eol)))))
 
 (defun backward-delete-line (&optional arg)
-  "Delete from point to beginning of line.
+  "Deletes from point to beginning of line.
 If point is at beginning of line, then
 delete the preceding newline character and,
 if `show-trailing-whitespace' is nil,
@@ -92,7 +92,7 @@ of ARG-th line before current line."
       (delete-region (pos-bol) (point)))))
 
 (defun delete-whole-line-or-region (arg)
-  "Delete whole line (i.e., including terminating newline)
+  "Deletes whole line (i.e., including terminating newline)
 or region (if active).
 If no region is active and ARG <= 0, then
 delete previous -ARG whole lines *before* current one.
@@ -107,22 +107,26 @@ nothing. In exchange, the behavior is a bit more intuitive."
 
 ;; Quitting
 (defun save-buffers-kill-terminal-silent ()
-  "Execute save-buffers-kill-terminal, automatically saving all buffers without asking."
+  "Executes `save-buffers-kill-terminal', which see,
+automatically saving all buffers without asking."
   (interactive)
   (save-buffers-kill-terminal t))
 
 (defun save-buffers-kill-emacs-silent ()
-  "Execute save-buffers-kill-emacs, automatically saving all buffers without asking."
+  "Executes `save-buffers-kill-emacs', which see,
+automatically saving all buffers without asking."
   (interactive)
   (save-buffers-kill-emacs t))
 
 (defun save-buffers-restart-emacs ()
-  "Execute save-buffers-kill-emacs, restarting Emacs afterward."
+  "Executes `save-buffers-kill-emacs', which see,
+restarting Emacs afterward."
   (interactive)
   (save-buffers-kill-emacs nil t))
 
 (defun save-buffers-restart-emacs-silent ()
-  "Execute save-buffers-restart-emacs, automatically saving all buffers without asking."
+  "Execute `save-buffers-restart-emacs', which see,
+automatically saving all buffers without asking."
   (interactive)
   (save-buffers-kill-emacs t t))
 

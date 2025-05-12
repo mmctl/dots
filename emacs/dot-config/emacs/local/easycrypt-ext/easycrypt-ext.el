@@ -72,9 +72,16 @@ Can be 'dark, 'light, or nil."
   (file-name-directory (or load-file-name buffer-file-name))
   "Directory where this file is stored (and so also where rest of package should be).")
 
-
 ;; Indentation
-;;; Basic rigid indentation
+(defun ece--insert-tabs-of-whitespace (n)
+  "Insert N literal tabs worth of whitespace, respecting `indent-tabs-mode'."
+  (if indent-tabs-mode
+      ;; Then, insert N actual tab characters
+      (insert (make-string n ?\t))
+    ;; Else, insert N * `tab-width' spaces
+    (insert (make-string (* n tab-width) ?\s))))
+
+;;; Basic indentation
 ;;;###autoload
 (defun ece-basic-indent (arg)
   "Indent (ARG > 0) resp. de-indent (ARG < 0) all lines touched by the
@@ -88,71 +95,73 @@ If ARG < 0 and there is no whitespace behind point in the middle of a line,
 again de-indent line |ARG| times (respecting tab stops)."
   (interactive "p")
   (let* ((neg (< arg 0))
-         (count (if neg (abs arg) arg)))
+         (count (if neg (abs arg) arg))
+         (orig-point (point))
+         (orig-col (current-column))
+         (orig-ind (current-indentation)))
     ;; If region is active,...
     (if (use-region-p)
         ;; Then, store start position of point and compute indentation region
-        (let ((pnt (point))
-              (curcol (current-column))
-              (curind (current-indentation))
-              (ind-region-start (save-excursion (goto-char (region-beginning))
+        (let ((ind-region-start (save-excursion (goto-char (region-beginning))
                                                 (pos-bol)))
               (ind-region-stop (save-excursion (goto-char (region-end))
                                                (when (bolp) (forward-line -1))
                                                (pos-eol))))
-          ;; If point is outside region to indent, move it to indentation
-          ;; closes line  inside this region
           ;; If it is inside region to indent within margins of indentation,
           ;; move to (end of) indentation
           ;; (Otherwise, leave point as is)
           (cond
-           ((< pnt ind-region-start)
+           ;; If point is before start of region to indent...
+           ((< orig-point ind-region-start)
+            ;; Then, move it to indentation on first line of region to indent
             (goto-char ind-region-start)
             (back-to-indentation))
-           ((< ind-region-stop pnt)
+           ;; Else, if point is after end of region to indent...
+           ((< ind-region-stop orig-point)
+            ;; Then, move it to indentation on last line of region to indent
             (goto-char ind-region-stop)
             (back-to-indentation))
-           ((< curcol curind)
+           ;; Else (point is inside region to indent), move it to indentation of current line
+           ((< orig-col orig-ind)
             (back-to-indentation)))
-          ;; Indent indentation region
+          ;; Indent indentation region appropriately
           (if neg
               (dotimes (_ count) (indent-rigidly-left-to-tab-stop ind-region-start ind-region-stop))
             (dotimes (_ count) (indent-rigidly-right-to-tab-stop ind-region-start ind-region-stop)))
           ;; Don't deactivate-mark, so we don't have to re-select region to repeat
           (setq-local deactivate-mark nil))
-      ;; Else (no region is active), if prefix argument is negative...
-      (if neg
-          ;; Then, if inside indentation...
-          (if (<= (current-column) (current-indentation))
-              ;; Then, de-indent current line (at most) -ARG times (and move to indentation)
-              (progn
-                (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol)))
-                (back-to-indentation))
-            ;; Else, take stock of whitespace behind point,...
-            (let* ((orig-point (point))
-                   (del-ub (min (* (abs arg) tab-width) (- orig-point (pos-bol))))
-                   (del (save-excursion
-                          (skip-chars-backward "[:space:]" (- orig-point del-ub))
-                          (- orig-point (point)))))
-              ;; If there is at least some whitespace...
-              (if (< 0 del)
-                  ;; Then, delete ARG * tab-width of white-space
-                  ;; (at most until first non-whitespace character)
-                  (delete-region (- orig-point del) orig-point)
-                ;; Else, de-indent current line (at most) ARG times
-                (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol))))))
-        ;; Else, if inside indentation...
-        (if (<= (current-column) (current-indentation))
-            ;; Then, indent current line ARG times (and move to indentation)
+      ;; Else (no region is active), if line is empty...
+      (if (string-match-p "^[[:blank:]]*$" (buffer-substring-no-properties (pos-bol) (pos-eol)))
+          ;; Then, if ARG < 0...
+          (if neg
+              ;; Then, remove (at most) |ARG| tabs worth of whitespace before point
+              (delete-region (max (pos-bol) (- orig-point (* count tab-width))) orig-point)
+            ;; Else, simply insert ARG tabs worth of whitespace
+            (ece--insert-tabs-of-whitespace count))
+        ;; Else (line is not empty), if inside indentation...
+        (if (<= orig-col orig-ind)
+            ;; Then, (de-)indent current line (at most) |ARG| times (and move to indentation)
             (progn
-              (dotimes (_ count) (indent-rigidly-right-to-tab-stop (pos-bol) (pos-eol)))
+              (if neg
+                  (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol)))
+                (dotimes (_ count) (indent-rigidly-right-to-tab-stop (pos-bol) (pos-eol))))
               (back-to-indentation))
-          ;; Else, if `indent-tabs-mode' is non-nil...
-          (if indent-tabs-mode
-              ;; Then, insert ARG actual tab characters
-              (insert (make-string count ?\t))
-            ;; Else, insert ARG * `tab-width' spaces
-            (insert (make-string (* count tab-width) ?\s))))))))
+          ;; Else (line is not empty and not inside indentation), if ARG < 0...
+          (if neg
+              ;; Then, take stock of whitespace before point...
+              (let* ((del-ub (min (* count tab-width) (- orig-point (pos-bol))))
+                     (del (save-excursion
+                            (skip-chars-backward "[:space:]" (- orig-point del-ub))
+                            (- orig-point (point)))))
+                ;; If there is at least some whitespace before point...
+                (if (< 0 del)
+                    ;; Then, delete |ARG| * tab-width worth of whitespace
+                    ;; (at most, until first non-whitespace character)
+                    (delete-region (- orig-point del) orig-point)
+                  ;; Else, de-indent current line (at most) |ARG| times
+                  (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol)))))
+            ;; Else (ARG >= 0), simply insert ARG tabs worth of whitespace
+            (ece--insert-tabs-of-whitespace count)))))))
 
 ;;;###autoload
 (defun ece-basic-deindent (arg)

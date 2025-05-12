@@ -218,9 +218,9 @@
 (setopt global-hl-line-sticky-flag nil)
 
 (setopt cycle-spacing-actions '(delete-all-space
+                                (just-one-space -)
                                 (delete-space-before 0)
                                 (delete-space-after 0)
-                                (delete-all-space -)
                                 restore))
 
 (setopt shift-select-mode t)
@@ -301,7 +301,10 @@
 (keymap-global-set "C-t" #'kill-ring-save)
 (keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
-;;;; Joining
+;;;; Exchanging/Joining
+(keymap-global-set "M-w" #'exchange-word)
+(keymap-global-set "M-W" #'exchange-word-backward)
+
 (keymap-global-set "M-j" #'join-line-stay)
 (keymap-global-set "M-J" #'join-line-forward-stay)
 
