@@ -302,8 +302,8 @@
 (keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
 ;;;; Joining
-(keymap-global-set "M-b" #'join-line)
-(keymap-global-set "M-f" #'join-line-forward)
+(keymap-global-set "M-j" #'join-line-stay)
+(keymap-global-set "M-J" #'join-line-forward-stay)
 
 ;;;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
@@ -977,6 +977,12 @@ that allows to include other templates by their name."
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
+(use-package move-text
+  :ensure t
+
+  :bind (("M-b" . move-text-up)
+         ("M-f" . move-text-down)))
+
 (use-package crux
   :ensure t
   :pin melpa
@@ -1217,7 +1223,6 @@ that allows to include other templates by their name."
 
   (keymap-set embark-become-file+buffer-map "F" #'find-file-other-window)
   (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window))
-
 
 (use-package embark-consult
   :ensure t

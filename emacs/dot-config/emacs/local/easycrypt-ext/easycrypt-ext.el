@@ -77,54 +77,76 @@ Can be 'dark, 'light, or nil."
 ;;; Basic rigid indentation
 ;;;###autoload
 (defun ece-basic-indent (arg)
-  "Indent all lines touched by the active region by ARG * `tab-width'.
-If no region is active, insert (ARG > 0) or delete (ARG < 0) tabs at point
-(respecting tab stops when inserting). If ARG < 0 and there is no whitespace
-behind point, remove ARG tabs worth of whitespace from indentation of current line."
+  "Indent (ARG > 0) resp. de-indent (ARG < 0) all lines touched by the
+active region by |ARG| tab stops.
+If no region is active and point is inside indentation,
+then indent (ARG > 0) resp. de-indent (ARG < 0) current line |ARG| times
+(respecting tab stops).
+If no region is active and point is in the middle of a line, insert (ARG > 0)
+or delete (ARG < 0) literal whitespace (|ARG| * `tab-width' worth).
+If ARG < 0 and there is no whitespace behind point in the middle of a line,
+again de-indent line |ARG| times (respecting tab stops)."
   (interactive "p")
-  ;; If region is active,...
-  (if (use-region-p)
-      ;; Then, take stock of current region, point, and mark positions
-      ;; and compute new region positions
-      (let* ((orig-region-start (region-beginning))
-             (orig-region-stop (region-end))
-             (new-region-start (save-excursion (goto-char orig-region-start)
-                                               (pos-bol)))
-             (new-region-stop (save-excursion (goto-char orig-region-stop)
-                                              (pos-eol)))
-             (region-forward (<= orig-region-start orig-region-stop)))
-        ;; Expand visual region to new region positions
-        (if region-forward
-            (progn (goto-char new-region-stop) (set-mark new-region-start))
-          (progn (goto-char new-region-start) (set-mark new-region-stop)))
-        ;; Indent visually expanded region
-        (indent-rigidly new-region-start new-region-stop (* arg tab-width))
-        ;; Don't deactivate-mark, so we don't have to re-select region to repeat
-        (setq-local deactivate-mark nil))
-    ;; Else (no region is active), if prefix argument is negative...
-    (if (< arg 0)
-        ;; Then, take stock of whitespace behind point, and
-        (let* ((orig-point (point))
-               (del-ub (min (* (abs arg) tab-width) (- orig-point (pos-bol))))
-               (del (save-excursion
-                      (skip-chars-backward "[:space:]" (- orig-point del-ub))
-                      (- orig-point (point)))))
-          ;; if there is at least some whitespace...
-          (if (< 0 del)
-              ;; Then, delete ARG * tab-width of white-space
-              ;; (at most until first non-whitespace character)
-              (delete-region (- orig-point del) orig-point)
-            ;; Else, un-tab current line (at most) ARG times
-            (indent-rigidly (pos-bol) (pos-eol) (* arg tab-width))))
-      ;; Else, insert ARG tabs at point
-      (insert-tab arg))))
+  (let* ((neg (< arg 0))
+         (count (if neg (abs arg) arg)))
+    ;; If region is active,...
+    (if (use-region-p)
+        ;; Then, take stock of current region, point, and mark positions
+        ;; and compute new region positions
+        (let* ((orig-region-start (region-beginning))
+               (orig-region-stop (region-end))
+               (new-region-start (save-excursion (goto-char orig-region-start)
+                                                 (pos-bol)))
+               (new-region-stop (save-excursion (goto-char orig-region-stop)
+                                                (pos-eol)))
+               (region-forward (<= orig-region-start orig-region-stop)))
+          ;; Expand visual region to new region positions
+          (if region-forward
+              (progn (goto-char new-region-stop) (set-mark new-region-start))
+            (progn (goto-char new-region-start) (set-mark new-region-stop)))
+          ;; Indent visually expanded region
+          (if neg
+              (dotimes (_ count) (indent-rigidly-left-to-tab-stop new-region-start new-region-stop))
+            (dotimes (_ count) (indent-rigidly-right-to-tab-stop new-region-start new-region-stop)))
+          ;; Don't deactivate-mark, so we don't have to re-select region to repeat
+          (setq-local deactivate-mark nil))
+      ;; Else (no region is active), if prefix argument is negative...
+      (if neg
+          ;; Then, if inside indentation...
+          (if (<= (current-column) (current-indentation))
+              ;; Then, de-indent current line (at most) -ARG times (and move to indentation)
+              (progn
+                (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol)))
+                (back-to-indentation))
+            ;; Else, take stock of whitespace behind point,...
+            (let* ((orig-point (point))
+                   (del-ub (min (* (abs arg) tab-width) (- orig-point (pos-bol))))
+                   (del (save-excursion
+                          (skip-chars-backward "[:space:]" (- orig-point del-ub))
+                          (- orig-point (point)))))
+              ;; If there is at least some whitespace...
+              (if (< 0 del)
+                  ;; Then, delete ARG * tab-width of white-space
+                  ;; (at most until first non-whitespace character)
+                  (delete-region (- orig-point del) orig-point)
+                ;; Else, de-indent current line (at most) ARG times
+                (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol))))))
+        ;; Else, if inside indentation...
+        (if (<= (current-column) (current-indentation))
+            ;; Then, indent current line ARG times (and move to indentation)
+            (progn
+              (dotimes (_ count) (indent-rigidly-right-to-tab-stop (pos-bol) (pos-eol)))
+              (back-to-indentation))
+          ;; Else, if `indent-tabs-mode' is non-nil...
+          (if indent-tabs-mode
+              ;; Then, insert ARG actual tab characters
+              (insert (make-string count ?\t))
+            ;; Else, insert ARG * `tab-width' spaces
+            (insert (make-string (* count tab-width) ?\s))))))))
 
 ;;;###autoload
 (defun ece-basic-deindent (arg)
-  "De-indent all lines touched by the active region by ARG * `tab-width'.
-If no region is active, remove ARG tabs worth of whitespace behind point.
-If there is no whitespace behind point, remove ARG tabs from indentation
-of current line."
+  "Simply passes negation of ARG to `ece-basic-indent', which see."
   (interactive "p")
   (ece-basic-indent (- arg)))
 
@@ -579,7 +601,6 @@ that allows to include other templates by their name."
   (when (eq (car-safe elt) 'i)
     (when-let (template (alist-get (cadr elt) (tempel--templates)))
       (cons 'l template))))
-
 
 (defun ece--tempel-template-file-read (file)
   (let ((res '()))

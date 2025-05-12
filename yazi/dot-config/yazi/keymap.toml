@@ -98,7 +98,6 @@ keymap = [
     # Meta-level operation (cd, sort, tabs, etc.)
     ## Copy/Cut/Paste (to/from clipboard)
     { on = [ "<C-x>", "<C-t>" ], run = "plugin copy-file-contents", desc = "Copy files (raw) to clipboard" },
-    { on = [ "<C-x>", "<C-y>" ], run = 'shell -- dragon -x -f -a -T "$@"', desc = "Drag files to other application" },
     ## CD (goto)
     { on = [ "g", "h" ], run = "cd $HOME", desc = "Go to user home directory"},
     { on = [ "g", "c" ], run = "cd $XDG_CONFIG_HOME", desc = "Go to config directory"},
@@ -108,7 +107,6 @@ keymap = [
     { on = [ "g", "A" ], run = "cd $HOME/archive", desc = "Go to archive directory"},
     { on = [ "g", "d" ], run = "cd $XDG_DATA_HOME/documents", desc = "Go to documents directory"},
     { on = [ "g", "D" ], run = "cd $XDG_DATA_HOME/downloads", desc = "Go to downloads directory"},
-    { on = [ "g", "m" ], run = "cd $XDG_DATA_HOME/media", desc = "Go to media directory"},
     { on = [ "g", "m" ], run = "cd $XDG_DATA_HOME/media", desc = "Go to media directory"},
     { on = [ "g", "R" ], run = "cd /", desc = "Go to root directory"},
     { on = [ "g", "e" ], run = "cd /etc", desc = "Go to etc (system config) directory"},

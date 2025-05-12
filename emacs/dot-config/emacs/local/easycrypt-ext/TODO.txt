@@ -1,3 +1,4 @@
+- Bug: Clone template auto-exit   
 - Bug: Cfold template parse error
 
 - Templates:

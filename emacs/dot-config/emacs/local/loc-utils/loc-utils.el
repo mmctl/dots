@@ -1,13 +1,43 @@
 ;; -*- lexical-binding: t -*-
 ;; loc-utils.el
 
+;; Moving
+;; (defun move-word-forward ()
+;;   (interactive)
+;;   (let ((text (if (use-region-p)
+;;                   (delete-and-extract-region (region-beginning) (region-end))
+;;                 (let ((bnds (bounds-of-thing-at-point 'word)))
+;;                   (when bnds
+;;                     (delete-and-extract-region (car bnds) (cdr bnds))))))
+;;         (inhibit-modification-hooks t))
+;;     (when text
+;;       (forward-word 1)
+;;       (unless (looking-back "[[:space:]]")
+;;         (insert " "))
+;;       (insert text))))
+
 ;; Joining
+(defun join-line-stay ()
+  "Call `join-line', which see, but save excursion
+(i.e., keep point where it is)."
+  (interactive)
+  (save-excursion
+    (join-line)))
+
 (defun join-line-forward ()
   "Join current line to the following line and
 fix up whitespace at join. Simply calls `join-line'
 with a prefix argument internally, which see."
   (interactive)
   (join-line t))
+
+(defun join-line-forward-stay ()
+  "Call `join-line-forward', which see, but save excursion
+(i.e., keep point where it is)."
+  (interactive)
+  (save-excursion
+    (join-line-forward)))
+
 
 ;; Killing
 (defun backward-kill-line (&optional arg)
