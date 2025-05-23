@@ -1,12 +1,9 @@
 
-- Bug: Cfold template parse error
-
 - Templates:
-   - ehoare
-   - async while
-   - rewrite equiv
-  - proc rewrite
-  - proc change
-  - code positions
-  - outline
+   - async while?
+   - code positions?
+   - indicate optional fields in info templates?
+   - indicate potential for side in info templates?
+   - rndsem
+   - outline
   

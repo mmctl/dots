@@ -467,7 +467,11 @@ easycrypt-mode
 (while2 "while{2} (" p ") (" q ")")
 
 (call "call (_: " q ")")
+(call1 "call{1} (_: " q ")")
+(call2 "call{2} (_: " q ")")
 (callt "call (_: true)")
+(call1t "call{1} (_: true)")
+(call2t "call{2} (_: true)")
 
 (callcont "call (_: " p " ==> " q ")")
 (call1cont "call{1} (_: " p " ==> " q ")")
@@ -481,13 +485,15 @@ easycrypt-mode
 (callube "call (_: " p ", " p ", " q ")")
 
 (ecall "ecall (" q ")")
+(ecall1 "ecall{1} (" q ")")
+(ecall2 "ecall{2} (" q ")")
+
+(swap1 "swap{1} " p " " q )
+(swap2 "swap{2} " p " " q )
 
 (swapbl "swap [" p ".." p "] " q)
 (swap1bl "swap{1} [" p ".." p "] " q)
 (swap2bl "swap{2} [" p ".." p "] " q)
-
-(swap1l "swap{1} " p " " q )
-(swap2l "swap{2} " p " " q )
 
 (swap1s "swap{1} " p " " p " " q)
 (swap2s "swap{2} " p " " p " " q)
@@ -503,8 +509,21 @@ easycrypt-mode
 (inline1o "inline{1} (" p ") " q)
 (inline2o "inline{2} (" p ") " q)
 
-;; (outline ...)
-;; (codepos ...)
+(outline "outline{" p "} " p " ~ " q)
+(outline1 "outline{1} " p " ~ " q)
+(outline2 "outline{2} " p " ~ " q)
+
+(outlinebl "outline{" p "} [" p ".." p "] ~ " q)
+(outline1bl "outline{1} [" p ".." p "] ~ " q)
+(outline2bl "outline{2} [" p ".." p "] ~ " q)
+
+(outlinecode "outline{" p "} " p " by { " q " }")
+(outline1code "outline{1} " p " by { " q " }")
+(outline2code "outline{2} " p " by { " q " }")
+
+(outlineblcode "outline{" p "} [" p ".." p "] by { " q " }")
+(outline1blcode "outline{1} [" p ".." p "] by { " q " }")
+(outline2blcode "outline{2} [" p ".." p "] by { " q " }")
 
 (rcondt1 "rcondt{1} " q)
 (rcondt2 "rcondt{2} " q)
@@ -535,9 +554,9 @@ easycrypt-mode
 (alias1e "alias{1} " p " " p " = " q)
 (alias2e "alias{2} " p " " p " = " q)
 
-(cfold "cfold " p " ! " q)
-(cfold1 "cfold{1} " p " ! " q)
-(cfold2 "cfold{2} " p " ! " q)
+(cfold "cfold " p " " q)
+(cfold1 "cfold{1} " p " " q)
+(cfold2 "cfold{2} " p " " q)
 
 (kill "kill " p " ! " q)
 (kill1 "kill{1} " p " ! " q)
@@ -578,7 +597,11 @@ easycrypt-mode
 (fel "fel " p " (" p ") (" p ") (" p ") (" p ") [" p "] (" q ")")
 
 (rewriteequiv "rewrite equiv [{" p "} " q "]")
+(rewriteequiv1 "rewrite equiv [{1} " q "]")
+(rewriteequiv2 "rewrite equiv [{2} " q "]")
 (rewriteequivrv "rewrite equiv [{" p "} " p " (" p " :@ " q ")]")
+(rewriteequiv1rv "rewrite equiv [{1} " p " (" p " :@ " q ")]")
+(rewriteequiv2rv "rewrite equiv [{2} " p " (" p " :@ " q ")]")
 
 (procchange "proc change " p " : " q)
 (procchange1 "proc change{1} " p " : " q)
@@ -594,6 +617,10 @@ easycrypt-mode
 (whi1 (i while1))
 (whi2 (i while2))
 
+(callc (i callcont))
+(call1c (i call1cont))
+(call2c (i call2cont))
+
 (inl1 (i inline1))
 (inl2 (i inline2))
 
@@ -604,6 +631,22 @@ easycrypt-mode
 (inlo (i inlineo))
 (inl1o (i inline1o))
 (inl2o (i inline2o))
+
+(outl (i outline))
+(outl1 (i outline1))
+(outl2 (i outline2))
+
+(outlb (i outlinebl))
+(outl1b (i outline1bl))
+(outl2b (i outline2bl))
+
+(outlc (i outlinecode))
+(outl1c (i outline1code))
+(outl2c (i outline2code))
+
+(outlbc (i outlineblcode))
+(outl1bc (i outline1blcode))
+(outl2bc (i outline2blcode))
 
 (rcot1 (i rcondt1))
 (rcot2 (i rcondt2))
@@ -659,7 +702,11 @@ easycrypt-mode
 (phospn (i phoaresplitneg))
 
 (reweqv (i rewriteequiv))
+(reweqv1 (i rewriteequiv1))
+(reweqv2 (i rewriteequiv2))
 (reweqvr (i rewriteequivrv))
+(reweqv1r (i rewriteequiv1rv))
+(reweqv2r (i rewriteequiv2rv))
 
 (procch (i procchange))
 (procch1 (i procchange1))

@@ -73,7 +73,7 @@ easycrypt-mode
 (modulealiasinfo "module " (p "Name") " = " (p "Mod(ModArg1, ..., ModArgN)") ".")
 
 ;; Tactics
-(smtinfo "smt(" (p "Lemma1 OR @Theory1 ... LemmaN OR @TheoryN") ")")
+(smtinfo "smt(" (p "Lemma1|@Theory1 ... LemmaN|@TheoryN") ")")
 
 (poseinfo "pose " (p "Name") " := " (p "Expr"))
 (haveinfo "have " (p "IntroPattern") ": " (p "Statement"))
@@ -82,12 +82,12 @@ easycrypt-mode
 (proctubinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ")")
 (proctubeinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ") (" (p "InvariantAfterBad") ")")
 
-(seqinfo "seq " (p "LineNumCutLeft") " " (p "LineNumCutRight") " :  (" (p "ConditionAtCut") ")")
-(seqhoainfo "seq " (p "LineNumCut") " :  (" (p "ConditionAtCut") ")")
-(seqphinfo "seq " (p "LineNumCut") " : (" (p "Event") ") (" (p "ProbEventTrueAtCut") ") (" (p "ProbPostTrueWhenEventTrue") ") (" (p "ProbEventFalseAtCut") ") (" (p "ProbPostTrueWhenEventFalse") ") (" (p "InvariantAtCut") ")")
+(seqinfo "seq " (p "CodePosCutLeft") " " (p "CodePosCutRight") " :  (" (p "ConditionAtCut") ")")
+(seqhoainfo "seq " (p "CodePosCut") " :  (" (p "ConditionAtCut") ")")
+(seqphinfo "seq " (p "CodePosCut") " : (" (p "Event") ") (" (p "ProbEventTrueAtCut") ") (" (p "ProbPostTrueWhenEventTrue") ") (" (p "ProbEventFalseAtCut") ") (" (p "ProbPostTrueWhenEventFalse") ") (" (p "InvariantAtCut") ")")
 
-(spinfo "sp " (p "LineNumLeft") " " (p "LineNumRight"))
-(wpinfo "wp " (p "LineNumLeft") " " (p "LineNumRight"))
+(spinfo "sp " (p "CodePosLeft") " " (p "CodePosRight"))
+(wpinfo "wp " (p "CodePosLeft") " " (p "CodePosRight"))
 
 (rndinfo "rnd " (p "Fun") " " (p "InverseFun"))
 (rndinvinfo "rnd " (p "InvolutiveFun"))
@@ -103,31 +103,33 @@ easycrypt-mode
 (callubinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ")")
 (callubeinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ", " (p "InvariantAfterBad") ")")
 
-(ecallinfo "ecall (_: " (p "Proofterm"))
+(ecallinfo "ecall (" (p "Proofterm") ")")
 
-(swapblinfo "swap [" (p "LineNumStart") ".." (p "LineNumEnd") "] " (p "(-)MoveAmount"))
-(swaplinfo "swap " (p "LineNum") " " (p "(-)MoveAmount"))
-(swapsinfo "swap " (p "LineNumBegin") " " (p "LineNumMid") " " (p "LineNumEnd"))
+(swapinfo "swap " (p "CodePos|CodePosBlock") " " (p "(-)MoveAmount"))
+(swapsinfo "swap " (p "CodePosBegin") " " (p "CodePosMid") " " (p "CodePosEnd"))
 
-(inlineinfo "inline " (p "Mod1.Proc1, ..., Modn.Procn OR LineNumProc"))
-(inlineoinfo "inline (" (p "LineNumOccur1 ... LineNumOccurN") ") " (p "Mod.Proc"))
+(inlineinfo "inline " (p "Mod1.Proc1, ..., ModN.ProcN | CodePosProc"))
+(inlineoinfo "inline (" (p "CodePosOccur1 ... CodePosOccurN") ") " (p "Mod.Proc"))
 
-(rcondtinfo "rcondt " (p "LineNumIfOrWhile"))
-(rcondfinfo "rcondf " (p "LineNumIfOrWhile"))
+(outlineinfo "outline{" (p "Side (1/2)") "} " (p "CodePos|CodePosBlock") " ~ " (p "Mod.Proc"))
+(outlinecodeinfo "outline{" (p "Side (1/2)") "} " (p "CodePos|CodePosBlock") " by {" (p " ProgStatement1; ... ProgStatementN;") " }")
 
-(unrollinfo "unroll " (p "LineNumWhile"))
+(rcondtinfo "rcondt " (p "CodePosIf|CodePosWhile"))
+(rcondfinfo "rcondf " (p "CodePosIf|CodePosWhile"))
 
-(splitwhileinfo "splitwhile " (p "LineNumWhile") " : (" (p "WhileCondition") ")")
+(unrollinfo "unroll " (p "CodePosWhile"))
 
-(fissioninfo "fission " (p "LineNumWhile") "!" (p "NumLinesBeforeWhile") " @ " (p "LineNumEndBlock1") ", " (p "LineNumEndBlock2"))
-(fusioninfo "fusion " (p "LineNumWhile") "!" (p "NumLinesBeforeWhile") " @ " (p "LineNumEndBlock1") ", " (p "LineNumEndBlock2"))
+(splitwhileinfo "splitwhile " (p "CodePosWhile") " : (" (p "WhileCondition") ")")
 
-(aliasinfo "alias " (p "LineNumAssignment") " with " (p "VarName"))
-(aliaseinfo "alias " (p "LineNumAssignment") " " (p "VarName") " = " (p "Expr"))
+(fissioninfo "fission " (p "CodePosWhile") "!" (p "NumLinesBeforeWhile") " @ " (p "CodePosEndBlock1") ", " (p "CodePosEndBlock2"))
+(fusioninfo "fusion " (p "CodePosWhile") "!" (p "NumLinesBeforeWhile") " @ " (p "CodePosEndBlock1") ", " (p "CodePosEndBlock2"))
 
-(cfoldinfo "cfold " (p "LineNumAssignment") " ! " (p "LineNumEndBlock"))
+(aliasinfo "alias " (p "CodePosAssignment") " with " (p "VarName"))
+(aliaseinfo "alias " (p "CodePosAssignment") " " (p "VarName") " = " (p "Expr"))
 
-(killinfo "kill " (p "LineNumStartBlock") " ! " (p "LenghtBlock"))
+(cfoldinfo "cfold " (p "CodePosAssignment") " " (p "CodePosEndBlock"))
+
+(killinfo "kill " (p "CodePosStartBlock") " ! " (p "LengthBlock"))
 
 (transivityinfo "transitivity " (p "Mod.Proc") " (" (p "PreLeft") " ==> " (p "PostLeft") ") (" (p "PreRight") " ==> " (p "PostRight") ")")
 (transivitycodeinfo "transitivity{" (p "Side (1/2)") "} { " (p "ProgStatement1; ...; ProgStatementN;") " } (" (p "PreLeft") " ==> " (p "PostLeft") ") (" (p "PreRight") " ==> " (p "PostRight") ")")
@@ -135,7 +137,7 @@ easycrypt-mode
 (conseqinfo "conseq (_: " (p "Pre") " ==> " (p "Post") ")")
 (conseqptinfo "conseq (" (p "Proofterm") ")")
 (conseqehhinfo "conseq (_: " (p "PreEquiv") " ==> " (p "PostEquiv") ") (_: " (p "PreHoareLeft") " ==> " (p "PostHoareLeft") ") (_: " (p "PreHoareRight") " ==> " (p "PostHoareRight") ")")
-(conseqphhinfo "conseq (_: " (p "PrePhoare") " ==> " (p "PostPhoare") ": " (p "ProbBndOrEq (ex: =1%r)") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
+(conseqphhinfo "conseq (_: " (p "PrePhoare") " ==> " (p "PostPhoare") ": " (p "ProbBnd|ProbEq (ex: =1%r)") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
 (conseqeh "conseq (" (p "ProoftermEquiv") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
 
 (byequivinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ")")
@@ -158,7 +160,7 @@ easycrypt-mode
 (siminvinfo "sim / " (p "InvariantGlobVars") " : (" (p "VarEqualities") ")")
 (simprinvinfo "sim " (p "(Mod11.Proc11 ~ Mod12.Proc12 : GlobVarEqualities1) ... (ModN1.ProcN1 ~ ModN2.ProcN2 : GlobalVarEqualitiesN)") " / " (p "InvariantGlobalVars") " : (" (p "VarEqualities") ")")
 
-(felinfo "fel " (p "LineNumEndInit") " (" (p "CntrExpr") ") (" (p "StepUpperBndFun") ") (" (p "CntrBndExpr") ") (" (p "BadEvent")") [ " (p "Mod1.Proc1 : IncCntrPre1; ...; ModN.ProcN : IncCntrPreN") " ] " (p "Invariant"))
+(felinfo "fel " (p "CodePosEndInit") " (" (p "CntrExpr") ") (" (p "StepUpperBndFun") ") (" (p "CntrBndExpr") ") (" (p "BadEvent")") [ " (p "Mod1.Proc1 : IncCntrPre1; ...; ModN.ProcN : IncCntrPreN") " ] " (p "Invariant"))
 
 (rewriteequivinfo "rewrite equiv [{" (p "Memory") "} " (p "CodePos") " " (p "Direction (-)") " " (p "ProoftermEquiv") " (" (p "Arg1, ..., ArgN") " :@ " (p "ReturnVar") ")]")
 
