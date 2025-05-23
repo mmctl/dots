@@ -1,10 +1,12 @@
-- Bug: Clone template auto-exit   
+
 - Bug: Cfold template parse error
 
 - Templates:
    - ehoare
-  - rewrite equiv
+   - async while
+   - rewrite equiv
   - proc rewrite
   - proc change
   - code positions
-   
+  - outline
+  

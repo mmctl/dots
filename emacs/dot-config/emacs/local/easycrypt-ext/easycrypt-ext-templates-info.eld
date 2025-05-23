@@ -31,6 +31,7 @@ easycrypt-mode
 (hoareinfo "hoare[" (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "]")
 (phoareinfo "phoare[" (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "] = " (p "Prob"))
 (equivinfo "equiv[" (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "]")
+(ehoareinfo "ehoare[" (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "]")
 
 (axiominfo "axiom " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Statement") ".")
 
@@ -43,10 +44,12 @@ easycrypt-mode
 (lemmallinfo "lemma " (p "Name") " : islossless " (p "Mod.Proc") "." n>
              (i proofinfo))
 
-(hoarelemmainfo "hoare " (p "Name") " : " (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "." n>
+(hoarelemmainfo "hoare " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "." n>
                 (i proofinfo))
-(equivlemmainfo "equiv " (p "Name") " : " (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "." n>
+(equivlemmainfo "equiv " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Mod1.Proc1") " ~ " (p "Mod2.Proc2") " : " (p "Pre") " ==> " (p "Post") "." n>
                 (i proofinfo))
+(ehoarelemmainfo "ehoare " (p "Name") " " (p "(Param1 : Type1) ... (ParamN : TypeN)") " : " (p "Mod.Proc") " : " (p "Pre") " ==> " (p "Post") "." n>
+                 (i proofinfo))
 
 ;; Imperative specification
 (procsiginfo "proc " (p "Name") "(" (p "Param1 : Type1, ..., ParamN : TypeN") ") : " (p "Type") " { " (p "ModParam1.Proc11, ... ModParam1.Proc1N, ..., ModParamN.ProcNN") " }")
@@ -70,7 +73,7 @@ easycrypt-mode
 (modulealiasinfo "module " (p "Name") " = " (p "Mod(ModArg1, ..., ModArgN)") ".")
 
 ;; Tactics
-(smtinfo "smt(" (p "Lemma1 OR @Theory1, ..., LemmaN OR @TheoryN") ")")
+(smtinfo "smt(" (p "Lemma1 OR @Theory1 ... LemmaN OR @TheoryN") ")")
 
 (poseinfo "pose " (p "Name") " := " (p "Expr"))
 (haveinfo "have " (p "IntroPattern") ": " (p "Statement"))
@@ -94,11 +97,13 @@ easycrypt-mode
 (while1info "while{1} " (p "Invariant") (p "TerminationVariant")) ; TODO: ask PY if this is correct
 (while2info "while{2} " (p "Invariant") (p "TerminationVariant"))
 
-(callinfo "call (_:" (p "Invariant") ")")
+(callinfo "call (_: " (p "Invariant") ")")
 (callcontinfo "call (_: " (p "Pre") " ==> " (p "Post") ")")
 (callptinfo "call (" (p "Proofterm") ")")
 (callubinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ")")
 (callubeinfo "call (_: " (p "BadEvent") ", " (p "InvariantUptoBad") ", " (p "InvariantAfterBad") ")")
+
+(ecallinfo "ecall (_: " (p "Proofterm"))
 
 (swapblinfo "swap [" (p "LineNumStart") ".." (p "LineNumEnd") "] " (p "(-)MoveAmount"))
 (swaplinfo "swap " (p "LineNum") " " (p "(-)MoveAmount"))
@@ -134,12 +139,12 @@ easycrypt-mode
 (conseqeh "conseq (" (p "ProoftermEquiv") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
 
 (byequivinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ")")
-(byequivptinfo "byequiv (" (p "Proofterm") ")")
+(byequivptinfo "byequiv (" (p "ProoftermEquiv") ")")
 (byequivubinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ") : " (p "BadEvent"))
-(byequivubptinfo "byequiv (" (p "Proofterm") ") : " (p "BadEvent"))
+(byequivubptinfo "byequiv (" (p "ProoftermEquiv") ") : " (p "BadEvent"))
 
 (byphoareinfo "byphoare (_: " (p "Pre") " ==> " (p "Post") ")")
-(byphoareptinfo "byphoare (" (p "Proofterm") ")")
+(byphoareptinfo "byphoare (" (p "ProoftermPhoare") ")")
 
 (bypr "bypr (" (p "ExprLeft") ") (" (p "ExprRight") ")")
 
@@ -155,4 +160,8 @@ easycrypt-mode
 
 (felinfo "fel " (p "LineNumEndInit") " (" (p "CntrExpr") ") (" (p "StepUpperBndFun") ") (" (p "CntrBndExpr") ") (" (p "BadEvent")") [ " (p "Mod1.Proc1 : IncCntrPre1; ...; ModN.ProcN : IncCntrPreN") " ] " (p "Invariant"))
 
-; ecall
+(rewriteequivinfo "rewrite equiv [{" (p "Memory") "} " (p "CodePos") " " (p "Direction (-)") " " (p "ProoftermEquiv") " (" (p "Arg1, ..., ArgN") " :@ " (p "ReturnVar") ")]")
+
+(procchangeinfo "proc change " (p "CodePosChange") " : " (p "ExprNew"))
+
+(procrewriteinfo "proc rewrite " (p "CodePosRewrite") " " (p "Proofterm"))

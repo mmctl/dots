@@ -147,11 +147,11 @@ set $mode_screenshot Screenshot mode: [d]isplay (save), [D]isplay (clip), [w]ind
 mode "$mode_screenshot" {
     ### Regular operation bindings
     bindsym d exec --no-startup-id maim --format=png --quality 10 "$XDG_DATA_HOME/media/pictures/screenshots/display-$(date +'%Y%m%dT%H%M%S')", mode default
-    bindsym D exec --no-startup-id maim --format=png --quality 6 | xclip -selection clipboard -t image/png, mode default
+    bindsym $S+d exec --no-startup-id maim --format=png --quality 6 | xclip -selection clipboard -t image/png, mode default
     bindsym w exec --no-startup-id maim --format=png --quality 10 --window $(xdotool getactivewindow) "$XDG_DATA_HOME/media/pictures/screenshots/window-$(date +'%Y%m%dT%H%M%S')", mode default
-    bindsym W exec --no-startup-id maim --format=png --quality 6 --window $(xdotool getactivewindow) | xclip -selection clipboard -t image/png, mode default
+    bindsym $S+w exec --no-startup-id maim --format=png --quality 6 --window $(xdotool getactivewindow) | xclip -selection clipboard -t image/png, mode default
     bindsym r exec --no-startup-id "maim --format=png --quality 10 --select --bordersize=2 --color=0.706,0.557,0.678 $XDG_DATA_HOME/media/pictures/screenshots/region-$(date +'%Y%m%dT%H%M%S')", mode default
-    bindsym R exec --no-startup-id "maim --format=png --quality 6 --select --bordersize=2 --color=0.706,0.557,0.678 | xclip -selection clipboard -t image/png", mode default
+    bindsym $S+r exec --no-startup-id "maim --format=png --quality 6 --select --bordersize=2 --color=0.706,0.557,0.678 | xclip -selection clipboard -t image/png", mode default
 
     ### Meta bindings
     bindsym Escape mode "default"
