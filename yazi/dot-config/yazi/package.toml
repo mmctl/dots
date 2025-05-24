@@ -30,8 +30,8 @@ hash = "374139554462a9dfc10dc8bfd0b01b19"
 
 [[plugin.deps]]
 use = "boydaihungst/restore"
-rev = "539aad5"
-hash = "fd162085ec09fef4b4060c92bba31994"
+rev = "1bfd5f7"
+hash = "f61cea367316f9459590f5c1dc4fc"
 
 [[plugin.deps]]
 use = "Ape/open-with-cmd"
@@ -40,8 +40,8 @@ hash = "86e0312b01bc5762813c6c1d0517f073"
 
 [[plugin.deps]]
 use = "boydaihungst/compress"
-rev = "f9d7adb"
-hash = "3c578c90c1cae2a1954768f52c9f9e22"
+rev = "e6d96fb"
+hash = "66b6f9f0e86df361ac8982a88785c487"
 
 [[plugin.deps]]
 use = "AnirudhG07/archivemount"

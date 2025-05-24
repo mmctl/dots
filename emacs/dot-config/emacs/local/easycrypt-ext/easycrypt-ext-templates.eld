@@ -27,7 +27,7 @@ easycrypt-mode
              q n
              "^*)" >)
 
-;;;; Aliases
+;;; Aliases
 (com (i comment))
 (comn (i commentn))
 (doc (i doccomment))
@@ -47,7 +47,7 @@ easycrypt-mode
 
 (clone "clone " q ".")
 (cloneas "clone " p " as " q ".")
-(cloneaswith "clone " p " as " q " with" n>
+(cloneaswith "clone " p " as " p " with" n>
              q ".")
 (cloneimport "clone import " q ".")
 (cloneimportas "clone import " p " as " q ".")
@@ -88,6 +88,9 @@ easycrypt-mode
 (cloinw (i cloneincludewith))
 (cloinaw (i cloneincludeaswith))
 
+(hints (i hintsimplify))
+(hintr (i hintrewrite))
+(hinte (i hintexact))
 
 ;; Scope
 
@@ -164,6 +167,14 @@ easycrypt-mode
         q n>
         "]" >)
 
+(ehoare "ehoare[" p " : " p " ==> " q "]")
+(ehoaren "ehoare[" n>
+         p " :" n>
+         p n>
+         "==>" n>
+         q n>
+         "]" >)
+
 (axiom "axiom " p " : " q ".")
 (axiomn "axiom " p " :" n>
         q "." >)
@@ -204,15 +215,29 @@ easycrypt-mode
               p "." n>
               (i proof))
 
-(equivlemma "equiv Eqv_" p " : " p " ~ " p " : " p " ==> "p "." n>
+(equivlemma "equiv " p " : " p " ~ " p " : " p " ==> "p "." n>
             (i proof))
-(equivlemmapq "equiv Eqv_" p " : " p " ~ " p " : " p " ==> "p "." n>
+(equivlemmapq "equiv " p " : " p " ~ " p " : " p " ==> "p "." n>
               (i proofpq))
-(equivlemman "equiv Eqv_" p " :" n>
+(equivlemman "equiv " p " :" n>
              p " ~ " p " : " p " ==> "p "." n>
              (i proof))
-(equivnlemman "equiv Eqv_" p " :" n>
+(equivnlemman "equiv " p " :" n>
                p " ~ " p " :" n>
+               p n>
+               "==>" n>
+               p "." n>
+               (i proof))
+
+(ehoarelemma "ehoare " p " : " p " : " p " ==> " p "." n>
+             (i proof))
+(ehoarelemmapq "ehoare " p " : " p " : " p " ==> " p "." n>
+               (i proofpq))
+(ehoarelemman "ehoare " p " :" n>
+              p " : " p " ==> " p "." n>
+              (i proof))
+(ehoarenlemman "ehoare " p " :" n>
+               p " :" n>
                p n>
                "==>" n>
                p "." n>
@@ -262,6 +287,8 @@ easycrypt-mode
 (ph1n (i phoare1n))
 (eqv (i equiv))
 (eqvn (i equivn))
+(eho (i ehoare))
+(ehon (i ehoaren))
 
 (ax (i axiom))
 (axn (i axiomn))
@@ -281,6 +308,10 @@ easycrypt-mode
 (eqvlempq (i equivlemmapq))
 (eqvlemn (i equivlemman))
 (eqvnlemn (i equivnlemman))
+(eholem (i ehoarelemma))
+(eholempq (i ehoarelemmapq))
+(eholemn (i ehoarelemman))
+(ehonlemn (i ehoarenlemman))
 
 (ifte (i ifthenelse))
 (iften (i ifthenelsen))
@@ -436,6 +467,11 @@ easycrypt-mode
 (while2 "while{2} (" p ") (" q ")")
 
 (call "call (_: " q ")")
+(call1 "call{1} (_: " q ")")
+(call2 "call{2} (_: " q ")")
+(callt "call (_: true)")
+(call1t "call{1} (_: true)")
+(call2t "call{2} (_: true)")
 
 (callcont "call (_: " p " ==> " q ")")
 (call1cont "call{1} (_: " p " ==> " q ")")
@@ -448,12 +484,16 @@ easycrypt-mode
 (callub "call (_: " p ", " q ")")
 (callube "call (_: " p ", " p ", " q ")")
 
+(ecall "ecall (" q ")")
+(ecall1 "ecall{1} (" q ")")
+(ecall2 "ecall{2} (" q ")")
+
+(swap1 "swap{1} " p " " q )
+(swap2 "swap{2} " p " " q )
+
 (swapbl "swap [" p ".." p "] " q)
 (swap1bl "swap{1} [" p ".." p "] " q)
 (swap2bl "swap{2} [" p ".." p "] " q)
-
-(swap1l "swap{1} " p " " q )
-(swap2l "swap{2} " p " " q )
 
 (swap1s "swap{1} " p " " p " " q)
 (swap2s "swap{2} " p " " p " " q)
@@ -468,6 +508,22 @@ easycrypt-mode
 (inlineo "inline (" p ") " q)
 (inline1o "inline{1} (" p ") " q)
 (inline2o "inline{2} (" p ") " q)
+
+(outline "outline{" p "} " p " ~ " q)
+(outline1 "outline{1} " p " ~ " q)
+(outline2 "outline{2} " p " ~ " q)
+
+(outlinebl "outline{" p "} [" p ".." p "] ~ " q)
+(outline1bl "outline{1} [" p ".." p "] ~ " q)
+(outline2bl "outline{2} [" p ".." p "] ~ " q)
+
+(outlinecode "outline{" p "} " p " by { " q " }")
+(outline1code "outline{1} " p " by { " q " }")
+(outline2code "outline{2} " p " by { " q " }")
+
+(outlineblcode "outline{" p "} [" p ".." p "] by { " q " }")
+(outline1blcode "outline{1} [" p ".." p "] by { " q " }")
+(outline2blcode "outline{2} [" p ".." p "] by { " q " }")
 
 (rcondt1 "rcondt{1} " q)
 (rcondt2 "rcondt{2} " q)
@@ -495,12 +551,12 @@ easycrypt-mode
 (alias2 "alias{2} " p " with " q)
 
 (aliase "alias " p " " p " = " q)
-(aliase1 "alias{1} " p " " p " = " q)
-(aliase2 "alias{2} " p " " p " = " q)
+(alias1e "alias{1} " p " " p " = " q)
+(alias2e "alias{2} " p " " p " = " q)
 
-(cfold "cfold " p " ! " q)
-(cfold1 "cfold{1} " p " ! " q)
-(cfold2 "cfold{1} " p " ! " q)
+(cfold "cfold " p " " q)
+(cfold1 "cfold{1} " p " " q)
+(cfold2 "cfold{2} " p " " q)
 
 (kill "kill " p " ! " q)
 (kill1 "kill{1} " p " ! " q)
@@ -529,6 +585,8 @@ easycrypt-mode
 (existss "exists* " q)
 (elims "elim* " q)
 
+(exlimi "exlim " p " => " q)
+
 (phoaresplitjunc "phoare split " p " " p " " q)
 (phoaresplitneg "phoare split ! " p " " q)
 
@@ -537,6 +595,126 @@ easycrypt-mode
 (simprinv "sim " p " / " p " : (" q ")")
 
 (fel "fel " p " (" p ") (" p ") (" p ") (" p ") [" p "] (" q ")")
+
+(rewriteequiv "rewrite equiv [{" p "} " q "]")
+(rewriteequiv1 "rewrite equiv [{1} " q "]")
+(rewriteequiv2 "rewrite equiv [{2} " q "]")
+(rewriteequivrv "rewrite equiv [{" p "} " p " (" p " :@ " q ")]")
+(rewriteequiv1rv "rewrite equiv [{1} " p " (" p " :@ " q ")]")
+(rewriteequiv2rv "rewrite equiv [{2} " p " (" p " :@ " q ")]")
+
+(procchange "proc change " p " : " q)
+(procchange1 "proc change{1} " p " : " q)
+(procchange2 "proc change{2} " p " : " q)
+
+(procrewrite "proc rewrite " q)
+(procrewrite1 "proc rewrite{1} " q)
+(procrewrite2 "proc rewrite{2} " q)
+
+;;; Aliases
+(whi (i while))
+(whiph (i whileph))
+(whi1 (i while1))
+(whi2 (i while2))
+
+(callc (i callcont))
+(call1c (i call1cont))
+(call2c (i call2cont))
+
+(inl1 (i inline1))
+(inl2 (i inline2))
+
+(inls (i inlines))
+(inl1s (i inlines))
+(inl2s (i inlines))
+
+(inlo (i inlineo))
+(inl1o (i inline1o))
+(inl2o (i inline2o))
+
+(outl (i outline))
+(outl1 (i outline1))
+(outl2 (i outline2))
+
+(outlb (i outlinebl))
+(outl1b (i outline1bl))
+(outl2b (i outline2bl))
+
+(outlc (i outlinecode))
+(outl1c (i outline1code))
+(outl2c (i outline2code))
+
+(outlbc (i outlineblcode))
+(outl1bc (i outline1blcode))
+(outl2bc (i outline2blcode))
+
+(rcot1 (i rcondt1))
+(rcot2 (i rcondt2))
+
+(rcof1 (i rcondf1))
+(rcof2 (i rcondf2))
+
+(unr1 (i unroll1))
+(unr2 (i unroll2))
+
+(splwhi (i splitwhile))
+(splwhi1 (i splitwhile1))
+(splwhi2 (i splitwhile2))
+
+(fis (i fission))
+(fis1 (i fission1))
+(fis2 (i fission2))
+
+(fus (i fusion))
+(fus1 (i fusion1))
+(fus2 (i fusion2))
+
+(ali (i alias))
+(ali1 (i alias1))
+(ali2 (i alias2))
+
+(alie (i aliase))
+(ali1e (i alias1e))
+(ali2e (i alias2e))
+
+(cfo (i cfold))
+(cfo1 (i cfold1))
+(cfo2 (i cfolde))
+
+(trans (i transitivity))
+(transc (i transitivitycode))
+
+(cons (i conseq))
+(conspt (i conseqpt))
+(conscr (i conseqcr))
+(consehh (i conseqehh))
+(conseh (i conseqeh))
+
+(byeqv (i byequiv))
+(byeqvpt (i byequivpt))
+(byeqvub (i byequivub))
+(byeqvubpt (i byequivubpt))
+
+(byph (i byphoare))
+(byphpt (i byphoarept))
+
+(phospjc (i phoaresplitjunc))
+(phospn (i phoaresplitneg))
+
+(reweqv (i rewriteequiv))
+(reweqv1 (i rewriteequiv1))
+(reweqv2 (i rewriteequiv2))
+(reweqvr (i rewriteequivrv))
+(reweqv1r (i rewriteequiv1rv))
+(reweqv2r (i rewriteequiv2rv))
+
+(procch (i procchange))
+(procch1 (i procchange1))
+(procch2 (i procchange2))
+
+(procrew (i procrewrite))
+(procrew1 (i procrewrite1))
+(procrew2 (i procrewrite2))
 
 ;; Miscellaneous
 (Prub (i Pr) n>

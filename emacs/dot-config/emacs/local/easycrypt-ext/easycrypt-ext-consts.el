@@ -25,6 +25,9 @@
 (defconst ece-delimiters
   (append ece-delimiters-open ece-delimiters-close))
 
+(defconst ece-bullets-proof
+  (list ?+ ?- ?*))
+
 ;; "Special" keywords
 (defconst ece-keywords-internal
   (list "debug" "fail" "pragma" "prover" "time" "timeout"
@@ -38,7 +41,7 @@
         "include" "remove" "rename" "require" "with"))
 
 (defconst ece-keywords-scope
-  (list "declare" "local"))
+  (list "declare" "local" "global"))
 
 (defconst ece-keywords-proof-start
   (list "proof" "realize"))
@@ -72,14 +75,18 @@
   (delete-dups (append ece-keywords-functional-spec-start
                        ece-keywords-functional-spec-other)))
 
-(defconst ece-keywords-imperative-spec-open
+(defconst ece-keywords-imperative-spec-start
   (list "elif" "else" "if" "match" "module" "proc" "while"))
+
+(defconst ece-keywords-imperative-spec-start-scope
+  (append ece-keywords-imperative-spec-start
+          ece-keywords-scope))
 
 (defconst ece-keywords-imperative-spec-other
   (list "assert" "for" "import" "include" "is" "return" "var"))
 
 (defconst ece-keywords-imperative-spec
-  (delete-dups (append ece-keywords-imperative-spec-open
+  (delete-dups (append ece-keywords-imperative-spec-start
                        ece-keywords-imperative-spec-other)))
 
 (defconst ece-keywords-spec

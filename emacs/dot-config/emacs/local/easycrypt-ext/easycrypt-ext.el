@@ -14,6 +14,22 @@
   :type 'boolean
   :group 'easycrypt-ext)
 
+(defcustom ece-indentation-style 'local
+  "`'local' or `'nonlocal' to make local or non-local
+the default indentation style. The difference between the
+two styles mainly pertains to indentation inside
+enclosed expressions (e.g., between { and }, ( and ),
+or [ and ]): `'local' indents w.r.t. previous
+non-blank line in the expression; `'non-local' indents
+w.r.t. expression opener (e.g., { or ( or [).
+In any case, indentation using the opposite style is available
+through the command `ece-indent-for-tab-command-inverse-style', which see.
+Only has effect if `ece-enable-indentation', which see, is non-nil."
+  :type '(choice
+          (const :tag "Local indentation" local)
+          (const :tag "Non-local indentation" nonlocal))
+  :group 'easycrypt-ext)
+
 (defcustom ece-enable-indentation-keybindings t
   "Non-nil (resp. `nil') to enable (resp. disable) suggested keybindings
 for indentation-related commands in EasyCrypt."
@@ -72,59 +88,100 @@ Can be 'dark, 'light, or nil."
   (file-name-directory (or load-file-name buffer-file-name))
   "Directory where this file is stored (and so also where rest of package should be).")
 
-
 ;; Indentation
-;;; Basic rigid indentation
+(defun ece--insert-tabs-of-whitespace (n)
+  "Insert N literal tabs worth of whitespace, respecting `indent-tabs-mode'."
+  (if indent-tabs-mode
+      ;; Then, insert N actual tab characters
+      (insert (make-string n ?\t))
+    ;; Else, insert N * `tab-width' spaces
+    (insert (make-string (* n tab-width) ?\s))))
+
+;;; Basic indentation
 ;;;###autoload
 (defun ece-basic-indent (arg)
-  "Indent all lines touched by the active region by ARG * `tab-width'.
-If no region is active, insert (ARG > 0) or delete (ARG < 0) tabs at point
-(respecting tab stops when inserting). If ARG < 0 and there is no whitespace
-behind point, remove ARG tabs worth of whitespace from indentation of current line."
+  "Indent (ARG > 0) resp. de-indent (ARG < 0) all lines touched by the
+active region by |ARG| tab stops.
+If no region is active and point is inside indentation,
+then indent (ARG > 0) resp. de-indent (ARG < 0) current line |ARG| times
+(respecting tab stops).
+If no region is active and point is in the middle of a line, insert (ARG > 0)
+or delete (ARG < 0) literal whitespace (|ARG| * `tab-width' worth).
+If ARG < 0 and there is no whitespace behind point in the middle of a line,
+again de-indent line |ARG| times (respecting tab stops)."
   (interactive "p")
-  ;; If region is active,...
-  (if (use-region-p)
-      ;; Then, take stock of current region, point, and mark positions
-      ;; and compute new region positions
-      (let* ((orig-region-start (region-beginning))
-             (orig-region-stop (region-end))
-             (new-region-start (save-excursion (goto-char orig-region-start)
-                                               (pos-bol)))
-             (new-region-stop (save-excursion (goto-char orig-region-stop)
-                                              (pos-eol)))
-             (region-forward (<= orig-region-start orig-region-stop)))
-        ;; Expand visual region to new region positions
-        (if region-forward
-            (progn (goto-char new-region-stop) (set-mark new-region-start))
-          (progn (goto-char new-region-start) (set-mark new-region-stop)))
-        ;; Indent visually expanded region
-        (indent-rigidly new-region-start new-region-stop (* arg tab-width))
-        ;; Don't deactivate-mark, so we don't have to re-select region to repeat
-        (setq-local deactivate-mark nil))
-    ;; Else (no region is active), if prefix argument is negative...
-    (if (< arg 0)
-        ;; Then, take stock of whitespace behind point, and
-        (let* ((orig-point (point))
-               (del-ub (min (* (abs arg) tab-width) (- orig-point (pos-bol))))
-               (del (save-excursion
-                      (skip-chars-backward "[:space:]" (- orig-point del-ub))
-                      (- orig-point (point)))))
-          ;; if there is at least some whitespace...
-          (if (< 0 del)
-              ;; Then, delete ARG * tab-width of white-space
-              ;; (at most until first non-whitespace character)
-              (delete-region (- orig-point del) orig-point)
-            ;; Else, un-tab current line (at most) ARG times
-            (indent-rigidly (pos-bol) (pos-eol) (* arg tab-width))))
-      ;; Else, insert ARG tabs at point
-      (insert-tab arg))))
+  (let* ((neg (< arg 0))
+         (count (if neg (abs arg) arg))
+         (orig-point (point))
+         (orig-col (current-column))
+         (orig-ind (current-indentation)))
+    ;; If region is active,...
+    (if (use-region-p)
+        ;; Then, store start position of point and compute indentation region
+        (let ((ind-region-start (save-excursion (goto-char (region-beginning))
+                                                (pos-bol)))
+              (ind-region-stop (save-excursion (goto-char (region-end))
+                                               (when (bolp) (forward-line -1))
+                                               (pos-eol))))
+          ;; If it is inside region to indent within margins of indentation,
+          ;; move to (end of) indentation
+          ;; (Otherwise, leave point as is)
+          (cond
+           ;; If point is before start of region to indent...
+           ((< orig-point ind-region-start)
+            ;; Then, move it to indentation on first line of region to indent
+            (goto-char ind-region-start)
+            (back-to-indentation))
+           ;; Else, if point is after end of region to indent...
+           ((< ind-region-stop orig-point)
+            ;; Then, move it to indentation on last line of region to indent
+            (goto-char ind-region-stop)
+            (back-to-indentation))
+           ;; Else (point is inside region to indent), move it to indentation of current line
+           ((< orig-col orig-ind)
+            (back-to-indentation)))
+          ;; Indent indentation region appropriately
+          (if neg
+              (dotimes (_ count) (indent-rigidly-left-to-tab-stop ind-region-start ind-region-stop))
+            (dotimes (_ count) (indent-rigidly-right-to-tab-stop ind-region-start ind-region-stop)))
+          ;; Don't deactivate-mark, so we don't have to re-select region to repeat
+          (setq-local deactivate-mark nil))
+      ;; Else (no region is active), if line is empty...
+      (if (string-match-p "^[[:blank:]]*$" (buffer-substring-no-properties (pos-bol) (pos-eol)))
+          ;; Then, if ARG < 0...
+          (if neg
+              ;; Then, remove (at most) |ARG| tabs worth of whitespace before point
+              (delete-region (max (pos-bol) (- orig-point (* count tab-width))) orig-point)
+            ;; Else, simply insert ARG tabs worth of whitespace
+            (ece--insert-tabs-of-whitespace count))
+        ;; Else (line is not empty), if inside indentation...
+        (if (<= orig-col orig-ind)
+            ;; Then, (de-)indent current line (at most) |ARG| times (and move to indentation)
+            (progn
+              (if neg
+                  (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol)))
+                (dotimes (_ count) (indent-rigidly-right-to-tab-stop (pos-bol) (pos-eol))))
+              (back-to-indentation))
+          ;; Else (line is not empty and not inside indentation), if ARG < 0...
+          (if neg
+              ;; Then, take stock of whitespace before point...
+              (let* ((del-ub (min (* count tab-width) (- orig-point (pos-bol))))
+                     (del (save-excursion
+                            (skip-chars-backward "[:space:]" (- orig-point del-ub))
+                            (- orig-point (point)))))
+                ;; If there is at least some whitespace before point...
+                (if (< 0 del)
+                    ;; Then, delete |ARG| * tab-width worth of whitespace
+                    ;; (at most, until first non-whitespace character)
+                    (delete-region (- orig-point del) orig-point)
+                  ;; Else, de-indent current line (at most) |ARG| times
+                  (dotimes (_ count) (indent-rigidly-left-to-tab-stop (pos-bol) (pos-eol)))))
+            ;; Else (ARG >= 0), simply insert ARG tabs worth of whitespace
+            (ece--insert-tabs-of-whitespace count)))))))
 
 ;;;###autoload
 (defun ece-basic-deindent (arg)
-  "De-indent all lines touched by the active region by ARG * `tab-width'.
-If no region is active, remove ARG tabs worth of whitespace behind point.
-If there is no whitespace behind point, remove ARG tabs from indentation
-of current line."
+  "Simply passes negation of ARG to `ece-basic-indent', which see."
   (interactive "p")
   (ece-basic-indent (- arg)))
 
@@ -140,22 +197,30 @@ or beginning of buffer if there is no such line."
   "Returns fallback indentation level for EasyCrypt code
 (i.e., when no 'special indentation' case is detected)."
   (save-excursion
-    ;; Get previous non-blank line
+    ;; Go to (indentation of) previous non-blank line
     (ece--goto-previous-nonblank-line)
-    (setq prev-line (buffer-substring-no-properties (pos-bol) (pos-eol)))
-    ;; If previous non-blank line is an unfinished non-proof/non-proc spec
-    ;; (E.g., starts with `lemma' but does not end with a `.')
-    ;; Here, we also count a comma as ending a spec to deal with the case of
-    ;; instantiation in `clone' (and hope it isn't common to end a line
-    ;; with a comma outside of `clone').
-    (if (and (seq-some (lambda (kw)
-                         (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
-                       ece-keywords-start)
-             (not (string-match-p "[\\.,][[:blank:]]*\\(?:(\\*.*\\*)\\)?[[:blank:]]*$" prev-line)))
-        ;; Then, align with previous non-blank line + tab
-        (+ (current-indentation) tab-width)
-      ;; Else, align with previous non-blank line (default)
-      (current-indentation))))
+    (back-to-indentation)
+    ;; If previous non-blank line starts with a proof bullet (i.e., +, -, or *),
+    ;; but doesn't end a comment (i.e., isn't `*)`)...
+    (if (and (memq (char-after) ece-bullets-proof)
+             (not (looking-at-p "\\*)")))
+        ;; Then, align to that line + 2 (putting point right after bullet)
+        (+ (current-indentation) 2)
+      ; Else, get content of that line...
+      (setq prev-line (buffer-substring-no-properties (pos-bol) (pos-eol)))
+      ;; If that line is an unfinished non-proof/non-proc spec
+      ;; (E.g., starts with `lemma' but does not end with a `.')
+      ;; Here, we also count a comma as ending a spec to deal with the case of
+      ;; instantiation in `clone' (and hope it isn't common to end a line
+      ;; with a comma outside of `clone').
+      (if (and (seq-some (lambda (kw)
+                           (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
+                         ece-keywords-start)
+               (not (string-match-p "[\\.,][[:blank:]]*\\(?:(\\*.*\\*)\\)?[[:blank:]]*$" prev-line)))
+          ;; Then, align with that line + tab
+          (+ (current-indentation) tab-width)
+        ;; Else, align with that line (default)
+        (current-indentation)))))
 
 (defun ece--indent-level ()
   "Returns desired indentation level of EasyCrypt code."
@@ -172,74 +237,113 @@ or beginning of buffer if there is no such line."
         (cond
          ;; If we are in a comment...
          (incom
-          (let ((comcl (looking-at-p "[\\^\\*]?\\*)")))
+          (let ((comcl (looking-at-p "[\\^\\*]?\\*)"))
+                (opcol (save-excursion (goto-char csop) (current-column))))
             ;; Then, if our line closes the comment...
             (if (and incom comcl)
                 ;; Then, align closer with the opener
-                (progn (goto-char csop)
-                       (setq indent-level (current-column)))
-              ;; Else,...
-              (ece--goto-previous-nonblank-line) ; Go to beginning of previous non-blank line
-              (back-to-indentation) ; Go to indentation of found line
-              ;; If there is a previous non-blank line within the comment...
-              (if (< csop (point))
-                  ;; Then, align with indentation of that line
-                  (setq indent-level (current-column))
-                ;; Else, align with opener + tab
-                (goto-char csop)
-                (setq indent-level (+ (current-column) tab-width))))))
+                (setq indent-level opcol)
+              ;; Else, if indentation style is non-local...
+              (if (eq ece-indentation-style 'nonlocal)
+                  ;; Then, align to opener + tab
+                  (setq indent-level (+ opcol tab-width))
+                ;; Else (indentation style is local)...
+                (ece--goto-previous-nonblank-line) ; Go to beginning of previous non-blank line
+                ;; If there is a previous non-blank line inside comment...
+                (if (< (line-number-at-pos csop) (line-number-at-pos))
+                    ;; Then, align to that line
+                    (setq indent-level (current-indentation))
+                  ;; Else, align to opener + tab
+                  (setq indent-level (+ opcol tab-width)))))))
          ;; Else, if we are in a string...
          (instr
           ;; Then, set indent-level to 0 (because indentation affects value of string)
           (setq indent-level 0))
          ;; Else, if we are in an opened or enclosed expression...
-         ;; (E.g., between { and }, or ( and ), or after { or ( with no closing counterpart)
+         ;; E.g., between { and }, or ( and ), or after { with no closing counterpart
          (exprop
-          (let ((chcl (char-after)))
-            (goto-char exprop) ; Go to opener
-            (let ((chop (char-after)))
+          (let* ((chcl (char-after))
+                 (choci (save-excursion
+                          (goto-char exprop)
+                          (list (char-after) (current-column) (current-indentation))))
+                 (chop (nth 0 choci))
+                 (opcol (nth 1 choci))
+                 (opind (nth 2 choci)))
               ;; Then, if opener is an expression opener (`[` or `(`)...
               (if (memq chop ece-delimiters-expression-open)
                   ;; Then, if first char on our line is a matching closer...
                   (if (eq chcl (matching-paren chop))
                       ;; Then, align to column of opener
-                      (setq indent-level (current-column))
-                    ;; Else, align to column of opener + 1
-                    (setq indent-level (+ (current-column) 1)))
+                      (setq indent-level opcol)
+                    ;; Else, if indentation style is non-local...
+                    (if (eq ece-indentation-style 'nonlocal)
+                        ;; Then, align to opener + 1
+                        (setq indent-level (+ opcol 1))
+                      ;; Else (indentation style is local)...
+                      (ece--goto-previous-nonblank-line) ; Go to beginning of previous non-blank line
+                      ;; If there is previous non-blank line in the enclosed expression...
+                      (if (< (line-number-at-pos exprop) (line-number-at-pos))
+                          ;; Then, align to that line
+                          (setq indent-level (current-indentation))
+                        ;; Else, align to opener + 1
+                        (setq indent-level (+ opcol 1)))))
                 ;; Else, if opener is a code opener (i.e., `{`)...
                 (if (memq chop ece-delimiters-code-open)
                     ;; Then,...
                     (let ((bob nil))
                       (progn
-                        ;; Find "imperative spec opener" (i.e., a keyword
-                        ;; opening a code block such as module or proc)
-                        ;; Note: point is at opening brace, so the imperative spec
-                        ;; opener might already be on the current line
+                        ;; Find "imperative spec starter" (i.e., a keyword
+                        ;; opening a code block, like module or proc) or
+                        ;; "scoper" (i.e., keyword defining the scope of an
+                        ;; artifact, like local, global, or declare)
                         (save-excursion
+                          (goto-char exprop)
                           (forward-line 0)
                           (while (and (not (bobp))
                                       (not (seq-some (lambda (kw) (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b")))
-                                                     ece-keywords-imperative-spec-open)))
+                                                     ece-keywords-imperative-spec-start-scope)))
                             (forward-line -1))
                           ;; If we didn't find such a line (i.e., we are at the beginning of a buffer)...
                           (if (bobp)
                               ;; Then, record this fact
                               (setq bob t)
-                            ;; Else, record indentation of imperative spec opener's line
+                            ;; Else, record indentation of keyword's line
                             (setq indent-level (current-indentation))))
-                        ;; If we didn't find a imperative spec opener,...
+                        ;; If we didn't find a valid keyword,...
                         (if bob
                             ;; Then, fallback to indenting relative to opening brace instead
                             ;; So, if first char on our line is a matching closing brace...
                             (if (eq chcl (matching-paren chop))
                                 ;; Then, align to indentation of opening brace's line
-                                (setq indent-level (current-indentation))
-                              ;; Else, align to indentation of opening brace's line + tab
-                              (setq indent-level (+ (current-indentation) tab-width)))
-                          ;; Else, if first char on our line is *not* a matching closer...
+                                (setq indent-level opind)
+                              ;; Else, if indentation style is non-local...
+                              (if (eq ece-indentation-style 'nonlocal)
+                                  ;; Then, align to indentation of opening brace's line + tab
+                                  (setq indent-level (+ opind tab-width))
+                                ;; Else (indentation style is local)...
+                                (ece--goto-previous-nonblank-line) ; Go to beginning of previous non-blank line
+                                ;; If there is previous non-blank line in the enclosed expression...
+                                (if (< (line-number-at-pos exprop) (line-number-at-pos))
+                                    ;; Then, align to that line
+                                    (setq indent-level (current-indentation))
+                                  ;; Else, align to indentation of opening brace's line + tab
+                                  (setq indent-level (+ opind tab-width)))))
+                          ;; Else (we found a valid keyword and `indent-level` recorded
+                          ;; indentation of corresponding line),
+                          ;; if first char on our line is *not* a matching closer...
                           (unless (eq chcl (matching-paren chop))
-                            ;; Then, add tab to recorded indentation of imperative spec opener
-                            (setq indent-level (+ indent-level tab-width))))))
+                            ;; Else, if indentation style is non-local...
+                              (if (eq ece-indentation-style 'nonlocal)
+                                  ;; Then, align to recorded indentation of keyword's line + tab
+                                  (setq indent-level (+ indent-level tab-width))
+                                ;; Else (indentation style is local)...
+                                (ece--goto-previous-nonblank-line) ; Go to beginning of previous non-blank line
+                                ;; If there is previous non-blank line in the enclosed expression...
+                                (if (< (line-number-at-pos exprop) (line-number-at-pos))
+                                    ;; Then, align to that line
+                                    (setq indent-level (current-indentation))
+                                  ;; Else, align to recorded indentation of keyword's line + tab
+                                  (setq indent-level (+ indent-level tab-width))))))))
                   ;; Else, parsing indicates we are in an expression that has
                   ;; an unknown opener, which shouldn't be possible.
                   ;; Although this is a bug and should be fixed, don't annoy user
@@ -248,7 +352,7 @@ or beginning of buffer if there is no such line."
                            "ece--indent-level: parsing indicates expression with unknown delimiter."
                            "This should not be possible, please report."
                            "Using fallback indentation.")
-                  (setq indent-level (ece--indent-level-fallback)))))))
+                  (setq indent-level (ece--indent-level-fallback))))))
          ;; Else, if we are looking at a proof starter (e.g., proof or realize)
          ((seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
                     ece-keywords-proof-start)
@@ -317,8 +421,18 @@ or beginning of buffer if there is no such line."
       (indent-line-to indent-level))
     ;; Still adjust point if it's inside indentation
     (when (< (current-column) (current-indentation))
-      (move-to-column indent-level))))
+      (back-to-indentation))))
 
+;;;###autoload
+(defun ece-indent-for-tab-command-inverse-style ()
+  "Calls `indent-for-tab-command' with `ece-indentation-style' inverted.
+If `ece-enable-indentation' is non-nil, `indent-line-function' will be set to
+`ece-indent-line', which is used by `indent-for-tab-command' to indent a line
+or region. So, this command essentially performs indentation according to the
+style that is currently not selected."
+  (interactive)
+  (let ((ece-indentation-style (if (eq ece-indentation-style 'local) 'nonlocal 'local)))
+    (indent-for-tab-command)))
 
 ;;;###autoload
 (defun ece-indent-on-insertion-closer ()
@@ -331,8 +445,7 @@ code that has been manually de-indented; this is a hack
 and a limitation of the localized ad-hoc computation
 of the indent level).
 Meant for `post-self-insert-hook'."
-  (when-let* ((line-before (buffer-substring-no-properties (pos-bol)
-                                                           (- (point) 1)))
+  (when-let* ((line-before (buffer-substring-no-properties (pos-bol) (- (point) 1)))
               ((or (and (memq last-command-event '(?\} ?\]))
                         (string-match-p "^[[:blank:]]*$" line-before))
                    (and (eq last-command-event ?\))
@@ -513,7 +626,8 @@ argument to the `locate' command in EasyCrypt."
     (keymap-local-set "TAB" #'ece-basic-indent)
     (keymap-local-set "<tab>" "TAB")
     (keymap-local-set "<backtab>" #'ece-basic-deindent)
-    (keymap-local-set "M-i" #'indent-for-tab-command)))
+    (keymap-local-set "M-i" #'indent-for-tab-command)
+    (keymap-local-set "M-I" #'ece-indent-for-tab-command-inverse-style)))
 
 ;;; Auxiliary functionality
 (defun ece--setup-auxiliary-functionality-keybindings ()
@@ -579,7 +693,6 @@ that allows to include other templates by their name."
   (when (eq (car-safe elt) 'i)
     (when-let (template (alist-get (cadr elt) (tempel--templates)))
       (cons 'l template))))
-
 
 (defun ece--tempel-template-file-read (file)
   (let ((res '()))

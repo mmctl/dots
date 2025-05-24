@@ -203,6 +203,8 @@
 (setopt truncate-lines t)
 (setopt truncate-partial-width-windows nil)
 
+(setopt fill-column 80)
+
 (setopt kill-do-not-save-duplicates t)
 
 (setopt use-dialog-box nil)
@@ -218,9 +220,9 @@
 (setopt global-hl-line-sticky-flag nil)
 
 (setopt cycle-spacing-actions '(delete-all-space
+                                (just-one-space -)
                                 (delete-space-before 0)
                                 (delete-space-after 0)
-                                (delete-all-space -)
                                 restore))
 
 (setopt shift-select-mode t)
@@ -294,16 +296,19 @@
 (keymap-global-set "M-M" #'pop-global-mark)
 
 ;;; Selection
-(keymap-global-set "M-SPC" #'set-mark-command)
+(keymap-global-set "M-h" #'set-mark-command)
 
 ;;; Manipulation
 ;;;; Copying
 (keymap-global-set "C-t" #'kill-ring-save)
 (keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
-;;;; Joining
-(keymap-global-set "M-b" #'join-line)
-(keymap-global-set "M-f" #'join-line-forward)
+;;;; Exchanging/Joining
+(keymap-global-set "M-w" #'exchange-word)
+(keymap-global-set "M-W" #'exchange-word-backward)
+
+(keymap-global-set "M-j" #'join-line-stay)
+(keymap-global-set "M-J" #'join-line-forward-stay)
 
 ;;;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
@@ -587,7 +592,7 @@
                             (?D defun-name     " ")
                             (?l line           "\n")
                             (?b buffer-file-name)))
-  (setopt easy-kill-cycle-ignored '(filename defun-name buffer-file-name)
+  (setopt easy-kill-cycle-ignored '(list filename defun defun-name buffer-file-name)
           easy-kill-try-things '(url email word line)
           easy-mark-try-things '(url email word sexp))
 
@@ -863,10 +868,10 @@
           cape-file-prefix '("file:" "f:")
           cape-file-directory-must-exist t)
 
-  :config
   ;; Keybindings
-  (keymap-global-set "C-c c"  #'cape-prefix-map)
+  (keymap-global-set "C-c y" #'cape-prefix-map)
 
+  :config
   ;; Custom functionality
   (defalias 'cape-abbrev-prefix-2 (cape-capf-prefix-length #'cape-abbrev 2))
   (defalias 'cape-dabbrev-prefix-2 (cape-capf-prefix-length #'cape-dabbrev 2))
@@ -884,8 +889,9 @@
   (defun setup-a-cape-mix-mode ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'cape-keyword-prefix-2 #'cape-dict-prefix-2
-                                       #'cape-dabbrev-prefix-2))))
+                                       #'cape-keyword-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      #'cape-dict-prefix-2)))
   (defun setup-a-cape-code-mode ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super #'cape-abbrev-prefix-2
@@ -896,6 +902,7 @@
                 (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-history-prefix-2 #'cape-file-prefix-2
                                        #'cape-dabbrev-prefix-2))))
+
   ;; Hooks
   (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev-prefix-2 #'cape-dabbrev-prefix-2))
 
@@ -977,6 +984,12 @@ that allows to include other templates by their name."
   (global-tempel-abbrev-mode 1))
 
 ;;; Actions
+(use-package move-text
+  :ensure t
+
+  :bind (("M-u" . move-text-up)
+         ("M-U" . move-text-down)))
+
 (use-package crux
   :ensure t
   :pin melpa
@@ -989,6 +1002,7 @@ that allows to include other templates by their name."
   (keymap-global-set "C-c x" 'a-crux-map-prefix)
 
   :bind (("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
+         ("<remap> <kill-whole-line>" . crux-kill-whole-line)
          ("M-d" . crux-duplicate-current-line-or-region)
          (:map a-crux-map
                ("RET" . crux-smart-open-line)
@@ -1115,7 +1129,7 @@ that allows to include other templates by their name."
   (defvar-keymap a-consult-map
     :doc "Keymap for consult (misc)"
     :prefix 'a-consult-map-prefix)
-  (keymap-global-set "C-c a" 'a-consult-map-prefix)
+  (keymap-global-set "C-c w" 'a-consult-map-prefix)
 
   :bind (("C-l" . consult-line)
          ("C-;" . consult-goto-line)
@@ -1180,8 +1194,8 @@ that allows to include other templates by their name."
   :ensure t
   :pin melpa
 
-  :bind (("C-," . embark-act)
-         ("C-." . embark-dwim)
+  :bind (("M-," . embark-act)
+         ("M-." . embark-dwim)
          ("C-h C-b" . embark-bindings))
 
   :init
@@ -1217,7 +1231,6 @@ that allows to include other templates by their name."
 
   (keymap-set embark-become-file+buffer-map "F" #'find-file-other-window)
   (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window))
-
 
 (use-package embark-consult
   :ensure t
@@ -1364,22 +1377,33 @@ that allows to include other templates by their name."
             (output-dvi "xdvi")
             (output-pdf "PDF Tools")
             (output-html "xdg-open")))
+
+  (setopt TeX-PDF-mode t)
+
+  (setopt TeX-master nil)
+
+  (setopt TeX-parse-self t
+          TeX-auto-regexp-list 'TeX-auto-full-regexp-list)
+
   (setopt TeX-file-line-error t
-          TeX-display-help t
-          TeX-PDF-mode t
+          TeX-display-help t)
+
+  (setopt TeX-save-query t
           TeX-auto-save t
-          TeX-parse-self t
-          TeX-master nil
-          TeX-save-query t
-          TeX-auto-regexp-list 'TeX-auto-full-regexp-list
           TeX-auto-untabify t)
+
+  (setopt TeX-source-correlate-method '((dvi . source-specials)
+                                        (pdf . synctex)))
 
   :config
   ;; Hooks
   (add-hook 'TeX-language-en-hook (lambda () (jinx-languages "en_US")))
   (add-hook 'TeX-language-nl-hook (lambda () (jinx-languages "nl")))
 
-  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer))
+  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+
+  ;; Activation
+  (TeX-source-correlate-mode 1))
 
 (use-package pdf-tools
   :ensure t
@@ -1406,20 +1430,21 @@ that allows to include other templates by their name."
   (keymap-set pdf-view-mode-map "p" #'pdf-view-previous-page-command)
   (keymap-set pdf-view-mode-map "<next>" #'pdf-view-next-page-command)
   (keymap-set pdf-view-mode-map "<prior>" #'pdf-view-previous-page-command)
-  (keymap-set pdf-view-mode-map "C-n" #'pdf-view-scroll-down-or-next-page)
-  (keymap-set pdf-view-mode-map "C-p" #'pdf-view-scroll-up-or-previous-page)
-  (keymap-set pdf-view-mode-map "SPC" #'pdf-view-scroll-down-or-next-page)
-  (keymap-set pdf-view-mode-map "DEL" #'pdf-view-scroll-up-or-previous-page)
+  (keymap-set pdf-view-mode-map "C-n" #'pdf-view-scroll-up-or-next-page)
+  (keymap-set pdf-view-mode-map "C-p" #'pdf-view-scroll-down-or-previous-page)
+  (keymap-set pdf-view-mode-map "SPC" #'pdf-view-scroll-up-or-next-page)
+  (keymap-set pdf-view-mode-map "DEL" #'pdf-view-scroll-down-or-previous-page)
   (keymap-set pdf-view-mode-map "<backspace>" "DEL")
   (keymap-set pdf-view-mode-map "<end>" #'pdf-view-last-page)
   (keymap-set pdf-view-mode-map "<home>" #'pdf-view-first-page)
-  (keymap-set pdf-view-mode-map "C-l" #'pdf-goto-label)
-  (keymap-set pdf-view-mode-map "C-;" #'pdf-goto-page)
-  (keymap-set pdf-view-mode-map "z" #'pdf-view-enlarge)
-  (keymap-set pdf-view-mode-map "Z" #'pdf-view-shrink)
+  (keymap-set pdf-view-mode-map "z" #'pdf-view-shrink)
+  (keymap-set pdf-view-mode-map "Z" #'pdf-view-enlarge)
   (keymap-set pdf-view-mode-map "0" #'pdf-view-scale-reset)
   (keymap-set pdf-view-mode-map "r" #'pdf-view-rotate)
   (keymap-set pdf-view-mode-map "R" #'revert-buffer)
+  (keymap-set pdf-view-mode-map "a c" #'pdf-view-center-in-window)
+  (keymap-set pdf-view-mode-map "a l" #'pdf-view-align-left)
+  (keymap-set pdf-view-mode-map "a r" #'pdf-view-align-right)
   (keymap-set pdf-view-mode-map "a w" #'pdf-view-fit-width-to-window)
   (keymap-set pdf-view-mode-map "a h" #'pdf-view-fit-height-to-window)
   (keymap-set pdf-view-mode-map "a p" #'pdf-view-fit-page-to-window)
@@ -1429,24 +1454,37 @@ that allows to include other templates by their name."
   (keymap-set pdf-view-mode-map "v m" #'pdf-view-midnight-minor-mode)
   (keymap-set pdf-view-mode-map "v t" #'pdf-view-themed-minor-mode)
   (keymap-set pdf-view-mode-map "v p" #'pdf-view-printer-minor-mode)
+  (keymap-set pdf-view-mode-map "C-l" #'pdf-view-goto-label)
+  (keymap-set pdf-view-mode-map "C-;" #'pdf-view-goto-page)
 
   ;; Hooks
-  (add-hook 'pdf-view-mode-hook #'pdf-view-themed-minor-mode)
   (add-hook 'pdf-tools-enabled-hook #'(lambda ()
                                         (keymap-set pdf-annot-edit-contents-minor-mode-map
                                                     "C-c C-v"
                                                     #'pdf-annot-edit-contents-commit)))
   (add-hook 'pdf-tools-enabled-hook #'(lambda ()
-                                        (keymap-set pdf-sync-minor-mode-map "<double-mouse-1>" nil))))
+                                        (keymap-unset pdf-sync-minor-mode-map "<double-mouse-1>"))))
 
 (use-package org
   :ensure t
 
   :defer t
 
+  :preface
+  (defvar-keymap an-org-map
+    :doc "Keymap for org"
+    :prefix 'an-org-map-prefix)
+  (keymap-global-set "C-c o" 'an-org-map-prefix)
+
+  :bind (("C-c c" . org-capture)
+         (:map an-org-map
+               ("a" . org-agenda)
+               ("c" . org-capture)
+               ("l" . org-store-link)))
+
   :init
   ;; Setup and settings (before load)
-  ;; Create and store templates directory
+  ;; Create and store org root directory
   (defconst ORG_DIR (file-name-as-directory
                      (if (getenv "XDG_DATA_HOME")
                          (file-name-concat (getenv "XDG_DATA_HOME") "org/")
@@ -1455,15 +1493,34 @@ that allows to include other templates by their name."
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
 
-  (setopt org-default-notes-file (file-name-concat ORG_DIR ".notes"))
+  ;; Create and store org agenda directory
+  (defconst ORG_AGENDA_DIR (file-name-as-directory (file-name-concat ORG_DIR "agenda/"))
+    "Directory used for org agenda files.")
+  (unless (file-directory-p ORG_AGENDA_DIR)
+    (make-directory ORG_AGENDA_DIR t))
 
-  (setopt org-replace-disputed-keys t)
+  (setopt org-default-notes-file (file-name-concat ORG_DIR "notes.org")
+          org-agenda-files ORG_AGENDA_DIR)
+
+  (setopt org-replace-disputed-keys t
+          org-disputed-keys '(([(meta up)] . [(meta p)])
+                              ([(meta down)] . [(meta n)])
+                              ([(meta left)] . [(meta b)])
+                              ([(meta right)] . [(meta f)])
+                              ([(shift up)]		. [(meta shift p)])
+                              ([(shift down)]		. [(meta shift n)])
+                              ([(shift left)]		. [(meta shift b)])
+                              ([(shift right)]		. [(meta shift f)])
+                              ([(control shift up)]	. [(control shift p)])
+                              ([(control shift down)]	. [(control shift n)])
+                              ([(control shift left)]	. [(control shift b)])
+                              ([(control shift right)] . [(control shift f)])))
+
   (setopt org-return-follows-link t)
+  (setopt org-support-shift-select t)
+  (setopt org-log-done 'time)
 
   :config
-  ;; Setup and settings (after load)
-  (setopt org-support-shift-select t)
-
   ;; Keybindings
   (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
 
@@ -1473,7 +1530,8 @@ that allows to include other templates by their name."
   (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right)
 
   ;; Hooks
-  (add-hook 'org-mode-hook #'loc-setup-mix-mode))
+  (add-hook 'org-mode-hook #'loc-setup-mix-mode)
+  (add-hook 'org-mode-hook #'org-indent-mode))
 
 (use-package markdown-mode
   :ensure t
