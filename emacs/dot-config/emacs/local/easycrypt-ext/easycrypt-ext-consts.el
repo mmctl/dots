@@ -4,6 +4,12 @@
 ;; (E.g., extract syntax elements from syntax table and keywords from parser)
 
 ;; Syntax
+(defconst ece-delimiters-comments-open
+  (list "(*" "(*&" "(*^"))
+
+(defconst ece-delimiters-comments-close
+  (list "*)" "&*)" "^*)"))
+
 (defconst ece-delimiters-expression-open
   (list ?\[ ?\())
 
@@ -17,10 +23,14 @@
   (list ?\}))
 
 (defconst ece-delimiters-open
-  (append ece-delimiters-expression-open ece-delimiters-code-open))
+  (append ece-delimiters-comments-open
+          ece-delimiters-expression-open
+          ece-delimiters-code-open))
 
 (defconst ece-delimiters-close
-  (append ece-delimiters-expression-close ece-delimiters-code-close))
+  (append ece-delimiters-comments-close
+          ece-delimiters-expression-close
+          ece-delimiters-code-close))
 
 (defconst ece-delimiters
   (append ece-delimiters-open ece-delimiters-close))

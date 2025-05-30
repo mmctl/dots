@@ -9,10 +9,15 @@ set $C Control
 set $S Shift
 
 ## Movement
-set $left h
-set $down j
-set $up k
-set $right l
+# set $left h
+# set $down j
+# set $up k
+# set $right l
+
+set $left Left
+set $down Down
+set $up Up
+set $right Right
 
 ## Workspaces
 ### Numbered

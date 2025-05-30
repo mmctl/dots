@@ -247,15 +247,15 @@
 (keymap-set function-key-map "C-M-S-<iso-lefttab>" "C-M-<backtab>")
 
 ;;; Movement
-(keymap-global-set "C-M-h" #'windmove-left)
-(keymap-global-set "C-M-j" #'windmove-down)
-(keymap-global-set "C-M-k" #'windmove-up)
-(keymap-global-set "C-M-l" #'windmove-right)
+(keymap-global-set "C-M-<left>" #'windmove-left)
+(keymap-global-set "C-M-<down>" #'windmove-down)
+(keymap-global-set "C-M-<up>" #'windmove-up)
+(keymap-global-set "C-M-<right>" #'windmove-right)
 
-(keymap-global-set "M-H" #'windmove-swap-states-left)
-(keymap-global-set "M-J" #'windmove-swap-states-down)
-(keymap-global-set "M-K" #'windmove-swap-states-up)
-(keymap-global-set "M-L" #'windmove-swap-states-right)
+(keymap-global-set "M-S-<left>" #'windmove-swap-states-left)
+(keymap-global-set "M-S-<down>" #'windmove-swap-states-down)
+(keymap-global-set "M-S-<up>" #'windmove-swap-states-up)
+(keymap-global-set "M-S-<right>" #'windmove-swap-states-right)
 
 (keymap-global-set "<left>" #'left-char)
 (keymap-global-set "<right>" #'right-char)
@@ -312,7 +312,7 @@
 
 ;;;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
-(keymap-global-set "M-<deletechar>" #'kill-word)
+(keymap-global-set "M-<delete>" #'kill-word)
 
 (keymap-global-set "M-a" #'backward-kill-line)
 (keymap-global-set "M-e" #'kill-line)
@@ -1503,18 +1503,14 @@ that allows to include other templates by their name."
           org-agenda-files ORG_AGENDA_DIR)
 
   (setopt org-replace-disputed-keys t
-          org-disputed-keys '(([(meta up)] . [(meta p)])
-                              ([(meta down)] . [(meta n)])
-                              ([(meta left)] . [(meta b)])
-                              ([(meta right)] . [(meta f)])
-                              ([(shift up)]		. [(meta shift p)])
-                              ([(shift down)]		. [(meta shift n)])
-                              ([(shift left)]		. [(meta shift b)])
-                              ([(shift right)]		. [(meta shift f)])
-                              ([(control shift up)]	. [(control shift p)])
-                              ([(control shift down)]	. [(control shift n)])
-                              ([(control shift left)]	. [(control shift b)])
-                              ([(control shift right)] . [(control shift f)])))
+          org-disputed-keys '(([(shift up)] . [(meta p)])
+                              ([(shift down)] . [(meta n)])
+                              ([(shift left)] . [(meta b)])
+                              ([(shift right)] . [(meta f)])
+                              ([(control shift up)]	. [(meta shift p)])
+                              ([(control shift down)]	. [(meta shift n)])
+                              ([(control shift left)]	. [(meta shift b)])
+                              ([(control shift right)] . [(meta shift f)])))
 
   (setopt org-return-follows-link t)
   (setopt org-support-shift-select t)
@@ -1565,6 +1561,39 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
+
+;;; Development
+;;;; OCaml
+(use-package tuareg
+  :ensure t
+  :pin melpa
+
+  :defer t
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt tuareg-electric-indent nil
+          tuareg-electric-close-vector nil)
+
+  (setopt tuareg-highlight-all-operators t))
+
+(use-package merlin
+  :ensure t
+  :pin melpa
+
+  :hook (tuareg-mode caml-mode)
+
+  :config
+  ;; Keybindings
+  (keymap-unset merlin-type-enclosing-map "C-<up>")
+  (keymap-unset merlin-type-enclosing-map "C-<down>")
+  (keymap-unset merlin-type-enclosing-map "C-w")
+
+  (keymap-set merlin-type-enclosing-map "C-p" #'merlin-type-enclosing-go-up)
+  (keymap-set merlin-type-enclosing-map "C-n" #'merlin-type-enclosing-go-down)
+  (keymap-set merlin-type-enclosing-map "C-t" #'merlin-copy-enclosing))
+
+;;;; Proof General (EasyCrypt)
 ;;;; Note, proof.el (which is provided by the proof-general package) is what is
 ;;;; actually loaded by the proof assistants, not proof-general.el.
 ;;;; Hence, we use `use-package proof :ensure proof-general` to
@@ -1643,6 +1672,8 @@ that allows to include other templates by their name."
   (defun setup-a-proof-mode-map ()
     (keymap-unset proof-mode-map "M-a")
     (keymap-unset proof-mode-map "M-e")
+    (keymap-unset proof-mode-map "C-M-<up>")
+    (keymap-unset proof-mode-map "C-M-<down>")
     (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
     (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive)
     (keymap-set proof-mode-map "C-<prior>" #'proof-goto-command-start)
@@ -1905,11 +1936,10 @@ that allows to include other templates by their name."
 
   :after proof
 
-  :hook (easycrypt-mode . ece-setup)
+  :hook (easycrypt-mode easycrypt-goals-mode easycrypt-response-mode)
 
   :init
-  (setopt ece-enable-templates-info nil)
-  (setopt ece-enable-theme nil))
+  (setopt ece-enable-templates-info nil))
 
 
 ;; Hooks

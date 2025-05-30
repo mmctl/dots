@@ -14,15 +14,15 @@ easycrypt-mode
 (commentn "(*" n>
           q n
           "*)" >)
-(doccomment "(** " q " **)")
-(doccommentn "(**" n>
+(doccomment "(*& " q " &*)")
+(doccommentn "(*&" n>
              q n
-             "**)" >)
+             "&*)" >)
 (doccommentf "(*^" n>
              (file-name-nondirectory (or (buffer-file-name) (buffer-name))) n
              n>
-             "Author: " p n>
-             "Date: " (pfl (format-time-string "%Y-%m-%d")) n>
+             "- Author: " p n>
+             "- Date: " (pfl (format-time-string "%Y-%m-%d")) n>
              "Description:" n>
              q n
              "^*)" >)
