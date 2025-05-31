@@ -2,34 +2,38 @@
 ;; easycrypt-ext.el
 (require 'easycrypt-ext-consts)
 
+;; Constants
+(defconst ece--dir
+  (file-name-directory (or load-file-name buffer-file-name))
+  "Directory where this file is stored (and so also where rest of package should be).")
 
-;; Customizations
+(defconst ece--templates-file
+  (file-name-concat ece--dir "easycrypt-ext-templates.eld")
+  "File where code templates for EasyCrypt are stored.")
+
+(defconst ece--templates-info-file
+  (file-name-concat ece--dir "easycrypt-ext-templates-info.eld")
+  "File where informative code templates for EasyCrypt are stored.")
+
+
+;; Customization options
 (defgroup easycrypt-ext nil
   "Customization group for EasyCrypt extension package."
   :group 'easycrypt)
-
-(defun ece--configure-indentation ()
-  (if ece-indentation	;; TODO: use  (buffer-local-set-state
-      (progn
-        (setq-local electric-indent-mode nil)
-        (setq-local electric-indent-inhibit t)
-        (setq-local tab-width 2)
-        (setq-local indent-line-function #'ece-indent-line)
-        (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t))
-    (kill-local-variable 'electric-indent-mode)
-    (kill-local-variable 'electric-indent-inhibit)
-    (kill-local-variable 'tab-width)
-    (kill-local-variable 'indent-line-function)
-    (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t)))
 
 (defcustom ece-indentation t
   "Non-nil (resp. `nil') to enable (resp. disable) enhanced
 (but still ad-hoc) indentation in EasyCrypt."
   :type 'boolean
   :group 'easycrypt-ext
-  :set (lambda (symbol value)
-         (set-default-toplevel-value symbol value)
-         (ece--configure-indentation)))
+  :initialize #'custom-initialize-default
+  :set #'(lambda (symbol value)
+           (ece--configure-indentation-internal value)
+           (set-default-toplevel-value symbol value)
+           (if value
+               (message "EasyCrypt Ext indentation enabled! Current style: %s." ece-indentation-style)
+             (message "EasyCrypt Ext indentation disabled!"))
+           value))
 
 (defcustom ece-indentation-style 'local
   "`'local' or `'nonlocal' to make local or non-local
@@ -43,37 +47,42 @@ In any case, indentation using the opposite style is available
 through the command `ece-indent-for-tab-command-inverse-style', which see.
 Only has effect if `ece-indentation', which see, is non-nil."
   :type '(choice
-          (const :tag "Local indentation" local)
-          (const :tag "Non-local indentation" nonlocal))
+          (const :tag "Local indentation style" local)
+          (const :tag "Non-local indentation style" nonlocal))
   :group 'easycrypt-ext)
 
-(defcustom ece-indentation-keybindings t
-  "Non-nil (resp. `nil') to enable (resp. disable) suggested keybindings
-for indentation-related commands in EasyCrypt."
-  :type 'boolean
-  :group 'easycrypt-ext)
-
-(defcustom ece-keywords-completion t
+(defcustom ece-keywords-completion nil
   "Non-nil (resp. `nil') to enable (resp. disable) completion for
 EasyCrypt keywords (depends on `cape')."
   :type 'boolean
-  :group 'easycrypt-ext)
+  :group 'easycrypt-ext
+  :initialize #'custom-initialize-default
+  :set #'(lambda (symbol value)
+           (with-eval-after-load 'cape-keyword
+             (ece--configure-keywords-completion-internal value)
+             (set-default-toplevel-value symbol value)
+             (message "EasyCrypt Ext keywords completion %s!" (if value "enabled" "disabled")))
+           (unless (featurep 'cape-keyword)
+             (message "Load `cape-keyword' for changes to %s to take effect. Attempting to change this option more than once before loading `cape-keyword' is pointless."
+                      symbol))))
 
-(defcustom ece-templates t
+(defcustom ece-templates nil
   "Non-nil (resp. `nil') to enable (resp. disable) code templates for
 EasyCrypt (depends on `tempel'). If you enable this, it is recommended to
 also enable enhanced indentation (see `ece-indentation'),
 since the templates use indentation and were made with the enhanced
 EasyCrypt indentation in mind."
   :type 'boolean
-  :group 'easycrypt-ext)
-
-(defcustom ece-templates-keybindings 'ece-templates
-  "Non-nil (resp. `nil') to enable (resp. disable) keybindings for inserting
-EasyCrypt (regular) templates (depends on `tempel'). Does not make much sense
-to enable this when you have disabled templates themselves (see `ece-templates')."
-  :type 'boolean
-  :group 'easycrypt-ext)
+  :group 'easycrypt-ext
+  :initialize #'custom-initialize-default
+  :set #'(lambda (symbol value)
+           (with-eval-after-load 'tempel
+             (ece--configure-templates-internal value)
+             (set-default-toplevel-value symbol value)
+             (message "EasyCrypt Ext templates %s!" (if value "enabled" "disabled")))
+           (unless (featurep 'tempel)
+             (message "Load `tempel' for changes to %s take effect. Attempting to change this option more than once before loading `tempel' is pointless."
+                      symbol))))
 
 (defcustom ece-templates-info 'ece-templates
   "Non-nil (resp. `nil') to enable (resp. disable) informative code templates
@@ -81,27 +90,16 @@ for EasyCrypt (depends on `tempel'). If you enable this, it is recommended to al
 enable enhanced indentation (see `ece-indentation'), since the
 templates use indentation and were made with the enhanced EasyCrypt indentation in mind."
   :type 'boolean
-  :group 'easycrypt-ext)
-
-(defcustom ece-auxiliary-functionality-keybindings t
-  "Non-nil (resp. `nil') to enable (resp. disable) keybindings for additional
-EasyCrypt functionality (e.g., printing/searching with mouse click)."
-  :type 'boolean
-  :group 'easycrypt-ext)
-
-
-;; Constants
-(defconst ece--dir
-  (file-name-directory (or load-file-name buffer-file-name))
-  "Directory where this file is stored (and so also where rest of package should be).")
-
-(defconst ece--templates-file
-  (file-name-concat ece--dir "easycrypt-ext-templates.eld")
-  "File where code templates for EasyCrypt are stored.")
-
-(defconst ece--templates-info-file
-  (file-name-concat ece--dir "easycrypt-ext-templates-info.eld")
-  "File where informative code templates for EasyCrypt are stored.")
+  :group 'easycrypt-ext
+  :initialize #'custom-initialize-default
+  :set #'(lambda (symbol value)
+           (with-eval-after-load 'tempel
+             (ece--configure-templates-info-internal value)
+             (set-default-toplevel-value symbol value)
+             (message "EasyCrypt Ext informative templates %s!" (if value "enabled" "disabled")))
+           (unless (featurep 'tempel)
+             (message "Load `tempel' for changes to %s take effect. Attempting to change this option more than once before loading `tempel' is pointless."
+                      symbol))))
 
 
 ;; Indentation
@@ -252,24 +250,26 @@ Else, align with previous non-blank line."
 (defun ece--indent-level ()
   "Returns desired indentation level of EasyCrypt code.
 In short, the default behavior is as follows.
-- If we are in a multi-line comment, align with the previous non-blank line
-in comment if it exists; otherwise, indent 1 tab beyond comment opener.
-- Else, if we are in a multi-line string, remove indentation (because it affects the value of the string).
-- Else, if we are in an non-code expression (i.e., between `(' and `)' or `[' and `]', or after `(' or `['
-without a corresponding closer), align with the previous non-blank line in expression if it exists;
-otherwise, indent 1 space beyond expression opener.
-- Else, if we are in a code expression (i.e., between `{' and `}', or after `{'
-without a corresponding closer), align with the previous non-blank line in
-code block if it exists; otherwise, indent 1 tab beyond the line that started
-the specification corresponding to the code block (e.g., the line that starts with
-`module' or `proc'.
-- Else, if we are opening a proof (e.g., our line starts with `proof' or `realize'),
-align to line that started the proof statement specification (e.g.,
-the line starting with `lemma'); if we cannot find such a line, use fallback
-indentation.
+- If we are in a multi-line comment, align with the previous non-blank line in
+comment if it exists; otherwise, indent 1 tab beyond comment opener.
+- Else, if we are in a multi-line string, remove indentation (because it
+affects the value of the string).
+- Else, if we are in an non-code expression (i.e., between `(' and `)' or
+`[' and `]', or after `(' or `[' without a corresponding closer),
+align with the previous non-blank line in expression if it exists; otherwise,
+indent 1 space beyond expression opener.
+- Else, if we are in a code expression (i.e., between `{' and `}', or after
+`{' without a corresponding closer), align with the previous non-blank line
+in code block if it exists; otherwise, indent 1 tab beyond the line that
+started the specification corresponding to the code block (e.g., the line
+that starts with `module' or `proc'.
+- Else, if we are opening a proof (e.g., our line starts with `proof' or
+`realize'), align to line that started the proof statement specification
+(e.g., the line starting with `lemma'); if we cannot find such a line,
+use fallback indentation.
 - Else, if we are closing a proof (e.g., our line starts with `qed'), align to
-line that opened the proof (e.g., the previous line starting with `proof');
-if we cannot find such a line, use fallback indentation.
+line that opened the proof (e.g., the previous line starting with `proof'); if
+we cannot find such a line, use fallback indentation.
 - Else, use fallback indentation.
 Here, fallback indentation refers to the indentation computed by
 `ece--indent-level-fallback', which see."
@@ -499,7 +499,7 @@ Meant for `post-self-insert-hook'."
                         (string-match-p "^[[:blank:]]*$" line-before))
                    (and (eq last-command-event ?\))
                         (string-match-p
-                         (concat "^[[:blank:]]*" (regexp-opt ece-delimiters-comments-close) "$")
+                         (concat "^[[:blank:]]*" (regexp-opt (push (string ?\)) ece-delimiters-comments-close)) "$")
                          (concat line-before (string ?\)))))
                    (and (eq last-command-event ?\.)
                         (save-excursion
@@ -517,8 +517,56 @@ Meant for `post-self-insert-hook'."
       ;; (`indent-line-to' moves it to end of indentation)
       (move-to-column (- orig-col indent-diff)))))
 
+;;; Configuration
+(defun ece--enable-indentation-settings-internal ()
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when easycrypt-ext-mode
+        (unless (local-variable-p 'original-indentation-state)
+          (setq-local original-indentation-state
+                      (buffer-local-set-state tab-width 2
+                                              indent-line-function #'ece-indent-line
+                                              electric-indent-mode nil)))
+        (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t)))))
 
-;; Shell commands
+(defun ece--disable-indentation-settings-internal ()
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when easycrypt-ext-mode
+        (when (local-variable-p 'original-indentation-state)
+          (buffer-local-restore-state original-indentation-state)
+          (kill-local-variable 'original-indentation-state))
+        (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t)))))
+
+(defun ece--configure-indentation-internal (enable)
+  (if enable
+      (progn
+        ;; Setup/settings
+        (ece--enable-indentation-settings-internal)
+        ;; Keybindings
+        (keymap-set easycrypt-ext-mode-map "RET" #'newline-and-indent)
+        (keymap-set easycrypt-ext-mode-map "<return>" "RET")
+        (keymap-set easycrypt-ext-mode-map "S-<return>" #'newline)
+        (keymap-set easycrypt-ext-mode-map "TAB" #'ece-basic-indent)
+        (keymap-set easycrypt-ext-mode-map "<tab>" "TAB")
+        (keymap-set easycrypt-ext-mode-map "<backtab>" #'ece-basic-deindent)
+        (keymap-set easycrypt-ext-mode-map "M-i" #'indent-for-tab-command)
+        (keymap-set easycrypt-ext-mode-map "M-I" #'ece-indent-for-tab-command-inverse-style))
+    ;; Setup/settings
+    (ece--disable-indentation-settings-internal)
+    ;; Keybindings
+    (keymap-unset easycrypt-ext-mode-map "RET" t)
+    (keymap-unset easycrypt-ext-mode-map "<return>" t)
+    (keymap-unset easycrypt-ext-mode-map "S-<return>" t)
+    (keymap-unset easycrypt-ext-mode-map "TAB" t)
+    (keymap-unset easycrypt-ext-mode-map "<tab>" t)
+    (keymap-unset easycrypt-ext-mode-map "<backtab>" t)
+    (keymap-unset easycrypt-ext-mode-map "M-i" t)
+    (keymap-unset easycrypt-ext-mode-map "M-I" t)))
+
+
+;; Auxiliary functionality
+;;; Proof shell commands
 (defun ece--validate-shell-command (command)
   "Checks if the COMMAND is a valid/supported EasyCrypt shell command
 (in the sense that a command below is implemented for it).
@@ -629,9 +677,52 @@ argument to the `locate' command in EasyCrypt."
   (ece--command "locate" event))
 
 
-;; Key maps
+;; Keymaps
+;;; Modes
+(defvar-keymap easycrypt-ext-mode-map
+  :doc "Keymap for `easycrypt-ext-mode'."
+  "C-c C-y p" #'ece-print
+  "C-c C-y P" #'ece-prompt-print
+  "C-c C-y l" #'ece-locate
+  "C-c C-y L" #'ece-prompt-locate
+  "C-c C-y s" #'ece-search
+  "C-c C-y S" #'ece-prompt-search
+  "C-S-<mouse-1>" #'ece-print
+  "C-S-<mouse-2>" #'ece-locate
+  "C-S-<mouse-3>" #'ece-search)
+
+(defvar-keymap easycrypt-ext-goals-mode-map
+  :doc "Keymap for `easycrypt-ext-goals-mode'."
+  "C-c C-y p" #'ece-print
+  "C-c C-y P" #'ece-prompt-print
+  "C-c C-y l" #'ece-locate
+  "C-c C-y L" #'ece-prompt-locate
+  "C-c C-y s" #'ece-search
+  "C-c C-y S" #'ece-prompt-search
+  "C-S-<mouse-1>" #'ece-print
+  "C-S-<mouse-2>" #'ece-locate
+  "C-S-<mouse-3>" #'ece-search)
+
+(defvar-keymap easycrypt-ext-response-mode-map
+  :doc "Keymap for `easycrypt-ext-response-mode'."
+  "C-c C-y p" #'ece-print
+  "C-c C-y P" #'ece-prompt-print
+  "C-c C-y l" #'ece-locate
+  "C-c C-y L" #'ece-prompt-locate
+  "C-c C-y s" #'ece-search
+  "C-c C-y S" #'ece-prompt-search
+  "C-S-<mouse-1>" #'ece-print
+  "C-S-<mouse-2>" #'ece-locate
+  "C-S-<mouse-3>" #'ece-search)
+
+;;; Templates
+(defvar-keymap ece-template-map
+  :doc "Keymap for EasyCrypt templates."
+  :prefix 'ece-template-map-prefix)
+
+;;; Repeat
 (defvar-keymap ece-proof-mode-process-repeat-map
-  :doc "Keymap (repeatable) for processing proof commands"
+  :doc "Keymap (repeatable) for processing proof commands."
   :repeat (:hints ((proof-undo-last-successful-command . "p/u: Undo last successful command")
                    (proof-assert-next-command-interactive . "n: Assert next command")
                    (proof-undo-and-delete-last-successful-command . "d: Undo and delete last successful command")))
@@ -641,7 +732,7 @@ argument to the `locate' command in EasyCrypt."
   "d" #'proof-undo-and-delete-last-successful-command)
 
 (defvar-keymap ece-bufhist-repeat-map
-  :doc "Keymap (repeatable) for browsing and managing buffer history"
+  :doc "Keymap (repeatable) for browsing and managing buffer history."
   :repeat (:hints ((bufhist-prev . "p: Go to previous history element")
                    (bufhist-next . "n: Go to next history element")
                    (bufhist-first . "f: Go to first history element")
@@ -653,57 +744,16 @@ argument to the `locate' command in EasyCrypt."
   "l" #'bufhist-last
   "d" #'bufhist-delete)
 
-(defvar-keymap ece-template-map
-  :doc "Keymap for EasyCrypt templates"
-  :prefix 'ece-template-map-prefix)
 
-(defvar-keymap easycrypt-ext-mode-map
-  :doc "Keymap for `easycrypt-ext-mode'")
+;; Keywords
+(defun ece--configure-keywords-completion-internal (enable)
+  (if enable
+      (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ece-keywords))
+    (setopt cape-keyword-list
+            (remove (cons 'easycrypt-mode ece-keywords) cape-keyword-list))))
 
 
-;; Setup
-;;; Indentation
-(defun ece--setup-indentation ()
-  (when ece-indentation
-    (setq-local electric-indent-mode nil)
-    (setq-local electric-indent-inhibit t)
-    (setq-local tab-width 2)
-    (setq-local indent-line-function #'ece-indent-line)
-    (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t)))
-
-(defun ece--setup-indentation-keybindings ()
-  (when ece-indentation-keybindings
-    (keymap-set easycrypt-ext-mode-map "RET" #'newline-and-indent)
-    (keymap-set easycrypt-ext-mode-map "<return>" "RET")
-    (keymap-set easycrypt-ext-mode-map "S-<return>" #'newline)
-    (keymap-set easycrypt-ext-mode-map "TAB" #'ece-basic-indent)
-    (keymap-set easycrypt-ext-mode-map "<tab>" "TAB")
-    (keymap-set easycrypt-ext-mode-map "<backtab>" #'ece-basic-deindent)
-    (keymap-set easycrypt-ext-mode-map "M-i" #'indent-for-tab-command)
-    (keymap-set easycrypt-ext-mode-map "M-I" #'ece-indent-for-tab-command-inverse-style)))
-
-(defun ece--setup-auxiliary-functionality-keybindings ()
-  (when ece-auxiliary-functionality-keybindings
-    (keymap-set easycrypt-ext-mode-map "C-c C-y p" #'ece-print)
-    (keymap-set easycrypt-ext-mode-map "C-c C-y P" #'ece-prompt-print)
-    (keymap-set easycrypt-ext-mode-map "C-c C-y l" #'ece-locate)
-    (keymap-set easycrypt-ext-mode-map "C-c C-y L" #'ece-prompt-locate)
-    (keymap-set easycrypt-ext-mode-map "C-c C-y s" #'ece-search)
-    (keymap-set easycrypt-ext-mode-map "C-c C-y S" #'ece-prompt-search)
-    (keymap-set easycrypt-ext-mode-map "S-<down-mouse-3>" #'ece-print)
-    (keymap-set easycrypt-ext-mode-map "S-<mouse-3>" #'ignore)
-    (keymap-set easycrypt-ext-mode-map "C-<down-mouse-3>" #'ece-locate)
-    (keymap-set easycrypt-ext-mode-map "C-<mouse-3>" #'ignore)
-    (keymap-set easycrypt-ext-mode-map "M-<down-mouse-3>" #'ece-search)
-    (keymap-set easycrypt-ext-mode-map "M-<mouse-3>" #'ignore)))
-
-;;; Keywords
-(defun ece--setup-keywords-completion ()
-  (when ece-keywords-completion
-    (with-eval-after-load 'cape-keyword
-      (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ece-keywords)))))
-
-;;; Templates
+;; Templates
 (defun ece--tempel-placeholder-form-as-lit (elt)
 "Defines slight adjustment of regular placeholder element
 so that a prompt form evaluating to a string is inserted as
@@ -732,93 +782,156 @@ that allows to include other templates by their name."
           (setq res (append res temps)))))
     res))
 
-(defun ece--setup-templates ()
-  (when ece-templates
-    (with-eval-after-load 'tempel
-      (unless (fboundp 'ece--templates-file-read)
-        (fset 'ece--templates-file-read #'(lambda () (ece--tempel-template-file-read ece--templates-file))))
-      (add-to-list 'tempel-user-elements #'ece--tempel-placeholder-form-as-lit)
-      (add-to-list 'tempel-user-elements #'ece--tempel-include)
-      (add-to-list 'tempel-template-sources #'ece--templates-file-read))))
+(defun ece--configure-templates-internal (enable)
+  (if enable
+      (progn ;; Setup/settings
+        (unless (fboundp 'ece--templates-file-read)
+          (fset 'ece--templates-file-read #'(lambda () (ece--tempel-template-file-read ece--templates-file))))
+        (add-to-list 'tempel-user-elements #'ece--tempel-placeholder-form-as-lit)
+        (add-to-list 'tempel-user-elements #'ece--tempel-include)
+        (add-to-list 'tempel-template-sources #'ece--templates-file-read)
+        ;; Keybindings
+        (tempel-key "a" axiomn ece-template-map)
+        (tempel-key "A" abbrevn ece-template-map)
+        (tempel-key "b" byequiv ece-template-map)
+        (tempel-key "B" byphoare ece-template-map)
+        (tempel-key "c" conseq ece-template-map)
+        (tempel-key "C" conseqehh ece-template-map)
+        (tempel-key "d" doccommentn ece-template-map)
+        (tempel-key "D" declaremodule ece-template-map)
+        (tempel-key "e" equivn ece-template-map)
+        (tempel-key "E" equivnlemman ece-template-map)
+        (tempel-key "f" funn ece-template-map)
+        (tempel-key "F" fel ece-template-map)
+        (tempel-key "g" ge0 ece-template-map)
+        (tempel-key "G" gt0 ece-template-map)
+        (tempel-key "h" hoaren ece-template-map)
+        (tempel-key "H" hoarenlemman ece-template-map)
+        (tempel-key "i" ifelse ece-template-map)
+        (tempel-key "I" ifthenelse ece-template-map)
+        (tempel-key "l" lemman ece-template-map)
+        (tempel-key "L" letinn ece-template-map)
+        (tempel-key "m" module ece-template-map)
+        (tempel-key "M" modulept ece-template-map)
+        (tempel-key "o" op ece-template-map)
+        (tempel-key "O" opas ece-template-map)
+        (tempel-key "p" proc ece-template-map)
+        (tempel-key "P" procsig ece-template-map)
+        (tempel-key "r" rewrited ece-template-map)
+        (tempel-key "R" rngin ece-template-map)
+        (tempel-key "s" seq ece-template-map)
+        (tempel-key "S" seqph ece-template-map)
+        (tempel-key "t" moduletype ece-template-map)
+        (tempel-key "T" moduletypep ece-template-map)
+        (tempel-key "u" Prmub ece-template-map)
+        (tempel-key "U" Prmrub ece-template-map)
+        (tempel-key "v" Prmeq ece-template-map)
+        (tempel-key "V" Prmreq ece-template-map)
+        (tempel-key "w" whiles ece-template-map)
+        (tempel-key "W" whileph ece-template-map)
+        (tempel-key "x" cloneimportaswith ece-template-map)
+        (tempel-key "X" requireimport ece-template-map)
+        (tempel-key "y" phoaren ece-template-map)
+        (tempel-key "Y" phoare1n ece-template-map)
+        (tempel-key "z" theory ece-template-map)
+        (tempel-key "Z" abstracttheory ece-template-map)
+        (keymap-set easycrypt-ext-mode-map "C-c C-y t" 'ece-template-map-prefix))
+    ;; Setup/settings
+    (when (fboundp 'ece--templates-file-read)
+      (setopt tempel-template-sources (remove #'ece--templates-file-read tempel-template-sources)))
+    (setopt tempel-user-elements (remove #'ece--tempel-include
+                                         (remove #'ece--tempel-placeholder-form-as-lit tempel-user-elements)))
+    ;; Keybindings
+    (keymap-unset ece-template-map "a")
+    (keymap-unset ece-template-map "A")
+    (keymap-unset ece-template-map "b")
+    (keymap-unset ece-template-map "B")
+    (keymap-unset ece-template-map "c")
+    (keymap-unset ece-template-map "C")
+    (keymap-unset ece-template-map "d")
+    (keymap-unset ece-template-map "D")
+    (keymap-unset ece-template-map "e")
+    (keymap-unset ece-template-map "E")
+    (keymap-unset ece-template-map "f")
+    (keymap-unset ece-template-map "F")
+    (keymap-unset ece-template-map "g")
+    (keymap-unset ece-template-map "G")
+    (keymap-unset ece-template-map "h")
+    (keymap-unset ece-template-map "H")
+    (keymap-unset ece-template-map "i")
+    (keymap-unset ece-template-map "I")
+    (keymap-unset ece-template-map "l")
+    (keymap-unset ece-template-map "L")
+    (keymap-unset ece-template-map "m")
+    (keymap-unset ece-template-map "M")
+    (keymap-unset ece-template-map "o")
+    (keymap-unset ece-template-map "O")
+    (keymap-unset ece-template-map "p")
+    (keymap-unset ece-template-map "P")
+    (keymap-unset ece-template-map "r")
+    (keymap-unset ece-template-map "R")
+    (keymap-unset ece-template-map "s")
+    (keymap-unset ece-template-map "S")
+    (keymap-unset ece-template-map "t")
+    (keymap-unset ece-template-map "T")
+    (keymap-unset ece-template-map "u")
+    (keymap-unset ece-template-map "U")
+    (keymap-unset ece-template-map "v")
+    (keymap-unset ece-template-map "V")
+    (keymap-unset ece-template-map "w")
+    (keymap-unset ece-template-map "W")
+    (keymap-unset ece-template-map "x")
+    (keymap-unset ece-template-map "X")
+    (keymap-unset ece-template-map "y")
+    (keymap-unset ece-template-map "Y")
+    (keymap-unset ece-template-map "z")
+    (keymap-unset ece-template-map "Z")
+    (keymap-unset easycrypt-ext-mode-map "C-c C-y t")))
 
-(defun ece--setup-templates-info ()
-  (when ece-templates-info
-    (with-eval-after-load 'tempel
-      (unless (fboundp 'ece--templates-info-file-read)
-        (fset 'ece--templates-info-file-read #'(lambda () (ece--tempel-template-file-read ece--templates-info-file))))
-      (add-to-list 'tempel-template-sources #'ece--templates-info-file-read))))
-
-(defun ece--setup-templates-keybindings ()
-  (when ece-templates-keybindings
-    (with-eval-after-load 'tempel
-      (tempel-key "a" axiomn ece-template-map)
-      (tempel-key "A" abbrevn ece-template-map)
-      (tempel-key "b" byequiv ece-template-map)
-      (tempel-key "B" byphoare ece-template-map)
-      (tempel-key "c" conseq ece-template-map)
-      (tempel-key "C" conseqehh ece-template-map)
-      (tempel-key "d" doccommentn ece-template-map)
-      (tempel-key "D" declaremodule ece-template-map)
-      (tempel-key "e" equivn ece-template-map)
-      (tempel-key "E" equivnlemman ece-template-map)
-      (tempel-key "f" funn ece-template-map)
-      (tempel-key "F" fel ece-template-map)
-      (tempel-key "g" ge0 ece-template-map)
-      (tempel-key "G" gt0 ece-template-map)
-      (tempel-key "h" hoaren ece-template-map)
-      (tempel-key "H" hoarenlemman ece-template-map)
-      (tempel-key "i" ifelse ece-template-map)
-      (tempel-key "I" ifthenelse ece-template-map)
-      (tempel-key "l" lemman ece-template-map)
-      (tempel-key "L" letinn ece-template-map)
-      (tempel-key "m" module ece-template-map)
-      (tempel-key "M" modulept ece-template-map)
-      (tempel-key "o" op ece-template-map)
-      (tempel-key "O" opas ece-template-map)
-      (tempel-key "p" proc ece-template-map)
-      (tempel-key "P" procsig ece-template-map)
-      (tempel-key "r" rewrited ece-template-map)
-      (tempel-key "R" rngin ece-template-map)
-      (tempel-key "s" seq ece-template-map)
-      (tempel-key "S" seqph ece-template-map)
-      (tempel-key "t" moduletype ece-template-map)
-      (tempel-key "T" moduletypep ece-template-map)
-      (tempel-key "u" Prmub ece-template-map)
-      (tempel-key "U" Prmrub ece-template-map)
-      (tempel-key "v" Prmeq ece-template-map)
-      (tempel-key "V" Prmreq ece-template-map)
-      (tempel-key "w" whiles ece-template-map)
-      (tempel-key "W" whileph ece-template-map)
-      (tempel-key "x" cloneimportaswith ece-template-map)
-      (tempel-key "X" requireimport ece-template-map)
-      (tempel-key "y" phoaren ece-template-map)
-      (tempel-key "Y" phoare1n ece-template-map)
-      (tempel-key "z" theory ece-template-map)
-      (tempel-key "Z" abstracttheory ece-template-map))
-    (keymap-set easycrypt-ext-mode-map "C-c C-y t" 'ece-template-map-prefix)))
+(defun ece--configure-templates-info-internal (enable)
+  (if enable
+      (progn
+        (unless (fboundp #'ece--templates-info-file-read)
+          (fset 'ece--templates-info-file-read #'(lambda () (ece--tempel-template-file-read ece--templates-info-file))))
+        (add-to-list 'tempel-template-sources #'ece--templates-info-file-read))
+    (when (fboundp #'ece--templates-info-file-read)
+      (setopt tempel-template-sources (remove #'ece--templates-info-file-read tempel-template-sources)))))
 
 ;;;###autoload
-(defun ece-setup ()
-  "Sets up EasyCrypt extensions, storing part
-of global state that is subject to change
-in order to revert at teardown."
-  (ece--setup-indentation)
-  (ece--setup-indentation-keybindings)
-  (ece--setup-auxiliary-functionality-keybindings)
-  (ece--setup-keywords-completion)
-  (ece--setup-templates)
-  (ece--setup-templates-keybindings)
-  (ece--setup-templates-info))
+(defun ece-configure ()
+  "Configures EasyCrypt extensions."
+  (ece--configure-indentation-internal ece-indentation)
+
+  (with-eval-after-load 'cape-keyword
+    (ece--configure-keywords-completion-internal ece-keywords-completion))
+
+  (with-eval-after-load 'tempel
+    (ece--configure-templates-internal ece-templates)
+    (ece--configure-templates-info-internal ece-templates-info)))
 
 
-;; Minor mode
+;; Minor modes
+;;; Regular
 (define-minor-mode easycrypt-ext-mode nil
   :lighter " ECE"
   :interactive '(easycrypt-mode)
   :keymap easycrypt-ext-mode-map
   (when easycrypt-ext-mode
-    (ece-setup)))
+    (ece-configure)))
+
+;;; Goals
+(define-minor-mode easycrypt-ext-goals-mode nil
+  :lighter " ECEg"
+  :interactive '(easycrypt-goals-mode)
+  :keymap easycrypt-ext-goals-mode-map)
+
+;;; Response
+(define-minor-mode easycrypt-ext-response-mode nil
+  :lighter " ECEr"
+  :interactive '(easycrypt-response-mode)
+  :keymap easycrypt-ext-response-mode-map)
+
 
 (provide 'easycrypt-ext)
 
-;;; easycrypt-ext ends here
+;;; easycrypt-ext.el ends here

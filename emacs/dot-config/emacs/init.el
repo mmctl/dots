@@ -1936,7 +1936,9 @@ that allows to include other templates by their name."
 
   :after proof
 
-  :hook (easycrypt-mode easycrypt-goals-mode easycrypt-response-mode)
+  :hook ((easycrypt-mode . easycrypt-ext-mode)
+         (easycrypt-goals-mode . easycrypt-ext-goals-mode)
+         (easycrypt-response-mode . easycrypt-ext-response-mode))
 
   :init
   (setopt ece-enable-templates-info nil))
