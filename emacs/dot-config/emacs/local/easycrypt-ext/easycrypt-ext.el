@@ -782,59 +782,72 @@ that allows to include other templates by their name."
           (setq res (append res temps)))))
     res))
 
+(defmacro ece--tempel-key (keymap key template-name)
+  "Binds KEY to TEMPLATE-NAME in KEYMAP.
+Simplified version of `tempel-key' macro from `tempel' package."
+  `(keymap-set ,keymap ,key
+              ,(let ((cmd (intern (format "tempel-insert-%s" template-name))))
+                `(prog1 ',cmd
+                   (defun ,cmd ()
+                     ,(format "Insert template %s in the current buffer."
+                              template-name)
+                     (interactive)
+                     (tempel-insert ',template-name))))))
+
 (defun ece--configure-templates-internal (enable)
   (if enable
-      (progn ;; Setup/settings
+      (progn
+        ;; Setup/settings
         (unless (fboundp 'ece--templates-file-read)
           (fset 'ece--templates-file-read #'(lambda () (ece--tempel-template-file-read ece--templates-file))))
         (add-to-list 'tempel-user-elements #'ece--tempel-placeholder-form-as-lit)
         (add-to-list 'tempel-user-elements #'ece--tempel-include)
         (add-to-list 'tempel-template-sources #'ece--templates-file-read)
         ;; Keybindings
-        (tempel-key "a" axiomn ece-template-map)
-        (tempel-key "A" abbrevn ece-template-map)
-        (tempel-key "b" byequiv ece-template-map)
-        (tempel-key "B" byphoare ece-template-map)
-        (tempel-key "c" conseq ece-template-map)
-        (tempel-key "C" conseqehh ece-template-map)
-        (tempel-key "d" doccommentn ece-template-map)
-        (tempel-key "D" declaremodule ece-template-map)
-        (tempel-key "e" equivn ece-template-map)
-        (tempel-key "E" equivnlemman ece-template-map)
-        (tempel-key "f" funn ece-template-map)
-        (tempel-key "F" fel ece-template-map)
-        (tempel-key "g" ge0 ece-template-map)
-        (tempel-key "G" gt0 ece-template-map)
-        (tempel-key "h" hoaren ece-template-map)
-        (tempel-key "H" hoarenlemman ece-template-map)
-        (tempel-key "i" ifelse ece-template-map)
-        (tempel-key "I" ifthenelse ece-template-map)
-        (tempel-key "l" lemman ece-template-map)
-        (tempel-key "L" letinn ece-template-map)
-        (tempel-key "m" module ece-template-map)
-        (tempel-key "M" modulept ece-template-map)
-        (tempel-key "o" op ece-template-map)
-        (tempel-key "O" opas ece-template-map)
-        (tempel-key "p" proc ece-template-map)
-        (tempel-key "P" procsig ece-template-map)
-        (tempel-key "r" rewrited ece-template-map)
-        (tempel-key "R" rngin ece-template-map)
-        (tempel-key "s" seq ece-template-map)
-        (tempel-key "S" seqph ece-template-map)
-        (tempel-key "t" moduletype ece-template-map)
-        (tempel-key "T" moduletypep ece-template-map)
-        (tempel-key "u" Prmub ece-template-map)
-        (tempel-key "U" Prmrub ece-template-map)
-        (tempel-key "v" Prmeq ece-template-map)
-        (tempel-key "V" Prmreq ece-template-map)
-        (tempel-key "w" whiles ece-template-map)
-        (tempel-key "W" whileph ece-template-map)
-        (tempel-key "x" cloneimportaswith ece-template-map)
-        (tempel-key "X" requireimport ece-template-map)
-        (tempel-key "y" phoaren ece-template-map)
-        (tempel-key "Y" phoare1n ece-template-map)
-        (tempel-key "z" theory ece-template-map)
-        (tempel-key "Z" abstracttheory ece-template-map)
+        (ece--tempel-key ece-template-map "a" axiomn)
+        (ece--tempel-key ece-template-map "A" abbrevn)
+        (ece--tempel-key ece-template-map "b" byequiv)
+        (ece--tempel-key ece-template-map "B" byphoare)
+        (ece--tempel-key ece-template-map "c" conseq)
+        (ece--tempel-key ece-template-map "C" conseqehh)
+        (ece--tempel-key ece-template-map "d" doccommentn)
+        (ece--tempel-key ece-template-map "D" declaremodule)
+        (ece--tempel-key ece-template-map "e" equivn)
+        (ece--tempel-key ece-template-map "E" equivnlemman)
+        (ece--tempel-key ece-template-map "f" funn)
+        (ece--tempel-key ece-template-map "F" fel)
+        (ece--tempel-key ece-template-map "g" ge0)
+        (ece--tempel-key ece-template-map "G" gt0)
+        (ece--tempel-key ece-template-map "h" hoaren)
+        (ece--tempel-key ece-template-map "H" hoarenlemman)
+        (ece--tempel-key ece-template-map "i" ifelse)
+        (ece--tempel-key ece-template-map "I" ifthenelse)
+        (ece--tempel-key ece-template-map "l" lemman)
+        (ece--tempel-key ece-template-map "L" letinn)
+        (ece--tempel-key ece-template-map "m" module)
+        (ece--tempel-key ece-template-map "M" modulept)
+        (ece--tempel-key ece-template-map "o" op)
+        (ece--tempel-key ece-template-map "O" opas)
+        (ece--tempel-key ece-template-map "p" proc)
+        (ece--tempel-key ece-template-map "P" procsig)
+        (ece--tempel-key ece-template-map "r" rewrited)
+        (ece--tempel-key ece-template-map "R" rngin)
+        (ece--tempel-key ece-template-map "s" seq)
+        (ece--tempel-key ece-template-map "S" seqph)
+        (ece--tempel-key ece-template-map "t" moduletype)
+        (ece--tempel-key ece-template-map "T" moduletypep)
+        (ece--tempel-key ece-template-map "u" Prmub)
+        (ece--tempel-key ece-template-map "U" Prmrub)
+        (ece--tempel-key ece-template-map "v" Prmeq)
+        (ece--tempel-key ece-template-map "V" Prmreq)
+        (ece--tempel-key ece-template-map "w" whiles)
+        (ece--tempel-key ece-template-map "W" whileph)
+        (ece--tempel-key ece-template-map "x" cloneimportaswith)
+        (ece--tempel-key ece-template-map "X" requireimport)
+        (ece--tempel-key ece-template-map "y" phoaren)
+        (ece--tempel-key ece-template-map "Y" phoare1n)
+        (ece--tempel-key ece-template-map "z" theory)
+        (ece--tempel-key ece-template-map "Z" abstracttheory)
         (keymap-set easycrypt-ext-mode-map "C-c C-y t" 'ece-template-map-prefix))
     ;; Setup/settings
     (when (fboundp 'ece--templates-file-read)
@@ -897,6 +910,7 @@ that allows to include other templates by their name."
     (when (fboundp #'ece--templates-info-file-read)
       (setopt tempel-template-sources (remove #'ece--templates-info-file-read tempel-template-sources)))))
 
+
 ;;;###autoload
 (defun ece-configure ()
   "Configures EasyCrypt extensions."
@@ -907,7 +921,19 @@ that allows to include other templates by their name."
 
   (with-eval-after-load 'tempel
     (ece--configure-templates-internal ece-templates)
-    (ece--configure-templates-info-internal ece-templates-info)))
+    (ece--configure-templates-info-internal ece-templates-info))
+
+  (let ((capeconf (and ece-keywords-completion (not (featurep 'cape-keyword))))
+        (tempconf (and (or ece-templates ece-templates-info) (not (featurep 'tempel)))))
+    (when (or capeconf tempconf)
+      (message "Attempted to configure %s missing. Load to complete setup."
+               (cond
+                ((and capeconf tempconf)
+                 "keyword completion and templates, but the required packages (`cape-keyword' and `tempel') were")
+                (capeconf
+                 "keyword completion, but the required package (`cape-keyword') was")
+                (t
+                 "templates, but the required package (`tempel') was"))))))
 
 
 ;; Minor modes

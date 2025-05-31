@@ -1941,7 +1941,10 @@ that allows to include other templates by their name."
          (easycrypt-response-mode . easycrypt-ext-response-mode))
 
   :init
-  (setopt ece-enable-templates-info nil))
+  (setopt ece-indentation t)
+  (setopt ece-keywords-completion t)
+  (setopt ece-templates t)
+  (setopt ece-templates-info nil))
 
 
 ;; Hooks
