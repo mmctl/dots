@@ -23,17 +23,20 @@
   (list ?\}))
 
 (defconst ece-delimiters-open
-  (append ece-delimiters-comments-open
-          ece-delimiters-expression-open
-          ece-delimiters-code-open))
+  (eval-when-compile
+    (append ece-delimiters-comments-open
+            ece-delimiters-expression-open
+            ece-delimiters-code-open)))
 
 (defconst ece-delimiters-close
-  (append ece-delimiters-comments-close
-          ece-delimiters-expression-close
-          ece-delimiters-code-close))
+  (eval-when-compile
+    (append ece-delimiters-comments-close
+            ece-delimiters-expression-close
+            ece-delimiters-code-close)))
 
 (defconst ece-delimiters
-  (append ece-delimiters-open ece-delimiters-close))
+  (eval-when-compile
+    (append ece-delimiters-open ece-delimiters-close)))
 
 (defconst ece-bullets-proof
   (list ?+ ?- ?*))
@@ -60,8 +63,9 @@
   (list "qed"))
 
 (defconst ece-keywords-proof-delimit
-  (append ece-keywords-proof-start
-          ece-keywords-proof-end))
+  (eval-when-compile
+    (append ece-keywords-proof-start
+            ece-keywords-proof-end)))
 
 (defconst ece-keywords-structural
   (list "section" "Self" "Top"))
@@ -82,26 +86,30 @@
         "Pr" "res" "then"))
 
 (defconst ece-keywords-functional-spec
-  (delete-dups (append ece-keywords-functional-spec-start
-                       ece-keywords-functional-spec-other)))
+  (eval-when-compile
+    (delete-dups (append ece-keywords-functional-spec-start
+                         ece-keywords-functional-spec-other))))
 
 (defconst ece-keywords-imperative-spec-start
   (list "elif" "else" "if" "match" "module" "proc" "while"))
 
 (defconst ece-keywords-imperative-spec-start-scope
-  (append ece-keywords-imperative-spec-start
-          ece-keywords-scope))
+  (eval-when-compile
+    (append ece-keywords-imperative-spec-start
+            ece-keywords-scope)))
 
 (defconst ece-keywords-imperative-spec-other
   (list "assert" "for" "import" "include" "is" "return" "var"))
 
 (defconst ece-keywords-imperative-spec
-  (delete-dups (append ece-keywords-imperative-spec-start
-                       ece-keywords-imperative-spec-other)))
+  (eval-when-compile
+    (delete-dups (append ece-keywords-imperative-spec-start
+                         ece-keywords-imperative-spec-other))))
 
 (defconst ece-keywords-spec
-  (delete-dups (append ece-keywords-functional-spec
-                       ece-keywords-imperative-spec)))
+  (eval-when-compile
+    (delete-dups (append ece-keywords-functional-spec
+                         ece-keywords-imperative-spec))))
 
 ;;;; Tactics keywords
 (defconst ece-keywords-tactic-regular
@@ -131,31 +139,34 @@
   (list "do" "expect" "first" "last" "strict" "try"))
 
 (defconst ece-keywords-tactic
-  (delete-dups (append ece-keywords-tactic-regular
-                       ece-keywords-tactic-close
-                       ece-keywords-tactic-dangerous
-                       ece-keywords-tactic-tactical)))
+  (eval-when-compile
+    (delete-dups (append ece-keywords-tactic-regular
+                         ece-keywords-tactic-close
+                         ece-keywords-tactic-dangerous
+                         ece-keywords-tactic-tactical))))
 
 
 ;; All keywords
 (defconst ece-keywords
-  (delete-dups (append ece-keywords-internal
-                       ece-keywords-functionality
-                       ece-keywords-meta
-                       ece-keywords-scope
-                       ece-keywords-spec
-                       ece-keywords-tactic)))
+  (eval-when-compile
+    (delete-dups (append ece-keywords-internal
+                         ece-keywords-functionality
+                         ece-keywords-meta
+                         ece-keywords-scope
+                         ece-keywords-spec
+                         ece-keywords-tactic))))
 
 ;; All "start" keywords (i.e., regularly starting a sentence, excluding inside proof and programs)
 (defconst ece-keywords-start
-  (delete-dups (append ece-keywords-internal
-                       ece-keywords-functionality
-                       ece-keywords-meta
-                       ece-keywords-scope
-                       ece-keywords-proof-start
-                       ece-keywords-proof-end
-                       ece-keywords-proof-spec-start
-                       ece-keywords-functional-spec-start)))
+  (eval-when-compile
+    (delete-dups (append ece-keywords-internal
+                         ece-keywords-functionality
+                         ece-keywords-meta
+                         ece-keywords-scope
+                         ece-keywords-proof-start
+                         ece-keywords-proof-end
+                         ece-keywords-proof-spec-start
+                         ece-keywords-functional-spec-start))))
 
 
 (provide 'easycrypt-ext-consts)

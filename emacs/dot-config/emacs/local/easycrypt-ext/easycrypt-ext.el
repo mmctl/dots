@@ -1,11 +1,37 @@
 ;; -*- lexical-binding: t -*-
 ;; easycrypt-ext.el
+;;
+;; EasyCrypt is a toolset primarily designed for the formal verification
+;; of code-based, game-playing crytpographic proofs. At its core,
+;; it features an interactive theorem prover with a front-end implemented
+;; in Proof General.
+;; This package aims to add useful extensions to this EasyCrypt front-end.
+;; Key features include the following:
+;; - improved (but still ad-hoc) indentation;
+;; - keyword completion (requires `cape', specifically `cape-keyword');
+;; - code templates (requires `tempel');
+;; - informative templates (requires `tempel'); and
+;; - auxiliary functionality for dynamic printing, searching, and locating
+;;   of items through keybindings or mouse clicks (eliminating the need to manually
+;;   type the corresponding commands).
+;; These features are (partially) implemented through three minor modes, one
+;; for each of the major modes provided by the existing front-end:
+;; - `easycrypt-ext-mode', for `easycrypt-mode';
+;; - `easycrypt-ext-goals-mode', for `easycrypt-goals-mode'; and
+;; - `easycrypt-ext-response-mode', for `easycrypt-response-mode'.
+;;
+;; For setup and usage instructions, see: TODO
+;;
+;; Author/Maintainer: Matthias Meijers
+;; Date: 01-06-2025
 (require 'easycrypt-ext-consts)
+
 
 ;; Constants
 (defconst ece--dir
   (file-name-directory (or load-file-name buffer-file-name))
-  "Directory where this file is stored (and so also where rest of package should be).")
+  "Directory where this file is stored (and so also where rest of package should
+  be).")
 
 (defconst ece--templates-file
   (file-name-concat ece--dir "easycrypt-ext-templates.eld")
@@ -36,12 +62,12 @@
            value))
 
 (defcustom ece-indentation-style 'local
-  "`'local' or `'nonlocal' to make local or non-local
+  "\='local or \='nonlocal to make local or non-local
 the default indentation style. The difference between the
 two styles mainly pertains to indentation inside
 enclosed expressions (e.g., between { and }, ( and ),
-or [ and ]): `'local' indents w.r.t. previous
-non-blank line in the expression; `'non-local' indents
+or [ and ]): \='local indents w.r.t. previous
+non-blank line in the expression; \='non-local indents
 w.r.t. expression opener (e.g., { or ( or [).
 In any case, indentation using the opposite style is available
 through the command `ece-indent-for-tab-command-inverse-style', which see.
@@ -51,20 +77,18 @@ Only has effect if `ece-indentation', which see, is non-nil."
           (const :tag "Non-local indentation style" nonlocal))
   :group 'easycrypt-ext)
 
-(defcustom ece-keywords-completion nil
-  "Non-nil (resp. `nil') to enable (resp. disable) completion for
+(defcustom ece-keyword-completion nil
+  "Non-nil (resp. nil) to enable (resp. disable) completion for
 EasyCrypt keywords (depends on `cape')."
   :type 'boolean
   :group 'easycrypt-ext
   :initialize #'custom-initialize-default
   :set #'(lambda (symbol value)
-           (with-eval-after-load 'cape-keyword
-             (ece--configure-keywords-completion-internal value)
+           (if (not (featurep 'cape-keyword))
+               (user-error "Package `cape-keyword' is required for this option, but was not detected. Load `cape-keyword' and try again. Abandoning for now...")
+             (ece--configure-keyword-completion-internal value)
              (set-default-toplevel-value symbol value)
-             (message "EasyCrypt Ext keywords completion %s!" (if value "enabled" "disabled")))
-           (unless (featurep 'cape-keyword)
-             (message "Load `cape-keyword' for changes to %s to take effect. Attempting to change this option more than once before loading `cape-keyword' is pointless."
-                      symbol))))
+             (message "EasyCrypt Ext keywords completion %s!" (if value "enabled" "disabled")))))
 
 (defcustom ece-templates nil
   "Non-nil (resp. `nil') to enable (resp. disable) code templates for
@@ -76,31 +100,26 @@ EasyCrypt indentation in mind."
   :group 'easycrypt-ext
   :initialize #'custom-initialize-default
   :set #'(lambda (symbol value)
-           (with-eval-after-load 'tempel
+           (if (not (featurep 'tempel))
+               (user-error "Package `tempel' is required for this option, but was not detected. Load `tempel' and try again. Abandoning for now...")
              (ece--configure-templates-internal value)
              (set-default-toplevel-value symbol value)
-             (message "EasyCrypt Ext templates %s!" (if value "enabled" "disabled")))
-           (unless (featurep 'tempel)
-             (message "Load `tempel' for changes to %s take effect. Attempting to change this option more than once before loading `tempel' is pointless."
-                      symbol))))
+             (message "EasyCrypt Ext templates %s!" (if value "enabled" "disabled")))))
 
 (defcustom ece-templates-info 'ece-templates
   "Non-nil (resp. `nil') to enable (resp. disable) informative code templates
-for EasyCrypt (depends on `tempel'). If you enable this, it is recommended to also
-enable enhanced indentation (see `ece-indentation'), since the
-templates use indentation and were made with the enhanced EasyCrypt indentation in mind."
+for EasyCrypt (depends on `tempel'). If you enable this, it is recommended to
+also enable enhanced indentation (see `ece-indentation'), since the templates
+use indentation and were made with the enhanced EasyCrypt indentation in mind."
   :type 'boolean
   :group 'easycrypt-ext
   :initialize #'custom-initialize-default
   :set #'(lambda (symbol value)
-           (with-eval-after-load 'tempel
+           (if (not (featurep 'tempel))
+               (user-error "Package `tempel' is required for this option, but was not detected. Load `tempel' and try again. Abandoning for now...")
              (ece--configure-templates-info-internal value)
              (set-default-toplevel-value symbol value)
-             (message "EasyCrypt Ext informative templates %s!" (if value "enabled" "disabled")))
-           (unless (featurep 'tempel)
-             (message "Load `tempel' for changes to %s take effect. Attempting to change this option more than once before loading `tempel' is pointless."
-                      symbol))))
-
+             (message "EasyCrypt Ext templates %s!" (if value "enabled" "disabled")))))
 
 ;; Indentation
 (defun ece--insert-tabs-of-whitespace (n)
@@ -208,15 +227,13 @@ or beginning of buffer if there is no such line."
       (forward-line -1)))
 
 (defun ece--indent-level-fallback ()
-  "Returns fallback indentation level for EasyCrypt code
-(i.e., when no 'special indentation' case is detected).
-In short, the behavior is as follows.
-If previous non-blank line start with a proof bullet (i.e., `+', `-', or `*'),
-indent as to put point after proof bullet.
-Else, if the previous non-blank line is an unfinished non-proof/non-code
-specification (e.g., starts with `lemma' but does not end with a `.'),
-indent 1 tab further than that line.
-Else, align with previous non-blank line."
+  "Returns fallback indentation level for EasyCrypt code (i.e., when no `special
+indentation' case is detected). In short, the behavior is as follows. If
+previous non-blank line start with a proof bullet (i.e., `+', `-', or `*'),
+indent as to put point after proof bullet. Else, if the previous non-blank line
+is an unfinished non-proof/non-code specification (e.g., starts with `lemma' but
+does not end with a `.'), indent 1 tab further than that line. Else, align with
+previous non-blank line."
   (save-excursion
     ;; Go to (indentation of) previous non-blank line
     (ece--goto-previous-nonblank-line)
@@ -232,20 +249,20 @@ Else, align with previous non-blank line."
         ;; Then, align to that line + 2 (putting point right after bullet)
         (+ (current-indentation) 2)
       ; Else, get content of that line...
-      (setq prev-line (buffer-substring-no-properties (pos-bol) (pos-eol)))
-      ;; If that line is an unfinished non-proof/non-proc spec
-      ;; (E.g., starts with `lemma' but does not end with a `.')
-      ;; Here, we also count a comma as ending a spec to deal with the case of
-      ;; instantiation in `clone' (and hope it isn't common to end a line
-      ;; with a comma outside of `clone').
-      (if (and (seq-some (lambda (kw)
-                           (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
-                         ece-keywords-start)
-               (not (string-match-p "[\\.,][[:blank:]]*\\(?:(\\*.*\\*)\\)?[[:blank:]]*$" prev-line)))
-          ;; Then, align with that line + tab
-          (+ (current-indentation) tab-width)
-        ;; Else, align with that line (default)
-        (current-indentation)))))
+      (let ((prev-line (buffer-substring-no-properties (pos-bol) (pos-eol))))
+        ;; If that line is an unfinished non-proof/non-proc spec
+        ;; (E.g., starts with `lemma' but does not end with a `.')
+        ;; Here, we also count a comma as ending a spec to deal with the case of
+        ;; instantiation in `clone' (and hope it isn't common to end a line
+        ;; with a comma outside of `clone').
+        (if (and (seq-some (lambda (kw)
+                             (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
+                           ece-keywords-start)
+                 (not (string-match-p "[\\.,][[:blank:]]*\\(?:(\\*.*\\*)\\)?[[:blank:]]*$" prev-line)))
+            ;; Then, align with that line + tab
+            (+ (current-indentation) tab-width)
+          ;; Else, align with that line (default)
+          (current-indentation))))))
 
 (defun ece--indent-level ()
   "Returns desired indentation level of EasyCrypt code.
@@ -746,11 +763,11 @@ argument to the `locate' command in EasyCrypt."
 
 
 ;; Keywords
-(defun ece--configure-keywords-completion-internal (enable)
+(defun ece--configure-keyword-completion-internal (enable)
   (if enable
       (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ece-keywords))
-    (setopt cape-keyword-list
-            (remove (cons 'easycrypt-mode ece-keywords) cape-keyword-list))))
+    (customize-set-variable 'cape-keyword-list
+                            (remove (cons 'easycrypt-mode ece-keywords) cape-keyword-list))))
 
 
 ;; Templates
@@ -766,7 +783,7 @@ default value in the same way as a literal string prompt."
          `('p ,prompt ,@rest))))))
 
 (defun ece--tempel-include (elt)
-  "Defines 'include' element (taken and slightly adjusted from TempEL github repo)
+  "Defines `include' element (taken and slightly adjusted from TempEL github repo)
 that allows to include other templates by their name."
   (when (eq (car-safe elt) 'i)
     (when-let (template (alist-get (cadr elt) (tempel--templates)))
@@ -785,14 +802,14 @@ that allows to include other templates by their name."
 (defmacro ece--tempel-key (keymap key template-name)
   "Binds KEY to TEMPLATE-NAME in KEYMAP.
 Simplified version of `tempel-key' macro from `tempel' package."
-  `(keymap-set ,keymap ,key
-              ,(let ((cmd (intern (format "tempel-insert-%s" template-name))))
-                `(prog1 ',cmd
-                   (defun ,cmd ()
-                     ,(format "Insert template %s in the current buffer."
-                              template-name)
-                     (interactive)
-                     (tempel-insert ',template-name))))))
+  `(define-key ,keymap ,(key-parse key)
+               ,(let ((cmd (intern (format "tempel-insert-%s" template-name))))
+                  `(prog1 ',cmd
+                     (defun ,cmd ()
+                       ,(format "Insert template %s in the current buffer."
+                                template-name)
+                       (interactive)
+                       (tempel-insert ',template-name))))))
 
 (defun ece--configure-templates-internal (enable)
   (if enable
@@ -851,9 +868,12 @@ Simplified version of `tempel-key' macro from `tempel' package."
         (keymap-set easycrypt-ext-mode-map "C-c C-y t" 'ece-template-map-prefix))
     ;; Setup/settings
     (when (fboundp 'ece--templates-file-read)
-      (setopt tempel-template-sources (remove #'ece--templates-file-read tempel-template-sources)))
-    (setopt tempel-user-elements (remove #'ece--tempel-include
-                                         (remove #'ece--tempel-placeholder-form-as-lit tempel-user-elements)))
+      (customize-set-variable 'tempel-template-sources
+                              (remove #'ece--templates-file-read tempel-template-sources)))
+    (customize-set-variable 'tempel-user-elements
+                            (remove #'ece--tempel-include
+                                    (remove #'ece--tempel-placeholder-form-as-lit
+                                            tempel-user-elements)))
     ;; Keybindings
     (keymap-unset ece-template-map "a")
     (keymap-unset ece-template-map "A")
@@ -908,39 +928,68 @@ Simplified version of `tempel-key' macro from `tempel' package."
           (fset 'ece--templates-info-file-read #'(lambda () (ece--tempel-template-file-read ece--templates-info-file))))
         (add-to-list 'tempel-template-sources #'ece--templates-info-file-read))
     (when (fboundp #'ece--templates-info-file-read)
-      (setopt tempel-template-sources (remove #'ece--templates-info-file-read tempel-template-sources)))))
+      (customize-set-variable 'tempel-template-sources
+                              (remove #'ece--templates-info-file-read tempel-template-sources)))))
 
 
+;; Utilities
+(defun ece--toggle (symbol)
+  (customize-set-variable symbol (if (symbol-value symbol) nil t)))
+
+;;;###autoload
+(defun ece-toggle-indentation ()
+  (interactive)
+  (ece--toggle 'ece-indentation))
+
+;;;###autoload
+(defun ece-toggle-keyword-completion ()
+  (interactive)
+  (ece--toggle 'ece-keyword-completion))
+
+;;;###autoload
+(defun ece-toggle-templates ()
+  (interactive)
+  (ece--toggle 'ece-templates))
+
+;;;###autoload
+(defun ece-toggle-templates-info ()
+  (interactive)
+  (ece--toggle 'ece-templates-info))
+
+
+;; Session configuration/setup
 ;;;###autoload
 (defun ece-configure ()
   "Configures EasyCrypt extensions."
   (ece--configure-indentation-internal ece-indentation)
 
-  (with-eval-after-load 'cape-keyword
-    (ece--configure-keywords-completion-internal ece-keywords-completion))
+  (let ((cpcnf nil)
+        (tpcnf nil))
+    (when ece-keyword-completion
+      (with-eval-after-load 'cape-keyword
+        (ece--configure-keyword-completion-internal ece-keyword-completion))
+      (setq cpcnf (not (featurep 'cape-keword))))
 
-  (with-eval-after-load 'tempel
-    (ece--configure-templates-internal ece-templates)
-    (ece--configure-templates-info-internal ece-templates-info))
+    (when (or ece-templates ece-templates-info)
+      (with-eval-after-load 'tempel
+        (ece--configure-templates-internal ece-templates)
+        (ece--configure-templates-info-internal ece-templates-info))
+      (setq tpcnf (not (featurep 'tempel))))
 
-  (let ((capeconf (and ece-keywords-completion (not (featurep 'cape-keyword))))
-        (tempconf (and (or ece-templates ece-templates-info) (not (featurep 'tempel)))))
-    (when (or capeconf tempconf)
-      (message "Attempted to configure %s missing. Load to complete setup."
+    (when (or cpcnf tpcnf)
+      (message "Attempted to setup %s not detected. Loading dependencies at any point will complete the corresponding setup automatically."
                (cond
-                ((and capeconf tempconf)
-                 "keyword completion and templates, but the required packages (`cape-keyword' and `tempel') were")
-                (capeconf
-                 "keyword completion, but the required package (`cape-keyword') was")
+                ((and cpcnf tpcnf)
+                 "keyword completion and templates, but dependencies `cape-keyword' and `tempel' were")
+                (cpcnf
+                 "keyword completion, but dependency `cape-keyword' was")
                 (t
-                 "templates, but the required package (`tempel') was"))))))
-
+                 "templates, but dependency `tempel' was"))))))
 
 ;; Minor modes
 ;;; Regular
 (define-minor-mode easycrypt-ext-mode nil
   :lighter " ECE"
-  :interactive '(easycrypt-mode)
   :keymap easycrypt-ext-mode-map
   (when easycrypt-ext-mode
     (ece-configure)))
@@ -948,13 +997,11 @@ Simplified version of `tempel-key' macro from `tempel' package."
 ;;; Goals
 (define-minor-mode easycrypt-ext-goals-mode nil
   :lighter " ECEg"
-  :interactive '(easycrypt-goals-mode)
   :keymap easycrypt-ext-goals-mode-map)
 
 ;;; Response
 (define-minor-mode easycrypt-ext-response-mode nil
   :lighter " ECEr"
-  :interactive '(easycrypt-response-mode)
   :keymap easycrypt-ext-response-mode-map)
 
 
