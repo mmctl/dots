@@ -65,7 +65,8 @@
 
 ;; Mix of text and code in small buffers (e.g., minibuffer or pop-up)
 (defun loc-setup-mini-mix-mode ()
-  "Setup modes dealing with a (somewhat even) mix of text and code in more transient buffers."
+  "Setup modes dealing with a (somewhat even) mix of text and code in more
+transient buffers."
   (when (display-graphic-p)
     (cond
      ((member "MonaspiceAr Nerd Font" (font-family-list))

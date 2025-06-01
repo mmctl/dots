@@ -58,11 +58,13 @@
 
 ;; Client
 (defun loc-setup-client-frame ()
-  "Setup inital client frame created by daemon/server. Assumes no global/default setup."
+  "Setup inital client frame created by daemon/server. Assumes no global/default
+setup."
   (loc-setup-frame (selected-frame)))
 
 (defun loc-setup-client-frame-after ()
-  "Setup inital client frame created by daemon/server. Assumes global/default setup.")
+  "Setup inital client frame created by daemon/server. Assumes global/default
+  setup.")
 
 
 ;; Global/Default
