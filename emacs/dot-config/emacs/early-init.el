@@ -7,6 +7,7 @@
 (setopt native-comp-async-query-on-exit t)
 (setopt package-native-compile t)
 
+
 ;; Frame parameters
 ;; (See https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html)
 (setopt default-frame-alist
@@ -32,6 +33,7 @@
           (cursor-type . bar)
           ;; Non-Lucid builds: (alpha-background . 0.9)))
           (alpha . 0.9)))
+
 
 ;; Garbage collection
 (setopt gc-cons-threshold 33554432
