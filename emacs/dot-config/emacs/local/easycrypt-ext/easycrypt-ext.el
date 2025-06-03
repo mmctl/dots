@@ -58,8 +58,8 @@
            (ece--configure-indentation value)
            (set-default-toplevel-value symbol value)
            (if value
-               (message "EasyCrypt Ext indentation enabled! Current style: %s." ece-indentation-style)
-             (message "EasyCrypt Ext indentation disabled!"))
+               (message "EasyCrypt Ext indentation enabled globally! Current style: %s." ece-indentation-style)
+             (message "EasyCrypt Ext indentation disabled globally!"))
            value))
 
 (defcustom ece-indentation-style 'local
@@ -89,7 +89,8 @@ EasyCrypt keywords (depends on `cape')."
                (user-error "Package `cape-keyword' is required for this option, but was not detected. Load `cape-keyword' and try again.")
              (ece--configure-keyword-completion value)
              (set-default-toplevel-value symbol value)
-             (message "EasyCrypt Ext keywords completion %s!" (if value "enabled" "disabled")))))
+             (message "EasyCrypt Ext keywords completion %s globally!" (if value "enabled" "disabled"))
+             value)))
 
 (defcustom ece-templates nil
   "Non-nil (resp. `nil') to enable (resp. disable) code templates for
@@ -105,7 +106,8 @@ EasyCrypt indentation in mind."
                (user-error "Package `tempel' is required for this option, but was not detected. Load `tempel' and try again.")
              (ece--configure-templates value)
              (set-default-toplevel-value symbol value)
-             (message "EasyCrypt Ext templates %s!" (if value "enabled" "disabled")))))
+             (message "EasyCrypt Ext templates %s globally!" (if value "enabled" "disabled"))
+             value)))
 
 (defcustom ece-templates-info 'ece-templates
   "Non-nil (resp. `nil') to enable (resp. disable) informative code templates
@@ -120,7 +122,8 @@ use indentation and were made with the enhanced EasyCrypt indentation in mind."
                (user-error "Package `tempel' is required for this option, but was not detected. Load `tempel' and try again.")
              (ece--configure-templates-info value)
              (set-default-toplevel-value symbol value)
-             (message "EasyCrypt Ext templates %s!" (if value "enabled" "disabled")))))
+             (message "EasyCrypt Ext informative templates %s globally!" (if value "enabled" "disabled"))
+             value)))
 
 ;; Indentation
 (defun ece--insert-tabs-of-whitespace (n)
@@ -697,24 +700,41 @@ Simplified version of `tempel-key' macro from `tempel' package."
 
 
 ;; Configuration
-;; Indentation
+;;; Utilities
+(defun ece--gen-buffer-loop-pred (fun pred &optional args)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (or (null pred) (funcall pred))
+        (apply fun args)))))
+
+(defun ece--gen-buffer-loop-symb (fun symb &optional args)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (symbol-value symb)
+        (apply fun args)))))
+
+(defsubst ece--ece-configure-global-from-local (fun &optional args)
+  (ece--gen-buffer-loop-symb fun 'easycrypt-ext-mode args))
+
+;;; Indentation
 (defvar-local original-indentation-state nil)
 (defvar-local original-local-map nil)
 
 (defun ece--enable-indentation-local ()
-  (if original-indentation-state
-      (setq-local tab-width 2
-                  indent-line-function #'ece-indent-line
-                  electric-indent-mode nil)
-    (setq-local original-indentation-state
-                (buffer-local-set-state tab-width 2
-                                        indent-line-function #'ece-indent-line
-                                        electric-indent-mode nil)))
-  (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t)
-  (let ((crlm (current-local-map)))
-    (unless original-local-map
-      (setq-local original-local-map crlm))
-    (use-local-map (copy-keymap crlm))
+  (unless (and (local-variable-p ece-indentation) ece-indentation)
+    (if original-indentation-state
+        (setq-local tab-width 2
+                    indent-line-function #'ece-indent-line
+                    electric-indent-mode nil)
+      (setq-local original-indentation-state
+                  (buffer-local-set-state tab-width 2
+                                          indent-line-function #'ece-indent-line
+                                          electric-indent-mode nil)))
+    (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t)
+    (let ((crlm (current-local-map)))
+      (unless original-local-map
+        (setq-local original-local-map crlm)
+        (use-local-map (copy-keymap crlm))))
     (keymap-local-set "RET" #'newline-and-indent)
     (keymap-local-set "<return>" "RET")
     (keymap-local-set "S-<return>" #'newline)
@@ -722,83 +742,120 @@ Simplified version of `tempel-key' macro from `tempel' package."
     (keymap-local-set "<tab>" "TAB")
     (keymap-local-set "<backtab>" #'ece-basic-deindent)
     (keymap-local-set "M-i" #'indent-for-tab-command)
-    (keymap-local-set "M-I" #'ece-indent-for-tab-command-inverse-style)))
+    (keymap-local-set "M-I" #'ece-indent-for-tab-command-inverse-style)
+    (setq-local ece-indentation t)))
+
+;; (defun ece--disable-indentation-local ()
+;;   (when original-local-map
+;;     (use-local-map original-local-map)
+;;     (setq-local original-local-map nil))
+;;   (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t)
+;;   (when original-indentation-state
+;;     (buffer-local-restore-state original-indentation-state)
+;;     (setq-local original-indentation-state nil)))
 
 (defun ece--disable-indentation-local ()
-  (when original-local-map
-    (use-local-map original-local-map)
-    (setq-local original-local-map nil))
-  (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t)
-  (when original-indentation-state
-    (buffer-local-restore-state original-indentation-state)
-    (setq-local original-indentation-state nil)))
+  (unless (and (local-variable-p ece-indentation) (null ece-indentation))
+    (setq-local ece-indentation nil)
+    (when original-local-map
+      (use-local-map original-local-map)
+      (setq-local original-local-map nil))
+    (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t)
+    (when original-indentation-state
+      (buffer-local-restore-state original-indentation-state)
+      (setq-local original-indentation-state nil))))
 
-(defun ece--configure-indentation-local (enable)
-  (if enable
-      (ece--enable-indentation-local)
-    (ece--disable-indentation-local)))
+;; (defun ece--configure-indentation-local (enable)
+;;   (if enable
+;;       (ece--enable-indentation-local)
+;;     (ece--disable-indentation-local)))
 
-(defun ece--enable-indentation ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--enable-indentation-local)))))
+(defsubst ece--configure-indentation-local (enable)
+  (if enable (ece--enable-indentation-local) (ece--disable-indentation-local)))
 
-(defun ece--disable-indentation ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--disable-indentation-local)))))
+;; (defun ece--enable-indentation ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--enable-indentation-local)))))
 
-(defun ece--configure-indentation (enable)
-  (if enable
-      (ece--enable-indentation)
-    (ece--disable-indentation)))
+;; (defun ece--disable-indentation ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--disable-indentation-local)))))
+
+;; (defun ece--configure-indentation (enable)
+;;   (if enable
+;;       (ece--enable-indentation)
+;;     (ece--disable-indentation)))
+
+(defsubst ece--configure-indentation (enable)
+  (ece--ece-configure-global-from-local
+   (if enable #'ece--enable-indentation-local #'ece--disable-indentation-local)))
 
 ;;; Keyword completion
 (defvar-local original-keyword-completion-state nil)
 
+;; (defun ece--enable-keyword-completion-local ()
+;;   (let* ((eckwcn (cons 'easycrypt-mode ece-keywords))
+;;          (cpkwup (if (member eckwcn cape-keyword-list)
+;;                      cape-keyword-list
+;;                    (cons eckwcn cape-keyword-list))))
+;;     (if original-keyword-completion-state
+;;         (setq-local cape-keyword-list cpkwup)
+;;       (setq-local original-keyword-completion-state
+;;                   (buffer-local-set-state cape-keyword-list cpkwup)))))
+
+;; (defun ece--disable-keyword-completion-local ()
+;;   (when original-keyword-completion-state
+;;     (buffer-local-restore-state original-keyword-completion-state)
+;;     (setq-local original-keyword-completion-state nil)))
+
 (defun ece--enable-keyword-completion-local ()
-  (let* ((eckwcn (cons 'easycrypt-mode ece-keywords))
-         (cpkwup (if (member eckwcn cape-keyword-list)
-                     cape-keyword-list
-                   (cons eckwcn cape-keyword-list))))
-    (if original-keyword-completion-state
-        (setq-local cape-keyword-list cpkwup)
+  (unless (and (local-variable-p ece-keyword-completion) ece-keyword-completion)
+    (unless original-keyword-completion-state
       (setq-local original-keyword-completion-state
-                  (buffer-local-set-state cape-keyword-list cpkwup)))))
+                  (buffer-local-set-state cape-keyword-list cape-keyword-list)))
+    (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ece-keywords))
+    (setq-local ece-keyword-completion t)))
 
 (defun ece--disable-keyword-completion-local ()
-  (when original-keyword-completion-state
-    (buffer-local-restore-state original-keyword-completion-state)
-    (setq-local original-keyword-completion-state nil)))
+  (unless (and (local-variable-p ece-keyword-completion) (null ece-keyword-completion))
+    (unless original-keyword-completion-state
+      (setq-local original-keyword-completion-state
+                  (buffer-local-set-state cape-keyword-list cape-keyword-list)))
+    (setq-local ece-keyword-completion nil)
+    (setq-local cape-keyword-list (remq (cons 'easycrypt-mode ece-keywords)
+                                        cape-keyword-list))))
 
-(defun ece--configure-keyword-completion-local (enable)
-  (if enable
-      (ece--enable-keyword-completion-local)
-    (ece--disable-keyword-completion-local)))
+(defsubst ece--configure-keyword-completion-local (enable)
+  (if enable (ece--enable-keyword-completion-local) (ece--disable-keyword-completion-local)))
 
-(defun ece--enable-keyword-completion ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--enable-keyword-completion-local)))))
+;; (defun ece--enable-keyword-completion ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--enable-keyword-completion-local)))))
 
-(defun ece--disable-keyword-completion ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--disable-keyword-completion-local)))))
+;; (defun ece--disable-keyword-completion ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--disable-keyword-completion-local)))))
 
-(defun ece--configure-keyword-completion (enable)
-  (if enable
-      (ece--enable-keyword-completion)
-    (ece--disable-keyword-completion)))
+;; (defun ece--configure-keyword-completion (enable)
+;;   (if enable
+;;       (ece--enable-keyword-completion)
+;;     (ece--disable-keyword-completion)))
 
+(defsubst ece--configure-keyword-completion (enable)
+  (ece--ece-configure-global-from-local
+   (if enable #'ece--enable-keyword-completion-local #'ece--disable-keyword-completion-local)))
 
 ;;; Templates
-(defvar-local original-templates-state nil)
-(defvar-local original-templates-info-state nil)
+(defvar-local original-templates-sources nil)
+(defvar-local original-templates-user-elements nil)
 
 (defvar-keymap ece-template-map
   :doc "Keymap for EasyCrypt templates."
@@ -850,113 +907,170 @@ Simplified version of `tempel-key' macro from `tempel' package."
   (ece--tempel-key ece-template-map "z" theory)
   (ece--tempel-key ece-template-map "Z" abstracttheory))
 
+;; (defun ece--enable-templates-local ()
+;;   (let* ((tueupp (if (member #'ece--tempel-placeholder-form-as-lit tempel-user-elements)
+;;                      tempel-user-elements
+;;                    (cons #'ece--tempel-placeholder-form-as-lit tempel-user-elements)))
+;;          (tueup (if (member #'ece--tempel-include tueupp)
+;;                     tueupp
+;;                   (cons #'ece--tempel-include tueupp)))
+;;          (ttsup (if (member #'ece--templates-file-read tempel-template-sources)
+;;                     tempel-template-sources
+;;                   (cons #'ece--templates-file-read tempel-template-sources))))
+;;     (if original-templates-user-elements
+;;         (setq-local tempel-user-elements tueup)
+;;       (setq-local original-templates-user-elements
+;;                   (buffer-local-set-state tempel-user-elements tueup)))
+;;     (if original-templates-sources
+;;         (setq-local tempel-template-sources ttsup)
+;;       (setq-local original-template-sources
+;;                   (buffer-local-set-state tempel-template-sources ttsup))))
+;;   (setq-local ece-templates t))
+
 (defun ece--enable-templates-local ()
-  (let* ((ttsup (if (member #'ece--templates-file-read tempel-template-sources)
-                    tempel-template-sources
-                  (cons #'ece--templates-file-read tempel-template-sources)))
-         (tueupp (if (member #'ece--tempel-placeholder-form-as-lit tempel-user-elements)
-                     tempel-user-elements
-                   (cons #'ece--tempel-placeholder-form-as-lit tempel-user-elements)))
-         (tueup (if (member #'ece--tempel-include tueupp)
-                    tueupp
-                  (cons #'ece--tempel-include tueupp))))
-    (if original-templates-state
-        (setq-local tempel-user-elements tueup
-                    tempel-template-sources ttsup)
-      (setq-local original-templates-state
-                  (buffer-local-set-state tempel-user-elements tueup
-                                          tempel-template-sources ttsup)))))
+  (unless (and (local-variable-p ece-templates) ece-templates)
+    (unless original-templates-user-elements
+      (setq-local original-templates-user-elements
+                  (buffer-local-set-state tempel-user-elements tempel-user-elements)))
+    (unless original-templates-sources
+      (setq-local original-templates-sources
+                  (buffer-local-set-state tempel-template-sources tempel-template-sources)))
+    (add-to-list 'tempel-user-elements #'ece--tempel-placeholder-form-as-lit)
+    (add-to-list 'tempel-user-elements #'ece--tempel-include)
+    (add-to-list 'tempel-template-sources #'ece--templates-file-read)
+    (setq-local ece-templates t)))
+
+;; (defun ece--disable-templates-local ()
+;;   (kill-local-variable ece-templates)
+;;   (when original-templates-user-elements
+;;     (buffer-local-restore-state original-templates-user-elements)
+;;     (setq-local original-templates-sources nil))
+;;   (when (and (local-variable-p ece-templates-info)
+;;              (buffer-local-value ece-templates-info (current-buffer)))
+;;     )
 
 (defun ece--disable-templates-local ()
-  (when original-templates-state
-    (buffer-local-restore-state original-templates-state)
-    (setq-local original-templates-state nil)))
+  (unless (and (local-variable-p ece-templates) (null ece-templates))
+    (unless original-templates-user-elements
+      (setq-local original-templates-user-elements
+                  (buffer-local-set-state tempel-user-elements tempel-user-elements)))
+    (unless original-templates-sources
+      (setq-local original-templates-sources
+                  (buffer-local-set-state tempel-template-sources tempel-template-sources)))
+    (setq-local ece-templates nil)
+    (setq-local tempel-user-elements
+                (remq #'ece--tempel-placeholder-form-as-lit
+                      (remq #'ece--tempel-include tempel-user-elements)))
+    (setq-local tempel-template-sources
+                (remq #'ece--templates-file-read tempel-template-sources))))
 
-(defun ece--configure-templates-local (enable)
-  (if enable
-      (ece--enable-templates-local)
-    (ece--disable-templates-local)))
+(defsubst ece--configure-templates-local (enable)
+  (if enable (ece--enable-templates-local) (ece--disable-templates-local)))
 
-(defun ece--enable-templates ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--enable-templates-local)))))
+;; (defun ece--enable-templates ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--enable-templates-local)))))
 
-(defun ece--disable-templates ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--disable-templates-local)))))
+;; (defun ece--disable-templates ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--disable-templates-local)))))
 
-(defun ece--configure-templates (enable)
-  (if enable
-      (ece--enable-templates)
-    (ece--disable-templates)))
+;; (defun ece--configure-templates (enable)
+;;   (if enable
+;;       (ece--enable-templates)
+;;     (ece--disable-templates)))
+
+(defsubst ece--configure-templates (enable)
+  (ece--ece-configure-global-from-local
+   (if enable #'ece--enable-templates-local #'ece--disable-templates-local)))
+
+;;(defvar original-templates-info-state nil)
+
+;; (defun ece--enable-templates-info-local ()
+;;   (let ((ttsup (if (member #'ece--templates-info-file-read tempel-template-sources)
+;;                    tempel-template-sources
+;;                  (cons #'ece--templates-info-file-read tempel-template-sources))))
+;;     (if original-templates-info-state
+;;         (setq-local tempel-template-sources ttsup)
+;;       (setq-local original-templates-info-state
+;;                   (buffer-local-set-state tempel-template-sources ttsup)))))
+
+;; (defun ece--disable-templates-info-local ()
+;;   (when original-templates-info-state
+;;     (buffer-local-restore-state original-templates-info-state)
+;;     (setq-local original-templates-info-state nil)))
 
 (defun ece--enable-templates-info-local ()
-  (let ((ttsup (if (member #'ece--templates-info-file-read tempel-template-sources)
-                   tempel-template-sources
-                 (cons #'ece--templates-info-file-read tempel-template-sources))))
-    (if original-templates-info-state
-        (setq-local tempel-template-sources ttsup)
-      (setq-local original-templates-info-state
-                  (buffer-local-set-state tempel-template-sources ttsup)))))
+  (unless (and (local-variable-p ece-templates-info) ece-templates-info)
+    (unless original-templates-sources
+      (setq-local original-templates-sources
+                  (buffer-local-set-state tempel-template-sources tempel-template-sources)))
+    (add-to-list 'tempel-template-sources #'ece--templates-info-file-read)
+    (setq-local ece-templates-info t)))
 
 (defun ece--disable-templates-info-local ()
-  (when original-templates-info-state
-    (buffer-local-restore-state original-templates-info-state)
-    (setq-local original-templates-info-state nil)))
+  (unless (and (local-variable-p ece-templates-info) (null ece-templates-info))
+    (unless original-templates-sources
+      (setq-local original-templates-sources
+                  (buffer-local-set-state tempel-template-sources tempel-template-sources)))
+    (setq-local ece-templates-info nil)
+    (setq-local tempel-template-sources
+                (remq #'ece--templates-info-file-read tempel-template-sources))))
 
-(defun ece--configure-templates-info-local (enable)
-  (if enable
-      (ece--enable-templates-info-local)
-    (ece--disable-templates-info-local)))
+(defsubst ece--configure-templates-info-local (enable)
+  (if enable (ece--enable-templates-info-local) (ece--disable-templates-info-local)))
 
-(defun ece--enable-templates-info ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--enable-templates-info-local)))))
+;; (defun ece--enable-templates-info ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--enable-templates-info-local)))))
 
-(defun ece--disable-templates-info ()
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer
-      (when easycrypt-ext-mode
-        (ece--disable-templates-info-local)))))
+;; (defun ece--disable-templates-info ()
+;;   (dolist (buffer (buffer-list))
+;;     (with-current-buffer buffer
+;;       (when easycrypt-ext-mode
+;;         (ece--disable-templates-info-local)))))
 
-(defun ece--configure-templates-info (enable)
-  (if enable
-      (ece--enable-templates-info)
-    (ece--disable-templates-info)))
+;; (defun ece--configure-templates-info (enable)
+;;   (if enable
+;;       (ece--enable-templates-info)
+;;     (ece--disable-templates-info)))
 
-;; Utilities
+(defsubst ece--configure-templates-info (enable)
+  (ece--ece-configure-global-from-local
+   (if enable #'ece--enable-templates-info-local #'ece--disable-templates-info-local)))
+
+
+;; Toggles
+;;; Local
 ;;;###autoload
-(defsubst ece-toggle-indentation-local ()
+(defun ece-toggle-indentation-local ()
   (interactive)
-  (ece--configure-indentation-local
-   (if original-indentation-state nil t)))
+  (ece--configure-indentation-local (null ece-indentation)))
 
 ;;;###autoload
-(defsubst ece-toggle-keyword-completion-local ()
+(defun ece-toggle-keyword-completion-local ()
   (interactive)
-  (ece--configure-keyword-completion-local
-   (if original-keyword-completion-state nil t)))
+  (ece--configure-keyword-completion-local (null ece-keyword-completion)))
 
 ;;;###autoload
 (defun ece-toggle-templates-local ()
   (interactive)
-  (ece--configure-templates-local
-   (if original-templates-state nil t)))
+  (ece--configure-templates-local (null ece-templates)))
 
 ;;;###autoload
 (defun ece-toggle-templates-info-local ()
   (interactive)
-  (ece--configure-templates-info-local
-   (if original-templates-info-state nil t)))
+  (ece--configure-templates-info-local (null ece-templates-info)))
 
-(defun ece--toggle (symbol)
-  (customize-set-variable symbol (if (symbol-value symbol) nil t)))
+;;; Global
+(defsubst ece--toggle (symbol)
+  (customize-set-variable symbol (null (symbol-value symbol))))
 
 ;;;###autoload
 (defun ece-toggle-indentation ()
@@ -1081,7 +1195,17 @@ Simplified version of `tempel-key' macro from `tempel' package."
 
 ;;;###autoload
 (defun ece-teardown ()
-  "Tears down EasyCrypt extensions.")
+  "Tears down EasyCrypt extensions."
+  ;; (when (not (null original-indentation-state))
+  ;;   (ece--disable-indentation-local))
+  ;; (when (not (null original-keyword-completion-state))
+  ;;   (ece--disable-keyword-completion-local))
+  ;; (when (not (null original-templates-state))
+  ;;   (ece--disable-templates-local))
+  ;; (when (not (null original-templates-info-state))
+  ;;   (ece--disable-templates-info-local)))
+  )
+
 
 ;; Minor modes
 ;;; Regular
