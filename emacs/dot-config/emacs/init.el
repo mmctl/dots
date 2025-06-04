@@ -343,6 +343,10 @@
 (keymap-global-set "M-E" #'forward-delete-line)
 (keymap-global-set "M-D" #'delete-whole-line-or-region)
 
+;;;; Replacing
+(keymap-global-set "M-r" #'query-replace)
+(keymap-global-set "M-R" #'query-replace-regexp)
+
 ;;; Management
 ;;;; Quitting
 (defvar-keymap a-quit-map
@@ -466,22 +470,27 @@
 (keymap-global-set "C-c g" 'a-goto-map-prefix)
 
 ;;;; Search map
-(defvar-keymap a-search-map
+(defvar-keymap a-search-replace-map
   :doc "Keymap for searching"
-  :prefix 'a-search-map-prefix
+  :prefix 'a-search-replace-map-prefix
   "f" #'find-file
   "F" #'find-file-other-window
   "C-f" #'find-file-other-frame
-  "r" #'recentf-open
-  "R" #'find-file-read-only
+  "o" #'recentf-open
+  "O" #'find-file-read-only
+  "r i" #'isearch-query-replace
+  "r I" #'isearch-query-replace-regexp
+  "r q" #'query-replace
+  "r Q" #'query-replace-regexp
   "i b" #'isearch-backward
   "i f" #'isearch-forward
   "i s" #'isearch-forward-symbol
   "i r" #'isearch-query-replace
+  "i R" #'isearch-query-replace-regexp
   "i w" #'isearch-forward-word
   "i ." #'isearch-forward-symbol-at-point)
 
-(keymap-global-set "C-c s" 'a-search-map-prefix)
+(keymap-global-set "C-c s" 'a-search-replace-map-prefix)
 
 
 ;; Packages
@@ -509,7 +518,9 @@
   (keymap-unset isearch-mode-map "C-w")
   (keymap-set isearch-mode-map "C-v" #'isearch-exit)
   (keymap-set isearch-mode-map "C-t" #'isearch-yank-word-or-char)
-  (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill))
+  (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill)
+  (keymap-set isearch-mode-map "M-r" #'isearch-query-replace)
+  (keymap-set isearch-mode-map "M-R" #'isearch-query-replace-regexp))
 
 (use-package dired
   :init
@@ -687,13 +698,41 @@
                                (yaml-ts-mode . conf-mode)))
 
   :config
-    ;; Keybindings
+  ;; Keybindings
   (keymap-set jinx-overlay-map "C-p" #'jinx-previous)
   (keymap-set jinx-overlay-map "C-n" #'jinx-next)
   (keymap-set jinx-repeat-map "C-p" #'jinx-previous)
   (keymap-set jinx-repeat-map "C-n" #'jinx-next)
   (keymap-set jinx-correct-map "C-p" #'jinx-previous)
   (keymap-set jinx-correct-map "C-n" #'jinx-next))
+
+(use-package anzu
+  :ensure t
+
+  :init
+  ;; Setup and settings
+  (setopt anzu-input-idle-delay 0.1)
+  (setopt anzu-replace-at-cursor-thing 'sexp)
+  (setopt anzu-replace-to-string-separator "->")
+
+  :config
+  ;; Keybindings
+  (keymap-global-set "<remap> <query-replace>" #'anzu-query-replace)
+  (keymap-global-set "<remap> <query-replace-regexp>" #'anzu-query-replace-regexp)
+
+  (keymap-set isearch-mode-map "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
+  (keymap-set isearch-mode-map "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
+
+  (keymap-set a-search-replace-map "<remap> <query-replace>" #'anzu-query-replace)
+  (keymap-set a-search-replace-map "<remap> <query-replace-regexp>" #'anzu-query-replace-regexp)
+  (keymap-set a-search-replace-map "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
+  (keymap-set a-search-replace-map "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
+  (keymap-set a-search-replace-map "r p" #'anzu-query-replace-at-cursor)
+  (keymap-set a-search-replace-map "r t" #'anzu-query-replace-at-cursor-thing)
+  (keymap-set a-search-replace-map "r T" #'anzu-replace-at-cursor-thing)
+
+  ;; Activation
+  (global-anzu-mode 1))
 
 ;;; Completion
 (use-package orderless
@@ -981,7 +1020,8 @@ that allows to include other templates by their name."
   (add-to-list 'tempel-user-elements #'a-tempel-include)
 
   ;; Activation
-  (global-tempel-abbrev-mode 1))
+  ;;(global-tempel-abbrev-mode 1)
+  )
 
 ;;; Actions
 (use-package move-text
@@ -1157,7 +1197,7 @@ that allows to include other templates by their name."
                ("M" . consult-global-mark)
                ("i" . consult-imenu)
                ("I" . consult-imenu-multi))
-         (:map a-search-map
+         (:map a-search-replace-map
                ("f" . find-file)
                ("F" . find-file-other-window)
                ("C-f" . consult-fd)
@@ -1562,7 +1602,7 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
 
-;;; Development
+;;; Developmentk
 ;;;; OCaml
 (use-package tuareg
   :ensure t
@@ -1924,11 +1964,53 @@ that allows to include other templates by their name."
   :after vertico
 
   :init
-  ;; Setup and settings (before load of this package, but after load of packages listed in `:after`)
+  ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
   (setopt global-corfu-minibuffer
           (lambda ()
             (not (or (bound-and-true-p vertico--input)
                      (eq (current-local-map) read-passwd-map))))))
+
+;;; Tempel + Cape
+(use-package tempel
+  :after cape
+
+  :config
+  ;; Custom functionality
+  (defalias 'cape-tempel-complete-prefix-2 (cape-capf-prefix-length #'tempel-complete 2))
+
+  (defun setup-a-cape-tempel-mix-mode ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-tempel-complete-prefix-2
+                                       #'cape-abbrev-prefix-2
+                                       #'cape-keyword-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      #'cape-dict-prefix-2)))
+
+  (defun setup-a-cape-tempel-code-mode ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-tempel-complete-prefix-2
+                                       #'cape-abbrev-prefix-2
+                                       #'cape-keyword-prefix-2
+                                       #'cape-dabbrev-prefix-2))))
+
+  (defun setup-a-cape-tempel-minibuffer ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-tempel-complete-prefix-2
+                                       #'cape-abbrev-prefix-2
+                                       #'cape-history-prefix-2 #'cape-file-prefix-2
+                                       #'cape-dabbrev-prefix-2))))
+
+  ;; Hooks (replace regular by tempel-including)
+  (remove-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
+  (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-mode)
+  (remove-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
+  (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-mode)
+  (remove-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
+  (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-mode)
+  (remove-hook 'prog-mode-hook #'setup-a-cape-code-mode)
+  (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-mode)
+  (remove-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer)
+  (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer))
 
 ;;; EasyCrypt (extension)
 (use-package easycrypt-ext
@@ -1941,10 +2023,42 @@ that allows to include other templates by their name."
          (easycrypt-response-mode . easycrypt-ext-response-mode))
 
   :init
+  ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
   (setopt ece-indentation t)
   (setopt ece-keyword-completion t)
   (setopt ece-templates t)
-  (setopt ece-templates-info nil))
+  (setopt ece-templates-info nil)
+  (setopt ece-templates-prefix-key "C-c l t")
+
+  :config
+  ;; Keybindings
+  (keymap-set easycrypt-ext-mode-map "C-c C-p" #'ece-print)
+  (keymap-set easycrypt-ext-mode-map "C-c l p" #'ece-print)
+  (keymap-set easycrypt-ext-mode-map "C-c l P" #'ece-print-prompt)
+  (keymap-set easycrypt-ext-mode-map "C-c l l" #'ece-locate)
+  (keymap-set easycrypt-ext-mode-map "C-c l L" #'ece-locate-prompt)
+  (keymap-set easycrypt-ext-mode-map "C-c C-s" #'ece-search)
+  (keymap-set easycrypt-ext-mode-map "C-c l s" #'ece-search)
+  (keymap-set easycrypt-ext-mode-map "C-c l S" #'ece-search-prompt)
+  (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
+
+  (keymap-set easycrypt-ext-goals-mode-map "C-c C-p" #'ece-print)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l p" #'ece-print)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l P" #'ece-print-prompt)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l l" #'ece-locate)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l L" #'ece-locate-prompt)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c C-s" #'ece-search)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l s" #'ece-search)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l S" #'ece-search-prompt)
+
+  (keymap-set easycrypt-ext-response-mode-map "C-c C-p" #'ece-print)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l p" #'ece-print)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l P" #'ece-print-prompt)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l l" #'ece-locate)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l L" #'ece-locate-prompt)
+  (keymap-set easycrypt-ext-response-mode-map "C-c C-s" #'ece-search)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l s" #'ece-search)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l S" #'ece-search-prompt))
 
 
 ;; Hooks
