@@ -58,8 +58,8 @@
 ;;            (ece--configure-indentation value)
 ;;            (set-default-toplevel-value symbol value)
 ;;            (if value
-;;                (message "EasyCrypt Ext indentation enabled globally! Current style: %s." ece-indentation-style)
-;;              (message "EasyCrypt Ext indentation disabled globally!"))
+;;                (message "EasyCrypt Ext indentation enabled in all buffers! Current style: %s." ece-indentation-style)
+;;              (message "EasyCrypt Ext indentation disabled in all buffers!"))
 ;;            value))
 
 (defcustom ece-indentation t
@@ -95,7 +95,7 @@ Only has effect if `ece-indentation', which see, is non-nil."
 ;;                (user-error "Package `cape-keyword' is required for this option, but was not detected. Load `cape-keyword' and try again.")
 ;;              (ece--configure-keyword-completion value)
 ;;              (set-default-toplevel-value symbol value)
-;;              (message "EasyCrypt Ext keywords completion %s globally!" (if value "enabled" "disabled"))
+;;              (message "EasyCrypt Ext keywords completion %s in all buffers!" (if value "enabled" "disabled"))
 ;;              value)))
 
 (defcustom ece-keyword-completion nil
@@ -127,7 +127,7 @@ EasyCrypt indentation in mind."
 ;;                (user-error "Package `tempel' is required for this option, but was not detected. Load `tempel' and try again.")
 ;;              (ece--configure-templates value)
 ;;              (set-default-toplevel-value symbol value)
-;;              (message "EasyCrypt Ext templates %s globally!" (if value "enabled" "disabled"))
+;;              (message "EasyCrypt Ext templates %s in all buffers!" (if value "enabled" "disabled"))
 ;;              value)))
 
 (defcustom ece-templates-info 'ece-templates
@@ -1151,8 +1151,8 @@ Simplified version of `tempel-key' macro from `tempel' package."
   (ece--configure-indentation-local (not ece-indentation))
   (message "EasyCrypt Ext indentation %s"
            (if ece-indentation
-               (format "enabled locally! Current style: %s." (if (eq ece-indentation-style 'local) "local" "non-local"))
-             "disabled locally!")))
+               (format "enabled in this buffer! Current style: %s." (if (eq ece-indentation-style 'local) "local" "non-local"))
+             "disabled in this buffer!")))
 
 ;;;###autoload
 (defun ece-toggle-indentation-style-local ()
@@ -1165,22 +1165,32 @@ Simplified version of `tempel-key' macro from `tempel' package."
 (defun ece-toggle-keyword-completion-local ()
   (interactive)
   (ece--configure-keyword-completion-local (not ece-keyword-completion))
-  (message "EasyCrypt Ext keyword completion %s locally!"
+  (message "EasyCrypt Ext keyword completion %s in this buffer!"
            (if ece-keyword-completion "enabled" "disabled")))
 
 ;;;###autoload
 (defun ece-toggle-templates-local ()
   (interactive)
   (ece--configure-templates-local (not ece-templates))
-  (message "EasyCrypt Ext templates %s locally!"
+  (message "EasyCrypt Ext templates %s in this buffer!"
            (if ece-templates "enabled" "disabled")))
 
 ;;;###autoload
 (defun ece-toggle-templates-info-local ()
   (interactive)
   (ece--configure-templates-info-local (not ece-templates-info))
-  (message "EasyCrypt Ext informative templates %s locally!"
+  (message "EasyCrypt Ext informative templates %s in this buffer!"
            (if ece-templates-info "enabled" "disabled")))
+
+;;;###autoload
+(defun ece-reset-to-defaults-local ()
+  (interactive)
+  (ece--configure-indentation-local (default-value ece-indentation))
+  (kill-local-variable ece-indentation-style)
+  (ece--configure-keyword-completion-local (default-value ece-keyword-completion))
+  (ece--configure-templates-local (default-value ece-templates))
+  (ece--configure-templates-info-local (default-value ece-templates-info))
+  (message "EasyCrypt Ext options in this buffer reset to their default values!"))
 
 ;;; Global
 ;; (defsubst ece--toggle (symbol)
@@ -1210,50 +1220,60 @@ Simplified version of `tempel-key' macro from `tempel' package."
 (defun ece-enable-indentation ()
   (interactive)
   (ece--configure-indentation t)
-  (message "EasyCrypt Ext indentation enabled globally! Current style: %s." ece-indentation-style))
+  (message "EasyCrypt Ext indentation enabled in all buffers! Current style: %s." ece-indentation-style))
 
 ;;;###autoload
 (defun ece-disable-indentation ()
   (interactive)
   (ece--configure-indentation nil)
-  (message "EasyCrypt Ext indentation disabled globally!"))
+  (message "EasyCrypt Ext indentation disabled in all buffers!"))
 
 ;;;###autoload
 (defun ece-enable-keyword-completion ()
   (interactive)
   (ece--configure-keyword-completion t)
-  (message "EasyCrypt Ext keyword completion enabled globally!"))
+  (message "EasyCrypt Ext keyword completion enabled in all buffers!"))
 
 ;;;###autoload
 (defun ece-disable-keyword-completion ()
   (interactive)
   (ece--configure-keyword-completion nil)
-  (message "EasyCrypt Ext keyword completion disabled globally!"))
+  (message "EasyCrypt Ext keyword completion disabled in all buffers!"))
 
 ;;;###autoload
 (defun ece-enable-templates ()
   (interactive)
   (ece--configure-templates t)
-  (message "EasyCrypt Ext templates enabled globally!"))
+  (message "EasyCrypt Ext templates enabled in all buffers!"))
 
 ;;;###autoload
 (defun ece-disable-templates ()
   (interactive)
   (ece--configure-templates nil)
-  (message "EasyCrypt Ext templates disabled globally!"))
+  (message "EasyCrypt Ext templates disabled in all buffers!"))
 
 ;;;###autoload
 (defun ece-enable-templates-info ()
   (interactive)
   (ece--configure-templates-info t)
-  (message "EasyCrypt Ext informative templates enabled globally!"))
+  (message "EasyCrypt Ext informative templates enabled in all buffers!"))
 
 ;;;###autoload
 (defun ece-disable-templates-info ()
   (interactive)
   (ece--configure-templates-info nil)
-  (message "EasyCrypt Ext informative templates disabled globally!"))
+  (message "EasyCrypt Ext informative templates disabled in all buffers!"))
 
+
+;;;###autoload
+(defun ece-reset-to-defaults ()
+  (interactive)
+  (ece--configure-indentation (default-value ece-indentation))
+  (ece--ece-configure-global-from-local #'(lambda () (kill-local-variable ece-indentation-style)))
+  (ece--configure-keyword-completion (default-value ece-keyword-completion))
+  (ece--configure-templates (default-value ece-templates))
+  (ece--configure-templates-info (default-value ece-templates-info))
+  (message "EasyCrypt Ext options in all buffers reset to their default values!"))
 
 ;; Keymaps
 ;;; Auxiliary
