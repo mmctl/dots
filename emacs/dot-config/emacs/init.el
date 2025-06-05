@@ -713,7 +713,7 @@
   ;; Setup and settings
   (setopt anzu-input-idle-delay 0.1)
   (setopt anzu-replace-at-cursor-thing 'sexp)
-  (setopt anzu-replace-to-string-separator "->")
+  (setopt anzu-replace-to-string-separator " -> ")
 
   :config
   ;; Keybindings
@@ -727,7 +727,7 @@
   (keymap-set a-search-replace-map "<remap> <query-replace-regexp>" #'anzu-query-replace-regexp)
   (keymap-set a-search-replace-map "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
   (keymap-set a-search-replace-map "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
-  (keymap-set a-search-replace-map "r p" #'anzu-query-replace-at-cursor)
+  (keymap-set a-search-replace-map "r ." #'anzu-query-replace-at-cursor)
   (keymap-set a-search-replace-map "r t" #'anzu-query-replace-at-cursor-thing)
   (keymap-set a-search-replace-map "r T" #'anzu-replace-at-cursor-thing)
 

@@ -175,6 +175,11 @@ or tries to find a (reasonable) thing at point. Uses the result as an
 argument to the `locate' command in EasyCrypt.
 
 (fn &optional EVENT)" t)
+(autoload 'ece-tempel-key "easycrypt-ext" "\
+Binds KEY to TEMPLATE-NAME in KEYMAP.
+Simplified version of `tempel-key' macro from `tempel' package.
+
+(fn KEYMAP KEY TEMPLATE-NAME)" nil t)
 (autoload 'ece-toggle-indentation-local "easycrypt-ext" nil t)
 (autoload 'ece-toggle-indentation-style-local "easycrypt-ext" nil t)
 (autoload 'ece-toggle-keyword-completion-local "easycrypt-ext" nil t)

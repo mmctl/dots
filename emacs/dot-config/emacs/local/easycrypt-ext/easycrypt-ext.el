@@ -694,7 +694,8 @@ that allows to include other templates by their name."
 (defsubst ece--templates-info-file-read ()
   (ece--tempel-template-file-read ece--templates-info-file))
 
-(defmacro ece--tempel-key (keymap key template-name)
+;;;###autoload
+(defmacro ece-tempel-key (keymap key template-name)
   "Binds KEY to TEMPLATE-NAME in KEYMAP.
 Simplified version of `tempel-key' macro from `tempel' package."
   `(define-key ,keymap ,(key-parse key)
@@ -818,7 +819,7 @@ Simplified version of `tempel-key' macro from `tempel' package."
 (dolist (keytemp ece-templates-bound)
   (let ((key (car keytemp))
         (temp (cadr keytemp)))
-    (eval `(ece--tempel-key ece-template-map ,key ,temp))))
+    (eval `(ece-tempel-key ece-template-map ,key ,temp))))
 
 (defun ece--enable-templates-local ()
   (unless (and (local-variable-p ece-templates) ece-templates)
@@ -933,11 +934,11 @@ Simplified version of `tempel-key' macro from `tempel' package."
 ;;;###autoload
 (defun ece-reset-to-defaults-local ()
   (interactive)
-  (ece--configure-indentation-local (default-value ece-indentation))
+  (ece--configure-indentation-local (default-value 'ece-indentation))
   (kill-local-variable ece-indentation-style)
-  (ece--configure-keyword-completion-local (default-value ece-keyword-completion))
-  (ece--configure-templates-local (default-value ece-templates))
-  (ece--configure-templates-info-local (default-value ece-templates-info))
+  (ece--configure-keyword-completion-local (default-value 'ece-keyword-completion))
+  (ece--configure-templates-local (default-value 'ece-templates))
+  (ece--configure-templates-info-local (default-value 'ece-templates-info))
   (message "EasyCrypt Ext options in this buffer reset to their default values!"))
 
 ;;;###autoload
@@ -988,16 +989,16 @@ Simplified version of `tempel-key' macro from `tempel' package."
   (ece--configure-templates-info nil)
   (message "EasyCrypt Ext informative templates disabled in all buffers!"))
 
-
 ;;;###autoload
 (defun ece-reset-to-defaults ()
   (interactive)
-  (ece--configure-indentation (default-value ece-indentation))
+  (ece--configure-indentation (default-value 'ece-indentation))
   (ece--ece-configure-global-from-local #'(lambda () (kill-local-variable ece-indentation-style)))
-  (ece--configure-keyword-completion (default-value ece-keyword-completion))
-  (ece--configure-templates (default-value ece-templates))
-  (ece--configure-templates-info (default-value ece-templates-info))
+  (ece--configure-keyword-completion (default-value 'ece-keyword-completion))
+  (ece--configure-templates (default-value 'ece-templates))
+  (ece--configure-templates-info (default-value 'ece-templates-info))
   (message "EasyCrypt Ext options in all buffers reset to their default values!"))
+
 
 ;; Keymaps
 ;;; Auxiliary
