@@ -110,6 +110,96 @@ Configures EasyCrypt extensions.")
 (register-definition-prefixes "init_min" '("ECE_DIR"))
 
 ;;;***
+
+
+;;; Generated autoloads from easycrypt-ext.el
+
+(autoload 'ece-basic-indent "easycrypt-ext" "\
+Indent (ARG > 0) resp. de-indent (ARG < 0) all lines touched by the
+active region by |ARG| tab stops.
+If no region is active and point is inside indentation,
+then indent (ARG > 0) resp. de-indent (ARG < 0) current line |ARG| times
+(respecting tab stops).
+If no region is active and point is in the middle of a line, insert (ARG > 0)
+or delete (ARG < 0) literal whitespace (|ARG| * `tab-width' worth).
+If ARG < 0 and there is no whitespace behind point in the middle of a line,
+again de-indent line |ARG| times (respecting tab stops).
+
+(fn ARG)" t)
+(autoload 'ece-basic-deindent "easycrypt-ext" "\
+Passes negation of ARG to `ece-basic-indent', which see.
+
+(fn ARG)" t)
+(autoload 'ece-indent-line "easycrypt-ext" "\
+Indents line of EasyCrypt code as per `ece--indent-level', which see." t)
+(autoload 'ece-indent-for-tab-command-inverse-style "easycrypt-ext" "\
+Calls `indent-for-tab-command' with `ece-indentation-style' inverted.
+If `ece-indentation' is non-nil, `indent-line-function' will be set to
+`ece-indent-line', which is used by `indent-for-tab-command' to indent a line
+or region. So, this command essentially performs indentation according to the
+style that is currently not selected." t)
+(autoload 'ece-indent-on-insertion-closer "easycrypt-ext" "\
+Indent when (1) last input was one of }, ), ], and it is the
+first character on current line (as an exception, `)` may also directly
+be preceded by symbols that make it a comment closer), or (2) the last
+input was . and the current line starts/ends a proof. However, only
+allow de-indents (to prevent automatically indenting
+code that has been manually de-indented; this is a hack
+and a limitation of the localized ad-hoc computation
+of the indent level).
+Meant for `post-self-insert-hook'.")
+(autoload 'ece-prompt-print "easycrypt-ext" "\
+Prompts user for arguments that are passed to the `print' command of EasyCrypt." t)
+(autoload 'ece-prompt-search "easycrypt-ext" "\
+Prompts user for arguments that are passed to the `search' command of EasyCrypt." t)
+(autoload 'ece-prompt-locate "easycrypt-ext" "\
+Prompts user for arguments that are passed to the `locate' command of EasyCrypt." t)
+(autoload 'ece-print "easycrypt-ext" "\
+If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point. Uses the result as an
+argument to the `print' command in EasyCrypt.
+
+(fn &optional EVENT)" t)
+(autoload 'ece-search "easycrypt-ext" "\
+If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point. Uses the result as an
+argument to the `search' command in EasyCrypt.
+
+(fn &optional EVENT)" t)
+(autoload 'ece-locate "easycrypt-ext" "\
+If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
+(ignoring any active region). Otherwise, takes the active region
+or tries to find a (reasonable) thing at point. Uses the result as an
+argument to the `locate' command in EasyCrypt.
+
+(fn &optional EVENT)" t)
+(autoload 'ece-toggle-indentation-local "easycrypt-ext" nil t)
+(autoload 'ece-toggle-indentation-style-local "easycrypt-ext" nil t)
+(autoload 'ece-toggle-keyword-completion-local "easycrypt-ext" nil t)
+(autoload 'ece-toggle-templates-local "easycrypt-ext" nil t)
+(autoload 'ece-toggle-templates-info-local "easycrypt-ext" nil t)
+(autoload 'ece-reset-to-defaults-local "easycrypt-ext" nil t)
+(autoload 'ece-enable-indentation "easycrypt-ext" nil t)
+(autoload 'ece-disable-indentation "easycrypt-ext" nil t)
+(autoload 'ece-enable-keyword-completion "easycrypt-ext" nil t)
+(autoload 'ece-disable-keyword-completion "easycrypt-ext" nil t)
+(autoload 'ece-enable-templates "easycrypt-ext" nil t)
+(autoload 'ece-disable-templates "easycrypt-ext" nil t)
+(autoload 'ece-enable-templates-info "easycrypt-ext" nil t)
+(autoload 'ece-disable-templates-info "easycrypt-ext" nil t)
+(autoload 'ece-reset-to-defaults "easycrypt-ext" nil t)
+(autoload 'ece-setup "easycrypt-ext" "\
+Sets up EasyCrypt extensions.")
+(autoload 'ece-teardown "easycrypt-ext" "\
+Tears down EasyCrypt extensions.")
+(register-definition-prefixes "easycrypt-ext" '("easycrypt-ext-" "ece-" "original-"))
+
+
+;;; Generated autoloads from easycrypt-ext-consts.el
+
+(register-definition-prefixes "easycrypt-ext-consts" '("ece-"))
 
 ;;; End of scraped data
 

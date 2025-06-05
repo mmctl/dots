@@ -95,9 +95,10 @@ use indentation and were made with the enhanced EasyCrypt indentation in mind."
 
 (defcustom ece-templates-prefix-key "C-c C-y t"
   "Key sequence to use as prefix for accessing `ece-template-map', a keymap
-containing bindings for common templates. Should be a string satisfying
+containing bindings for common templates when templates are enabled
+(i.e., when `ece-templates' is non-nil). Should be a string satisfying
 `key-valid-p', which see."
-  :type '(string :tag "Prefix key")
+  :type 'key
   :group 'easycrypt-ext
   :initialize #'custom-initialize-default
   :set #'(lambda (symbol value)
@@ -108,6 +109,29 @@ containing bindings for common templates. Should be a string satisfying
              (keymap-local-set value 'ece-template-map-prefix))
            (set-default-toplevel-value symbol value)
            value))
+
+(defcustom ece-templates-bound
+  '(("a" axiomn) ("A" abbrevn) ("b" byequiv) ("B" byphoare)
+    ("c" conseq) ("C" conseqeqvhoahoa) ("d" doccommentn) ("D" declaremodule)
+    ("e" equivn) ("E" equivnlemman) ("f" funn) ("F" fel)
+    ("g" ge0) ("G" gt0) ("h" hoaren) ("H" hoarenlemman)
+    ("i" ifelse) ("I" ifthenelse) ("l" lemman) ("L" letinn)
+    ("m" module) ("M" modulept) ("o" op) ("O" opas)
+    ("p" proc) ("P" procsig) ("r" rewrited) ("R" rngin)
+    ("s" seq) ("S" seqph) ("t" moduletype) ("T" moduletypep)
+    ("u" Prmbnd) ("U" Prmrbnd) ("v" Prmeq) ("V" Prmreq)
+    ("w" whiles) ("W" whileph) ("x" cloneimportaswith) ("X" requireimport)
+    ("y" phoaren) ("Y" phoare1n) ("z" theory) ("Z" abstracttheory))
+  "Alist of (KEY TEMPLATE-NAME) pairs for which KEY
+should be bound to TEMPLATE-NAME in `ece-template-map'
+when templates are enabled (i.e., when `ece-templates'
+are non-nil). KEY should be a string satisfying
+`key-valid-p', which see, and TEMPLATE-NAME should be
+a symbol matching a template specified in the template file
+`eascyrypt-ext-templates'."
+  :type '(alist :key-type key :value-type symbol)
+  :group 'easycrypt-ext)
+
 
 ;; Indentation
 (defun ece--insert-tabs-of-whitespace (n)
@@ -791,51 +815,10 @@ Simplified version of `tempel-key' macro from `tempel' package."
   :doc "Keymap for EasyCrypt templates."
   :prefix 'ece-template-map-prefix)
 
-(eval-when-compile
-  (ece--tempel-key ece-template-map "a" axiomn)
-  (ece--tempel-key ece-template-map "A" abbrevn)
-  (ece--tempel-key ece-template-map "b" byequiv)
-  (ece--tempel-key ece-template-map "B" byphoare)
-  (ece--tempel-key ece-template-map "c" conseq)
-  (ece--tempel-key ece-template-map "C" conseqehh)
-  (ece--tempel-key ece-template-map "d" doccommentn)
-  (ece--tempel-key ece-template-map "D" declaremodule)
-  (ece--tempel-key ece-template-map "e" equivn)
-  (ece--tempel-key ece-template-map "E" equivnlemman)
-  (ece--tempel-key ece-template-map "f" funn)
-  (ece--tempel-key ece-template-map "F" fel)
-  (ece--tempel-key ece-template-map "g" ge0)
-  (ece--tempel-key ece-template-map "G" gt0)
-  (ece--tempel-key ece-template-map "h" hoaren)
-  (ece--tempel-key ece-template-map "H" hoarenlemman)
-  (ece--tempel-key ece-template-map "i" ifelse)
-  (ece--tempel-key ece-template-map "I" ifthenelse)
-  (ece--tempel-key ece-template-map "l" lemman)
-  (ece--tempel-key ece-template-map "L" letinn)
-  (ece--tempel-key ece-template-map "m" module)
-  (ece--tempel-key ece-template-map "M" modulept)
-  (ece--tempel-key ece-template-map "o" op)
-  (ece--tempel-key ece-template-map "O" opas)
-  (ece--tempel-key ece-template-map "p" proc)
-  (ece--tempel-key ece-template-map "P" procsig)
-  (ece--tempel-key ece-template-map "r" rewrited)
-  (ece--tempel-key ece-template-map "R" rngin)
-  (ece--tempel-key ece-template-map "s" seq)
-  (ece--tempel-key ece-template-map "S" seqph)
-  (ece--tempel-key ece-template-map "t" moduletype)
-  (ece--tempel-key ece-template-map "T" moduletypep)
-  (ece--tempel-key ece-template-map "u" Prmub)
-  (ece--tempel-key ece-template-map "U" Prmrub)
-  (ece--tempel-key ece-template-map "v" Prmeq)
-  (ece--tempel-key ece-template-map "V" Prmreq)
-  (ece--tempel-key ece-template-map "w" whiles)
-  (ece--tempel-key ece-template-map "W" whileph)
-  (ece--tempel-key ece-template-map "x" cloneimportaswith)
-  (ece--tempel-key ece-template-map "X" requireimport)
-  (ece--tempel-key ece-template-map "y" phoaren)
-  (ece--tempel-key ece-template-map "Y" phoare1n)
-  (ece--tempel-key ece-template-map "z" theory)
-  (ece--tempel-key ece-template-map "Z" abstracttheory))
+(dolist (keytemp ece-templates-bound)
+  (let ((key (car keytemp))
+        (temp (cadr keytemp)))
+    (eval `(ece--tempel-key ece-template-map ,key ,temp))))
 
 (defun ece--enable-templates-local ()
   (unless (and (local-variable-p ece-templates) ece-templates)
@@ -1164,7 +1147,7 @@ Simplified version of `tempel-key' macro from `tempel' package."
 (define-minor-mode easycrypt-ext-mode nil
   :lighter " ECE"
   :keymap easycrypt-ext-mode-map
-  :interactive '(easycrypt-mode)
+  :interactive (easycrypt-mode)
   (if easycrypt-ext-mode
       (ece-setup)
     (ece-teardown)))
@@ -1173,13 +1156,13 @@ Simplified version of `tempel-key' macro from `tempel' package."
 (define-minor-mode easycrypt-ext-goals-mode nil
   :lighter " ECEg"
   :keymap easycrypt-ext-goals-mode-map
-  :interactive '(easycrypt-goals-mode))
+  :interactive (easycrypt-goals-mode))
 
 ;;; Response
 (define-minor-mode easycrypt-ext-response-mode nil
   :lighter " ECEr"
   :keymap easycrypt-ext-response-mode-map
-  :interactive '(easycrypt-response-mode))
+  :interactive (easycrypt-response-mode))
 
 
 (provide 'easycrypt-ext)

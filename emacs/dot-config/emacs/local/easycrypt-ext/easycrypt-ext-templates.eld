@@ -23,6 +23,7 @@ easycrypt-mode
              n>
              "- Author: " p n>
              "- Date: " (pfl (format-time-string "%Y-%m-%d")) n>
+             n>
              "Description:" n>
              q n
              "^*)" >)
@@ -442,8 +443,8 @@ easycrypt-mode
 
 ;;; Program
 (proct "proc (" q ")")
-(proctub "proc (" p ") (" q ")")
-(proctube "proc (" p ") (" p ") (" q ")")
+(proctupbad "proc (" p ") (" q ")")
+(proctupbadext "proc (" p ") (" p ") (" q ")")
 
 (seq "seq " p " " p " : (" q ")")
 (seqhoa "seq " p " : (" q ")")
@@ -568,14 +569,14 @@ easycrypt-mode
 (conseq "conseq (_: " p " ==> " q ")")
 (conseqpt "conseq (" q ")")
 (conseqcr "conseq />")
-(conseqehh "conseq (_: " p " ==> " p ") (_: " p " ==> " p ") (_: " p " ==> " q ")")
-(conseqphh "conseq (_: " p " ==> " p ": " p ") (_: " p " ==> " q ")")
-(conseqeh "conseq (" p ") (_: " p " ==> " q ")")
+(conseqeqvhoahoa "conseq (_: " p " ==> " p ") (_: " p " ==> " p ") (_: " p " ==> " q ")")
+(conseqphhoahoa "conseq (_: " p " ==> " p ": " p ") (_: " p " ==> " q ")")
+(conseqeqvhoa "conseq (" p ") (_: " p " ==> " q ")")
 
 (byequiv "byequiv (_: " p " ==> " q ")")
 (byequivpt "byequiv (" q ")")
-(byequivub "byequiv (_: " p " ==> " p ") : " q)
-(byequivubpt "byequiv (" p ") : " q)
+(byequivupbad "byequiv (_: " p " ==> " p ") : " q)
+(byequivupbadpt "byequiv (" p ") : " q)
 
 (byphoare "byphoare (_: " p " ==> " q ")")
 (byphoarept "byphoare (" q ")")
@@ -612,6 +613,9 @@ easycrypt-mode
 (procrewrite2 "proc rewrite{2} " q)
 
 ;;; Aliases
+(proctup (i proctupbad))
+(proctupe (i proctupbadext))
+
 (whi (i while))
 (whiph (i whileph))
 (whi1 (i while1))
@@ -717,18 +721,18 @@ easycrypt-mode
 (procrew2 (i procrewrite2))
 
 ;; Miscellaneous
-(Prub (i Pr) n>
-      "<=" n>
-      (i Pr))
-(Prnub (i Prn) n>
+(Prbnd (i Pr) n>
        "<=" n>
-       (i Prn))
-(Prmub (i prm) n>
-       "<=" n>
-       (i prm))
-(Prmrub (i prmr) n>
+       (i Pr))
+(Prnbnd (i Prn) n>
         "<=" n>
-        (i prmr))
+        (i Prn))
+(Prmbnd (i Prm) n>
+        "<=" n>
+        (i Prm))
+(Prmrbnd (i Prmr) n>
+         "<=" n>
+         (i Prmr))
 
 (Preq (i Pr) n>
       "=" n>
@@ -736,25 +740,25 @@ easycrypt-mode
 (Prneq (i Prn) n>
        "=" n>
        (i Prn))
-(Prmeq (i prm) n>
+(Prmeq (i Prm) n>
        "=" n>
-       (i prm))
-(Prmreq (i prmr) n>
+       (i Prm))
+(Prmreq (i Prmr) n>
         "=" n>
-        (i prmr))
+        (i Prmr))
 
-(lemPrub "lemma " p " :" n>
-         (i Prub) "." n>
-         (i proof))
-(lemPrnub "lemma " p " :" n>
-          (i Prnub) "." n>
+(lemPrbnd "lemma " p " :" n>
+          (i Prbnd) "." n>
           (i proof))
-(lemPrmub "lemma " p " &m :" n>
-          (i Prmub) "." n>
-          (i proof))
-(lemPrmrub "lemma " p " &m :" n>
-           (i Prmrub) "." n>
+(lemPrnbnd "lemma " p " :" n>
+           (i Prnbnd) "." n>
            (i proof))
+(lemPrmbnd "lemma " p " &m :" n>
+           (i Prmbnd) "." n>
+           (i proof))
+(lemPrmrbnd "lemma " p " &m :" n>
+            (i Prmrbnd) "." n>
+            (i proof))
 
 (lemPreq "lemma " p " :" n>
          (i Preq) "." n>

@@ -1202,7 +1202,7 @@ that allows to include other templates by their name."
                ("F" . find-file-other-window)
                ("C-f" . consult-fd)
                ("M-f" . consult-find)
-               ("r" . consult-recent-file)
+               ("o" . consult-recent-file)
                ("c" . consult-locate)
                ("g" . consult-ripgrep)
                ("G" . consult-git-grep)

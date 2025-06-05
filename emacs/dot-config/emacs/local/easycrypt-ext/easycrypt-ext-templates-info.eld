@@ -79,8 +79,8 @@ easycrypt-mode
 (haveinfo "have " (p "IntroPattern") ": " (p "Statement"))
 
 (proctinfo "proc (" (p "Invariant") ")")
-(proctubinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ")")
-(proctubeinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ") (" (p "InvariantAfterBad") ")")
+(proctupbadinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ")")
+(proctupbadextinfo "proc (" (p "BadEvent") ") (" (p "InvariantUptoBad") ") (" (p "InvariantAfterBad") ")")
 
 (seqinfo "seq " (p "CodePosCutLeft") " " (p "CodePosCutRight") " :  (" (p "ConditionAtCut") ")")
 (seqhoainfo "seq " (p "CodePosCut") " :  (" (p "ConditionAtCut") ")")
@@ -136,14 +136,14 @@ easycrypt-mode
 
 (conseqinfo "conseq (_: " (p "Pre") " ==> " (p "Post") ")")
 (conseqptinfo "conseq (" (p "Proofterm") ")")
-(conseqehhinfo "conseq (_: " (p "PreEquiv") " ==> " (p "PostEquiv") ") (_: " (p "PreHoareLeft") " ==> " (p "PostHoareLeft") ") (_: " (p "PreHoareRight") " ==> " (p "PostHoareRight") ")")
-(conseqphhinfo "conseq (_: " (p "PrePhoare") " ==> " (p "PostPhoare") ": " (p "ProbBnd|ProbEq (ex: =1%r)") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
-(conseqeh "conseq (" (p "ProoftermEquiv") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
+(conseqeqvhoahoainfo "conseq (_: " (p "PreEquiv") " ==> " (p "PostEquiv") ") (_: " (p "PreHoareLeft") " ==> " (p "PostHoareLeft") ") (_: " (p "PreHoareRight") " ==> " (p "PostHoareRight") ")")
+(conseqphhoahoainfo "conseq (_: " (p "PrePhoare") " ==> " (p "PostPhoare") ": " (p "ProbBnd|ProbEq (ex: =1%r)") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
+(conseqeqvhoainfo "conseq (" (p "ProoftermEquiv") ") (_: " (p "PreHoare") " ==> " (p "PostHoare") ")")
 
 (byequivinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ")")
 (byequivptinfo "byequiv (" (p "ProoftermEquiv") ")")
-(byequivubinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ") : " (p "BadEvent"))
-(byequivubptinfo "byequiv (" (p "ProoftermEquiv") ") : " (p "BadEvent"))
+(byequivupbadinfo "byequiv (_: " (p "Pre") " ==> " (p "Post") ") : " (p "BadEvent"))
+(byequivupbadptinfo "byequiv (" (p "ProoftermEquiv") ") : " (p "BadEvent"))
 
 (byphoareinfo "byphoare (_: " (p "Pre") " ==> " (p "Post") ")")
 (byphoareptinfo "byphoare (" (p "ProoftermPhoare") ")")
