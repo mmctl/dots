@@ -347,6 +347,10 @@
 (keymap-global-set "M-r" #'query-replace)
 (keymap-global-set "M-R" #'query-replace-regexp)
 
+;;; Miscellaneous
+(keymap-global-set "M-c" #'comment-dwim)
+(keymap-global-set "M-C" #'comment-line)
+
 ;;; Management
 ;;;; Quitting
 (defvar-keymap a-quit-map
@@ -471,7 +475,7 @@
 
 ;;;; Search map
 (defvar-keymap a-search-replace-map
-  :doc "Keymap for searching"
+  :doc "Keymap for searching and replacing"
   :prefix 'a-search-replace-map-prefix
   "f" #'find-file
   "F" #'find-file-other-window
@@ -614,7 +618,7 @@
   (keymap-set easy-kill-base-map ">" #'easy-kill-expand)
   (keymap-set easy-kill-base-map "a"  #'easy-kill-append)
   (keymap-set easy-kill-base-map "k"  #'easy-kill-region)
-  (keymap-set easy-kill-base-map "K"  #'easy-delete-region)
+  (keymap-set easy-kill-base-map "K"  #'easy-kill-delete-region)
   (keymap-set easy-kill-base-map "q"  #'easy-kill-abort)
   (keymap-set easy-kill-base-map "p"  #'easy-kill-exchange-point-and-mark))
 
@@ -719,14 +723,12 @@
   ;; Keybindings
   (keymap-global-set "<remap> <query-replace>" #'anzu-query-replace)
   (keymap-global-set "<remap> <query-replace-regexp>" #'anzu-query-replace-regexp)
+  (keymap-global-set "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
+  (keymap-global-set "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
 
   (keymap-set isearch-mode-map "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
   (keymap-set isearch-mode-map "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
 
-  (keymap-set a-search-replace-map "<remap> <query-replace>" #'anzu-query-replace)
-  (keymap-set a-search-replace-map "<remap> <query-replace-regexp>" #'anzu-query-replace-regexp)
-  (keymap-set a-search-replace-map "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
-  (keymap-set a-search-replace-map "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
   (keymap-set a-search-replace-map "r ." #'anzu-query-replace-at-cursor)
   (keymap-set a-search-replace-map "r t" #'anzu-query-replace-at-cursor-thing)
   (keymap-set a-search-replace-map "r T" #'anzu-replace-at-cursor-thing)

@@ -549,15 +549,15 @@ Meant for `post-self-insert-hook'."
 
 ;; Auxiliary functionality
 ;;; Proof shell commands
-(defun ece--validate-shell-command (command)
-  "Checks if the COMMAND is a valid/supported EasyCrypt shell command
+(defun ece--validate-proof-shell-command (command)
+  "Checks if the COMMAND is a valid/supported EasyCrypt proof shell command
 (in the sense that a command below is implemented for it).
 Prints a message informing the user if that is not the case."
   (or (member command '("print" "search" "locate"))
-      (user-error "Unknown/Unsupported command: `%s'." command)))
+      (user-error "Unknown/Unsupported proof command: `%s'." command)))
 
-(defun ece--exec-shell-command (command &rest args)
-  "Combines COMMAND and ARGS into a command for the EasyCrypt shell, and
+(defun ece--exec-proof-shell-command (command &rest args)
+  "Combines COMMAND and ARGS into a command for the EasyCrypt proof shell, and
 directly calls the shell with it."
   (if (fboundp 'proof-shell-invisible-command)
       (progn
@@ -570,11 +570,11 @@ directly calls the shell with it."
 (defun ece--prompt-command (command)
   "Prompts user for arguments that are passed to the COMMAND command of EasyCrypt.
 If COMMAND is not valid, prints a message informing
-the user (see `ece--validate-shell-command')."
-  (when (ece--validate-shell-command command)
+the user (see `ece--validate-proof-shell-command')."
+  (when (ece--validate-proof-shell-command command)
     (let ((arg (read-string (format "Provide arguments for '%s': " command))))
       (if arg
-          (ece--exec-shell-command command arg)
+          (ece--exec-proof-shell-command command arg)
         (user-error "Please provide an argument.")))))
 
 ;;;###autoload
@@ -615,11 +615,11 @@ or tries to find a (reasonable) thing at point."
 or tries to find a (reasonable) thing at point. The result is used as an
 argument to the COMMAND command of EasyCrypt. If nothing (reasonable) is
 found, or the provided COMMAND is not valid, prints a message informing
-the user (see `ece--validate-shell-command')."
-  (when (ece--validate-shell-command command)
+the user (see `ece--validate-proof-shell-command')."
+  (when (ece--validate-proof-shell-command command)
     (let ((arg (ece--thing-at event)))
       (if arg
-          (ece--exec-shell-command command arg)
+          (ece--exec-proof-shell-command command arg)
         (user-error "No reasonable thing at %s found for command `%s'.%s"
                     (if (mouse-event-p event) "mouse" "point")
                     command
@@ -658,6 +658,70 @@ argument to the `locate' command in EasyCrypt."
                        nil)))
   (ece--command "locate" event))
 
+;;; Shell commands
+(defun ece--validate-subcommand (subcommand)
+  "Checks if COMMAND is a valid/supported subcommand
+for EasyCrypt (executable, not proof shell).
+Prints a message informing the user if that is not the case."
+  (or (member subcommand '("docgen" "runtest" "why3config" "--help"))
+      (user-error "Unknown/Unsupported subcommand `%s'." subcommand)))
+
+(defun ece--insert-command-header-in-buffer (buffer command sync)
+  (with-current-buffer buffer
+    (goto-char (point-max))
+    (unless (bobp)
+      (newline (if (bolp) 2 3)))
+    (insert (format "Executing command `%s' %s\nCommand output:\n"
+                    command
+                    (if sync "synchronously" "asynchronously")))))
+
+(defun ece--execute-subcommand (subcommand &optional sync &rest args)
+  ""
+  (unless (bound-and-true-p easycrypt-prog-name)
+    (user-error "EasyCrypt executable name not found in expected place. Did you load Proof General in EasyCrypt mode?"))
+  (ece--validate-subcommand subcommand)
+  (let* ((bufnm (format "*EasyCrypt subcommand: %s (%s)*" subcommand (if sync "sync" "async")))
+         (buf (get-buffer-create bufnm))
+         (fcom (concat easycrypt-prog-name " " (combine-and-quote-strings (cons subcommand args) " "))))
+    (ece--insert-command-header-in-buffer buf fcom sync)
+    (if (not sync)
+        (apply #'start-process fcom buf easycrypt-prog-name subcommand args)
+      (pop-to-buffer buf nil t)
+      (apply #'call-process easycrypt-prog-name nil buf t subcommand args))))
+
+;;;###autoload
+(defun ece-help (sync)
+  ""
+  (interactive (list (yes-or-no-p "Execute synchronously?")))
+  (ece--execute-subcommand "--help" sync))
+
+;;;###autoload
+(defun ece-help-dwim ()
+  ""
+  (interactive)
+  (ece--execute-subcommand "--help" t))
+
+(defun ece-docgen ()
+  "")
+
+(defun ece-runtest ()
+  "")
+
+;;;###autoload
+(defun ece-why3config (conffile sync)
+  ""
+  (interactive
+   (list (read-file-name "Configuration file (default determined by EasyCrypt): " nil "")
+         (yes-or-no-p "Execute synchronously?")))
+  (if (or (null conffile) (string-empty-p conffile))
+      (ece--execute-subcommand "why3config" sync)
+    (ece--execute-subcommand "why3config" sync "-why3" (file-truename conffile))))
+
+;;;###autoload
+(defun ece-why3config-dwim ()
+  ""
+  (interactive)
+  (ece-why3config nil t))
 
 ;; Templates
 (defun ece--tempel-placeholder-form-as-lit (elt)
@@ -712,7 +776,7 @@ Simplified version of `tempel-key' macro from `tempel' package."
 ;;; Utilities
 (defsubst ece--check-feature (feature)
   (unless (featurep feature)
-    (user-error "Feature `%s' is required for this option, but was not detected. Load it and try again." (symbol-name feature))))
+    (user-error "Feature `%s' not detected, but is required for this option. Load it and try again." (symbol-name feature))))
 
 (defun ece--gen-buffer-loop-pred (fun pred &optional args)
   (dolist (buffer (buffer-list))
@@ -1115,33 +1179,36 @@ Simplified version of `tempel-key' macro from `tempel' package."
 ;;;###autoload
 (defun ece-teardown ()
   "Tears down EasyCrypt extensions."
-  ;; Disable all extensions
-  (ece--disable-indentation-local)
-  (ece--disable-keyword-completion-local)
-  (ece--disable-templates-local)
-  (ece--disable-templates-info-local)
+  ;; Disable extensions and restore state
+  (when (local-variable-p ece-indentation)
+    (ece--disable-indentation-local)
+    (unless (null original-local-map)
+      (use-local-map original-local-map)
+      (setq-local original-local-map nil))
+    (kill-local-variable ece-indentation))
 
-  ;; Restore original state
-  (unless (null original-local-map)
-    (use-local-map original-local-map)
-    (setq-local original-local-map nil))
-  (unless (null original-cape-keyword-list)
-    (buffer-local-restore-state original-cape-keyword-list)
-    (setq-local original-cape-keyword-list nil))
-  (unless (null original-tempel-user-elements)
-    (buffer-local-restore-state original-tempel-user-elements)
-    (setq-local original-tempel-user-elements nil))
-  (unless (null original-tempel-template-sources)
-    (buffer-local-restore-state original-tempel-template-sources)
-    (setq-local original-tempel-template-sources nil))
+  (when (local-variable-p ece-keyword-completion)
+    (ece--disable-keyword-completion-local)
+    (unless (null original-cape-keyword-list)
+      (buffer-local-restore-state original-cape-keyword-list)
+      (setq-local original-cape-keyword-list nil))
+    (kill-local-variable ece-keyword-completion))
 
-  ;; Destroy localized option variables
-  (kill-local-variable ece-indentation)
-  (kill-local-variable ece-indentation-style)
-  (kill-local-variable ece-keyword-completion)
-  (kill-local-variable ece-templates)
-  (kill-local-variable ece-templates-info))
-
+  (let ((loctmp (local-variable-p ece-templates))
+        (loctmpi (local-variable-p ece-templates-info)))
+    (when (or loctmp loctmpi)
+      (when loctmp
+        (ece--disable-templates-local)
+        (kill-local-variable ece-templates))
+      (when loctmpi
+        (ece--disable-templates-info-local)
+        (kill-local-variable ece-templates-info))
+      (unless (null original-tempel-user-elements)
+        (buffer-local-restore-state original-tempel-user-elements)
+        (setq-local original-tempel-user-elements nil))
+      (unless (null original-tempel-template-sources)
+        (buffer-local-restore-state original-tempel-template-sources)
+        (setq-local original-tempel-template-sources nil)))))
 
 ;; Minor modes
 ;;; Regular
