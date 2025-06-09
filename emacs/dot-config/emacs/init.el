@@ -78,7 +78,7 @@
 ;;; Load path/pointers
 ;;;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones
 (add-to-list 'load-path LOCAL_DIR)
-(dolist (file (directory-files-recursively LOCAL_DIR "[^.].*" t t))
+(dolist (file (directory-files-recursively LOCAL_DIR "^[^.].*" t t))
   (when (file-directory-p file)
     (add-to-list 'load-path file)))
 
@@ -1019,11 +1019,7 @@ that allows to include other templates by their name."
     (when (eq (car-safe elt) 'i)
       (when-let (template (alist-get (cadr elt) (tempel--templates)))
         (cons 'l template))))
-  (add-to-list 'tempel-user-elements #'a-tempel-include)
-
-  ;; Activation
-  ;;(global-tempel-abbrev-mode 1)
-  )
+  (add-to-list 'tempel-user-elements #'a-tempel-include))
 
 ;;; Actions
 (use-package move-text
@@ -1280,8 +1276,19 @@ that allows to include other templates by their name."
   :after (embark consult))
 
 ;;; Tools
+;;;; Project.el (built-in)
+(use-package project
+  :init
+  ;; Setup and settings (before load)
+  ;; Create and store file for known projects
+  (defconst PROJECT_LIST_FILE (file-name-concat EMACS_DATA_DIR "projects.eld")
+    "File where known project's are stored.")
+  (setopt project-list-file PROJECT_LIST_FILE)
+  (setopt project-mode-line t))
+
+
 (use-package projectile
-  :ensure t
+  :disabled t
 
   :init
   ;; Setup and settings (before load)
@@ -2079,5 +2086,4 @@ that allows to include other templates by their name."
 (add-hook 'markdown-mode-hook #'loc-setup-mix-mode)
 (add-hook 'conf-mode-hook #'loc-setup-mix-mode)
 (add-hook 'log-edit-mode-hook #'loc-setup-mix-mode)
-
 (add-hook 'prog-mode-hook #'loc-setup-code-mode)
