@@ -131,15 +131,6 @@ used with EasyCrypt's `runtest' subcommand."
   :type 'string
   :group 'easycrypt-ext)
 
-(defcustom ece-runtest-default-jobs 1
-  "Default number of jobs used with EasyCrypt's `runtest'
-subcommand. If you call one of the commands executing
-`runtest' without specifying a number of jobs, the
-number specified here is used."
-  :type '(restricted-sexp
-          :match-alternatives (#'(lambda (x) (and (natnump x) (not (zerop x))))))
-  :group 'easycrypt-ext)
-
 (defcustom ece-runtest-default-report-file "report.log"
   "Default file name for the report used with EasyCrypt's `runtest'
 subcommand. This should be a relative path, and it is
@@ -873,7 +864,7 @@ they are stored directly the specified directory or `default-directory'."
                     (expand-file-name ece-docgen-default-outdir srcs)))))
     (ece--docgen-internal nil srcs outdir)))
 
-(defun ece--runtest-internal (sync testfile scenario &optional jobs report &rest options)
+(defun ece--runtest-internal (sync testfile scenario jobs &optional report &rest options)
   "Executes `easycrypt runtest' command using `ece--execute-subcommand' (passing
 SYNC directly), which see, performing the test SCENARIO specified in TESTFILE
 using JOBS concurrent processes, writing a final report to REPORT. All paths can be
@@ -888,22 +879,26 @@ is passed to the subcommand literally."
                     (setq testfile etfn)
                     (throw 'found t)))))
       (user-error "Test configuration file(s) non-existent or not readable.")))
-  (ece--execute-subcommand
-   "runtest" sync
-   (append (list (expand-file-name testfile)
-                 (if (or (null scenario) (string-empty-p scenario))
-                     ece-runtest-default-scenario
-                   scenario)
-                 "-jobs"
-                 (if (not (integerp jobs))
-                     ece-runtest-default-jobs
-                   (if (<= 0 jobs) jobs 1)))
-           (unless (or (null report) (string-empty-p report))
-             (list "-report" (expand-file-name report)))
-           options)))
+  (unless (or (null report) (string-empty-p report))
+    (let ((repd (file-name-directory (expand-file-name report))))
+      (unless (file-directory-p repd)
+        (make-directory repd t))))
+  ;; Set process-connection-type to nil to get a pipe instead of a pty
+  ;; (current EasyCrypt runtest errors out with the latter)
+  (let ((process-connection-type nil))
+    (apply #'ece--execute-subcommand "runtest" sync
+           (append (list (expand-file-name testfile)
+                         (if (or (null scenario) (string-empty-p scenario))
+                             ece-runtest-default-scenario
+                           scenario))
+                   (when (and (integerp jobs) (< 0 jobs))
+                     (list "-jobs" (number-to-string jobs)))
+                   (unless (or (null report) (string-empty-p report))
+                     (list "-report" (expand-file-name report)))
+                   options))))
 
 ;;;###autoload
-(defun ece-runtest-full (sync testfile scenario &optional jobs report &rest options)
+(defun ece-runtest-full (sync testfile scenario jobs &optional report &rest options)
   "Executes `easycrypt runtest' command synchronously (resp. asynchronously) if
 SYNC is non-nil (resp. `nil'), performing the test SCENARIO specified in
 TESTFILE using JOBS concurrent processes/threads, writing a final report to
@@ -916,14 +911,16 @@ subcommand literally."
                          nil ece-runtest-default-test-files t)
          (read-string (format-prompt "Test scenario name" ece-runtest-default-scenario)
                       nil nil ece-runtest-default-scenario)
-         (read-number "Number of jobs: " ece-runtest-default-jobs)
+         (read-number "Number of jobs, 0 to let EasyCrypt decide: " 0)
          (read-file-name (format-prompt "Test report file, empty for no report" ece-runtest-default-report-file)
                          nil ece-runtest-default-report-file)
          (split-string-shell-command (read-string (format-prompt "Further options" "")))))
-  (ece--runtest-internal sync testfile scenario jobs report options))
+  (if-let* ((opts (seq-filter #'stringp options)))
+      (apply #'ece--runtest-internal sync testfile scenario jobs report opts)
+    (ece--runtest-internal sync testfile scenario jobs report)))
 
 ;;;###autoload
-(defun ece-runtest (testfile scenario &optional jobs report &rest options)
+(defun ece-runtest (testfile scenario jobs &optional report &rest options)
   "Executes `easycrypt runtest' command synchronously, performing the test
 SCENARIO specified in TESTFILE using JOBS concurrent processes/threads, writing
 a final report to REPORT. Relative paths are with respect to whatever
@@ -934,22 +931,23 @@ is passed to the subcommand literally."
                          nil ece-runtest-default-test-files t)
          (read-string (format-prompt "Test scenario name" ece-runtest-default-scenario)
                       nil nil ece-runtest-default-scenario)
-         (read-number "Number of jobs: " ece-runtest-default-jobs)
+         (read-number "Number of jobs, 0 to let EasyCrypt decide: " 0)
          (read-file-name (format-prompt "Test report file, empty for no report" ece-runtest-default-report-file)
                          nil ece-runtest-default-report-file)
          (split-string-shell-command (read-string (format-prompt "Further options" "")))))
-  (ece--runtest-internal nil testfile scenario jobs report options))
+  (if-let* ((opts (seq-filter #'stringp options)))
+      (apply #'ece--runtest-internal nil testfile scenario jobs report opts)
+    (ece--runtest-internal nil testfile scenario jobs report)))
 
 ;;;###autoload
 (defun ece-runtest-dflt ()
   "Executes `easycrypt runtest' command synchronously, performing the test
 `ece-runtest-default-scenario' specified in one of the test
-files specified in `ece-runtest-default-test-files' using
-`ece-runtest-default-jobs' concurrent processes/threads,
+files specified in `ece-runtest-default-test-files',
 writing a final report to `ece-runtest-default-report-file'."
   (ece--runtest-internal nil
                          ece-runtest-default-scenario
-                         ece-runtest-default-jobs
+                         0
                          ece-runtest-default-report-file))
 
 (defun ece--why3config-internal (sync &optional why3file)
@@ -1363,7 +1361,7 @@ global defaults in all EasyCrypt buffers."
   "C-c C-y S" #'ece-prompt-search
   "C-c C-y o" 'ece-options-map-prefix
   "C-c C-y t" 'ece-template-map-prefix
-  "C-c C-y x" 'ece-exec-map-prefix
+  "C-c C-y e" 'ece-exec-map-prefix
   "C-S-<mouse-1>" #'ece-print
   "C-S-<mouse-2>" #'ece-locate
   "C-S-<mouse-3>" #'ece-search)
@@ -1376,6 +1374,7 @@ global defaults in all EasyCrypt buffers."
   "C-c C-y L" #'ece-prompt-locate
   "C-c C-y s" #'ece-search
   "C-c C-y S" #'ece-prompt-search
+  "C-c C-y e" 'ece-exec-map-prefix
   "C-S-<mouse-1>" #'ece-print
   "C-S-<mouse-2>" #'ece-locate
   "C-S-<mouse-3>" #'ece-search
@@ -1390,6 +1389,7 @@ global defaults in all EasyCrypt buffers."
   "C-c C-y L" #'ece-prompt-locate
   "C-c C-y s" #'ece-search
   "C-c C-y S" #'ece-prompt-search
+  "C-c C-y e" 'ece-exec-map-prefix
   "C-S-<mouse-1>" #'ece-print
   "C-S-<mouse-2>" #'ece-locate
   "C-S-<mouse-3>" #'ece-search

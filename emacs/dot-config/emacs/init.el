@@ -2050,6 +2050,10 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-mode-map "C-c l s" #'ece-search)
   (keymap-set easycrypt-ext-mode-map "C-c l S" #'ece-search-prompt)
   (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
+  (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix)
+  (keymap-set easycrypt-ext-mode-map "C-c l t" 'ece-template-map-prefix)
+  (keymap-set easycrypt-ext-mode-map "C-c C-e" 'ece-exec-map-prefix)
+  (keymap-set easycrypt-ext-mode-map "C-c l e" 'ece-exec-map-prefix)
 
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-p" #'ece-print)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l p" #'ece-print)
@@ -2059,6 +2063,8 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-s" #'ece-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l s" #'ece-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l S" #'ece-search-prompt)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c C-e" 'ece-exec-map-prefix)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l e" 'ece-exec-map-prefix)
 
   (keymap-set easycrypt-ext-response-mode-map "C-c C-p" #'ece-print)
   (keymap-set easycrypt-ext-response-mode-map "C-c l p" #'ece-print)
@@ -2067,7 +2073,9 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-response-mode-map "C-c l L" #'ece-locate-prompt)
   (keymap-set easycrypt-ext-response-mode-map "C-c C-s" #'ece-search)
   (keymap-set easycrypt-ext-response-mode-map "C-c l s" #'ece-search)
-  (keymap-set easycrypt-ext-response-mode-map "C-c l S" #'ece-search-prompt))
+  (keymap-set easycrypt-ext-response-mode-map "C-c l S" #'ece-search-prompt)
+  (keymap-set easycrypt-ext-response-mode-map "C-c C-e" 'ece-exec-map-prefix)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l e" 'ece-exec-map-prefix))
 
 
 ;; Hooks
