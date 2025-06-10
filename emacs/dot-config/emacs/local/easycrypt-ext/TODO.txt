@@ -1,12 +1,8 @@
-- Minor mode maps:
-   - Abuse minor-mode-overriding-map-alist
-     to buffer-locally insert a map to be used for easycrypt-ext-mode
-     and use this to set/unset indentation and template map prefix 
 - Functionality:
-  - Commands to run EC subcommands:
-    _ Generate documentation for current file or files (perhaps even in directory), have separate commadns for file and directory, and a dwim command
-   _ Batch check files/runtest
-   
+  - ece docgen project dwim: Given the project's root directory, recursively generate documentation for each subdirectory, placing the resulting documentation files in
+  the directories of the corresponding source files (or a separate docs/ directory in the
+  directory of these source files)
+- relative file/direcotry validation for defcustoms
 
 - Templates:
    - async while?

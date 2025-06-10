@@ -117,22 +117,17 @@ a symbol matching a template specified in the template file
 
 (defcustom ece-runtest-default-test-files "tests.config"
   "Default file name(s) to consider for test configuration files
-used with EasyCrypt's `runtest' subcommand. These file names may
-either be absolute or relative. If you call one of the commands executing
-`runtest' without specifying a test configuration file,
-the file(s) specified here is used. A relative
-file name is interpreted with respect to whatever
-`default-directory' contains at that time (most likely
-the directory of the file in the current buffer)."
+used with EasyCrypt's `runtest' subcommand. These should be relative
+paths, and they are interpreted at runtime with respect to the
+considered directory (either provided or whatever `default-directory'
+contains at that time)."
   :type '(choice string
                  (repeat string))
   :group 'easycrypt-ext)
 
 (defcustom ece-runtest-default-scenario "default"
   "Default scenario name (inside test configuration files)
-used with EasyCrypt's `runtest' subcommand. If you call one of
-the commands executing `runtest' without specifying a scenario name, the
-name specified here is used."
+used with EasyCrypt's `runtest' subcommand."
   :type 'string
   :group 'easycrypt-ext)
 
@@ -147,21 +142,20 @@ number specified here is used."
 
 (defcustom ece-runtest-default-report-file "report.log"
   "Default file name for the report used with EasyCrypt's `runtest'
-subcommand. If you call one of the commands executing
-`runtest' without specifying a report file,
-the file specified here is used."
+subcommand. This should be a relative path, and it is
+interpreted at runtime with respect to the considered
+directory (either provided or whatever `default-directory'
+contains at that time)."
   :type 'string
   :group 'easycrypt-ext)
 
 (defcustom ece-docgen-default-outdir "docs/"
   "Default output directory used with EasyCrypt's `docgen'
-subcommand to store the generated documentation. This directory may
-be relative of absolute. If you call one of
-the commands executing `docgen' without specifying an output directory,
-the directory specified here is used. A relative
-directory is interpreted with respect to whatever
-`default-directory' contains at that time (most likely
-the directory of the file in the current buffer)."
+subcommand to store the generated documentation.
+This should be a relative path, and it is
+interpreted at runtime with respect to the considered directory
+(either provided or whatever `default-directory'
+contains at that time)."
   :type 'string
   :group 'easycrypt-ext)
 
@@ -611,10 +605,9 @@ Meant for `post-self-insert-hook'."
 ;;; Proof shell commands
 (defun ece--validate-proof-shell-command (command)
   "Checks if the COMMAND is a valid/supported EasyCrypt proof shell command
-(in the sense that a command below is implemented for it).
-Prints a message informing the user if that is not the case."
+(in the sense that a command below is implemented for it)."
   (or (member command '("print" "search" "locate"))
-      (user-error "Unknown/Unsupported proof command: `%s'." command)))
+      (error "Unknown/Unsupported proof command: `%s'." command)))
 
 (defun ece--exec-proof-shell-command (command &rest args)
   "Combines COMMAND and ARGS into a command for the EasyCrypt proof shell, and
@@ -626,9 +619,8 @@ directly calls the shell with it."
     (proof-shell-invisible-command command)))
 
 (defun ece--prompt-command (command)
-  "Prompts user for arguments that are passed to the COMMAND command of EasyCrypt.
-If COMMAND is not valid, prints a message informing
-the user (see `ece--validate-proof-shell-command')."
+  "Prompts user for arguments that are passed to COMMAND (proof shell) command
+of EasyCrypt."
   (when (ece--validate-proof-shell-command command)
     (let ((arg (read-string (format "Provide arguments for '%s': " command))))
       (if arg
@@ -637,19 +629,22 @@ the user (see `ece--validate-proof-shell-command')."
 
 ;;;###autoload
 (defun ece-prompt-print ()
-  "Prompts user for arguments that are passed to the `print' command of EasyCrypt."
+  "Prompts user for arguments that are passed to the `print' (proof shell)
+command of EasyCrypt."
   (interactive)
   (ece--prompt-command "print"))
 
 ;;;###autoload
 (defun ece-prompt-search ()
-  "Prompts user for arguments that are passed to the `search' command of EasyCrypt."
+  "Prompts user for arguments that are passed to the `search' (proof shell)
+command of EasyCrypt."
   (interactive)
   (ece--prompt-command "search"))
 
 ;;;###autoload
 (defun ece-prompt-locate ()
-  "Prompts user for arguments that are passed to the `locate' command of EasyCrypt."
+  "Prompts user for arguments that are passed to the `locate' (proof shell)
+command of EasyCrypt."
   (interactive)
   (ece--prompt-command "locate"))
 
@@ -672,8 +667,7 @@ or tries to find a (reasonable) thing at point."
 (ignoring any active region). Otherwise, takes the active region
 or tries to find a (reasonable) thing at point. The result is used as an
 argument to the COMMAND command of EasyCrypt. If nothing (reasonable) is
-found, or the provided COMMAND is not valid, prints a message informing
-the user (see `ece--validate-proof-shell-command')."
+found, prints a message informing the user."
   (when (ece--validate-proof-shell-command command)
     (let ((arg (ece--thing-at event)))
       (if arg
@@ -718,13 +712,21 @@ argument to the `locate' command in EasyCrypt."
 
 ;;;###autoload
 (defun ece-bufhist-prev (&optional n)
-  ""
+  "Browses back N buffer history items (for the
+goals and response buffer) by wrapping `bufhist-prev',
+which see. Allows binding to a mouse-based key
+(e.g., `<wheel-up>') and have it effect the window
+that the mouse is hovering, not necessarily the active one."
   (interactive "@")
   (ece--check-functionality 'bufhist-prev 'proof-general)
   (bufhist-prev n))
 
 (defun ece-bufhist-next (&optional n)
-  ""
+  "Browses back N buffer history items (for the
+goals and response buffer) by wrapping `bufhist-next',
+which see. Allows binding to a mouse-based key
+(e.g., `<wheel-down>') and have it effect the window
+that the mouse is hovering, not necessarily the active one."
   (interactive "@")
   (ece--check-functionality 'bufhist-next 'proof-general)
   (bufhist-next n))
@@ -732,10 +734,9 @@ argument to the `locate' command in EasyCrypt."
 ;;; Shell commands
 (defun ece--validate-subcommand (subcommand)
   "Checks if COMMAND is a valid/supported subcommand
-for EasyCrypt (executable, not proof shell).
-Prints a message informing the user if that is not the case."
+for EasyCrypt (executable, not proof shell)."
   (or (member subcommand '("docgen" "runtest" "why3config" "--help"))
-      (user-error "Unknown/Unsupported subcommand `%s'." subcommand)))
+      (error "Unknown/Unsupported subcommand `%s'." subcommand)))
 
 (defun ece--insert-command-header-in-buffer (buffer command sync)
   (with-current-buffer buffer
@@ -746,12 +747,16 @@ Prints a message informing the user if that is not the case."
                     command
                     (if sync "synchronously" "asynchronously")))))
 
-(defun ece--execute-subcommand (subcommand &optional sync &rest args)
-  ""
+(defun ece--execute-subcommand (subcommand sync &rest args)
+  "Executes SUBCOMMAND of EasyCrypt in a separate process. If SYNC is non-nil
+(resp. `nil'), the process is executed synchronously (resp. asynchronously).
+ARGS is a list of strings, all of which are combined to form the remainder of
+the command. That is, this list contains, in order, the elements that are to be
+space-separated in the command; this includes the option flags."
   (unless (bound-and-true-p easycrypt-prog-name)
     (user-error "EasyCrypt executable name not found in expected place. Did you load Proof General in EasyCrypt mode?"))
   (ece--validate-subcommand subcommand)
-  (let* ((bufnm (format "*EasyCrypt subcommand: %s*" subcommand))
+  (let* ((bufnm (format "*EasyCrypt subcommand: %s (%s)*" subcommand (if sync "sync" "async")))
          (buf (get-buffer-create bufnm))
          (fcom (concat easycrypt-prog-name " " (combine-and-quote-strings (cons subcommand args) " "))))
     (ece--insert-command-header-in-buffer buf fcom sync)
@@ -760,43 +765,53 @@ Prints a message informing the user if that is not the case."
       (pop-to-buffer buf nil t)
       (apply #'call-process easycrypt-prog-name nil buf t subcommand args))))
 
-;;;###autoload
 (defun ece--help-internal (sync)
-  ""
+  "Executes `easycrypt --help' command using `ece--execute-subcommand'
+(passing SYNC directly), which see."
   (ece--execute-subcommand "--help" sync))
 
 ;;;###autoload
 (defun ece-help-full (sync)
-  ""
+  "Executes `easycrypt --help' command synchronously (resp. asynchronously)
+if SYNC is `nil' (resp. non-nil)."
   (interactive (list (yes-or-no-p "Execute synchronously?")))
-  (ece--help-internal sync t))
+  (ece--help-internal sync))
 
 ;;;###autoload
 (defun ece-help ()
-  ""
+  "Executes `easycrypt --help' command synchronously."
   (interactive)
   (ece--help-internal t))
 
 ;;;###autoload
-(defun ece--docgen-internal (sync srcs outdir)
-  ""
+(defun ece--docgen-internal (sync srcs &optional outdir)
+  "Executes `easycrypt docgen' command using `ece--execute-subcommand' (passing
+SYNC directly), which see, generating documentation file(s) for the EasyCrypt
+file SRCS (or files in SRCS if it is a directory). That is, SRCS is either an
+EasyCrypt file or a directory containing EasyCrypt files for which to generate
+documentation. The generated files are stored in output directory OUTDIR. All
+paths can be absolute or relative. Relative paths are with respect to whatever
+`default-directory' contains, which is also the default value for the output
+directory (if OUTDIR is nil)."
   (let ((esrc (expand-file-name srcs))
-        (eodr (file-name-as-directory (expand-file-name outdir))))
+        (eodr (file-name-as-directory
+               (expand-file-name (if outdir outdir default-directory)))))
     (unless (file-readable-p esrc)
       (user-error "EasyCrypt source file (directory) `%s' non-existent or not readable" srcs))
     (if (file-exists-p eodr)
         (when (not (and (file-directory-p eodr) (file-writable-p eodr)))
           (user-error "File `%s' not a writable directory" outdir))
       (make-directory eodr t))
-
     (let ((srcl (if (file-directory-p esrc) (directory-files esrc t "^[^.].*\\.eca?$") esrc)))
       (if (listp srcl)
           (dolist (src srcl) (ece--execute-subcommand "docgen" sync src "-outdir" eodr))
         (ece--execute-subcommand "docgen" sync srcl "-outdir" eodr)))))
 
 ;;;###autoload
-(defun ece-docgen-full (sync srcs outdir)
-  ""
+(defun ece-docgen-full (sync srcs &optional outdir)
+  "Executes `easycrypt docgen' command synchronously (resp. asynchronously)
+if SYNC is non-nil (resp. `nil'), generating documentation file(s) for
+the EasyCrypt file SRCS (or files in SRCS if it is a directory)."
   (interactive (list (yes-or-no-p "Execute synchronously?")
                      (read-file-name (format-prompt "EasyCrypt source file or directory" default-directory)
                                      nil default-directory t)
@@ -805,28 +820,66 @@ Prints a message informing the user if that is not the case."
   (ece--docgen-internal sync srcs outdir))
 
 ;;;###autoload
-(defun ece-docgen (srcs outdir)
-  ""
+(defun ece-docgen (srcs &optional outdir)
+  "Executes `easycrypt docgen' command asynchronously, generating documentation
+file(s) for the EasyCrypt file SRCS (or files in SRCS if it is a directory)."
   (interactive (list (read-file-name (format-prompt "EasyCrypt source file or directory" default-directory)
                                      nil default-directory t)
                      (read-directory-name (format-prompt "Output directory" ece-docgen-default-outdir)
                                           nil ece-docgen-default-outdir)))
   (ece--docgen-internal nil srcs outdir))
 
+
 ;;;###autoload
-(defun ece-docgen-dwim (&optional arg)
-  ""
+(defun ece-docgen-file-dwim (&optional arg)
+  "Executes `easycrypt docgen' command asynchronously, generating documentation
+for the EasyCrypt file visited by the current buffer, or asks to specify a
+file/directory if the current buffer is not visiting such a file. The generated
+files are stored in `ece-docgen-default-outdir' (relative to the directory of
+the specified file, the specified directory, or `default-directory') unless the
+prefix argument ARG is non-nil, in which case it is stored directly in the
+directory of the specified file, the specified directory, or`default-directory'."
   (interactive "P")
   (let* ((buffn (buffer-file-name))
-         (srcs (if (string-match-p "^[^.].*\\.eca?$" buffn) buffn default-directory))
+         (srcs (if (and buffn
+                        (string-match-p "^[^.].*\\.eca?$" (file-name-nondirectory buffn)))
+                   buffn
+                 (read-file-name (format-prompt "EasyCrypt source file or directory"
+                                                default-directory)
+                                 nil default-directory t)))
+         (srcd (if (file-directory-p srcs) srcs (file-name-directory srcs)))
          (outdir (if arg
-                     default-directory
+                     srcd
                    (file-name-as-directory
-                    (expand-file-name ece-docgen-default-outdir default-directory)))))
+                    (expand-file-name ece-docgen-default-outdir srcd)))))
+    (ece--docgen-internal nil srcs outdir)))
+
+;;;###autoload
+(defun ece-docgen-dir-dwim (&optional arg)
+  "Executes `easycrypt docgen' command asynchronously, generating documentation
+for the EasyCrypt files in `default-directory', or asks to specify a directory
+if there are no such files in `default-directory'. The generated files are
+stored in `ece-docgen-default-outdir' (relative to the specified directory or
+`default-directory') unless the prefix argument ARG is non-nil, in which case
+they are stored directly the specified directory or `default-directory'."
+  (interactive "P")
+  (let* ((srcs (if (directory-files default-directory t "^[^.].*\\.eca?$")
+                   default-directory
+                 (read-directory-name (format-prompt "EasyCrypt source directory" "")
+                                      nil nil t)))
+         (outdir (if arg
+                     srcs
+                   (file-name-as-directory
+                    (expand-file-name ece-docgen-default-outdir srcs)))))
     (ece--docgen-internal nil srcs outdir)))
 
 (defun ece--runtest-internal (sync testfile scenario &optional jobs report &rest options)
-  ""
+  "Executes `easycrypt runtest' command using `ece--execute-subcommand' (passing
+SYNC directly), which see, performing the test SCENARIO specified in TESTFILE
+using JOBS concurrent processes, writing a final report to REPORT. All paths can be
+absolute or relative. Relative paths are with respect to whatever
+`default-directory' contains. OPTIONS are concatenated, in order, and the result
+is passed to the subcommand literally."
   (when (or (null testfile) (string-empty-p testfile))
     (unless (catch 'found
               (dolist (tfn (ensure-list ece-runtest-default-test-files) nil)
@@ -835,7 +888,6 @@ Prints a message informing the user if that is not the case."
                     (setq testfile etfn)
                     (throw 'found t)))))
       (user-error "Test configuration file(s) non-existent or not readable.")))
-
   (ece--execute-subcommand
    "runtest" sync
    (append (list (expand-file-name testfile)
@@ -852,7 +904,12 @@ Prints a message informing the user if that is not the case."
 
 ;;;###autoload
 (defun ece-runtest-full (sync testfile scenario &optional jobs report &rest options)
-  ""
+  "Executes `easycrypt runtest' command synchronously (resp. asynchronously) if
+SYNC is non-nil (resp. `nil'), performing the test SCENARIO specified in
+TESTFILE using JOBS concurrent processes/threads, writing a final report to
+REPORT. Relative paths are with respect to whatever `default-directory'
+contains. OPTIONS are concatenated, in order, and the result is passed to the
+subcommand literally."
   (interactive
    (list (yes-or-no-p "Execute synchronously?")
          (read-file-name (format-prompt "Test configuration file" ece-runtest-default-test-files)
@@ -867,7 +924,11 @@ Prints a message informing the user if that is not the case."
 
 ;;;###autoload
 (defun ece-runtest (testfile scenario &optional jobs report &rest options)
-  ""
+  "Executes `easycrypt runtest' command synchronously, performing the test
+SCENARIO specified in TESTFILE using JOBS concurrent processes/threads, writing
+a final report to REPORT. Relative paths are with respect to whatever
+`default-directory' contains. OPTIONS are concatenated, in order, and the result
+is passed to the subcommand literally."
   (interactive
    (list (read-file-name (format-prompt "Test configuration file" ece-runtest-default-test-files)
                          nil ece-runtest-default-test-files t)
@@ -881,32 +942,45 @@ Prints a message informing the user if that is not the case."
 
 ;;;###autoload
 (defun ece-runtest-dflt ()
-  ""
-  (ece--runtest-internal nil nil ece-runtest-default-jobs ece-runtest-default-report-file))
+  "Executes `easycrypt runtest' command synchronously, performing the test
+`ece-runtest-default-scenario' specified in one of the test
+files specified in `ece-runtest-default-test-files' using
+`ece-runtest-default-jobs' concurrent processes/threads,
+writing a final report to `ece-runtest-default-report-file'."
+  (ece--runtest-internal nil
+                         ece-runtest-default-scenario
+                         ece-runtest-default-jobs
+                         ece-runtest-default-report-file))
 
-(defun ece--why3config-internal (sync why3file)
-  ""
+(defun ece--why3config-internal (sync &optional why3file)
+  "Executes `easycrypt why3config' command using `ece--execute-subcommand'
+(passing SYNC directly), which see, using WHY3FILE for the `-why3' option
+if its non-nil."
   (if (or (null why3file) (string-empty-p why3file))
       (ece--execute-subcommand "why3config" sync)
     (ece--execute-subcommand "why3config" sync "-why3" (expand-file-name why3file))))
 
 ;;;###autoload
-(defun ece-why3config-full (sync why3file)
-  ""
+(defun ece-why3config-full (sync &optional why3file)
+  "Executes `easycrypt why3config' command synchronously (resp. asynchronously)
+if SYNC is non-nil (resp. `nil'), using WHY3FILE for the `-why3' option
+if its non-nil."
   (interactive (list (yes-or-no-p "Execute synchronously?")
                      (read-file-name (format-prompt "Configuration file" "determined by EasyCrypt") nil "")))
   (ece--why3config-internal sync why3file))
 
-(defun ece-why3config (why3file)
-  ""
+(defun ece-why3config (&optional why3file)
+  "Executes `easycrypt why3config' command synchronously,
+using WHY3FILE for the `-why3' option if its non-nil."
   (interactive (list (read-file-name (format-prompt "Configuration file" "determined by EasyCrypt") nil "")))
   (ece--why3config-internal t why3file))
 
 ;;;###autoload
 (defun ece-why3config-dflt ()
-  ""
+  "Executes `easycrypt why3config' command synchronously."
   (interactive)
   (ece--why3config-internal t nil))
+
 
 ;; Templates
 (defun ece--tempel-placeholder-form-as-lit (elt)
@@ -945,7 +1019,7 @@ that allows to include other templates by their name."
 
 ;;;###autoload
 (defmacro ece-tempel-key (keymap key template-name)
-  "Binds KEY to TEMPLATE-NAME in KEYMAP.
+  "Binds KEY to (a function inserting) TEMPLATE-NAME in KEYMAP.
 Simplified version of `tempel-key' macro from `tempel' package, but
 with functionality checks."
   `(define-key ,keymap ,(key-parse key)
@@ -956,9 +1030,10 @@ with functionality checks."
                                 template-name)
                        (interactive)
                        (unless ece-templates
-                         (user-error "Templates not enabled (option: `ece-templates'). Try again after enabling."))
+                         (user-error "Templates not enabled (i.e., `ece-templates' is nil). Try again after enabling."))
                        (ece--check-functionality 'tempel-insert 'tempel)
                        (tempel-insert ',template-name))))))
+
 
 ;; Configuration
 ;;; Indentation
@@ -991,15 +1066,16 @@ with functionality checks."
     (setq-local ece-indentation t)))
 
 (defun ece--disable-indentation-local ()
+  (setq-local ece-indentation nil)
   (when original-local-map
-    (keymap-local-set "RET" #'newline-and-indent)
-    (keymap-local-set "<return>" "RET")
-    (keymap-local-set "S-<return>" #'newline)
-    (keymap-local-set "TAB" #'ece-basic-indent)
-    (keymap-local-set "<tab>" "TAB")
-    (keymap-local-set "<backtab>" #'ece-basic-deindent)
-    (keymap-local-set "M-i" #'indent-for-tab-command)
-    (keymap-local-set "M-I" #'ece-indent-for-tab-command-inverse-style))
+    (keymap-local-unset "RET")
+    (keymap-local-unset "<return>")
+    (keymap-local-unset "S-<return>")
+    (keymap-local-unset "TAB")
+    (keymap-local-unset "<tab>")
+    (keymap-local-unset "<backtab>")
+    (keymap-local-unset "M-i")
+    (keymap-local-unset "M-I"))
   (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t)
   (when original-indentation-state
     (buffer-local-restore-state original-indentation-state)
@@ -1121,6 +1197,7 @@ with functionality checks."
 ;;; Local
 ;;;###autoload
 (defun ece-toggle-indentation-local ()
+  "Toggles EasyCrypt Ext indentation in this buffer."
   (interactive)
   (ece--configure-indentation-local (not ece-indentation))
   (message "EasyCrypt Ext indentation %s"
@@ -1130,6 +1207,7 @@ with functionality checks."
 
 ;;;###autoload
 (defun ece-toggle-indentation-style-local ()
+  "Toggles EasyCrypt Ext indentation style in this buffer."
   (interactive)
   (setq-local ece-indentation-style (if (eq ece-indentation-style 'local) 'nonlocal 'local))
   (message "EasyCrypt Ext indentation style set to %s!"
@@ -1137,6 +1215,7 @@ with functionality checks."
 
 ;;;###autoload
 (defun ece-toggle-keyword-completion-local ()
+  "Toggles EasyCrypt Ext keyword completion in this buffer."
   (interactive)
   (ece--configure-keyword-completion-local (not ece-keyword-completion))
   (message "EasyCrypt Ext keyword completion %s in this buffer!"
@@ -1144,6 +1223,7 @@ with functionality checks."
 
 ;;;###autoload
 (defun ece-toggle-templates-local ()
+  "Toggles EasyCrypt Ext templates in this buffer."
   (interactive)
   (ece--configure-templates-local (not ece-templates))
   (message "EasyCrypt Ext templates %s in this buffer!"
@@ -1151,6 +1231,7 @@ with functionality checks."
 
 ;;;###autoload
 (defun ece-toggle-templates-info-local ()
+  "Toggles EasyCrypt Ext informative templates in this buffer."
   (interactive)
   (ece--configure-templates-info-local (not ece-templates-info))
   (message "EasyCrypt Ext informative templates %s in this buffer!"
@@ -1158,71 +1239,83 @@ with functionality checks."
 
 ;;;###autoload
 (defun ece-reset-to-defaults-local ()
+  "Resets all EasyCrypt Ext functionalities/settings in this buffer
+to their global defaults."
   (interactive)
   (ece--configure-indentation-local (default-value 'ece-indentation))
   (kill-local-variable ece-indentation-style)
   (ece--configure-keyword-completion-local (default-value 'ece-keyword-completion))
   (ece--configure-templates-local (default-value 'ece-templates))
   (ece--configure-templates-info-local (default-value 'ece-templates-info))
-  (message "EasyCrypt Ext options in this buffer reset to their default values!"))
+  (message "EasyCrypt Ext options reset to their default values in this buffer!"))
 
 ;;;###autoload
 (defun ece-enable-indentation ()
+  "Enables EasyCrypt Ext indentation in all EasyCrypt buffers."
   (interactive)
   (ece--configure-indentation t)
   (message "EasyCrypt Ext indentation enabled in all buffers! Current style: %s." ece-indentation-style))
 
 ;;;###autoload
 (defun ece-disable-indentation ()
+  "Disables EasyCrypt Ext indentation in all EasyCrypt buffers."
   (interactive)
   (ece--configure-indentation nil)
   (message "EasyCrypt Ext indentation disabled in all buffers!"))
 
 ;;;###autoload
 (defun ece-enable-keyword-completion ()
+  "Enables EasyCrypt Ext keyword completion in all EasyCrypt buffers."
   (interactive)
   (ece--configure-keyword-completion t)
-  (message "EasyCrypt Ext keyword completion enabled in all buffers!"))
+  (message "EasyCrypt Ext keyword completion enabled in all (EasyCrypt) buffers!"))
 
 ;;;###autoload
 (defun ece-disable-keyword-completion ()
+  "Disables EasyCrypt Ext keyword completion in all EasyCrypt buffers."
   (interactive)
   (ece--configure-keyword-completion nil)
-  (message "EasyCrypt Ext keyword completion disabled in all buffers!"))
+  (message "EasyCrypt Ext keyword completion disabled in all (EasyCrypt) buffers!"))
 
 ;;;###autoload
 (defun ece-enable-templates ()
+  "Enables EasyCrypt Ext templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates t)
-  (message "EasyCrypt Ext templates enabled in all buffers!"))
+  (message "EasyCrypt Ext templates enabled in all (EasyCrypt) buffers!"))
 
 ;;;###autoload
 (defun ece-disable-templates ()
+  "Disables EasyCrypt Ext templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates nil)
-  (message "EasyCrypt Ext templates disabled in all buffers!"))
+  (message "EasyCrypt Ext templates disabled in all (EasyCrypt) buffers!"))
 
 ;;;###autoload
 (defun ece-enable-templates-info ()
+  "Enables EasyCrypt Ext informative templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates-info t)
-  (message "EasyCrypt Ext informative templates enabled in all buffers!"))
+  (message "EasyCrypt Ext informative templates enabled in all (EasyCrypt) buffers!"))
 
 ;;;###autoload
 (defun ece-disable-templates-info ()
+  "Disables EasyCrypt Ext informative templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates-info nil)
-  (message "EasyCrypt Ext informative templates disabled in all buffers!"))
+  (message "EasyCrypt Ext informative templates disabled in all (EasyCrypt) buffers!"))
 
 ;;;###autoload
 (defun ece-reset-to-defaults ()
+  "Resets all EasyCrypt Ext settings/functionalities to their
+global defaults in all EasyCrypt buffers."
   (interactive)
   (ece--configure-indentation (default-value 'ece-indentation))
   (ece--ece-configure-global-from-local #'(lambda () (kill-local-variable ece-indentation-style)))
   (ece--configure-keyword-completion (default-value 'ece-keyword-completion))
   (ece--configure-templates (default-value 'ece-templates))
   (ece--configure-templates-info (default-value 'ece-templates-info))
-  (message "EasyCrypt Ext options in all buffers reset to their default values!"))
+  (message "EasyCrypt Ext options reset to their default values in all (EasyCrypt) buffers!"))
 
 
 ;; Keymaps
@@ -1230,8 +1323,10 @@ with functionality checks."
 (defvar-keymap ece-exec-map
   :doc "Keymap for executing EasyCrypt subcommands (in separate processes)"
   :prefix 'ece-exec-map-prefix
-  "d" #'ece-docgen-dwim
-  "D" #'ece-docgen
+  "d" #'ece-docgen-file-dwim
+  "D" #'ece-docgen-dir-dwim
+  "C-d" #'ece-docgen
+  "h" #'ece-help
   "r" #'ece-runtest-dflt
   "R" #'ece-runtest
   "w" #'ece-why3config-dflt
@@ -1360,14 +1455,14 @@ with functionality checks."
   ;; Disable extensions and restore state
   (when (local-variable-p ece-indentation)
     (ece--disable-indentation-local)
-    (unless (null original-local-map)
+    (when original-local-map
       (use-local-map original-local-map)
       (setq-local original-local-map nil))
     (kill-local-variable ece-indentation))
 
   (when (local-variable-p ece-keyword-completion)
     (ece--disable-keyword-completion-local)
-    (unless (null original-cape-keyword-list)
+    (when original-cape-keyword-list
       (buffer-local-restore-state original-cape-keyword-list)
       (setq-local original-cape-keyword-list nil))
     (kill-local-variable ece-keyword-completion))
@@ -1381,10 +1476,10 @@ with functionality checks."
       (when loctmpi
         (ece--disable-templates-info-local)
         (kill-local-variable ece-templates-info))
-      (unless (null original-tempel-user-elements)
+      (when original-tempel-user-elements
         (buffer-local-restore-state original-tempel-user-elements)
         (setq-local original-tempel-user-elements nil))
-      (unless (null original-tempel-template-sources)
+      (when original-tempel-template-sources
         (buffer-local-restore-state original-tempel-template-sources)
         (setq-local original-tempel-template-sources nil)))))
 
