@@ -726,7 +726,7 @@ that the mouse is hovering, not necessarily the active one."
 (defun ece--validate-subcommand (subcommand)
   "Checks if COMMAND is a valid/supported subcommand
 for EasyCrypt (executable, not proof shell)."
-  (or (member subcommand '("docgen" "runtest" "why3config" "--help"))
+  (or (member subcommand '("compile" "docgen" "runtest" "why3config" "--help"))
       (error "Unknown/Unsupported subcommand `%s'." subcommand)))
 
 (defun ece--insert-command-header-in-buffer (buffer command sync)
@@ -775,12 +775,109 @@ if SYNC is `nil' (resp. non-nil)."
   (ece--help-internal t))
 
 ;;;###autoload
-(defun ece--docgen-internal (sync srcs &optional outdir)
+(defun ece--compile-internal (sync srcs &optional subdirs &rest options)
+  "Executes `easycrypt compile' command using `ece--execute-subcommand' (passing
+SYNC directly), which see, checking the EasyCrypt file SRCS or, if SRCS is a
+directory, EasyCrypt files in (subdirectories of) SRCS. In the latter case,
+subdirectories are considered if SUBDIRS is non-nil. All paths can be absolute
+or relative. Relative paths are with respect to whatever `default-directory'
+contains. OPTIONS are concatenated, in order, and the result is passed to the
+subcommand literally"
+  (let ((esrc (expand-file-name srcs)))
+    (unless (file-readable-p esrc)
+      (user-error "`%s' non-existent or not readable." srcs))
+    (when (and (file-regular-p esrc)
+               (not (string-match-p "^[^.].*\\.eca?$" (file-name-nondirectory esrc))))
+      (user-error "`%s' not recognized as an EasyCrypt source file (extension should be `.ec' or `.eca')."
+                  srcs))
+    (cond
+     ((file-regular-p esrc)
+      (apply #'ece--execute-subcommand "compile" sync (cons esrc options)))
+     ((and (file-directory-p esrc) (not subdirs))
+      (let ((srcl (directory-files esrc t "^[^.].*\\.eca?$")))
+        (dolist (src srcl) (apply #'ece--execute-subcommand "compile" sync src options))))
+     ((and (file-directory-p esrc) subdirs)
+      (let ((srcl (directory-files-recursively esrc "^[^.].*\\.eca?$" nil t t)))
+        (dolist (src srcl) (apply #'ece--execute-subcommand "compile" sync src options))))
+     (t
+      (user-error "`%s' not a regular file nor a directory." srcs)))))
+
+;;;###autoload
+(defun ece-compile-full (sync srcs &optional subdirs &rest options)
+  "Executes `easycrypt compile' command synchronously (resp. asynchronously) if
+SYNC is non-nil (resp. `nil'), checking the EasyCrypt file SRCS or, if SRCS is a
+directory, EasyCrypt files in (subdirectories of) SRCS. In the latter case,
+subdirectories are considered if SUBDIRS is non-nil. All paths can be absolute
+or relative. Relative paths are with respect to whatever `default-directory'
+contains. OPTIONS are concatenated, in order, and the result is passed to the
+subcommand literally."
+  (interactive (let* ((srcs (read-file-name (format-prompt "EasyCrypt source file or (project root) directory"
+                                                           default-directory)
+                                            nil default-directory t))
+                      (subdirs (when (file-directory-p srcs) (yes-or-no-p "Include subdirectories?"))))
+                 (list (yes-or-no-p "Execute synchronously?")
+                       srcs
+                       subdirs
+                       (split-string-shell-command
+                        (read-string (format-prompt "Further options" ""))))))
+  (if-let* ((opts (seq-filter #'stringp (flatten-list options))))
+      (apply #'ece--compile-internal sync srcs subdirs opts)
+    (ece--compile-internal sync srcs subdirs)))
+
+;;;###autoload
+(defun ece-compile (srcs &optional subdirs &rest options)
+  "As `ece-compile-full', which see, but always executed `easycrypt compile'
+command asynchronously."
+  (interactive (let* ((srcs (read-file-name (format-prompt "EasyCrypt source file or (project root) directory"
+                                                           default-directory)
+                                            nil default-directory t))
+                      (subdirs (when (file-directory-p srcs) (yes-or-no-p "Include subdirectories?"))))
+                 (list srcs
+                       subdirs
+                       (split-string-shell-command
+                        (read-string (format-prompt "Further options" ""))))))
+  (if-let* ((opts (seq-filter #'stringp (flatten-list options))))
+      (apply #'ece--compile-internal sync srcs subdirs opts)
+    (ece--compile-internal sync srcs subdirs)))
+
+;;;###autoload
+(defun ece-compile-file ()
+  "Executes `easycrypt compile' command asynchronously, checking
+the EasyCrypt file visited by the current buffer, or asks to specify a
+file if the current buffer is not visiting such a file."
+  (interactive)
+  (let* ((buffn (buffer-file-name))
+         (srcs (if (and buffn
+                        (string-match-p "^[^.].*\\.eca?$" (file-name-nondirectory buffn)))
+                   buffn
+                 (read-file-name (format-prompt "EasyCrypt source file" "")
+                                 nil nil t nil (apply-partially #'string-match-p "^[^.].*\\.eca?$")))))
+    (ece--compile-internal nil srcs nil)))
+
+;;;###autoload
+(defun ece-compile-dir (&optional arg)
+  "Executes `easycrypt compile' command asynchronously, checking the EasyCrypt
+files in `default-directory' and its subdirectories (unless ARG is non-nil), or
+asks to specify a directory if `default-directory' and its subdirectories
+(unless ARG is non-nil) do not contain any such files."
+  (interactive "P")
+  (let* ((srcs (if (or (and (null arg) (directory-files-recursively default-directory "^[^.].*\\.eca?$" nil t t))
+                       (and arg (directory-files default-directory t "^[^.].*\\.eca?$")))
+                   default-directory
+                 (read-directory-name (format-prompt "EasyCrypt %s directory" ""
+                                                     (if arg "source" "project root"))
+                                      nil nil t))))
+    (ece--compile-internal nil srcs (null arg))))
+
+;;;###autoload
+(defun ece--docgen-internal (sync srcs &optional subdirs outdir)
   "Executes `easycrypt docgen' command using `ece--execute-subcommand' (passing
 SYNC directly), which see, generating documentation file(s) for the EasyCrypt
-file SRCS (or files in SRCS if it is a directory). That is, SRCS is either an
-EasyCrypt file or a directory containing EasyCrypt files for which to generate
-documentation. The generated files are stored in output directory OUTDIR. All
+file SRCS or, if SRCS is a directory, EasyCrypt files in (subdirectories of) SRCS.
+In the latter case, subdirectories are considered is SUBDIRS is non-nil.
+The generated files are stored in output directory OUTDIR; if SUBDIRS is non-nil,
+documentation generated for source files found in subdirectories are stored
+in an identically named subdirectory relative to OUTDIR. All
 paths can be absolute or relative. Relative paths are with respect to whatever
 `default-directory' contains, which is also the default value for the output
 directory (if OUTDIR is nil)."
@@ -788,81 +885,109 @@ directory (if OUTDIR is nil)."
         (eodr (file-name-as-directory
                (expand-file-name (if outdir outdir default-directory)))))
     (unless (file-readable-p esrc)
-      (user-error "EasyCrypt source file (directory) `%s' non-existent or not readable" srcs))
+      (user-error "`%s' non-existent or not readable." srcs))
+    (when (and (file-regular-p esrc)
+               (not (string-match-p "^[^.].*\\.eca?$" (file-name-nondirectory esrc))))
+      (user-error "`%s' not recognized as an EasyCrypt source file (extension should be `.ec' or `.eca')."
+                  srcs))
     (if (file-exists-p eodr)
         (when (not (and (file-directory-p eodr) (file-writable-p eodr)))
-          (user-error "File `%s' not a writable directory" outdir))
+          (user-error "`%s' exists but not a writable directory." outdir))
       (make-directory eodr t))
-    (let ((srcl (if (file-directory-p esrc) (directory-files esrc t "^[^.].*\\.eca?$") esrc)))
-      (if (listp srcl)
-          (dolist (src srcl) (ece--execute-subcommand "docgen" sync src "-outdir" eodr))
-        (ece--execute-subcommand "docgen" sync srcl "-outdir" eodr)))))
+    (cond
+     ((file-regular-p esrc)
+      (ece--execute-subcommand "docgen" sync esrc "-outdir" eodr))
+     ((and (file-directory-p esrc) (not subdirs))
+      (let ((srcl (directory-files esrc t "^[^.].*\\.eca?$")))
+        (dolist (src srcl) (ece--execute-subcommand "docgen" sync src "-outdir" eodr))))
+     ((and (file-directory-p esrc) subdirs)
+      (let ((srcl (directory-files-recursively esrc "^[^.].*\\.eca?$" nil t t)))
+        (dolist (src srcl)
+          (let* ((pardir (file-name-parent-directory src))
+                 (reldir (file-relative-name pardir esrc))
+                 (eodrc (file-name-as-directory (expand-file-name reldir eodr))))
+            (unless (file-directory-p eodrc)
+              (make-directory eodrc t))
+            (ece--execute-subcommand "docgen" sync src "-outdir" eodrc)))))
+     (t
+      (user-error "`%s' not a regular file nor a directory." srcs)))))
 
 ;;;###autoload
-(defun ece-docgen-full (sync srcs &optional outdir)
-  "Executes `easycrypt docgen' command synchronously (resp. asynchronously)
-if SYNC is non-nil (resp. `nil'), generating documentation file(s) for
-the EasyCrypt file SRCS (or files in SRCS if it is a directory)."
-  (interactive (list (yes-or-no-p "Execute synchronously?")
-                     (read-file-name (format-prompt "EasyCrypt source file or directory" default-directory)
-                                     nil default-directory t)
-                     (read-directory-name (format-prompt "Output directory" ece-docgen-default-outdir)
-                                          nil ece-docgen-default-outdir)))
-  (ece--docgen-internal sync srcs outdir))
+(defun ece-docgen-full (sync srcs &optional subdirs outdir)
+  "Executes `easycrypt docgen' command synchronously (resp. asynchronously) if
+SYNC is non-nil (resp. `nil'), generating documentation file(s) for the
+EasyCrypt file SRCS or, if SRCS is a directory, EasyCrypt files in
+(subdirectories of) SRCS. The generated files are stored in output directory
+OUTDIR; if SUBDIRS is non-nil, documentation generated for source files found in
+subdirectories are stored in an identically named subdirectory relative to
+OUTDIR. All paths can be absolute or relative. Relative paths are with respect
+to whatever `default-directory' contains, which is also the default value for
+the output directory (if OUTDIR is nil)."
+  (interactive (let* ((srcs (read-file-name (format-prompt "EasyCrypt source file or (project root) directory"
+                                                           default-directory)
+                                            nil default-directory t))
+                      (subdirs (when (file-directory-p srcs) (yes-or-no-p "Include subdirectories?"))))
+                 (list (yes-or-no-p "Execute synchronously?")
+                       srcs subdirs
+                       (read-directory-name
+                        (format-prompt "Output directory%s" ece-docgen-default-outdir (if subdirs " root" ""))
+                        nil ece-docgen-default-outdir))))
+  (ece--docgen-internal sync srcs subdirs outdir))
+
+ ;;;###autoload
+(defun ece-docgen (srcs &optional subdirs outdir)
+  "As `ece-docgen-full', which see, but always executes `easycrypt docgen'
+asynchronously."
+  (interactive (let* ((srcs (read-file-name (format-prompt "EasyCrypt source file or (project root) directory"
+                                                           default-directory)
+                                            nil default-directory t))
+                      (subdirs (when (file-directory-p srcs) (yes-or-no-p "Include subdirectories?"))))
+                 (list srcs subdirs
+                       (read-directory-name
+                        (format-prompt "Output directory%s" ece-docgen-default-outdir (if subdirs " root" ""))
+                        nil ece-docgen-default-outdir))))
+  (ece--docgen-internal nil srcs subdirs outdir))
 
 ;;;###autoload
-(defun ece-docgen (srcs &optional outdir)
-  "Executes `easycrypt docgen' command asynchronously, generating documentation
-file(s) for the EasyCrypt file SRCS (or files in SRCS if it is a directory)."
-  (interactive (list (read-file-name (format-prompt "EasyCrypt source file or directory" default-directory)
-                                     nil default-directory t)
-                     (read-directory-name (format-prompt "Output directory" ece-docgen-default-outdir)
-                                          nil ece-docgen-default-outdir)))
-  (ece--docgen-internal nil srcs outdir))
-
-
-;;;###autoload
-(defun ece-docgen-file-dwim (&optional arg)
+(defun ece-docgen-file (&optional arg)
   "Executes `easycrypt docgen' command asynchronously, generating documentation
 for the EasyCrypt file visited by the current buffer, or asks to specify a
-file/directory if the current buffer is not visiting such a file. The generated
-files are stored in `ece-docgen-default-outdir' (relative to the directory of
-the specified file, the specified directory, or `default-directory') unless the
+file if the current buffer is not visiting such a file. The generated
+file is stored in `ece-docgen-default-outdir' (relative to the directory of
+the specified file or `default-directory') unless the
 prefix argument ARG is non-nil, in which case it is stored directly in the
-directory of the specified file, the specified directory, or`default-directory'."
+directory of the specified file or`default-directory'."
   (interactive "P")
   (let* ((buffn (buffer-file-name))
          (srcs (if (and buffn
                         (string-match-p "^[^.].*\\.eca?$" (file-name-nondirectory buffn)))
                    buffn
-                 (read-file-name (format-prompt "EasyCrypt source file or directory"
-                                                default-directory)
-                                 nil default-directory t)))
-         (srcd (if (file-directory-p srcs) srcs (file-name-directory srcs)))
+                 (read-file-name (format-prompt "EasyCrypt source file" "")
+                                 nil nil t nil (apply-partially #'string-match-p "^[^.].*\\.eca?$"))))
          (outdir (if arg
-                     srcd
+                     (file-name-directory srcs)
                    (file-name-as-directory
-                    (expand-file-name ece-docgen-default-outdir srcd)))))
-    (ece--docgen-internal nil srcs outdir)))
+                    (expand-file-name ece-docgen-default-outdir (file-name-directory srcs))))))
+    (ece--docgen-internal nil srcs nil outdir)))
 
 ;;;###autoload
-(defun ece-docgen-dir-dwim (&optional arg)
+(defun ece-docgen-dir (&optional arg)
   "Executes `easycrypt docgen' command asynchronously, generating documentation
 for the EasyCrypt files in `default-directory', or asks to specify a directory
 if there are no such files in `default-directory'. The generated files are
 stored in `ece-docgen-default-outdir' (relative to the specified directory or
 `default-directory') unless the prefix argument ARG is non-nil, in which case
-they are stored directly the specified directory or `default-directory'."
+they are stored directly in the specified directory or `default-directory'."
   (interactive "P")
-  (let* ((srcs (if (directory-files default-directory t "^[^.].*\\.eca?$")
+  (let* ((srcs (if (or (and (null arg) (directory-files-recursively default-directory "^[^.].*\\.eca?$" nil t t))
+                       (and arg (directory-files default-directory t "^[^.].*\\.eca?$")))
                    default-directory
-                 (read-directory-name (format-prompt "EasyCrypt source directory" "")
+                 (read-directory-name (format-prompt "EasyCrypt %s directory" ""
+                                                     (if arg "source" "project root"))
                                       nil nil t)))
-         (outdir (if arg
-                     srcs
-                   (file-name-as-directory
-                    (expand-file-name ece-docgen-default-outdir srcs)))))
-    (ece--docgen-internal nil srcs outdir)))
+         (outdir (file-name-as-directory
+                    (expand-file-name ece-docgen-default-outdir srcs))))
+    (ece--docgen-internal nil srcs (null arg) outdir)))
 
 (defun ece--runtest-internal (sync testfile scenario jobs &optional report &rest options)
   "Executes `easycrypt runtest' command using `ece--execute-subcommand' (passing
@@ -887,7 +1012,7 @@ is passed to the subcommand literally."
   ;; (current EasyCrypt runtest errors out with the latter)
   (let ((process-connection-type nil))
     (apply #'ece--execute-subcommand "runtest" sync
-           (append (list (expand-file-name testfile)
+           (nconc (list (expand-file-name testfile)
                          (if (or (null scenario) (string-empty-p scenario))
                              ece-runtest-default-scenario
                            scenario))
@@ -915,17 +1040,13 @@ subcommand literally."
          (read-file-name (format-prompt "Test report file, empty for no report" ece-runtest-default-report-file)
                          nil ece-runtest-default-report-file)
          (split-string-shell-command (read-string (format-prompt "Further options" "")))))
-  (if-let* ((opts (seq-filter #'stringp options)))
+  (if-let* ((opts (seq-filter #'stringp (flatten-list options))))
       (apply #'ece--runtest-internal sync testfile scenario jobs report opts)
     (ece--runtest-internal sync testfile scenario jobs report)))
 
 ;;;###autoload
 (defun ece-runtest (testfile scenario jobs &optional report &rest options)
-  "Executes `easycrypt runtest' command synchronously, performing the test
-SCENARIO specified in TESTFILE using JOBS concurrent processes/threads, writing
-a final report to REPORT. Relative paths are with respect to whatever
-`default-directory' contains. OPTIONS are concatenated, in order, and the result
-is passed to the subcommand literally."
+  "As `ece-runtest-full', which see, but always executes `easycrypt runtest' synchronously."
   (interactive
    (list (read-file-name (format-prompt "Test configuration file" ece-runtest-default-test-files)
                          nil ece-runtest-default-test-files t)
@@ -935,7 +1056,7 @@ is passed to the subcommand literally."
          (read-file-name (format-prompt "Test report file, empty for no report" ece-runtest-default-report-file)
                          nil ece-runtest-default-report-file)
          (split-string-shell-command (read-string (format-prompt "Further options" "")))))
-  (if-let* ((opts (seq-filter #'stringp options)))
+  (if-let* ((opts (seq-filter #'stringp (flatten-list options))))
       (apply #'ece--runtest-internal nil testfile scenario jobs report opts)
     (ece--runtest-internal nil testfile scenario jobs report)))
 
@@ -968,14 +1089,15 @@ if its non-nil."
   (ece--why3config-internal sync why3file))
 
 (defun ece-why3config (&optional why3file)
-  "Executes `easycrypt why3config' command synchronously,
-using WHY3FILE for the `-why3' option if its non-nil."
+  "As `ece-why3config-full', which see, but always executes `easycrypt
+  why3config' synchronously."
   (interactive (list (read-file-name (format-prompt "Configuration file" "determined by EasyCrypt") nil "")))
   (ece--why3config-internal t why3file))
 
 ;;;###autoload
 (defun ece-why3config-dflt ()
-  "Executes `easycrypt why3config' command synchronously."
+  "Executes `easycrypt why3config' command synchronously
+with default settings."
   (interactive)
   (ece--why3config-internal t nil))
 
@@ -1321,8 +1443,11 @@ global defaults in all EasyCrypt buffers."
 (defvar-keymap ece-exec-map
   :doc "Keymap for executing EasyCrypt subcommands (in separate processes)"
   :prefix 'ece-exec-map-prefix
-  "d" #'ece-docgen-file-dwim
-  "D" #'ece-docgen-dir-dwim
+  "c" #'ece-compile-file
+  "C" #'ece-compile-dir
+  "C-c" #'ece-compile
+  "d" #'ece-docgen-file
+  "D" #'ece-docgen-dir
   "C-d" #'ece-docgen
   "h" #'ece-help
   "r" #'ece-runtest-dflt
