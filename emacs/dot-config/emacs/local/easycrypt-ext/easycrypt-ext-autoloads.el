@@ -149,11 +149,14 @@ and a limitation of the localized ad-hoc computation
 of the indent level).
 Meant for `post-self-insert-hook'.")
 (autoload 'ece-prompt-print "easycrypt-ext" "\
-Prompts user for arguments that are passed to the `print' command of EasyCrypt." t)
+Prompts user for arguments that are passed to the `print' (proof shell)
+command of EasyCrypt." t)
 (autoload 'ece-prompt-search "easycrypt-ext" "\
-Prompts user for arguments that are passed to the `search' command of EasyCrypt." t)
+Prompts user for arguments that are passed to the `search' (proof shell)
+command of EasyCrypt." t)
 (autoload 'ece-prompt-locate "easycrypt-ext" "\
-Prompts user for arguments that are passed to the `locate' command of EasyCrypt." t)
+Prompts user for arguments that are passed to the `locate' (proof shell)
+command of EasyCrypt." t)
 (autoload 'ece-print "easycrypt-ext" "\
 If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region
@@ -175,26 +178,166 @@ or tries to find a (reasonable) thing at point. Uses the result as an
 argument to the `locate' command in EasyCrypt.
 
 (fn &optional EVENT)" t)
+(autoload 'ece-bufhist-prev "easycrypt-ext" "\
+Browses back N buffer history items (for the
+goals and response buffer) by wrapping `bufhist-prev',
+which see. Allows binding to a mouse-based key
+(e.g., `<wheel-up>') and have it effect the window
+that the mouse is hovering, not necessarily the active one.
+
+(fn &optional N)" t)
+(autoload 'ece-help-full "easycrypt-ext" "\
+Executes `easycrypt --help' command synchronously (resp. asynchronously)
+if SYNC is `nil' (resp. non-nil).
+
+(fn SYNC)" t)
+(autoload 'ece-help "easycrypt-ext" "\
+Executes `easycrypt --help' command synchronously." t)
+(autoload 'ece--compile-internal "easycrypt-ext" "\
+Executes `easycrypt compile' command using `ece--execute-subcommand' (passing
+SYNC directly), which see, checking the EasyCrypt file SRCS or, if SRCS is a
+directory, EasyCrypt files in (subdirectories of) SRCS. In the latter case,
+subdirectories are considered if SUBDIRS is non-nil. All paths can be absolute
+or relative. Relative paths are with respect to whatever `default-directory'
+contains. OPTIONS are concatenated, in order, and the result is passed to the
+subcommand literally
+
+(fn SYNC SRCS &optional SUBDIRS &rest OPTIONS)")
+(autoload 'ece-compile-full "easycrypt-ext" "\
+Executes `easycrypt compile' command synchronously (resp. asynchronously) if
+SYNC is non-nil (resp. `nil'), checking the EasyCrypt file SRCS or, if SRCS is a
+directory, EasyCrypt files in (subdirectories of) SRCS. In the latter case,
+subdirectories are considered if SUBDIRS is non-nil. All paths can be absolute
+or relative. Relative paths are with respect to whatever `default-directory'
+contains. OPTIONS are concatenated, in order, and the result is passed to the
+subcommand literally.
+
+(fn SYNC SRCS &optional SUBDIRS &rest OPTIONS)" t)
+(autoload 'ece-compile "easycrypt-ext" "\
+As `ece-compile-full', which see, but always executed `easycrypt compile'
+command asynchronously.
+
+(fn SRCS &optional SUBDIRS &rest OPTIONS)" t)
+(autoload 'ece-compile-file "easycrypt-ext" "\
+Executes `easycrypt compile' command asynchronously, checking
+the EasyCrypt file visited by the current buffer, or asks to specify a
+file if the current buffer is not visiting such a file." t)
+(autoload 'ece-compile-dir "easycrypt-ext" "\
+Executes `easycrypt compile' command asynchronously, checking the EasyCrypt
+files in `default-directory' and its subdirectories (unless ARG is non-nil), or
+asks to specify a directory if `default-directory' and its subdirectories
+(unless ARG is non-nil) do not contain any such files.
+
+(fn &optional ARG)" t)
+(autoload 'ece--docgen-internal "easycrypt-ext" "\
+Executes `easycrypt docgen' command using `ece--execute-subcommand' (passing
+SYNC directly), which see, generating documentation file(s) for the EasyCrypt
+file SRCS or, if SRCS is a directory, EasyCrypt files in (subdirectories of) SRCS.
+In the latter case, subdirectories are considered is SUBDIRS is non-nil.
+The generated files are stored in output directory OUTDIR; if SUBDIRS is non-nil,
+documentation generated for source files found in subdirectories are stored
+in an identically named subdirectory relative to OUTDIR. All
+paths can be absolute or relative. Relative paths are with respect to whatever
+`default-directory' contains, which is also the default value for the output
+directory (if OUTDIR is nil).
+
+(fn SYNC SRCS &optional SUBDIRS OUTDIR)")
+(autoload 'ece-docgen-full "easycrypt-ext" "\
+Executes `easycrypt docgen' command synchronously (resp. asynchronously) if
+SYNC is non-nil (resp. `nil'), generating documentation file(s) for the
+EasyCrypt file SRCS or, if SRCS is a directory, EasyCrypt files in
+(subdirectories of) SRCS. The generated files are stored in output directory
+OUTDIR; if SUBDIRS is non-nil, documentation generated for source files found in
+subdirectories are stored in an identically named subdirectory relative to
+OUTDIR. All paths can be absolute or relative. Relative paths are with respect
+to whatever `default-directory' contains, which is also the default value for
+the output directory (if OUTDIR is nil).
+
+(fn SYNC SRCS &optional SUBDIRS OUTDIR)" t)
+(autoload 'ece-docgen-file "easycrypt-ext" "\
+Executes `easycrypt docgen' command asynchronously, generating documentation
+for the EasyCrypt file visited by the current buffer, or asks to specify a
+file if the current buffer is not visiting such a file. The generated
+file is stored in `ece-docgen-default-outdir' (relative to the directory of
+the specified file or `default-directory') unless the
+prefix argument ARG is non-nil, in which case it is stored directly in the
+directory of the specified file or`default-directory'.
+
+(fn &optional ARG)" t)
+(autoload 'ece-docgen-dir "easycrypt-ext" "\
+Executes `easycrypt docgen' command asynchronously, generating documentation
+for the EasyCrypt files in `default-directory', or asks to specify a directory
+if there are no such files in `default-directory'. The generated files are
+stored in `ece-docgen-default-outdir' (relative to the specified directory or
+`default-directory') unless the prefix argument ARG is non-nil, in which case
+they are stored directly in the specified directory or `default-directory'.
+
+(fn &optional ARG)" t)
+(autoload 'ece-runtest-full "easycrypt-ext" "\
+Executes `easycrypt runtest' command synchronously (resp. asynchronously) if
+SYNC is non-nil (resp. `nil'), performing the test SCENARIO specified in
+TESTFILE using JOBS concurrent processes/threads, writing a final report to
+REPORT. Relative paths are with respect to whatever `default-directory'
+contains. OPTIONS are concatenated, in order, and the result is passed to the
+subcommand literally.
+
+(fn SYNC TESTFILE SCENARIO JOBS &optional REPORT &rest OPTIONS)" t)
+(autoload 'ece-runtest "easycrypt-ext" "\
+As `ece-runtest-full', which see, but always executes `easycrypt runtest' synchronously.
+
+(fn TESTFILE SCENARIO JOBS &optional REPORT &rest OPTIONS)" t)
+(autoload 'ece-runtest-dflt "easycrypt-ext" "\
+Executes `easycrypt runtest' command synchronously, performing the test
+`ece-runtest-default-scenario' specified in one of the test
+files specified in `ece-runtest-default-test-files',
+writing a final report to `ece-runtest-default-report-file'.")
+(autoload 'ece-why3config-full "easycrypt-ext" "\
+Executes `easycrypt why3config' command synchronously (resp. asynchronously)
+if SYNC is non-nil (resp. `nil'), using WHY3FILE for the `-why3' option
+if its non-nil.
+
+(fn SYNC &optional WHY3FILE)" t)
+(autoload 'ece-why3config-dflt "easycrypt-ext" "\
+Executes `easycrypt why3config' command synchronously
+with default settings." t)
 (autoload 'ece-tempel-key "easycrypt-ext" "\
-Binds KEY to TEMPLATE-NAME in KEYMAP.
-Simplified version of `tempel-key' macro from `tempel' package.
+Binds KEY to (a function inserting) TEMPLATE-NAME in KEYMAP.
+Simplified version of `tempel-key' macro from `tempel' package, but
+with functionality checks.
 
 (fn KEYMAP KEY TEMPLATE-NAME)" nil t)
-(autoload 'ece-toggle-indentation-local "easycrypt-ext" nil t)
-(autoload 'ece-toggle-indentation-style-local "easycrypt-ext" nil t)
-(autoload 'ece-toggle-keyword-completion-local "easycrypt-ext" nil t)
-(autoload 'ece-toggle-templates-local "easycrypt-ext" nil t)
-(autoload 'ece-toggle-templates-info-local "easycrypt-ext" nil t)
-(autoload 'ece-reset-to-defaults-local "easycrypt-ext" nil t)
-(autoload 'ece-enable-indentation "easycrypt-ext" nil t)
-(autoload 'ece-disable-indentation "easycrypt-ext" nil t)
-(autoload 'ece-enable-keyword-completion "easycrypt-ext" nil t)
-(autoload 'ece-disable-keyword-completion "easycrypt-ext" nil t)
-(autoload 'ece-enable-templates "easycrypt-ext" nil t)
-(autoload 'ece-disable-templates "easycrypt-ext" nil t)
-(autoload 'ece-enable-templates-info "easycrypt-ext" nil t)
-(autoload 'ece-disable-templates-info "easycrypt-ext" nil t)
-(autoload 'ece-reset-to-defaults "easycrypt-ext" nil t)
+(autoload 'ece-toggle-indentation-local "easycrypt-ext" "\
+Toggles EasyCrypt Ext indentation in this buffer." t)
+(autoload 'ece-toggle-indentation-style-local "easycrypt-ext" "\
+Toggles EasyCrypt Ext indentation style in this buffer." t)
+(autoload 'ece-toggle-keyword-completion-local "easycrypt-ext" "\
+Toggles EasyCrypt Ext keyword completion in this buffer." t)
+(autoload 'ece-toggle-templates-local "easycrypt-ext" "\
+Toggles EasyCrypt Ext templates in this buffer." t)
+(autoload 'ece-toggle-templates-info-local "easycrypt-ext" "\
+Toggles EasyCrypt Ext informative templates in this buffer." t)
+(autoload 'ece-reset-to-defaults-local "easycrypt-ext" "\
+Resets all EasyCrypt Ext functionalities/settings in this buffer
+to their global defaults." t)
+(autoload 'ece-enable-indentation "easycrypt-ext" "\
+Enables EasyCrypt Ext indentation in all EasyCrypt buffers." t)
+(autoload 'ece-disable-indentation "easycrypt-ext" "\
+Disables EasyCrypt Ext indentation in all EasyCrypt buffers." t)
+(autoload 'ece-enable-keyword-completion "easycrypt-ext" "\
+Enables EasyCrypt Ext keyword completion in all EasyCrypt buffers." t)
+(autoload 'ece-disable-keyword-completion "easycrypt-ext" "\
+Disables EasyCrypt Ext keyword completion in all EasyCrypt buffers." t)
+(autoload 'ece-enable-templates "easycrypt-ext" "\
+Enables EasyCrypt Ext templates in all EasyCrypt buffers." t)
+(autoload 'ece-disable-templates "easycrypt-ext" "\
+Disables EasyCrypt Ext templates in all EasyCrypt buffers." t)
+(autoload 'ece-enable-templates-info "easycrypt-ext" "\
+Enables EasyCrypt Ext informative templates in all EasyCrypt buffers." t)
+(autoload 'ece-disable-templates-info "easycrypt-ext" "\
+Disables EasyCrypt Ext informative templates in all EasyCrypt buffers." t)
+(autoload 'ece-reset-to-defaults "easycrypt-ext" "\
+Resets all EasyCrypt Ext settings/functionalities to their
+global defaults in all EasyCrypt buffers." t)
 (autoload 'ece-setup "easycrypt-ext" "\
 Sets up EasyCrypt extensions.")
 (autoload 'ece-teardown "easycrypt-ext" "\

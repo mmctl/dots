@@ -1,10 +1,32 @@
-;; -*- lexical-binding: t -*-
-;; easycrypt-ext.el
+;;; easycrypt-ext.el --- EasyCrypt Extensions (for proof-General) -*- lexical-binding: t; -*-
 ;;
+;; Copyright (C) 2025 Matthias Meijers
+
+;; Author: Matthias Meijers <research@mmeijers.com>
+;; Maintainer: Matthias Meijers <research@mmeijers.com>
+;; Created: 22 April 2025
+
+;; Keywords: abbrev, convenience, mouse, tools
+;; URL: https://www.easycrypt.info/
+
+;; This file is not part of GNU Emacs.
+
+;; This file is free software: you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free Software
+;; Foundation, either version 3 of the License, or (at your option) any later
+;; version. This file is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;; FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+;; details. You should have received a copy of the GNU General Public License
+;; along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+;; Package-Requires: ((emacs "29.1") (proof-general "4.5"))
+
+;;; Commentary:
 ;; EasyCrypt is a toolset primarily designed for the formal verification
 ;; of code-based, game-playing crytpographic proofs. At its core,
 ;; it features an interactive theorem prover with a front-end implemented
-;; in Proof General.
+;; in `Proof General'.
 ;; This package aims to add useful extensions to this EasyCrypt front-end.
 ;; Key features include the following:
 ;; - improved (but still ad-hoc) indentation;
@@ -22,9 +44,11 @@
 ;;
 ;; For setup and usage instructions, see: TODO
 ;;
-;; Author/Maintainer: Matthias Meijers
-;; Date: 01-06-2025
-(require 'easycrypt-ext-consts)
+;;; Code:
+
+
+(require 'easycrypt) ; Provided by proof-general
+(require 'easycrypt-ext-consts) ; Provided locally
 
 
 ;; Constants
@@ -606,7 +630,7 @@ directly calls the shell with it."
   (ece--check-functionality 'proof-shell-invisible-command 'proof-general)
   ;; proof-shell-ready-prover called inside proof-shell-invisible-command
   (if args
-      (proof-shell-invisible-command (concat command " " (string-join args " ")))
+      (proof-shell-invisible-command (string-join (cons command args) " "))
     (proof-shell-invisible-command command)))
 
 (defun ece--prompt-command (command)
@@ -826,7 +850,7 @@ subcommand literally."
 
 ;;;###autoload
 (defun ece-compile (srcs &optional subdirs &rest options)
-  "As `ece-compile-full', which see, but always executed `easycrypt compile'
+  "As `ece-compile-full', which see, but always executes `easycrypt compile'
 command asynchronously."
   (interactive (let* ((srcs (read-file-name (format-prompt "EasyCrypt source file or (project root) directory"
                                                            default-directory)
@@ -837,8 +861,8 @@ command asynchronously."
                        (split-string-shell-command
                         (read-string (format-prompt "Further options" ""))))))
   (if-let* ((opts (seq-filter #'stringp (flatten-list options))))
-      (apply #'ece--compile-internal sync srcs subdirs opts)
-    (ece--compile-internal sync srcs subdirs)))
+      (apply #'ece--compile-internal nil srcs subdirs opts)
+    (ece--compile-internal nil srcs subdirs)))
 
 ;;;###autoload
 (defun ece-compile-file ()
@@ -873,12 +897,12 @@ asks to specify a directory if `default-directory' and its subdirectories
 (defun ece--docgen-internal (sync srcs &optional subdirs outdir)
   "Executes `easycrypt docgen' command using `ece--execute-subcommand' (passing
 SYNC directly), which see, generating documentation file(s) for the EasyCrypt
-file SRCS or, if SRCS is a directory, EasyCrypt files in (subdirectories of) SRCS.
-In the latter case, subdirectories are considered is SUBDIRS is non-nil.
-The generated files are stored in output directory OUTDIR; if SUBDIRS is non-nil,
-documentation generated for source files found in subdirectories are stored
-in an identically named subdirectory relative to OUTDIR. All
-paths can be absolute or relative. Relative paths are with respect to whatever
+file SRCS or, if SRCS is a directory, EasyCrypt files in (subdirectories of)
+SRCS. In the latter case, subdirectories are considered is SUBDIRS is non-nil.
+The generated files are stored in output directory OUTDIR; if SUBDIRS is
+non-nil, documentation generated for source files found in subdirectories are
+stored in an identically named subdirectory relative to OUTDIR. All paths can be
+absolute or relative. Relative paths are with respect to whatever
 `default-directory' contains, which is also the default value for the output
 directory (if OUTDIR is nil)."
   (let ((esrc (expand-file-name srcs))
@@ -992,8 +1016,8 @@ they are stored directly in the specified directory or `default-directory'."
 (defun ece--runtest-internal (sync testfile scenario jobs &optional report &rest options)
   "Executes `easycrypt runtest' command using `ece--execute-subcommand' (passing
 SYNC directly), which see, performing the test SCENARIO specified in TESTFILE
-using JOBS concurrent processes, writing a final report to REPORT. All paths can be
-absolute or relative. Relative paths are with respect to whatever
+using JOBS concurrent processes, writing a final report to REPORT. All paths can
+be absolute or relative. Relative paths are with respect to whatever
 `default-directory' contains. OPTIONS are concatenated, in order, and the result
 is passed to the subcommand literally."
   (when (or (null testfile) (string-empty-p testfile))
@@ -1046,7 +1070,8 @@ subcommand literally."
 
 ;;;###autoload
 (defun ece-runtest (testfile scenario jobs &optional report &rest options)
-  "As `ece-runtest-full', which see, but always executes `easycrypt runtest' synchronously."
+  "As `ece-runtest-full', which see, but always executes `easycrypt runtest'
+asynchronously."
   (interactive
    (list (read-file-name (format-prompt "Test configuration file" ece-runtest-default-test-files)
                          nil ece-runtest-default-test-files t)

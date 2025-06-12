@@ -841,6 +841,7 @@
           corfu-min-width 15
           corfu-max-width 80
           corfu-cycle nil
+          corfu-preview-current nil
           corfu-quit-at-boundary 'separator
           corfu-quit-no-match 'separator
           corfu-left-margin-width 0.5
@@ -872,12 +873,12 @@
   (keymap-unset corfu-map "RET")
   (keymap-unset corfu-map "<up>")
   (keymap-unset corfu-map "<down>")
-  (keymap-set corfu-map "C-p" #'corfu-previous)
-  (keymap-set corfu-map "C-n" #'corfu-next)
-  (keymap-set corfu-map "C-<prior>" #'corfu-scroll-up)
-  (keymap-set corfu-map "C-<next>" #'corfu-scroll-down)
-  (keymap-set corfu-map "C-<home>" #'corfu-first)
-  (keymap-set corfu-map "C-<end>" #'corfu-last)
+  (keymap-set corfu-map "M-p" #'corfu-previous)
+  (keymap-set corfu-map "M-n" #'corfu-next)
+  (keymap-set corfu-map "M-<prior>" #'corfu-scroll-up)
+  (keymap-set corfu-map "M-<next>" #'corfu-scroll-down)
+  (keymap-set corfu-map "M-<home>" #'corfu-first)
+  (keymap-set corfu-map "M-<end>" #'corfu-last)
 
   ;; Activation
   (global-corfu-mode 1))
@@ -1738,8 +1739,8 @@ that allows to include other templates by their name."
     (keymap-set proof-mode-map "C-c C-k" #'pg-response-clear-displays)
     (keymap-set proof-mode-map "C-c C-x" #'proof-minibuffer-cmd)
     (keymap-set proof-mode-map "C-c C-q" #'proof-shell-exit)
-    (keymap-set proof-mode-map "M-p" #'pg-previous-matching-input-from-input)
-    (keymap-set proof-mode-map "M-n" #'pg-next-matching-input-from-input)
+    (keymap-set proof-mode-map "M-P" #'pg-previous-matching-input-from-input)
+    (keymap-set proof-mode-map "M-N" #'pg-next-matching-input-from-input)
     (keymap-set proof-mode-map "C-M-p" #'pg-previous-input)
     (keymap-set proof-mode-map "C-M-n" #'pg-next-input)
     (keymap-set proof-mode-map "C-M-S-p" #'pg-previous-matching-input)
@@ -1802,9 +1803,9 @@ that allows to include other templates by their name."
     '(vertico-mouse :foreground 'unspecified :background 'unspecified
                     :inherit 'lazy-highlight)
     '(vertico-quick1 :foreground 'unspecified :background 'unspecified
-                   :inherit 'avy-lead-face)
+                     :inherit 'avy-lead-face)
     '(vertico-quick2 :foreground 'unspecified :background 'unspecified
-                   :inherit 'avy-lead-face-1)
+                     :inherit 'avy-lead-face-1)
     '(corfu-border :foreground 'unspecified :background 'unspecified
                    :inherit 'vertical-border)
     '(corfu-bar :foreground 'unspecified :background 'unspecified
@@ -1827,10 +1828,10 @@ that allows to include other templates by their name."
 ;;;; Doom-themes specific
 ;;;;; Nord <3
 (use-package doom-nord-theme
-  :ensure nil ; Provided by doom-themes
-
   ;; :disabled t ; Don't use this theme
   :demand t ; Use this theme
+
+  :ensure nil ; Provided by doom-themes
 
   :init
   ;; Setup and settings (before load)
@@ -1866,14 +1867,25 @@ that allows to include other templates by their name."
     '(easycrypt-tactics-closing-face :foreground yellow)
     '(easycrypt-tactics-dangerous-face :foreground red))
 
+  ;;; Dummy face definitions
+  ;;; (applying theme settings that inherit from these faces
+  ;;; without explicitly loading the packages that apply
+  ;;; initially define them)
+  (defface avy-lead-face '((t . (:inherit default)))
+    "Dummy definition for avy-lead-face")
+  (defface avy-lead-face-1 '((t . (:inherit default)))
+    "Dummy definition for avy-lead-face-1")
+
   ;; Hooks
   (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord))))
 
 (use-package doom-nord-light-theme
-  :ensure nil ; Provided by doom-themes
-
   :disabled t ; Don't use this theme
   ;; :demand t ; Use this theme
+
+  :ensure nil ; Provided by doom-themes
+
+  :after doom-themes
 
   :init
   ;; Setup and settings (before load)

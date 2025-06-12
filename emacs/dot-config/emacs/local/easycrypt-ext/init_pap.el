@@ -1,71 +1,89 @@
 ;; -*- lexical-binding: t -*-
-;; init.el
 ;; Environment
-(defconst ECE_DIR (file-name-as-directory (file-name-concat user-emacs-directory "local/easycrypt-ext/"))
+(defconst ECE_DIR (file-name-as-directory
+                   (file-name-concat user-emacs-directory "local/easycrypt-ext/"))
   "Directory where `easycrypt-ext` package is located. (By default it is the
-local/easycrypt-ext/ directory, relative from your emacs configuration directory.
-You can find the value of this directory by launching Emacs, pressing `C-h v` (i.e.,
-`Control + h` followed by `v`), type `user-emacs-directory`, and press Return (i.e., Enter).)")
+local/easycrypt-ext/ directory, relative to your emacs configuration directory.
+You can find this directory by launching Emacs, pressing `C-h v' (i.e., `Control
++ h' followed by `v'), typing `user-emacs-directory', and press Return (i.e.,
+Enter).)")
 
-;;; Load path/pointers
-;;;; Add ECE_DIR to the load path, so we can load it
+;;; Add ECE_DIR to the load path, so we can, well, load it
 (add-to-list 'load-path ECE_DIR)
 
 ;; Package system
+;;; Load package system
 (require 'package)
 
-;;; Add package archives (Emacs-managed: gnu and nongnu, external: melpa)
-;;; By default, prioritize gnu over nongnu, and nongnu over melpa
-(setopt package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                           ("melpa" . "https://melpa.org/packages/"))
-        package-archive-priorities '(("gnu" . 10)
-                                     ("nongnu" . 5)
-                                     ("melpa" . 1)))
+;;; Add MELPA package archive
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
-;; Initialize the package system for Emacs < 27
-(when (version< emacs-version "27.0")
-  (package-initialize))
+;;; Initialize package system
+(if (version< emacs-version "27.0")
+    (package-initialize)
+  (package-initialize t))
 
-;; Refresh package contents if needed
+;;; Refresh package contents if needed
 (unless package-archive-contents
   (package-refresh-contents))
 
-;; Install use-package if not already installed
+;;; Install use-package if not already installed
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
-;; Ensure use-package is loaded
+;;; Ensure use-package is loaded
 (require 'use-package)
 
 
 ;; Packages
 ;; Completions
 ;;; Cape
-;;; Provides completion-at-point functions and related functionality.
-;;; Used by `easycrypt-ext` to provide support for keyword completion through `cape-keyword`.
-;;; Additionally allows for the addition/combination of other such completion functions,
-;;; and easy integration with `tempel` for template (completion) support
-;;; See: https://github.com/minad/cape
+;;; Provides completion-at-point (read: completion of thing you are typing)
+;;; functions and related functionality. Used by `easycrypt-ext' to provide
+;;; support for keyword completion through `cape-keyword'. Additionally allows
+;;; for the addition/combination of other such completion functions, and easy
+;;; integration with `tempel' for template (completion) support.
+;; See: https://github.com/minad/cape
 (use-package cape
   :ensure t)
 
 ;;; Tempel
-;;; Provides functionality for defining and integrating templates in standard workflow.
-;;; Used by `easycrypt-ext` to provide template support.
-;;; Can be easily integrated with (and without) `cape`.
+;;; Provides functionality for defining and integrating templates in standard
+;;; workflow. Used by `easycrypt-ext' to provide template support. Can be easily
+;;; integrated with (and without) `cape'.
 ;;; See: https://github.com/minad/tempel
 (use-package tempel
   :ensure t)
 
-;; Themes
-;; Doom-themes
-;; Bundle of themes made for Doom Emacs,
-;; but work perfectly fine in (regular) Emacs as well.
-;; See: https://github.com/doomemacs/themes
-(use-package doom-themes
-  :ensure t)
+;;; Corfu
+;;; Provides functionality to enhance and improve your experience
+;;; when it comes to completions (i.e., actually using completion functions
+;;; as provided by, e.g., `cape' and `tempel'). In particular, it provides
+;;; an in-buffer completion popup.
+;;; Not used by `easycrypt-ext' directly, but recommended.
+;;; See: https://github.com/minad/corfu
+(use-package corfu
+  :ensure t
 
+  :init
+
+  ;; Consider uncommenting the following if you want the completion pop-up
+  ;; to show up automatically (i.e., without explicitly calling it)
+  ;; (setopt corfu-auto t) ; make pop-up automatic
+  ;; (setopt corfu-preselect 'valid) ; select first candidate on pop-up
+  ;; (setopt corfu-on-exact-match nil) ; don't automatically complete on single match
+
+  :config
+  ;; Consider uncommenting the following if think selecting a completion
+  ;; shouldn't use your regular movement/editing keybindings.
+  ;; May be especially annoying if you have an automatic pop-up
+  ;; (keymap-unset corfu-map "RET") ; Don't use return/enter for accepting
+  ;; (keymap-unset corfu-map "<up>") ; Don't use up arrow for going up
+  ;; (keymap-unset corfu-map "<down>") ; Don't use up arrow for going up
+  ;; (keymap-set corfu-map "C-p" #'corfu-previous) ; Example: Use `Control + p' for going up
+  ;; (keymap-set corfu-map "C-n" #'corfu-next) ; Example: Use `Control + n' for going down
+  ;; (keymap-set corfu-map "C-v" #'corfu-next) ; Example: Use `Control + v' for accepting
+  )
 
 ;; Proof assistants
 ;;; Proof-General
@@ -105,7 +123,7 @@ You can find the value of this directory by launching Emacs, pressing `C-h v` (i
   (setopt easycrypt-one-command-per-line nil))
 
 
-;;; EasyCrypt extension
+;;; EasyCrypt Extension
 ;;; See
 (use-package easycrypt-ext
   :ensure nil ; Provided locally

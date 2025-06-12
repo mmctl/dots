@@ -1,8 +1,4 @@
 - Functionality:
-  - ece docgen project dwim: Given the project's root directory, recursively generate documentation for each subdirectory, placing the resulting documentation files in
-  the directories of the corresponding source files (or a separate docs/ directory in the
-  directory of these source files)
-- relative file/direcotry validation for defcustoms
 - Hideshow integration: Have user option to enable hideshow and automatically
 hide everything non-local, or everything non-local?
 - Use PTY with runtest, not Pipe (as process connection type)

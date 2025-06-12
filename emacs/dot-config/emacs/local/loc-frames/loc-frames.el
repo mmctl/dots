@@ -1,6 +1,13 @@
 ;; -*- lexical-binding: t -*-
 ;; loc-frames.el (functions/hooks)
 
+;; Utilities
+;;; Re-enable custom themes
+(defsubst reenable-custom-themes ()
+  "Re-enable currently enabled custom themes"
+  (let ((revcenth (reverse custom-enabled-themes)))
+    (dolist (cth revcenth) (enable-theme cth))))
+
 ;; Setup
 ;;; TTY
 (defun loc-setup-tty-frame (frame)
@@ -60,7 +67,9 @@
 (defun loc-setup-client-frame ()
   "Setup inital client frame created by daemon/server. Assumes no global/default
 setup."
-  (loc-setup-frame (selected-frame)))
+  (loc-setup-frame (selected-frame))
+  ;; Fixes bug of server not properly applying custom themes for first frame
+  (reenable-custom-themes))
 
 (defun loc-setup-client-frame-after ()
   "Setup inital client frame created by daemon/server. Assumes global/default
