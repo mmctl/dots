@@ -46,9 +46,12 @@
 ;;
 ;;; Code:
 
-
+;; Requirements
+;;; External packages
 (require 'easycrypt) ; Provided by proof-general
-(require 'easycrypt-ext-consts) ; Provided locally
+
+;;; Local
+(require 'easycrypt-ext-consts)
 
 
 ;; Constants

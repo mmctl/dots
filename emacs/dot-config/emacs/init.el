@@ -717,7 +717,7 @@
   ;; Setup and settings
   (setopt anzu-input-idle-delay 0.1)
   (setopt anzu-replace-at-cursor-thing 'sexp)
-  (setopt anzu-replace-to-string-separator " -> ")
+  (setopt anzu-replace-to-string-separator "")
 
   :config
   ;; Keybindings
@@ -1518,8 +1518,6 @@ that allows to include other templates by their name."
 (use-package org
   :ensure t
 
-  :defer t
-
   :preface
   (defvar-keymap an-org-map
     :doc "Keymap for org"
@@ -1543,14 +1541,25 @@ that allows to include other templates by their name."
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
 
-  ;; Create and store org agenda directory
-  (defconst ORG_AGENDA_DIR (file-name-as-directory (file-name-concat ORG_DIR "agenda/"))
-    "Directory used for org agenda files.")
-  (unless (file-directory-p ORG_AGENDA_DIR)
-    (make-directory ORG_AGENDA_DIR t))
+  ;; Create and store org agenda file
+  (defconst ORG_AGENDA_FILE (file-name-concat ORG_DIR ".agenda_files")
+    "File containing locations of org agenda files.")
+  (unless (file-regular-p ORG_AGENDA_FILE)
+    (make-empty-file ORG_AGENDA_FILE t))
 
-  (setopt org-default-notes-file (file-name-concat ORG_DIR "notes.org")
-          org-agenda-files ORG_AGENDA_DIR)
+  ;; Create and store org (default) notes file
+  (defconst ORG_NOTES_FILE (file-name-concat ORG_DIR "notes.org")
+    "Default file for notes created with org.")
+  (unless (file-regular-p ORG_NOTES_FILE)
+    (make-empty-file ORG_NOTES_FILE t))
+
+  ;; Create and store org (default) todos file
+  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
+    "Default file for todos created with org.")
+  (unless (file-regular-p ORG_TODOS_FILE)
+    (make-empty-file ORG_TODOS_FILE t))
+
+  (setopt org-default-notes-file ORG_NOTES_FILE)
 
   (setopt org-replace-disputed-keys t
           org-disputed-keys '(([(shift up)] . [(meta p)])
@@ -1564,11 +1573,66 @@ that allows to include other templates by their name."
 
   (setopt org-return-follows-link t)
   (setopt org-support-shift-select t)
-  (setopt org-log-done 'time)
+
+  (setopt org-log-done 'time
+          org-log-refile 'time)
+
+  (setopt org-refile-allow-creating-parent-nodes 'confirm)
+
+  (setopt org-tag-alist
+          '((:startgroup)
+            ("@work" . ?w) ("@home" . ?h) ("@online" . ?o) ("@elsewhere" . ?e)
+            (:endgroup)
+            (:startgroup) ("Project") (:grouptags) ("proj@.+" . ?p) (:endgroup)
+            (:startgroup) ("Area") (:grouptags) ("area@.+" . ?a) (:endgroup)
+            ("administration" . ?A) ("event" . ?E) ("family-and-friends". ?f) ("finance" . ?F)
+            ("home" . ?H) ("matthias" . ?m) ("miscellaneous". ?M) ("partner" . ?P)
+            ("research" . ?r) ("resource" . ?R) ("study". ?s) ("teach" . ?t)
+            ("travel" . ?T) ("work" . ?W)))
+
+  (setopt org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "BLOCKED" "DONE")))
+  (setopt org-todo-keyword-faces
+          '(("TODO" . (:inherit org-todo))
+            ("IN-PROGRESS" . (:inherit org-cite))
+            ("BLOCKED" . (:inherit org-warning))
+            ("DONE" . (:inherit org-done))))
+
+  (setopt org-capture-templates
+          '(("n" "Note"
+             entry (file+headline ORG_NOTES_FILE "Notes")
+             "* %?\nCreated: %U"
+             :empty-lines 0)
+            ("N" "Note with context"
+             entry (file+headline ORG_NOTES_FILE "Notes")
+             "* %?%^g\nCreated: %U\nContext: %a\n%i"
+             :empty-lines 0)
+            ("t" "Todo"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %?\nCreated: %U"
+             :empty-lines 0)
+            ("T" "Todo with context"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %?%^g\nCreated: %U\nContext: %a\n%i"
+             :empty-lines 0)
+            ("d" "Deadline (todo)"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %?\nCreated: %U\nDeadline: %^T"
+             :empty-lines 0)
+            ("D" "Deadline (todo) with context"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %?%^g\nCreated: %U\nDeadline: %^T\nContext: %a\n%i"
+             :empty-lines 0)))
 
   :config
+  ;; Setup and settings (after load)
+  (add-to-list 'org-agenda-files ORG_TODOS_FILE)
+
   ;; Keybindings
   (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
+
+  (keymap-set org-capture-mode-map "C-c C-v" #'org-capture-finalize)
+  (keymap-set org-capture-mode-map "C-c C-r" #'org-capture-refile)
+  (keymap-set org-capture-mode-map "C-c C-q" #'org-capture-kill)
 
   (keymap-unset org-read-date-minibuffer-local-map "C-v")
   (keymap-unset org-read-date-minibuffer-local-map "M-v")
@@ -1877,7 +1941,7 @@ that allows to include other templates by their name."
     "Dummy definition for avy-lead-face-1")
 
   ;; Hooks
-  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord))))
+  (add-hook 'after-init-hook #'(lambda () (unless (daemonp) (enable-theme 'doom-nord)))))
 
 (use-package doom-nord-light-theme
   :disabled t ; Don't use this theme
@@ -1922,7 +1986,7 @@ that allows to include other templates by their name."
     '(easycrypt-tactics-dangerous-face :foreground red))
 
   ;; Hooks
-  (add-hook 'after-init-hook #'(lambda () (enable-theme 'doom-nord-light))))
+  (add-hook 'after-init-hook #'(lambda () (unless (daemonp) (enable-theme 'doom-nord-light)))))
 
 (use-package solaire-mode
   :ensure t
@@ -2069,12 +2133,12 @@ that allows to include other templates by their name."
 
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-p" #'ece-print)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l p" #'ece-print)
-  (keymap-set easycrypt-ext-goals-mode-map "C-c l P" #'ece-print-prompt)
-  (keymap-set easycrypt-ext-goals-mode-map "C-c l l" #'ece-locate)
-  (keymap-set easycrypt-ext-goals-mode-map "C-c l L" #'ece-locate-prompt)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l P" #'ece-prompt-print)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l l" #'ece-prompt-locate)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l L" #'ece-prompt-locate)
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-s" #'ece-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l s" #'ece-search)
-  (keymap-set easycrypt-ext-goals-mode-map "C-c l S" #'ece-search-prompt)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l S" #'ece-prompt-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-e" 'ece-exec-map-prefix)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l e" 'ece-exec-map-prefix)
 
