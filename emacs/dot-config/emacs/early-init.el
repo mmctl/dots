@@ -30,7 +30,7 @@
           (right-fringe . 8)
           (left-divider-width . 3)
           (right-divider-width . 3)
-          (cursor-type . bar)
+          (cursor-type . box)
           ;; Non-Lucid builds: (alpha-background . 0.9)))
           (alpha . 0.9)))
 

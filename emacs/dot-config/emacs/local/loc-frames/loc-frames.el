@@ -41,14 +41,18 @@
     (set-face-attribute 'line-number-current-line frame :family "MonaspiceNe Nerd Font"))
    ((member "Monaspace Neon" (font-family-list))
     (set-face-attribute 'line-number frame :family "Monaspace Neon")
-    (set-face-attribute 'line-number-current-line frame :family "Monaspace Neon")))
+    (set-face-attribute 'line-number-current-line frame :family "Monaspace Neon"))
+   (t
+    (set-face-attribute 'default '(:family "Monospace" :height 110))))
   (cond
    ((member "MonaspiceKr Nerd Font" (font-family-list))
     (set-face-attribute 'fixed-pitch frame :family "MonaspiceKr Nerd Font"
                         :height 110 :weight 'medium))
    ((member "Monaspace Krypton" (font-family-list))
     (set-face-attribute 'fixed-pitch frame :family "Monaspace Krypton"
-                        :height 110 :weight 'medium)))
+                        :height 110 :weight 'medium))
+   (t
+    (set-face-attribute 'default '(:family "Monospace" :height 110))))
   (setopt display-line-numbers-width 3))
 
 

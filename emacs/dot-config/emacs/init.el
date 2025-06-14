@@ -287,9 +287,6 @@
 (keymap-global-set "C-p" #'backward-sexp)
 (keymap-global-set "C-n" #'forward-sexp)
 
-(keymap-global-set "C-S-p" #'backward-sentence)
-(keymap-global-set "C-S-n" #'forward-sentence)
-
 (keymap-global-set "C-w" #'other-window)
 
 (keymap-global-set "M-m" #'pop-to-mark-command)
@@ -591,6 +588,15 @@
   ;; Activation
   (which-key-mode 1))
 
+(use-package goggles
+  :ensure t
+
+  :hook (prog-mode text-mode)
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt goggles-pulse t))
+
 (use-package easy-kill
   :ensure t
 
@@ -598,7 +604,7 @@
          ("<remap> <mark-word>" . #'easy-mark))
 
   :init
-  ;; Setup and settings
+  ;; Setup and settings (before load)
   (setopt easy-kill-alist '((?w word           " ")
                             (?s sexp           "\n")
                             (?h list           "\n")
@@ -1287,60 +1293,6 @@ that allows to include other templates by their name."
   (setopt project-list-file PROJECT_LIST_FILE)
   (setopt project-mode-line t))
 
-
-(use-package projectile
-  :disabled t
-
-  :init
-  ;; Setup and settings (before load)
-  ;; Create and store projectile known projects file
-  (defconst PTILE_FILE (file-name-concat EMACS_DATA_DIR "projectile-bookmarks.eld")
-    "File where projectile's known projects are stored.")
-  (setopt projectile-known-projects-file PTILE_FILE)
-  (setopt projectile-keymap-prefix (kbd "C-c p")
-          projectile-mode-line-prefix " Ptile")
-
-  (setopt tags-revert-without-query t)
-  (setopt projectile-enable-caching t
-          projectile-sort-order 'recently-active
-          projectile-dirconfig-comment-prefix ?\#
-          projectile-find-dir-includes-top-level t
-          projectile-enable-idle-timer nil
-          projectile-current-project-on-switch 'move-to-end)
-
-  :config
-  ;; Keybindings
-  (keymap-set projectile-command-map "e" #'projectile-run-project)
-  (keymap-set projectile-command-map "p" #'projectile-switch-project)
-  (keymap-set projectile-command-map "P" #'projectile-switch-open-project)
-  (keymap-set projectile-command-map "q" #'projectile-compile-project)
-  (keymap-set projectile-command-map "r" #'projectile-recentf)
-  (keymap-set projectile-command-map "R" #'projectile-replace)
-  (keymap-set projectile-command-map "C-r" #'projectile-regenerate-tags)
-  (keymap-set projectile-command-map "w f" #'projectile-find-file-other-window)
-  (keymap-set projectile-command-map "w F" #'projectile-find-other-file-other-window)
-  (keymap-set projectile-command-map "w d" #'projectile-find-dir-other-window)
-  (keymap-set projectile-command-map "w D" #'projectile-dired-other-window)
-  (keymap-set projectile-command-map "w g" #'projectile-find-file-dwim-other-window)
-  (keymap-set projectile-command-map "w t" #'projectile-find-implementation-or-test-other-window)
-  (keymap-set projectile-command-map "w b" #'projectile-switch-to-buffer-other-window)
-  (keymap-set projectile-command-map "w B" #'projectile-display-buffer)
-  (keymap-set projectile-command-map "^ f" #'projectile-find-file-other-frame)
-  (keymap-set projectile-command-map "^ F" #'projectile-find-other-file-other-frame)
-  (keymap-set projectile-command-map "^ d" #'projectile-find-dir-other-frame)
-  (keymap-set projectile-command-map "^ D" #'projectile-dired-other-frame)
-  (keymap-set projectile-command-map "^ g" #'projectile-find-file-dwim-other-frame)
-  (keymap-set projectile-command-map "^ t" #'projectile-find-implementation-or-test-other-frame)
-  (keymap-set projectile-command-map "^ b" #'projectile-switch-to-buffer-other-frame)
-  (keymap-set projectile-command-map "s g" #'projectile-ripgrep)
-  (keymap-set projectile-command-map "s G" #'projectile-grep)
-  (keymap-set projectile-command-map "s s" #'projectile-ag)
-  (keymap-set projectile-command-map "s r" #'projectile-find-references)
-  (keymap-set projectile-command-map "x w" #'projectile-run-vterm-other-window)
-
-  ;; Activation
-  (projectile-mode 1))
-
 (use-package diff-hl
   :ensure t
   :pin melpa
@@ -1541,11 +1493,11 @@ that allows to include other templates by their name."
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
 
-  ;; Create and store org agenda file
-  (defconst ORG_AGENDA_FILE (file-name-concat ORG_DIR ".agenda_files")
-    "File containing locations of org agenda files.")
-  (unless (file-regular-p ORG_AGENDA_FILE)
-    (make-empty-file ORG_AGENDA_FILE t))
+  ;; Create and store org calendar file
+  (defconst ORG_CALENDAR_FILE (file-name-concat ORG_DIR "calendar.org")
+    "Default file for calendar events created with org.")
+  (unless (file-regular-p ORG_CALENDAR_FILE)
+    (make-empty-file ORG_CALENDAR_FILE t))
 
   ;; Create and store org (default) notes file
   (defconst ORG_NOTES_FILE (file-name-concat ORG_DIR "notes.org")
@@ -1559,6 +1511,18 @@ that allows to include other templates by their name."
   (unless (file-regular-p ORG_TODOS_FILE)
     (make-empty-file ORG_TODOS_FILE t))
 
+  ;; Create and store org (default) todos file
+  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
+    "Default file for todos created with org.")
+  (unless (file-regular-p ORG_TODOS_FILE)
+    (make-empty-file ORG_TODOS_FILE t))
+
+  ;; Create and store org (default) meetings file
+  (defconst ORG_MEETINGS_FILE (file-name-concat ORG_DIR "meetings.org")
+    "Default file for todos created with org.")
+  (unless (file-regular-p ORG_MEETINGS_FILE)
+    (make-empty-file ORG_MEETINGS_FILE t))
+
   (setopt org-default-notes-file ORG_NOTES_FILE)
 
   (setopt org-replace-disputed-keys t
@@ -1566,10 +1530,14 @@ that allows to include other templates by their name."
                               ([(shift down)] . [(meta n)])
                               ([(shift left)] . [(meta b)])
                               ([(shift right)] . [(meta f)])
-                              ([(control shift up)]	. [(meta shift p)])
-                              ([(control shift down)]	. [(meta shift n)])
-                              ([(control shift left)]	. [(meta shift b)])
-                              ([(control shift right)] . [(meta shift f)])))
+                              ([(control shift up)]	. [(control shift p)])
+                              ([(control shift down)]	. [(control shift n)])
+                              ([(control shift left)]	. [(control shift b)])
+                              ([(control shift right)] . [(control shift f)])
+                              ([(meta shift up)]	. [(meta shift p)])
+                              ([(meta shift down)]	. [(meta shift n)])
+                              ([(meta shift left)]	. [(meta shift b)])
+                              ([(meta shift right)] . [(meta shift f)])))
 
   (setopt org-return-follows-link t)
   (setopt org-support-shift-select t)
@@ -1586,7 +1554,7 @@ that allows to include other templates by their name."
             (:startgroup) ("Project") (:grouptags) ("proj@.+" . ?p) (:endgroup)
             (:startgroup) ("Area") (:grouptags) ("area@.+" . ?a) (:endgroup)
             ("administration" . ?A) ("event" . ?E) ("family-and-friends". ?f) ("finance" . ?F)
-            ("home" . ?H) ("matthias" . ?m) ("miscellaneous". ?M) ("partner" . ?P)
+            ("home" . ?H) ("matthias" . ?m) ("meeting" . ?M) ("miscellaneous". ?M) ("partner" . ?P)
             ("research" . ?r) ("resource" . ?R) ("study". ?s) ("teach" . ?t)
             ("travel" . ?T) ("work" . ?W)))
 
@@ -1602,25 +1570,40 @@ that allows to include other templates by their name."
              entry (file+headline ORG_NOTES_FILE "Notes")
              "* %?\nCreated: %U"
              :empty-lines 0)
-            ("N" "Note with context"
+            ("N" "Note (tag + context)"
              entry (file+headline ORG_NOTES_FILE "Notes")
-             "* %?%^g\nCreated: %U\nContext: %a\n%i"
+             "* %? %^g\nCreated: %U\n** Context: %a\n%i"
              :empty-lines 0)
             ("t" "Todo"
              entry (file+headline ORG_TODOS_FILE "Tasks")
              "* TODO [#B] %?\nCreated: %U"
              :empty-lines 0)
-            ("T" "Todo with context"
+            ("T" "Todo (tag + context)"
              entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %?%^g\nCreated: %U\nContext: %a\n%i"
+             "* TODO [#B] %? %^g\nCreated: %U\n** Context: %a\n%i"
              :empty-lines 0)
-            ("d" "Deadline (todo)"
+            ("d" "Todo with deadline"
              entry (file+headline ORG_TODOS_FILE "Tasks")
              "* TODO [#B] %?\nCreated: %U\nDeadline: %^T"
              :empty-lines 0)
-            ("D" "Deadline (todo) with context"
+            ("D" "Todo with deadline (tag + context)"
              entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %?%^g\nCreated: %U\nDeadline: %^T\nContext: %a\n%i"
+             "* TODO [#B] %? %^g\nCreated: %U\nDeadline: %^T\n** Context: %a\n%i"
+             :empty-lines 0)
+            ("c" "Calendar event"
+             entry (file+headline ORG_CALENDAR_FILE "Events")
+             "* %?\nCreated: %U\nStart: %^T\nEnd: %^T"
+             :empty-lines 0)
+            ("C" "Calendar event (tag + context)"
+             entry (file+headline ORG_CALENDAR_FILE "Events")
+             "* %? %^g\nCreated: %U\nStart: %^T\nEnd: %^T\n** Context:\n%i"
+             :empty-lines 0)
+            ("m" "Meeting"
+             entry (file+olp+datetree ORG_MEETINGS_FILE)
+             "* %? :meeting:%^g\nCreated: %U\n** Notes:%i\n** Action Items:\n*** TODO [#B] "
+             :tree-type week
+             :clock-in t
+             :clock-resume t
              :empty-lines 0)))
 
   :config
@@ -1630,9 +1613,8 @@ that allows to include other templates by their name."
   ;; Keybindings
   (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
 
-  (keymap-set org-capture-mode-map "C-c C-v" #'org-capture-finalize)
-  (keymap-set org-capture-mode-map "C-c C-r" #'org-capture-refile)
-  (keymap-set org-capture-mode-map "C-c C-q" #'org-capture-kill)
+  (with-eval-after-load 'org-capture
+    (keymap-set org-capture-mode-map "C-c C-v" #'org-capture-finalize))
 
   (keymap-unset org-read-date-minibuffer-local-map "C-v")
   (keymap-unset org-read-date-minibuffer-local-map "M-v")
@@ -1641,7 +1623,8 @@ that allows to include other templates by their name."
 
   ;; Hooks
   (add-hook 'org-mode-hook #'loc-setup-mix-mode)
-  (add-hook 'org-mode-hook #'org-indent-mode))
+  (add-hook 'org-mode-hook #'org-indent-mode)
+  (add-hook 'org-capture-mode-hook #'loc-setup-mix-mode))
 
 (use-package markdown-mode
   :ensure t
