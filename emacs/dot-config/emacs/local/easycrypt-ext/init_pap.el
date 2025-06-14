@@ -1,12 +1,12 @@
 ;; -*- lexical-binding: t -*-
 ;; Environment
-(defconst ECE_DIR (file-name-as-directory
-                   (file-name-concat user-emacs-directory "local/easycrypt-ext/"))
-  "Directory where `easycrypt-ext` package is located. (By default it is the
+(defconst ECE_DIR (file-name-as-directory (file-name-concat user-emacs-directory "local/easycrypt-ext/"))
+  "Directory where `easycrypt-ext` package is located. By default it is the
 local/easycrypt-ext/ directory, relative to your emacs configuration directory.
 You can find this directory by launching Emacs, pressing `C-h v' (i.e., `Control
 + h' followed by `v'), typing `user-emacs-directory', and press Return (i.e.,
-Enter).)")
+Enter). You can replace the above `(file-name-as-directory (file-name-concat ...))'
+form with a string containing the absolute path to the directory as well." )
 
 ;;; Add ECE_DIR to the load path, so we can, well, load it
 (add-to-list 'load-path ECE_DIR)
@@ -19,17 +19,16 @@ Enter).)")
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 
 ;;; Initialize package system
-(if (version< emacs-version "27.0")
-    (package-initialize)
-  (package-initialize t))
+(package-initialize)
 
-;;; Refresh package contents if needed
+;;; Install `use-package' if not already installed
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+;;; Refresh package contents if still needed
 (unless package-archive-contents
   (package-refresh-contents))
-
-;;; Install use-package if not already installed
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
 
 ;;; Ensure use-package is loaded
 (require 'use-package)
@@ -66,23 +65,24 @@ Enter).)")
   :ensure t
 
   :init
-
-  ;; Consider uncommenting the following if you want the completion pop-up
-  ;; to show up automatically (i.e., without explicitly calling it)
+  ;; CONSIDER
+  ;; Let completion pop-up show up automatically while you type
   ;; (setopt corfu-auto t) ; make pop-up automatic
-  ;; (setopt corfu-preselect 'valid) ; select first candidate on pop-up
   ;; (setopt corfu-on-exact-match nil) ; don't automatically complete on single match
 
   :config
-  ;; Consider uncommenting the following if think selecting a completion
-  ;; shouldn't use your regular movement/editing keybindings.
-  ;; May be especially annoying if you have an automatic pop-up
-  ;; (keymap-unset corfu-map "RET") ; Don't use return/enter for accepting
-  ;; (keymap-unset corfu-map "<up>") ; Don't use up arrow for going up
-  ;; (keymap-unset corfu-map "<down>") ; Don't use up arrow for going up
-  ;; (keymap-set corfu-map "C-p" #'corfu-previous) ; Example: Use `Control + p' for going up
-  ;; (keymap-set corfu-map "C-n" #'corfu-next) ; Example: Use `Control + n' for going down
-  ;; (keymap-set corfu-map "C-v" #'corfu-next) ; Example: Use `Control + v' for accepting
+  ;; CONSIDER
+  ;; Change completion keybindings to not use up/down arrow and return/enter
+  ;; for performing actions in the pop-up. This may especially be
+  ;; worthwhile if you have the pop-up show up automatically.
+  ;; (keymap-unset corfu-map "RET") ; Don't use return/enter for inserting a completion candidate
+  ;; (keymap-unset corfu-map "<up>") ; Don't use up arrow for going up in the pop-up
+  ;; (keymap-unset corfu-map "<remap> <previous-line>") ; Don't use default "previous line command" for going up in the pop-up
+  ;; (keymap-unset corfu-map "<down>") ; Don't use down arrow for going down in the pop-up
+  ;; (keymap-unset corfu-map "<remap> <next-line>") ; Don't use default "next line command" for going down in the pop-up
+  ;; (keymap-set corfu-map "C-p" #'corfu-previous) ; Example: Use `Control + p' for going up in the pop-up
+  ;; (keymap-set corfu-map "C-n" #'corfu-next) ; Example: Use `Control + n' for going down in the pop-up
+  ;; (keymap-set corfu-map "C-v" #'corfu-insert) ; Example: Use `Control + v' for inserting a completion candidate
   )
 
 ;; Proof assistants
@@ -128,39 +128,17 @@ Enter).)")
 (use-package easycrypt-ext
   :ensure nil ; Provided locally
 
-  :hook (easycrypt-mode . ece-setup)
+  :hook ((easycrypt-mode . easycrypt-ext-mode)
+         (easycrypt-goals-mode . easycrypt-ext-goals-mode)
+         (easycrypt-response-mode . easycrypt-ext-response-mode))
 
   :init
-
-  ;; Enable enhanced (but still ad-hoc) indentation support for EasyCrypt.
-  ;; By default, aligns a line to the first non-blank preceding line.
-  ;; Roughly speaking, indents (by `tab-width`) if (1) inside an code/expression enclosure
-  ;; (e.g., between ( and ), [ and ], or { and }), or (2) inside an
-  ;; unfinished specification (e.g., lemma statement that wasn't yet terminated with a `.`).
-  ;; Also, automatically de-indents upon insertion of (1) a }, ), or ] if it is the first char
-  ;; on a line and closes an enclosure (opened with {, (, or [), or (2) a . if it is preceded by
-  ;; `proof` or `qed`.
+  ;; Enable enhanced (but still ad-hoc) indentation for EasyCrypt.
+  ;; See documentation of indentation-related functions in `easycrypt-ext.el'
+  ;; for details on the indentation behavior (a good starting point is `ece--indent-level').
   ;; Can disable by setting to `nil`.
   (setopt ece-enable-indentation t)
-  ;; Enable suggested keybindings for indentation-related commands in EasyCrypt.
-  ;; This makes the tab key perform "basic" indentation, as you would normally expect
-  ;; in most other editors. Specifically, it simply inserts a tab character (of `tab-width`).
-  ;; Correspondingly, pressing the tab key while holding Shift does the opposite (but
-  ;; de-indents the whole line if there is no white-space to remove at point).
-  ;; When having a region selected, these will insert (resp. remove) a tab
-  ;; at the beginning of each line in the region, and furthermore select the full region.
-  ;; The original command bound to the tab key (i.e., `indent-for-tab-command`) is
-  ;; still bound to `M-i` (i.e., `Meta + i`).
-  ;; Further, binds the return key (i.e., enter) to the `newline-and-indent` command
-  ;; which, well, inserts a newline and indents it. Normally, return is bound to `newline`,
-  ;; and `electric-indent-mode` indents both the current line and newline, which our
-  ;; indentation is not consistent enough for (I think, feel free to try out).
-  ;; The command only inserting a newline without indenting (`newline`) is bound
-  ;; to `S-<return>`, i.e., pressing return while holding the Shift key.
-  ;; Can disable by setting to `nil`.
-  ;; (Even when disabled, can still bind any of these commands to keys of your choice)
-  (setopt ece-enable-indentation-keybindings t)
-  ;; Enable completion for EasyCrypt keywords (depends on `cape`, see above).
+  ;; Enable completion for EasyCrypt keywords (depends on `cape', see above).
   ;; This essentially adds all keywords in EasyCrypt to the `cape-keyword-list` (but
   ;; only for EasyCrypt mode, of course), after which the `cape-keyword`
   ;; completion-at-point function will return completions for these keywords.
@@ -171,7 +149,7 @@ Enter).)")
   ;; already existing settings you may have w.r.t. completions.
   ;; For a complete setup, see the more elaborate example initialization files provided.
   ;; Can disable by setting to `nil`.
-  (setopt ece-enable-keywords-completion t)
+  (setopt ece-enable-keyword-completion t)
   ;; Enable code templates (snippets) for EasyCrypt (depends on `tempel`, see above).
   ;; This essentially loads all templates in `easycrypt-ext-templates.eld` into `tempel`,
   ;; allowing you to insert, expand, or complete templates using
@@ -183,28 +161,10 @@ Enter).)")
   ;; For a complete setup, see the more elaborate example initialization files provided.
   ;; Can disable by setting to `nil`.
   (setopt ece-enable-templates t)
-  ;; Enable keybindings for inserting EasyCrypt (regular) templates (depends on `tempel, see above).
-  ;; Specifically, this gives you a whole map of (keybindings inserting) templates that you can
-  ;; access via `C-c l t` (i.e., `Control + c`, followed by `l`, followed by `t`).
-  ;; For example, `C-c l t e` will insert a nicely formatted `equiv` expression.
-  ;; Can disable by setting to `nil`.
-  ;; (Even when disabled, can bind this map to any other keybinding. The map's variable name is
-  ;; `ece-template-map` with prefix commmand `'ece-template-map-prefix`)
-  (setopt ece-enable-templates-keybindings t)
-  ;; Enable informative code templates for EasyCrypt (depends on `tempel`, see above).
-  ;; Analogous to `ece-enable-templates`, but for the (informative) templates defined in
-  ;; `easycrypt-ext-templates-info.eld`.
+  ;; Enable informative code templates for EasyCrypt (depends on `tempel', see above).
+  ;; Analogous to `ece-enable-templates', but for the (informative) templates defined in
+  ;; `easycrypt-ext-templates-info.eld'.
   (setopt ece-enable-templates-info t)
-  ;; Enable informative code templates for EasyCrypt (depends on `tempel`, see above).
-  (setopt ece-enable-auxiliary-functionality-keybindings t)
-  ;; Disable EasyCrypt theme extension (depends on `doom-themes`, see above).
-  ;; Can be set to 'dark, 'light, or nil (for a dark, a light, or no theme, respectively.)
-  ;; Note that, in Emacs, themes are applied globally, i.e., to all buffers in the current
-  ;; Emacs session. Thus, if you don't want your theme to be overwritten in other buffers
-  ;; (or at all), then you can keep this disabled (by setting to `nil`).
-  ;; (The themes should also look good in most other situations, though, so you might
-  ;; try it out.)
-  (setopt ece-enable-theme nil)
 
   :config
   ;; Enable mode to make use of repeat maps, which allow you to
@@ -213,5 +173,5 @@ Enter).)")
   ;; Note that this is a global (minor) mode, i.e., it will apply to all
   ;; buffers managed by the current Emacs session. Thus, if you don't want
   ;; this behavior in other buffers (in the same session as you are doing EasyCrypt),
-  ;; then you can disable this by changing the 1 to -1 (or remove it the whole form).
+  ;; then you can disable this by changing the 1 to -1 (or remove it altogether).
   (repeat-mode 1))
