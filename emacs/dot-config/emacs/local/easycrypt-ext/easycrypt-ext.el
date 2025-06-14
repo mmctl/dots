@@ -1416,42 +1416,42 @@ to their global defaults."
   "Enables EasyCrypt Ext keyword completion in all EasyCrypt buffers."
   (interactive)
   (ece--configure-keyword-completion t)
-  (message "EasyCrypt Ext keyword completion enabled in all (EasyCrypt) buffers!"))
+  (message "EasyCrypt Ext keyword completion enabled in all (EasyCrypt Ext) buffers!"))
 
 ;;;###autoload
 (defun ece-disable-keyword-completion ()
   "Disables EasyCrypt Ext keyword completion in all EasyCrypt buffers."
   (interactive)
   (ece--configure-keyword-completion nil)
-  (message "EasyCrypt Ext keyword completion disabled in all (EasyCrypt) buffers!"))
+  (message "EasyCrypt Ext keyword completion disabled in all (EasyCrypt Ext) buffers!"))
 
 ;;;###autoload
 (defun ece-enable-templates ()
   "Enables EasyCrypt Ext templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates t)
-  (message "EasyCrypt Ext templates enabled in all (EasyCrypt) buffers!"))
+  (message "EasyCrypt Ext templates enabled in all (EasyCrypt Ext) buffers!"))
 
 ;;;###autoload
 (defun ece-disable-templates ()
   "Disables EasyCrypt Ext templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates nil)
-  (message "EasyCrypt Ext templates disabled in all (EasyCrypt) buffers!"))
+  (message "EasyCrypt Ext templates disabled in all (EasyCrypt Ext) buffers!"))
 
 ;;;###autoload
 (defun ece-enable-templates-info ()
   "Enables EasyCrypt Ext informative templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates-info t)
-  (message "EasyCrypt Ext informative templates enabled in all (EasyCrypt) buffers!"))
+  (message "EasyCrypt Ext informative templates enabled in all (EasyCrypt Ext) buffers!"))
 
 ;;;###autoload
 (defun ece-disable-templates-info ()
   "Disables EasyCrypt Ext informative templates in all EasyCrypt buffers."
   (interactive)
   (ece--configure-templates-info nil)
-  (message "EasyCrypt Ext informative templates disabled in all (EasyCrypt) buffers!"))
+  (message "EasyCrypt Ext informative templates disabled in all (EasyCrypt Ext) buffers!"))
 
 ;;;###autoload
 (defun ece-reset-to-defaults ()
@@ -1463,7 +1463,7 @@ global defaults in all EasyCrypt buffers."
   (ece--configure-keyword-completion (default-value 'ece-keyword-completion))
   (ece--configure-templates (default-value 'ece-templates))
   (ece--configure-templates-info (default-value 'ece-templates-info))
-  (message "EasyCrypt Ext options reset to their default values in all (EasyCrypt) buffers!"))
+  (message "EasyCrypt Ext options reset to their default values in all (EasyCrypt Ext) buffers!"))
 
 
 ;; Keymaps
@@ -1573,7 +1573,111 @@ global defaults in all EasyCrypt buffers."
   "l" #'bufhist-last
   "d" #'bufhist-delete)
 
-;;; Session setup/teardown
+;; Menus
+;;; Generation (macro)
+(defmacro ece--easy-menu-gen (symb map shell exec options &optional submode)
+  `(easy-menu-define ,symb ,map
+     ,(format "Menu bar and mode line menu (clickable) for `easycrypt-ext-mode%s'."
+              (if (stringp submode) (concat "-" submode) ""))
+     '(,(format "EasyCrypt Ext%s" (if (stringp submode) (format " (%s)" submode) ""))
+       :visible t
+       :active t
+       :help ,(format "Menu exposing functionality provided by EasyCrypt Ext%s."
+                      (if (stringp submode) (format " (%s)" submode) ""))
+       ,@(append
+          (when shell
+           (list
+            ["Locate" ece-locate
+             :help "Locate the item at cursor in the current EasyCrypt context."]
+            ["Locate (prompt)" ece-prompt-locate
+             :help "Locate an item of choice in the current EasyCrypt context."]
+            ["Print" ece-print
+             :help "Print the item at cursor from the current EasyCrypt context."]
+            ["Print (prompt)" ece-prompt-print
+             :help "Print an item of choice from the current EasyCrypt context."]
+            ["Search" ece-search
+             :help "Search for known axioms/lemmas from the current EasyCrypt context containing the item at cursor."]
+            ["Search (prompt)" ece-prompt-search
+             :help "Search for known axioms/lemmas from the current EasyCrypt context containing items of choice."]
+            (when (or exec options) "-----")))
+          (when exec
+            (list
+             '("External (\"command line\") commands"
+               :visible t
+               :active t
+               ["Compile file" ece-compile-file
+                :help "Check current EasyCrypt file."]
+               ["Compile directory/project" ece-compile-dir
+                :help "Check EasyCrypt files in current directory and its subdirectories."]
+               ["Compile (prompt)" ece-compile
+                :help "Check EasyCrypt file(s) of choice."]
+               "-----"
+               ["Generate documentation file" ece-docgen-file
+                :help "Generate documentation for current EasyCrypt file."]
+               ["Generate documentation directory/project" ece-docgen-dir
+                :help "Generate documentation for EasyCrypt files in current directory and its subdirectories."]
+               ["Generate documentation" ece-docgen
+                :help "Generate documentation for EasyCrypt file(s) of choice."]
+               "-----"
+               ["Print help (from executable)" ece-help
+                :help "Print help information as provided by the EasyCrypt executable (through \"--help\")."]
+               "-----"
+               ["Run test scenario (default)" ece-runtest-dflt
+                :help "Run default test scenario (for current EasyCrypt file)."]
+               ["Run test scenario (prompt)" ece-runtest
+                :help "Run test scenario of choice."])))
+          (when options
+            (list
+             '("Configuration/Options"
+               :visible t
+               :active t
+               ["Toggle enhanced indentation (local)" ece-toggle-indentation-local
+                :help "Toggle enhanced indentation in this buffer."
+                :style toggle
+                :selected ece-indentation]
+               ["Enable enhanced indentation (global)" ece-enable-indentation
+                :help "Enable enhanced indentation in all EasyCrypt Ext buffers."]
+               ["Disable enhanced indentation (global)" ece-disable-indentation
+                :help "Disable enhanced indentation in all EasyCrypt Ext buffers."]
+               "-----"
+               ["Toggle keyword completion (local)" ece-toggle-keyword-completion-local
+                :help "Toggle keyword completion in this buffer."
+                :style toggle
+                :selected ece-keyword-completion]
+               ["Enable keyword completion (global)" ece-enable-keyword-completion
+                :help "Enable keyword completion in all EasyCrypt Ext buffers."]
+               ["Disable keyword completion (global)" ece-disable-keyword-completion
+                :help "Disable keyword completion in all EasyCrypt Ext buffers."]
+               "-----"
+               ["Toggle templates (local)" ece-toggle-templates-local
+                :help "Toggle templates in this buffer."
+                :style toggle
+                :selected ece-templates]
+               ["Enable templates (global)" ece-enable-templates
+                :help "Enable templates in all EasyCrypt Ext buffers."]
+               ["Disable templates (global)" ece-disable-templates
+                :help "Disable templates in all EasyCrypt Ext buffers."]
+               "-----"
+               ["Toggle informative templates (local)" ece-toggle-templates-info-local
+                :help "Toggle informative templates in this buffer."
+                :style toggle
+                :selected ece-templates-info]
+               ["Enable informative templates (global)" ece-enable-templates-info
+                :help "Enable informative templates in all EasyCrypt Ext buffers."]
+               ["Disable informative templates (global)" ece-disable-templates-info
+                :help "Disable informative templates in all EasyCrypt Ext buffers."]
+               "-----"
+               ["Reset settings (local)" ece-reset-to-defaults-local
+                :help "Reset EasyCrypt Ext settings to their defaults in this buffer."]
+               ["Reset settings (global)" ece-reset-to-defaults
+                :help "Reset EasyCrypt Ext settings to their defaults in all EasyCrypt Ext buffers."])))))))
+
+(ece--easy-menu-gen easycrypt-ext-mode-menu easycrypt-ext-mode-map t t t)
+(ece--easy-menu-gen easycrypt-ext-goals-mode-menu easycrypt-ext-goals-mode-map t t nil "goals")
+(ece--easy-menu-gen easycrypt-ext-response-mode-menu easycrypt-ext-response-mode-map t t nil "response")
+
+
+;; Session setup/teardown
 ;;;###autoload
 (defun ece-setup ()
   "Sets up EasyCrypt extensions."
