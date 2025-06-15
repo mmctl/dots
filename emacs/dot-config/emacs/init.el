@@ -912,7 +912,7 @@
   :init
   ;; Setup and settings (before load)
   (setopt cape-dict-limit 50
-          cape-dabbrev-check-other-buffers #'cape--buffers-major-mode
+          cape-dabbrev-check-other-buffers #'cape-same-mode-buffers
           cape-file-prefix '("file:" "f:")
           cape-file-directory-must-exist t)
 
@@ -2096,7 +2096,6 @@ that allows to include other templates by their name."
   (setopt ece-keyword-completion t)
   (setopt ece-templates t)
   (setopt ece-templates-info nil)
-  (setopt ece-templates-prefix-key "C-c l t")
 
   :config
   ;; Keybindings
