@@ -8,12 +8,12 @@ a generic framework for implementing such front-ends.
 This package aims to add useful extensions to this EasyCrypt front-end.
 Key features include the following.
 - Improved (but still ad-hoc) indentation.
-- Keyword completion (requires [`cape`](https://github.com/minad/cape), specifically `cape-keyword`).
-- Code templates (requires [`tempel`](https://github.com/minad/tempel)).
-- Informative code templates (requires
-  [`tempel`](https://github.com/minad/tempel)). Contrary to traditional code
+- Keyword completion; requires [`cape`](https://github.com/minad/cape), specifically `cape-keyword`.
+- Templates ("code snippets"); requires [`tempel`](https://github.com/minad/tempel).
+- Informative templates ("code snippets"); requires
+  [`tempel`](https://github.com/minad/tempel). Contrary to "regular"
   templates, which automatically insert boilerplate code and allow you to
-  quickly navigate and fill in fields, informative code templates mainly aim to
+  quickly navigate and fill in fields, informative templates mainly aim to
   provide guidance on the type of information expected in each field. These
   templates serve more as documentation or reminders rather than just code
   insertion tools.
