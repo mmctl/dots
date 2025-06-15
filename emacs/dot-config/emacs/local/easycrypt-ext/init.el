@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t -*-
 ;; Environment
+;; CHECK
 (defconst ECE_DIR
   (file-name-as-directory (file-name-concat user-emacs-directory "local/easycrypt-ext/"))
   "Directory where `easycrypt-ext` package is located. By default it is the
@@ -200,32 +201,33 @@ form with a string containing the absolute path to the directory as well." )
   ;; Add `tempel-complete' and `cape-keyword' as completion-at-point functions
   ;; considered simultaneously (rather than sequentially, which is the default)
   ;; whenever you enter `easycrypt-mode', e.g., by opening an EasyCrypt file.
-  ;; (add-hook 'easycrypt-ext-mode-hook
-  ;;           #'(lambda ()
-  ;;               (setq-local completion-at-point-functions
-  ;;                           (cons (cape-wrap-super #'tempel-complete #'cape-keyword)
-  ;;                                 completion-at-point-functions))))
+  (add-hook 'easycrypt-ext-mode-hook
+            #'(lambda ()
+                (setq-local completion-at-point-functions
+                            (cons (cape-wrap-super #'tempel-complete #'cape-keyword)
+                                  completion-at-point-functions))))
 
   ;; CONSIDER (EXAMPLE: completion-at-point-functions)
   ;; As the previous example, but *also* add `cape-dabbrev', which provides
   ;; completion candidates for text in current buffers. This allows you to
   ;; also get completions for identifiers (of, e.g., operators, modules, etc.)
   ;; somewhere in an opened EasyCrypt file.
-  (add-hook 'easycrypt-ext-mode-hook
-            #'(lambda ()
-                (setq-local completion-at-point-functions
-                            (cons (cape-capf-super #'tempel-complete #'cape-keyword #'cape-dabbrev)
-                                  completion-at-point-functions))))
+  ;; (add-hook 'easycrypt-ext-mode-hook
+  ;;           #'(lambda ()
+  ;;               (setq-local completion-at-point-functions
+  ;;                           (cons (cape-capf-super #'tempel-complete #'cape-keyword #'cape-dabbrev)
+  ;;                                 completion-at-point-functions
+                                  ))))
 
   ;; CONSIDER
   ;; Enable Corfu automatically when opening an EasyCrypt file
-  (add-hook 'easycrypt-ext-mode-hook #'corfu-mode)
+  ;; (add-hook 'easycrypt-ext-mode-hook #'corfu-mode)
 
   ;; CONSIDER (EXAMPLE: keybindings)
-  ;; To prevent unwanted clashes with other keybindings (by Proof-General
+  ;; To prevent unwanted clashes with other keybindings (by Proof General
   ;; or otherwise), all keybindings of `easycrypt-ext' are prefixed with
   ;; `C-c C-y'. However, depending on your personal keybindings and
-  ;; how many of the bindings provided by Proof-General you use,
+  ;; how many of the bindings provided by Proof General you use,
   ;; there may be more convenient alternatives.
   ;; The following is an example rebinding every top-level keybinding
   ;; provided by `easycrypt-ext', including those accessing the

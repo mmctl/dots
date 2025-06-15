@@ -1,9 +1,9 @@
-;;; easycrypt-ext.el --- EasyCrypt Extensions (for proof-General) -*- lexical-binding: t; -*-
+;;; easycrypt-ext.el --- EasyCrypt Extensions (for Proof General) -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2025 Matthias Meijers
 
-;; Author: Matthias Meijers <research@mmeijers.com>
-;; Maintainer: Matthias Meijers <research@mmeijers.com>
+;; Author: Matthias Meijers <kernel@mmeijers.com>
+;; Maintainer: Matthias Meijers <kernel@mmeijers.com>
 ;; Created: 22 April 2025
 
 ;; Keywords: abbrev, convenience, mouse, tools
@@ -28,19 +28,35 @@
 ;; it features an interactive theorem prover with a front-end implemented
 ;; in `Proof General'.
 ;; This package aims to add useful extensions to this EasyCrypt front-end.
-;; Key features include the following:
-;; - improved (but still ad-hoc) indentation;
-;; - keyword completion (requires `cape', specifically `cape-keyword');
-;; - code templates (requires `tempel');
-;; - informative templates (requires `tempel'); and
-;; - auxiliary functionality for dynamic printing, searching, and locating
-;;   of items through keybindings or mouse clicks (eliminating the need to manually
-;;   type the corresponding commands).
+;; Key features include the following.
+;; - Improved (but still ad-hoc) indentation.
+;; - Keyword completion (requires `cape', specifically `cape-keyword').
+;; - Code templates (requires `tempel').
+;; - Informative templates (requires `tempel').
+;; - Executing proof shell commands through keybindings or mouse clicks
+;;   (eliminating the need to manually type the corresponding commands).
+;;   Supported commands are `print', `search', and `locate'.
+;;   This functionality is also made accessible through the
+;;   appropriate menus (menu bar and mode line).
+;; - Executing command line (sub)commands through keybindings.
+;;   Supported commands are `compile', `docgen', `runtest', `why3config',
+;;   and `--help' (which is actually an option, but you get the point).
+;;   Where relevant, this functionality is extended to the directory/project
+;;   level, enabling you to execute a (sub)commands for each EasyCrypt
+;;   file in a directory (tree).
+;;   This functionality is also made accessible through the
+;;   appropriate menus (menu bar and mode line).
+;;
 ;; These features are (partially) implemented through three minor modes, one
 ;; for each of the major modes provided by the existing front-end:
 ;; - `easycrypt-ext-mode', for `easycrypt-mode';
 ;; - `easycrypt-ext-goals-mode', for `easycrypt-goals-mode'; and
 ;; - `easycrypt-ext-response-mode', for `easycrypt-response-mode'.
+;;
+;; The default values for the user options are customizable via Emacs's
+;; usual customization interface, but all options can additionally
+;; be enabled/disabled/toggled via commands accessible through
+;; key bindings and the appropriate menus (menu bar and mode line).
 ;;
 ;; For setup and usage instructions, see: TODO
 ;;
@@ -48,7 +64,7 @@
 
 ;; Requirements
 ;;; External packages
-(require 'easycrypt) ; Provided by proof-general
+(require 'proof) ; Provided by proof-general
 
 ;;; Local
 (require 'easycrypt-ext-consts)
@@ -1467,9 +1483,9 @@ global defaults in all EasyCrypt buffers."
 
 
 ;; Keymaps
-;;; Execution (subcommands)
+;;; Executable (subcommands)
 (defvar-keymap ece-exec-map
-  :doc "Keymap for executing EasyCrypt subcommands (in separate processes)"
+  :doc "Keymap for executing EasyCrypt (command line) subcommands."
   :prefix 'ece-exec-map-prefix
   "c" #'ece-compile-file
   "C" #'ece-compile-dir
