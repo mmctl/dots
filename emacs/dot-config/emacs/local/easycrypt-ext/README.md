@@ -10,7 +10,13 @@ Key features include the following.
 - Improved (but still ad-hoc) indentation.
 - Keyword completion (requires [`cape`](https://github.com/minad/cape), specifically `cape-keyword`).
 - Code templates (requires [`tempel`](https://github.com/minad/tempel)).
-- Informative templates (requires [`tempel`](https://github.com/minad/tempel)).
+- Informative code templates (requires
+  [`tempel`](https://github.com/minad/tempel)). Contrary to traditional code
+  templates, which automatically insert boilerplate code and allow you to
+  quickly navigate and fill in fields, informative code templates mainly aim to
+  provide guidance on the type of information expected in each field. These
+  templates serve more as documentation or reminders rather than just code
+  insertion tools.
 - Executing proof shell commands through keybindings or mouse clicks
   (eliminating the need to manually type the corresponding commands).
   Supported commands are `print`, `search`, and `locate`.
@@ -95,22 +101,41 @@ bar and mode line.
 
 ### Executable (Command Line)
 
-| Command               | Keybinding      | Description                                                                           |
-|:----------------------|:----------------|:--------------------------------------------------------------------------------------|
-| `ece-compile-file`    | `C-c C-y e c`   | `compile` (check) visited EasyCrypt file                                              |
-| `ece-compile-dir`     | `C-c C-y e C`   | `compile` (check) EasyCrypt files in visited directory                                |
-| `ece-compile`         | `C-c C-y e C-c` | Prompt for EasyCrypt file(s) to `compile` (check)                                     |
-| `ece-docgen-file`     | `C-c C-y e d`   | `docgen` (generate documentation) visited EasyCrypt file                              |
-| `ece-docgen-dir`      | `C-c C-y e D`   | `docgen` (generate documentation) EasyCrypt files in visited directory                |
-| `ece-docgen`          | `C-c C-y e C-d` | Prompt for EasyCrypt file(s) to `docgen` (generate documentation)                     |
-| `ece-help`            | `C-c C-y e h`   | Print help (as output by `easycrypt --help`                                           |
-| `ece-runtest-dflt`    | `C-c C-y e r`   | `runtest` (test) using default test file and scenario (relative to visited directory) |
-| `ece-runtest`         | `C-c C-y e R`   | Prompt for configuration to use with `runtest` (test)                                 |
-| `ece-why3config-dflt` | `C-c C-y e w`   | `why3config` (configure Why3) using default configuration file                        |
-| `ece-why3config-dflt` | `C-c C-y e W`   | Prompt for configuration file to use with `why3config` (configure Why3).              |
+| Command               | Keybinding      | Description                                                                             |
+|:----------------------|:----------------|:----------------------------------------------------------------------------------------|
+| `ece-compile-file`    | `C-c C-y e c`   | `compile` (check) visited EasyCrypt file                                                |
+| `ece-compile-dir`     | `C-c C-y e C`   | `compile` (check) EasyCrypt files in visited directory and its children                 |
+| `ece-compile`         | `C-c C-y e C-c` | Prompt for EasyCrypt file(s) to `compile` (check)                                       |
+| `ece-docgen-file`     | `C-c C-y e d`   | `docgen` (generate documentation) visited EasyCrypt file                                |
+| `ece-docgen-dir`      | `C-c C-y e D`   | `docgen` (generate documentation) EasyCrypt files in visited directory and its children |
+| `ece-docgen`          | `C-c C-y e C-d` | Prompt for EasyCrypt file(s) to `docgen` (generate documentation)                       |
+| `ece-help`            | `C-c C-y e h`   | Print help (as output by `easycrypt --help`)                                            |
+| `ece-runtest-dflt`    | `C-c C-y e r`   | `runtest` (test) using default test file and scenario (relative to visited directory)   |
+| `ece-runtest`         | `C-c C-y e R`   | Prompt for configuration to use with `runtest` (test)                                   |
+| `ece-why3config-dflt` | `C-c C-y e w`   | `why3config` (configure Why3) using default configuration file                          |
+| `ece-why3config`      | `C-c C-y e W`   | Prompt for configuration file to use with `why3config` (configure Why3).                |
 
 ### Options
 
+| Command                               | Keybinding      | Description                                                                     |
+|:--------------------------------------|:----------------|:--------------------------------------------------------------------------------|
+| `ece-toggle-indentation-local`        | `C-c C-y o i`   | Toggle enhanced indentation in current buffer                                   |
+| `ece-enable-indentation`              | `C-c C-y o I`   | Enable enhanced indentation in all EasyCrypt Ext buffers                        |
+| `ece-disable-indentation`             | `C-c C-y o C-i` | Disable enhanced indentation in all EasyCrypt Ext buffers                       |
+| `ece-toggle-indentation-style-local`  | `C-c C-y o s`   | Toggle indentation style in current buffer                                      |
+| `ece-toggle-keyword-completion-local` | `C-c C-y o k`   | Toggle keyword completion in current buffer                                     |
+| `ece-enable-keyword-completion`       | `C-c C-y o K`   | Enable keyword completion in all EasyCrypt Ext buffers                          |
+| `ece-disable-keyword-completion`      | `C-c C-y o C-k` | Disable keyword completion in all EasyCrypt Ext buffers                         |
+| `ece-toggle-templates-local`          | `C-c C-y o t`   | Toggle templates in current buffer                                              |
+| `ece-enable-templates`                | `C-c C-y o T`   | Enable templates in all EasyCrypt Ext buffers                                   |
+| `ece-disable-templates`               | `C-c C-y o C-t` | Disable templates in all EasyCrypt Ext buffers                                  |
+| `ece-toggle-templates-info-local`     | `C-c C-y o o`   | Toggle informative templates in current buffer                                  |
+| `ece-enable-templates-info`           | `C-c C-y o O`   | Enable informative templates in all EasyCrypt Ext buffers                       |
+| `ece-disable-templates-info`          | `C-c C-y o C-o` | Disable informative templates in all EasyCrypt Ext buffers                      |
+| `ece-reset-to-defaults-local`         | `C-c C-y o r`   | Reset all EasyCrypt Ext settings to their defaults in current buffer            |
+| `ece-disable-templates-info`          | `C-c C-y o R`   | Reset all EasyCrypt Ext settings to their defaults in all EasyCrypt Ext buffers |
 
 ### Miscellaneous
-
+conditional:
+- templates map
+- indentation
