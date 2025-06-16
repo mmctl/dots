@@ -82,6 +82,9 @@ Below are the most relevant available commands and their default keybindings.
 most commands can also be accessed through the corresponding menus in the menu
 bar and mode line.
 
+TODO: comment about finding documentation in Emacs and file
+TODO
+
 > To avoid conflicts with other keybindings (from Proof General or
 > otherwise), all keybindings for this package begin with the prefix `C-c C-y`.
 > Depending on your personal keybindings and how many Proof General
@@ -90,14 +93,14 @@ bar and mode line.
 
 ### Proof Shell
 
-| Command             | Keybinding  | Description                     |
-|:--------------------|:------------|:--------------------------------|
-| `ece-locate`        | `C-c C-y l` | `locate` item at point or click |
-| `ece-print`         | `C-c C-y p` | `print` item at point or click  |
-| `ece-search`        | `C-c C-y p` | `search` item at point or click |
-| `ece-prompt-locate` | `C-c C-y L` | Prompt for item to `locate`     |
-| `ece-prompt-print`  | `C-c C-y P` | Prompt for item to `print`      |
-| `ece-prompt-search` | `C-c C-y S` | Prompt for item to `search`     |
+| Command             | Keybinding                      | Description                     |
+|:--------------------|:--------------------------------|:--------------------------------|
+| `ece-locate`        | `C-c C-y l` and `C-S-<mouse 2>` | `locate` item at point or click |
+| `ece-print`         | `C-c C-y p` and `C-S-<mouse 1>` | `print` item at point or click  |
+| `ece-search`        | `C-c C-y p` and `C-S-<mouse 3>` | `search` item at point or click |
+| `ece-prompt-locate` | `C-c C-y L`                     | Prompt for item to `locate`     |
+| `ece-prompt-print`  | `C-c C-y P`                     | Prompt for item to `print`      |
+| `ece-prompt-search` | `C-c C-y S`                     | Prompt for item to `search`     |
 
 ### Executable (Command Line)
 

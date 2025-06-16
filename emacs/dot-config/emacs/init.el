@@ -1026,7 +1026,10 @@ that allows to include other templates by their name."
     (when (eq (car-safe elt) 'i)
       (when-let (template (alist-get (cadr elt) (tempel--templates)))
         (cons 'l template))))
-  (add-to-list 'tempel-user-elements #'a-tempel-include))
+  (add-to-list 'tempel-user-elements #'a-tempel-include)
+
+  ;; Activation
+  (global-tempel-abbrev-mode 1))
 
 ;;; Actions
 (use-package move-text
@@ -1472,7 +1475,7 @@ that allows to include other templates by their name."
 
   :preface
   (defvar-keymap an-org-map
-    :doc "Keymap for org"
+    :doc "Keymap for org (outside `org-mode')"
     :prefix 'an-org-map-prefix)
   (keymap-global-set "C-c o" 'an-org-map-prefix)
 
@@ -1545,17 +1548,25 @@ that allows to include other templates by their name."
   (setopt org-log-done 'time
           org-log-refile 'time)
 
-  (setopt org-refile-allow-creating-parent-nodes 'confirm)
+  (setopt org-refile-allow-creating-parent-nodes 'confirm
+          org-refile-targets '((nil . (:level . 1))
+                               (nil . (:tag . "rftarget"))
+                               (org-agenda-files . (:level . 1))
+                               (org-agenda-files . (:tag . "rftarget"))))
 
   (setopt org-tag-alist
           '((:startgroup)
             ("@work" . ?w) ("@home" . ?h) ("@online" . ?o) ("@elsewhere" . ?e)
             (:endgroup)
-            (:startgroup) ("Project") (:grouptags) ("proj@.+" . ?p) (:endgroup)
-            (:startgroup) ("Area") (:grouptags) ("area@.+" . ?a) (:endgroup)
+            (:startgrouptag)
+            ("Project") (:grouptags) ("{proj@.+}" . ?p)
+            (:endgrouptag)
+            (:startgrouptag)
+            ("Area") (:grouptags) ("{area@.+}" . ?a)
+            (:endgrouptag)
             ("administration" . ?A) ("event" . ?E) ("family-and-friends". ?f) ("finance" . ?F)
-            ("home" . ?H) ("matthias" . ?m) ("meeting" . ?M) ("miscellaneous". ?M) ("partner" . ?P)
-            ("research" . ?r) ("resource" . ?R) ("study". ?s) ("teach" . ?t)
+            ("home" . ?H) ("matthias" . ?m) ("meeting" . ?M) ("partner" . ?P)
+            ("research" . ?r) ("rftarget" . ?R) ("study". ?s) ("teach" . ?t)
             ("travel" . ?T) ("work" . ?W)))
 
   (setopt org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "BLOCKED" "DONE")))
@@ -1606,9 +1617,21 @@ that allows to include other templates by their name."
              :clock-resume t
              :empty-lines 0)))
 
+  ;; Custom functionality
+  (defun find-file-org ()
+    "Find file in `ORG_DIR' using `find-file'."
+    (interactive)
+    (let ((default-directory ORG_DIR))
+      (call-interactively #'find-file)))
+
+  ;; Keybindings
+  (keymap-set an-org-map "f" #'find-file-org)
+
   :config
   ;; Setup and settings (after load)
+  (add-to-list 'org-agenda-files ORG_CALENDAR_FILE)
   (add-to-list 'org-agenda-files ORG_TODOS_FILE)
+  (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
 
   ;; Keybindings
   (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
@@ -2038,48 +2061,6 @@ that allows to include other templates by their name."
             (not (or (bound-and-true-p vertico--input)
                      (eq (current-local-map) read-passwd-map))))))
 
-;;; Tempel + Cape
-(use-package tempel
-  :after cape
-
-  :config
-  ;; Custom functionality
-  (defalias 'cape-tempel-complete-prefix-2 (cape-capf-prefix-length #'tempel-complete 2))
-
-  (defun setup-a-cape-tempel-mix-mode ()
-    (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-tempel-complete-prefix-2
-                                       #'cape-abbrev-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      #'cape-dict-prefix-2)))
-
-  (defun setup-a-cape-tempel-code-mode ()
-    (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-tempel-complete-prefix-2
-                                       #'cape-abbrev-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2))))
-
-  (defun setup-a-cape-tempel-minibuffer ()
-    (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-tempel-complete-prefix-2
-                                       #'cape-abbrev-prefix-2
-                                       #'cape-history-prefix-2 #'cape-file-prefix-2
-                                       #'cape-dabbrev-prefix-2))))
-
-  ;; Hooks (replace regular by tempel-including)
-  (remove-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
-  (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-mode)
-  (remove-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
-  (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-mode)
-  (remove-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
-  (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-mode)
-  (remove-hook 'prog-mode-hook #'setup-a-cape-code-mode)
-  (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-mode)
-  (remove-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer)
-  (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer))
-
 ;;; EasyCrypt (extension)
 (use-package easycrypt-ext
   :ensure nil ; Provided locally
@@ -2101,12 +2082,12 @@ that allows to include other templates by their name."
   ;; Keybindings
   (keymap-set easycrypt-ext-mode-map "C-c C-p" #'ece-print)
   (keymap-set easycrypt-ext-mode-map "C-c l p" #'ece-print)
-  (keymap-set easycrypt-ext-mode-map "C-c l P" #'ece-print-prompt)
+  (keymap-set easycrypt-ext-mode-map "C-c l P" #'ece-prompt-print)
   (keymap-set easycrypt-ext-mode-map "C-c l l" #'ece-locate)
-  (keymap-set easycrypt-ext-mode-map "C-c l L" #'ece-locate-prompt)
+  (keymap-set easycrypt-ext-mode-map "C-c l L" #'ece-prompt-locate)
   (keymap-set easycrypt-ext-mode-map "C-c C-s" #'ece-search)
   (keymap-set easycrypt-ext-mode-map "C-c l s" #'ece-search)
-  (keymap-set easycrypt-ext-mode-map "C-c l S" #'ece-search-prompt)
+  (keymap-set easycrypt-ext-mode-map "C-c l S" #'ece-prompt-search)
   (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
   (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix)
   (keymap-set easycrypt-ext-mode-map "C-c l t" 'ece-template-map-prefix)
@@ -2126,12 +2107,12 @@ that allows to include other templates by their name."
 
   (keymap-set easycrypt-ext-response-mode-map "C-c C-p" #'ece-print)
   (keymap-set easycrypt-ext-response-mode-map "C-c l p" #'ece-print)
-  (keymap-set easycrypt-ext-response-mode-map "C-c l P" #'ece-print-prompt)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l P" #'ece-prompt-print)
   (keymap-set easycrypt-ext-response-mode-map "C-c l l" #'ece-locate)
-  (keymap-set easycrypt-ext-response-mode-map "C-c l L" #'ece-locate-prompt)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l L" #'ece-prompt-locate)
   (keymap-set easycrypt-ext-response-mode-map "C-c C-s" #'ece-search)
   (keymap-set easycrypt-ext-response-mode-map "C-c l s" #'ece-search)
-  (keymap-set easycrypt-ext-response-mode-map "C-c l S" #'ece-search-prompt)
+  (keymap-set easycrypt-ext-response-mode-map "C-c l S" #'ece-prompt-search)
   (keymap-set easycrypt-ext-response-mode-map "C-c C-e" 'ece-exec-map-prefix)
   (keymap-set easycrypt-ext-response-mode-map "C-c l e" 'ece-exec-map-prefix))
 
