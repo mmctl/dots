@@ -1254,21 +1254,13 @@ with functionality checks."
    (if enable #'ece--enable-indentation-local #'ece--disable-indentation-local)))
 
 ;;; Keyword completion
-;; (defvar-local original-cape-keyword-list nil)
-
 (defun ece--enable-keyword-completion-local ()
   (unless (and (local-variable-p ece-keyword-completion) ece-keyword-completion)
-    ;; (unless original-cape-keyword-list
-    ;;   (setq-local original-cape-keyword-list
-    ;;               (buffer-local-set-state cape-keyword-list cape-keyword-list)))
     (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ece-keywords))
     (setq-local ece-keyword-completion t)))
 
 (defun ece--disable-keyword-completion-local ()
   (unless (and (local-variable-p ece-keyword-completion) (not ece-keyword-completion))
-    ;; (unless original-cape-keyword-list
-    ;;   (setq-local original-cape-keyword-list
-    ;;               (buffer-local-set-state cape-keyword-list cape-keyword-list)))
     (setq-local ece-keyword-completion nil)
     (setq-local cape-keyword-list (assq-delete-all 'easycrypt-mode cape-keyword-list))
     (when (eq cape-keyword-list (default-value 'cape-keyword-list))
@@ -1284,9 +1276,6 @@ with functionality checks."
    (if enable #'ece--enable-keyword-completion-local #'ece--disable-keyword-completion-local)))
 
 ;;; Templates
-;; (defvar-local original-tempel-template-sources nil)
-;; (defvar-local original-tempel-user-elements nil)
-
 (defvar-keymap ece-template-map
   :doc "Keymap for EasyCrypt templates."
   :prefix 'ece-template-map-prefix)
@@ -1298,12 +1287,6 @@ with functionality checks."
 
 (defun ece--enable-templates-local ()
   (unless (and (local-variable-p ece-templates) ece-templates)
-    ;; (unless original-tempel-user-elements
-    ;;   (setq-local original-tempel-user-elements
-    ;;               (buffer-local-set-state tempel-user-elements tempel-user-elements)))
-    ;; (unless original-tempel-template-sources
-    ;;   (setq-local original-tempel-template-sources
-    ;;               (buffer-local-set-state tempel-template-sources tempel-template-sources)))
     (add-to-list 'tempel-user-elements #'ece--tempel-placeholder-form-as-lit)
     (add-to-list 'tempel-user-elements #'ece--tempel-include)
     (add-to-list 'tempel-template-sources #'ece--templates-file-read)
@@ -1313,12 +1296,6 @@ with functionality checks."
 
 (defun ece--disable-templates-local ()
   (unless (and (local-variable-p ece-templates) (not ece-templates))
-    ;; (unless original-tempel-user-elements
-    ;;   (setq-local original-tempel-user-elements
-    ;;               (buffer-local-set-state tempel-user-elements tempel-user-elements)))
-    ;; (unless original-tempel-template-sources
-    ;;   (setq-local original-tempel-template-sources
-    ;;               (buffer-local-set-state tempel-template-sources tempel-template-sources)))
     (setq-local ece-templates nil)
     (setq-local tempel-user-elements
                 (remq #'ece--tempel-placeholder-form-as-lit
@@ -1343,9 +1320,6 @@ with functionality checks."
 
 (defun ece--enable-templates-info-local ()
   (unless (and (local-variable-p ece-templates-info) ece-templates-info)
-    ;; (unless original-tempel-template-sources
-    ;;   (setq-local original-tempel-template-sources
-    ;;               (buffer-local-set-state tempel-template-sources tempel-template-sources)))
     (add-to-list 'tempel-template-sources #'ece--templates-info-file-read)
     (when tempel-abbrev-mode
       (tempel-abbrev-mode 1))
@@ -1353,9 +1327,6 @@ with functionality checks."
 
 (defun ece--disable-templates-info-local ()
   (unless (and (local-variable-p ece-templates-info) (not ece-templates-info))
-    ;; (unless original-tempel-template-sources
-    ;;   (setq-local original-tempel-template-sources
-    ;;               (buffer-local-set-state tempel-template-sources tempel-template-sources)))
     (setq-local ece-templates-info nil)
     (setq-local tempel-template-sources
                 (remq #'ece--templates-info-file-read tempel-template-sources))
@@ -1750,9 +1721,6 @@ global defaults in all EasyCrypt buffers."
 
   (when (local-variable-p ece-keyword-completion)
     (ece--disable-keyword-completion-local)
-    ;; (when original-cape-keyword-list
-    ;;   (buffer-local-restore-state original-cape-keyword-list)
-    ;;   (setq-local original-cape-keyword-list nil))
     (kill-local-variable ece-keyword-completion))
 
   (when (local-variable-p ece-templates)
@@ -1763,20 +1731,6 @@ global defaults in all EasyCrypt buffers."
     (ece--disable-templates-info-local)
     (kill-local-variable ece-templates-info)))
 
-;; (loctmpi (local-variable-p ece-templates-info)))
-;; (when (or loctmp loctmpi)
-;;   (when loctmp
-;;     (ece--disable-templates-local)
-;;     (kill-local-variable ece-templates))
-;;   (when loctmpi
-;;     (ece--disable-templates-info-local)
-;;     (kill-local-variable ece-templates-info))
-;;   (when original-tempel-user-elements
-;;     (buffer-local-restore-state original-tempel-user-elements)
-;;     (setq-local original-tempel-user-elements nil))
-;;   (when original-tempel-template-sources
-;;     (buffer-local-restore-state original-tempel-template-sources)
-;;     (setq-local original-tempel-template-sources nil)))))
 
 ;; Minor modes
 ;;; Regular

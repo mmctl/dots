@@ -606,13 +606,14 @@
   :init
   ;; Setup and settings (before load)
   (setopt easy-kill-alist '((?w word           " ")
-                            (?s sexp           "\n")
+                            (?s symbol         " ")
+                            (?S sexp           "\n")
                             (?h list           "\n")
                             (?f filename       "\n")
                             (?d defun          "\n\n")
                             (?D defun-name     " ")
                             (?l line           "\n")
-                            (?b buffer-file-name)))
+                            (?b buffer-file-name "\n")))
   (setopt easy-kill-cycle-ignored '(list filename defun defun-name buffer-file-name)
           easy-kill-try-things '(url email word line)
           easy-mark-try-things '(url email word sexp))
@@ -627,18 +628,6 @@
   (keymap-set easy-kill-base-map "K"  #'easy-kill-delete-region)
   (keymap-set easy-kill-base-map "q"  #'easy-kill-abort)
   (keymap-set easy-kill-base-map "p"  #'easy-kill-exchange-point-and-mark))
-
-(use-package expand-region
-  :ensure t
-  :pin melpa
-
-  :bind ("C->" . #'er/expand-region)
-
-  :init
-  ;; Setup and settings
-  (setopt expand-region-fast-keys-enabled t
-          expand-region-contract-fast-key "<"
-          expand-region-reset-fast-key "r"))
 
 (use-package undo-tree
   :ensure t
@@ -787,8 +776,8 @@
   (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
   (keymap-set vertico-map "C-p" #'previous-history-element)
   (keymap-set vertico-map "C-n" #'next-history-element)
-  (keymap-set vertico-map "C-<up>" #'vertico-previous-group)
-  (keymap-set vertico-map "C-<down>" #'vertico-next-group)
+  (keymap-set vertico-map "C-<prior>" #'vertico-previous-group)
+  (keymap-set vertico-map "C-<next>" #'vertico-next-group)
   (keymap-set vertico-map "C-<home>" #'vertico-first)
   (keymap-set vertico-map "C-<end>" #'vertico-last)
 
@@ -828,8 +817,8 @@
 
   :init
   ;; Setup and settings (before load)
-  (setopt vertico-quick1 "asdfjkl")
-  (setopt vertico-quick2 "gerhui")
+  (setopt vertico-quick1 "asdfjkl;")
+  (setopt vertico-quick2 "gwerhuio")
 
   :config
   ;; Keybindings
@@ -868,7 +857,7 @@
   (keymap-set corfu-map "TAB" #'corfu-complete)
   (keymap-set corfu-map "<tab>" "TAB")
   (keymap-set corfu-map "C-v" #'corfu-send)
-  (keymap-set corfu-map "S-SPC" #'corfu-insert-separator)
+  (keymap-set corfu-map "M-SPC" #'corfu-insert-separator)
   ;;; Auto mode
   (keymap-unset corfu-map "<remap> <beginning-of-buffer>")
   (keymap-unset corfu-map "<remap> <end-of-buffer>")
@@ -879,12 +868,12 @@
   (keymap-unset corfu-map "RET")
   (keymap-unset corfu-map "<up>")
   (keymap-unset corfu-map "<down>")
-  (keymap-set corfu-map "M-p" #'corfu-previous)
-  (keymap-set corfu-map "M-n" #'corfu-next)
-  (keymap-set corfu-map "M-<prior>" #'corfu-scroll-up)
-  (keymap-set corfu-map "M-<next>" #'corfu-scroll-down)
-  (keymap-set corfu-map "M-<home>" #'corfu-first)
-  (keymap-set corfu-map "M-<end>" #'corfu-last)
+  (keymap-set corfu-map "M-<up>" #'corfu-previous)
+  (keymap-set corfu-map "M-<down>" #'corfu-next)
+  (keymap-set corfu-map "M-p" #'corfu-scroll-down)
+  (keymap-set corfu-map "M-n" #'corfu-scroll-up)
+  (keymap-set corfu-map "M-<" #'corfu-first)
+  (keymap-set corfu-map "M->" #'corfu-last)
 
   ;; Activation
   (global-corfu-mode 1))
@@ -896,8 +885,8 @@
 
   :init
   ;; Setup and settings (before load)
-  (setopt corfu-quick1 "asdfjkl")
-  (setopt corfu-quick2 "gerhui")
+  (setopt corfu-quick1 "asdfjkl;")
+  (setopt corfu-quick2 "gwerhuio")
 
   :config
   ;; Keybindings
@@ -964,6 +953,8 @@
 (use-package tempel
   :ensure t
 
+  :pin melpa
+
   :preface
   ;; Keymaps
   (defvar-keymap a-tempel-map
@@ -998,15 +989,13 @@
   (keymap-unset tempel-map "<remap> <end-of-buffer>")
   (keymap-unset tempel-map "<remap> <backward-paragraph>")
   (keymap-unset tempel-map "<remap> <forward-paragraph>")
-  (keymap-set tempel-map "C-<backspace>" #'tempel-previous)
-  (keymap-set tempel-map "C-SPC" #'tempel-next)
-  (keymap-set tempel-map "<prior>" #'tempel-previous)
-  (keymap-set tempel-map "<next>" #'tempel-next)
-  (keymap-set tempel-map "<home>" #'tempel-beginning)
-  (keymap-set tempel-map "<end>" #'tempel-end)
+  (keymap-set tempel-map "M-<left>" #'tempel-previous)
+  (keymap-set tempel-map "M-<right>" #'tempel-next)
+  (keymap-set tempel-map "M--" #'tempel-beginning)
+  (keymap-set tempel-map "M-_" #'tempel-end)
   (keymap-set tempel-map "M-k" #'tempel-kill)
   (keymap-set tempel-map "C-v" #'tempel-done)
-  (keymap-set tempel-map "C-q" #'tempel-abort)
+  (keymap-set tempel-map "M-q" #'tempel-abort)
 
   (defun a-tempel-placeholder-form-as-lit (elt)
     "Define slight adjustment of regular placeholder element
@@ -1087,7 +1076,7 @@ that allows to include other templates by their name."
                ("c" . crux-create-scratch-buffer)
                ("d" . crux-kill-buffer-truename)
                ("K" . crux-kill-other-buffers)
-               ("p" . crux-switch-to-previous-buffer))
+               ("h" . crux-switch-to-previous-buffer))
          (:map a-window-map
                ("z" . crux-transpose-windows))))
 
@@ -1156,7 +1145,7 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  (setopt avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?e ?r ?u ?i)
+  (setopt avy-keys '(?a ?s ?d ?f ?j ?k ?l ?\;)
           avy-style 'at-full
           avy-all-windows 'all-frames
           avy-case-fold-search t
@@ -1177,22 +1166,27 @@ that allows to include other templates by their name."
   (defvar-keymap a-consult-map
     :doc "Keymap for consult (misc)"
     :prefix 'a-consult-map-prefix)
-  (keymap-global-set "C-c w" 'a-consult-map-prefix)
+  (keymap-global-set "C-c h" 'a-consult-map-prefix)
 
   :bind (("C-l" . consult-line)
          ("C-;" . consult-goto-line)
          ("C-M-y" . consult-yank-pop)
+         ("M-m" . consult-mark)
+         ("M-M" . consult-global-mark)
+         ("<remap> <goto-line>" . consult-goto-line)
          (:map a-consult-map
                ("x" . consult-mode-command)
                ("h" . consult-history)
                ("k" . consult-kmacro)
-               ("m" . consult-man)
+               ("l" . consult-man)
+               ("m" . consult-minor-mode-menu)
                ("i" . consult-info)
                (":" . consult-complex-command))
          (:map a-buffer-map
                ("g" . consult-buffer)
                ("G" . consult-buffer-other-window)
-               ("M-g" . consult-buffer-other-frame))
+               ("M-g" . consult-buffer-other-frame)
+               ("p" . consult-project-buffer))
          (:map a-goto-map
                ("b" . consult-buffer)
                ("B" . consult-buffer-other-window)
@@ -1201,6 +1195,7 @@ that allows to include other templates by their name."
                ("d" . consult-flymake)
                ("l" . consult-goto-line)
                ("o" . consult-outline)
+               ("p" . consult-project-buffer)
                ("m" . consult-mark)
                ("M" . consult-global-mark)
                ("i" . consult-imenu)
@@ -1221,12 +1216,12 @@ that allows to include other templates by their name."
                ("u" . consult-focus-lines)
                ("h" . consult-isearch-history))
          (:map isearch-mode-map
+               ("<remap> <isearch-edit-string>" . consult-isearch-history)
                ("M-s h" . consult-isearch-history)
                ("M-s l" . consult-line)
                ("M-s L" . consult-line-multi))
          (:map minibuffer-local-map
-               ("M-s" . consult-history)
-               ("M-r" . consult-history)))
+               ("M-h" . consult-history)))
 
   :init
   ;; Setup and settings (before load)
@@ -1236,15 +1231,48 @@ that allows to include other templates by their name."
           consult-async-input-thottle 0.3
           consult-async-input-debounce 0.1
           consult-async-min-input 2)
-  (setopt xref-show-xrefs-function #'consult-xref))
+
+  ;; Keybindings
+  (with-eval-after-load 'org
+    (keymap-set org-mode-map "C-c H" #'consult-org-heading))
+
+  (with-eval-after-load 'org-agenda
+    (keymap-set org-agenda-mode-map "C-c H" #'consult-org-agenda))
+
+  :config
+  ;; Setup and settings (after load)
+  (setopt xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
+
+  (setopt register-preview-function #'consult-register-format)
+  (advice-add #'register-preview :override #'consult-register-window)
+  (setopt register-preview-delay 0.5))
 
 (use-package embark
   :ensure t
   :pin melpa
 
+  :preface
+  (defvar-keymap an-embark-map
+    :doc "Keymap for embark (global)"
+    :prefix 'an-embark-map-prefix)
+  (keymap-global-set "C-c e" 'an-embark-map-prefix)
+
   :bind (("M-," . embark-act)
          ("M-." . embark-dwim)
-         ("C-h C-b" . embark-bindings))
+         ("C-o" . embark-select)
+         ("C-S-v" . embark-export)
+         ("C-h C-b" . embark-bindings)
+         (:map an-embark-map
+               ("a" . embark-act)
+               ("A" . embark-act-all)
+               ("b" . embark-bindings)
+               ("c" . embark-collect)
+               ("d" . embark-dwim)
+               ("e" . embark-export)
+               ("l" . embark-live))
+         (:map minibuffer-local-map
+               ("M-b" . embark-become)))
 
   :init
   ;; Setup and settings (before load)
@@ -1280,10 +1308,22 @@ that allows to include other templates by their name."
   (keymap-set embark-become-file+buffer-map "F" #'find-file-other-window)
   (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window))
 
+(use-package avy-embark-collect
+  :ensure t
+
+  :bind (:map an-avy-map
+              ("e" . avy-embark-collect-choose)
+              ("E" . avy-embark-collect-act)))
+
 (use-package embark-consult
   :ensure t
 
-  :after (embark consult))
+  :after (embark consult)
+
+  :config
+  (keymap-set embark-consult-async-search-map "g" #'consult-ripgrep)
+  (keymap-set embark-consult-async-search-map "G" #'consult-grep)
+  (keymap-set embark-consult-async-search-map "M-g" #'consult-git-grep))
 
 ;;; Tools
 ;;;; Project.el (built-in)
@@ -1546,7 +1586,7 @@ that allows to include other templates by their name."
   (setopt org-support-shift-select t)
 
   (setopt org-log-done 'time
-          org-log-refile 'time)
+          org-log-refile nil)
 
   (setopt org-refile-allow-creating-parent-nodes 'confirm
           org-refile-targets '((nil . (:level . 1))
@@ -1783,10 +1823,8 @@ that allows to include other templates by their name."
   (defun setup-a-bufhist-map ()
     (keymap-set bufhist-mode-map "C-p" #'bufhist-prev)
     (keymap-set bufhist-mode-map "C-n" #'bufhist-next)
-    (keymap-set bufhist-mode-map "C-<prior>" #'bufhist-prev)
-    (keymap-set bufhist-mode-map "C-<next>" #'bufhist-next)
-    (keymap-set bufhist-mode-map "C-<home>" #'bufhist-first)
-    (keymap-set bufhist-mode-map "C-<end>" #'bufhist-last)
+    (keymap-set bufhist-mode-map "C-<" #'bufhist-first)
+    (keymap-set bufhist-mode-map "C->" #'bufhist-last)
     (keymap-set bufhist-mode-map "M-c" #'bufhist-clear)
     (keymap-set bufhist-mode-map "M-d" #'bufhist-delete))
   (defun setup-a-proof-mode-map ()
@@ -1796,9 +1834,6 @@ that allows to include other templates by their name."
     (keymap-unset proof-mode-map "C-M-<down>")
     (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
     (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive)
-    (keymap-set proof-mode-map "C-<prior>" #'proof-goto-command-start)
-    (keymap-set proof-mode-map "C-<next>" #'proof-goto-command-end)
-    (keymap-set proof-mode-map "C-<end>" #'proof-goto-end-of-locked)
     (keymap-set proof-mode-map "C-c C-v" #'proof-goto-point)
     (keymap-set proof-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
     (keymap-set proof-mode-map "C-c C-a" #'proof-goto-command-start)
@@ -1893,7 +1928,16 @@ that allows to include other templates by their name."
     '(proof-mouse-highlight-face :inherit 'lazy-highlight)
     '(proof-region-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
     '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
-    '(proof-active-area-face :inherit 'secondary-selection)))
+    '(proof-active-area-face :inherit 'secondary-selection))
+
+  ;;; Dummy face definitions
+  ;;; (applying theme settings that inherit from these faces
+  ;;; without explicitly loading the packages that apply
+  ;;; initially define them)
+  (defface avy-lead-face '((t . (:inherit default)))
+    "Dummy definition for `avy-lead-face'")
+  (defface avy-lead-face-1 '((t . (:inherit default)))
+    "Dummy definition for `avy-lead-face-1'"))
 
 ;;;; Doom-themes specific
 ;;;;; Nord <3
@@ -1915,6 +1959,7 @@ that allows to include other templates by their name."
   ;; Setup and settings (after load)
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
+    '(cursor :background success)
     '(trailing-whitespace :background magenta)
     '(aw-background-face :inherit 'avy-background-face)
     '(aw-leading-char-face :inherit 'avy-lead-face)
@@ -1936,15 +1981,6 @@ that allows to include other templates by their name."
     '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
     '(easycrypt-tactics-closing-face :foreground yellow)
     '(easycrypt-tactics-dangerous-face :foreground red))
-
-  ;;; Dummy face definitions
-  ;;; (applying theme settings that inherit from these faces
-  ;;; without explicitly loading the packages that apply
-  ;;; initially define them)
-  (defface avy-lead-face '((t . (:inherit default)))
-    "Dummy definition for avy-lead-face")
-  (defface avy-lead-face-1 '((t . (:inherit default)))
-    "Dummy definition for avy-lead-face-1")
 
   ;; Hooks
   (add-hook 'after-init-hook #'(lambda () (unless (daemonp) (enable-theme 'doom-nord)))))
@@ -1969,6 +2005,7 @@ that allows to include other templates by their name."
   ;; Setup and settings (after load)
   (load-theme 'doom-nord-light t)
   (doom-themes-set-faces 'doom-nord-light
+    '(cursor :background success)
     '(trailing-whitespace :background magenta)
     '(aw-background-face :inherit 'avy-background-face)
     '(aw-leading-char-face :inherit 'avy-lead-face)
