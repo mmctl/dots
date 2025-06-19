@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t -*-
 ;; init.el
-;; Environment
-;;; Config
+;;; Environment
+;; Config
 (defconst EMACS_CONFIG_DIR (file-name-as-directory
                             (if (getenv "XDG_CONFIG_HOME")
                                 (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
@@ -23,7 +23,7 @@
 (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
   "File where (automatically generated) customization settings are stored.")
 
-;;; Data
+;; Data
 (defconst EMACS_DATA_DIR (file-name-as-directory
                           (if (getenv "XDG_DATA_HOME")
                               (file-name-concat (getenv "XDG_DATA_HOME") "emacs/")
@@ -33,7 +33,7 @@
 (defconst BACKUPS_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "backups/"))
   "Directory where (automatically generated) backup files are stored.")
 
-;;; Cache
+;; Cache
 (defconst EMACS_CACHE_DIR (file-name-as-directory
                            (if (getenv "XDG_CACHE_HOME")
                                (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
@@ -46,8 +46,8 @@
 (defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
   "Directory where lock files are stored.")
 
-;; Bootstrap
-;;; Directories
+;;; Bootstrap
+;; Directories
 (unless (file-directory-p THEMES_DIR)
   (make-directory THEMES_DIR t))
 
@@ -69,14 +69,14 @@
 (unless (file-directory-p LOCKS_DIR)
   (make-directory LOCKS_DIR t))
 
-;;; Custom file
+;; Custom file
 (unless (file-exists-p CUSTOM_FILE)
   (make-empty-file CUSTOM_FILE))
 (setopt custom-file CUSTOM_FILE)
 (load CUSTOM_FILE)
 
-;;; Load path/pointers
-;;;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones
+;; Load path/pointers
+;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones
 (add-to-list 'load-path LOCAL_DIR)
 (dolist (file (directory-files-recursively LOCAL_DIR "^[^.].*" t t))
   (when (file-directory-p file)
@@ -86,7 +86,7 @@
 
 (setopt custom-theme-directory THEMES_DIR)
 
-;;; Backups
+;; Backups
 (setopt backup-directory-alist `((".*" . ,BACKUPS_DIR))
         make-backup-files t
         vc-make-backup-files nil
@@ -98,7 +98,7 @@
         backup-by-copying-when-linked t
         backup-by-copying-when-mismatch t)
 
-;;; Auto-saves
+;; Auto-saves
 (setopt auto-save-file-name-transforms `((".*" ,(file-name-concat AUTOSAVES_DIR "\\1") t))
         auto-save-visited-file-name nil
         auto-save-interval 50
@@ -107,11 +107,11 @@
         delete-auto-save-files t
         auto-save-list-file-prefix nil)
 
-;;; Locks
+;; Locks
 (setopt lock-file-name-transforms `((".*" ,(file-name-concat LOCKS_DIR "\\1") t))
         create-lockfiles t)
 
-;;; Custom local functionalities
+;; Custom local functionalities
 (require 'loc-frames)
 (require 'loc-modes)
 (require 'loc-utils)
@@ -132,13 +132,13 @@
   (package-refresh-contents))
 
 
-;; Settings (general/UI)
-;;; Launching
+;;; Settings (general/UI)
+;; Launching
 (setopt inhibit-splash-screen t)
 (setopt initial-major-mode 'fundamental-mode)
 (setopt initial-scratch-message "// This buffer is for text that is not saved, and for Lisp evaluation \\\\")
 
-;;; Frames/Windows
+;; Frames/Windows
 (setopt frame-resize-pixelwise t)
 (setopt window-resize-pixelwise t)
 
@@ -161,7 +161,7 @@
 (unless (daemonp)
   (loc-setup-global-frame))
 
-;;; (Mini)Buffers
+;; (Mini)Buffers
 (setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
 (setopt read-extended-command-predicate #'command-completion-default-include-p)
 (setopt enable-recursive-minibuffers t)
@@ -170,14 +170,14 @@
 
 (setopt echo-keystrokes 0.02)
 
-;;; Cursor
+;; Cursor
 (setopt x-stretch-cursor nil)
 (setopt blink-matching-paren t)
 (setopt cursor-in-non-selected-windows nil)
 
 (blink-cursor-mode -1)
 
-;;; Scrolling/Mouse
+;; Scrolling/Mouse
 (setopt hscroll-margin 2)
 (setopt hscroll-step 1)
 (setopt scroll-conservatively 10)
@@ -194,7 +194,7 @@
 
 (pixel-scroll-precision-mode 1)
 
-;;; Editor/interaction
+;; Editor/interaction
 (setopt indent-tabs-mode nil)
 (setopt tab-width 2)
 (setopt tab-always-indent nil)
@@ -229,7 +229,7 @@
 (repeat-mode 1)
 
 
-;;; Miscellaneous
+;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)
 (setopt bidi-paragraph-direction 'left-to-right)
 
@@ -240,13 +240,13 @@
 (recentf-mode 1)
 
 
-;; Bindings (general)
-;;; Translations
+;;; Bindings (general)
+;; Translations
 (keymap-set function-key-map "C-S-<iso-lefttab>" "C-<backtab>")
 (keymap-set function-key-map "M-S-<iso-lefttab>" "M-<backtab>")
 (keymap-set function-key-map "C-M-S-<iso-lefttab>" "C-M-<backtab>")
 
-;;; Movement
+;; Movement
 (keymap-global-set "C-M-<left>" #'windmove-left)
 (keymap-global-set "C-M-<down>" #'windmove-down)
 (keymap-global-set "C-M-<up>" #'windmove-up)
@@ -292,22 +292,22 @@
 (keymap-global-set "M-m" #'pop-to-mark-command)
 (keymap-global-set "M-M" #'pop-global-mark)
 
-;;; Selection
+;; Selection
 (keymap-global-set "M-h" #'set-mark-command)
 
-;;; Manipulation
-;;;; Copying
+;; Manipulation
+;; Copying
 (keymap-global-set "C-t" #'kill-ring-save)
 (keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
 
-;;;; Exchanging/Joining
+;; Exchanging/Joining
 (keymap-global-set "M-w" #'exchange-word)
 (keymap-global-set "M-W" #'exchange-word-backward)
 
 (keymap-global-set "M-j" #'join-line-stay)
 (keymap-global-set "M-J" #'join-line-forward-stay)
 
-;;;; Killing
+;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
 (keymap-global-set "M-<delete>" #'kill-word)
 
@@ -327,12 +327,12 @@
 (keymap-global-set "M-;" #'undo)
 (keymap-global-set "M-/" #'undo-redo)
 
-;;;; Yanking
+;; Yanking
 (keymap-global-set "M-y" #'yank)
 (keymap-global-set "M-Y" #'clipboard-yank)
 (keymap-global-set "C-M-y" #'yank-pop)
 
-;;;; Deleting
+;; Deleting
 (keymap-global-set "C-k" #'cycle-spacing)
 (keymap-global-set "M-k" #'delete-all-space)
 
@@ -340,16 +340,16 @@
 (keymap-global-set "M-E" #'forward-delete-line)
 (keymap-global-set "M-D" #'delete-whole-line-or-region)
 
-;;;; Replacing
+;; Replacing
 (keymap-global-set "M-r" #'query-replace)
 (keymap-global-set "M-R" #'query-replace-regexp)
 
-;;; Miscellaneous
+;; Miscellaneous
 (keymap-global-set "M-c" #'comment-dwim)
 (keymap-global-set "M-C" #'comment-line)
 
-;;; Management
-;;;; Quitting
+;; Management
+;; Quitting
 (defvar-keymap a-quit-map
   :doc "Keymap for quitting (optionally saving and/or restarting)"
   :prefix 'a-quit-map-prefix
@@ -364,7 +364,7 @@
 
 (keymap-global-set "C-x q" 'a-quit-map-prefix)
 
-;;;; Killing
+;; Killing
 (defvar-keymap a-kill-map
   :doc "Keymap for killing"
   :prefix 'a-kill-map-prefix
@@ -379,7 +379,7 @@
 
 (keymap-global-set "C-x k" 'a-kill-map-prefix)
 
-;;;; Frames
+;; Frames
 (defvar-keymap a-frame-map
   :doc "Keymap for frame management"
   :prefix 'a-frame-map-prefix
@@ -394,7 +394,7 @@
 
 (keymap-global-set "C-x ^" 'a-frame-map-prefix)
 
-;;;; Windows
+;; Windows
 (defvar-keymap a-window-resize-repeat-map
   :doc "Keymap (repeatable) for resizing windows"
   :repeat (:hints ((shrink-window . "h: Shrink window height")
@@ -429,7 +429,7 @@
 
 (keymap-global-set "C-x w" 'a-window-map-prefix)
 
-;;;; Buffers
+;; Buffers
 (defvar-keymap a-buffer-map
   :doc "Keymap for buffer management"
   :prefix 'a-buffer-map-prefix
@@ -447,13 +447,13 @@
 
 (keymap-global-set "C-x b" 'a-buffer-map-prefix)
 
-;;; Navigation/searching
+;; Navigation/searching
 (keymap-global-set "C-x f" #'find-file)
 (keymap-global-set "C-x F" #'find-file-other-window)
 (keymap-global-set "C-x C-f" #'find-file-other-frame)
 (keymap-global-set "C-x C-r" #'recentf-open)
 
-;;;; Goto map
+;; Goto map
 (defvar-keymap a-goto-map
   :doc "Keymap for navigation"
   :prefix 'a-goto-map-prefix
@@ -470,7 +470,7 @@
 
 (keymap-global-set "C-c g" 'a-goto-map-prefix)
 
-;;;; Search map
+;; Search map
 (defvar-keymap a-search-replace-map
   :doc "Keymap for searching and replacing"
   :prefix 'a-search-replace-map-prefix
@@ -494,14 +494,14 @@
 (keymap-global-set "C-c s" 'a-search-replace-map-prefix)
 
 
-;; Packages
-;;; General
+;;; Packages
+;; General
 (setopt use-package-always-ensure nil
         use-package-always-defer nil
         use-package-always-pin nil
         use-package-always-demand nil)
 
-;;; Base/Built-in
+;; Base/Built-in
 (use-package isearch
   :init
   ;; Setup and settings
@@ -556,7 +556,14 @@
           dabbrev-case-distinction nil
           dabbrev-case-replace nil))
 
-;;; Helpers
+(use-package calendar
+  :config
+  ;; Keybindings
+  (keymap-unset calendar-mode-map "C-b")
+  (keymap-unset calendar-mode-map "C-f"))
+
+
+;; Helpers
 (use-package which-key
   :ensure t
 
@@ -634,7 +641,7 @@
 
   :init
   ;; Setup and settings
-  ;;; Create and store undo history directory
+  ;; Create and store undo history directory
   (defconst UNDO_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "undos/"))
     "Directory where (automatically generated) undo (history) files are stored.")
   (unless (file-directory-p UNDO_DIR)
@@ -731,7 +738,7 @@
   ;; Activation
   (global-anzu-mode 1))
 
-;;; Completion
+;; Completion
 (use-package orderless
   :ensure t
 
@@ -852,13 +859,13 @@
 
   :config
   ;; Keybindings
-  ;;; All modes
+  ;; All modes
   (keymap-set corfu-map "C-o" #'corfu-complete)
   (keymap-set corfu-map "TAB" #'corfu-complete)
   (keymap-set corfu-map "<tab>" "TAB")
   (keymap-set corfu-map "C-v" #'corfu-send)
   (keymap-set corfu-map "M-SPC" #'corfu-insert-separator)
-  ;;; Auto mode
+  ;; Auto mode
   (keymap-unset corfu-map "<remap> <beginning-of-buffer>")
   (keymap-unset corfu-map "<remap> <end-of-buffer>")
   (keymap-unset corfu-map "<remap> <previous-line>")
@@ -971,7 +978,7 @@
 
   :init
   ;; Setup and settings (before load)
-  ;;; Create and store templates directory
+  ;; Create and store templates directory
   (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/"))
     "Directory where tempel templates are stored.")
   (unless (file-directory-p TEMPEL_DIR)
@@ -1020,7 +1027,7 @@ that allows to include other templates by their name."
   ;; Activation
   (global-tempel-abbrev-mode 1))
 
-;;; Actions
+;; Actions
 (use-package move-text
   :ensure t
 
@@ -1325,8 +1332,8 @@ that allows to include other templates by their name."
   (keymap-set embark-consult-async-search-map "G" #'consult-grep)
   (keymap-set embark-consult-async-search-map "M-g" #'consult-git-grep))
 
-;;; Tools
-;;;; Project.el (built-in)
+;; Tools
+;; Project.el (built-in)
 (use-package project
   :init
   ;; Setup and settings (before load)
@@ -1596,7 +1603,7 @@ that allows to include other templates by their name."
 
   (setopt org-tag-alist
           '((:startgroup)
-            ("@work" . ?w) ("@home" . ?h) ("@online" . ?o) ("@elsewhere" . ?e)
+            ("@work" . ?W) ("@home" . ?H) ("@online" . ?O) ("@elsewhere" . ?E)
             (:endgroup)
             (:startgrouptag)
             ("Project") (:grouptags) ("{proj@.+}" . ?p)
@@ -1604,10 +1611,12 @@ that allows to include other templates by their name."
             (:startgrouptag)
             ("Area") (:grouptags) ("{area@.+}" . ?a)
             (:endgrouptag)
-            ("administration" . ?A) ("event" . ?E) ("family-and-friends". ?f) ("finance" . ?F)
-            ("home" . ?H) ("matthias" . ?m) ("meeting" . ?M) ("partner" . ?P)
+            ("administration" . ?A) ("event" . ?e) ("family-and-friends". ?f) ("finance" . ?F)
+            ("home" . ?h) ("matthias" . ?m) ("meeting" . ?M) ("partner" . ?P)
             ("research" . ?r) ("rftarget" . ?R) ("study". ?s) ("teach" . ?t)
-            ("travel" . ?T) ("work" . ?W)))
+            ("travel" . ?T) ("work" . ?w)))
+
+  (setopt org-tags-exclude-from-inheritance '("rftarget"))
 
   (setopt org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "BLOCKED" "DONE")))
   (setopt org-todo-keyword-faces
@@ -1619,43 +1628,46 @@ that allows to include other templates by their name."
   (setopt org-capture-templates
           '(("n" "Note"
              entry (file+headline ORG_NOTES_FILE "Notes")
-             "* %?\nCreated: %U"
+             "* %?\n:PROPERTIES:\n:CREATED: %U\n:END:"
              :empty-lines 0)
             ("N" "Note (tag + context)"
              entry (file+headline ORG_NOTES_FILE "Notes")
-             "* %? %^g\nCreated: %U\n** Context: %a\n%i"
+             "* %? %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n:CONTEXT:\n%a\n:END:"
              :empty-lines 0)
             ("t" "Todo"
              entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %?\nCreated: %U"
+             "* TODO [#B] %?\n:PROPERTIES:\n:CREATED: %U\n:END:"
              :empty-lines 0)
             ("T" "Todo (tag + context)"
              entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %? %^g\nCreated: %U\n** Context: %a\n%i"
+             "* TODO [#B] %? %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n:CONTEXT:\n%a\n:END:"
              :empty-lines 0)
             ("d" "Todo with deadline"
              entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %?\nCreated: %U\nDeadline: %^T"
+             "* TODO [#B] %?\nDEADLINE: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:"
              :empty-lines 0)
             ("D" "Todo with deadline (tag + context)"
              entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %? %^g\nCreated: %U\nDeadline: %^T\n** Context: %a\n%i"
+             "* TODO [#B] %? %^g\nDEADLINE: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:\n:CONTEXT:\n%a\n:END:"
              :empty-lines 0)
             ("c" "Calendar event"
              entry (file+headline ORG_CALENDAR_FILE "Events")
-             "* %?\nCreated: %U\nStart: %^T\nEnd: %^T"
-             :empty-lines 0)
-            ("C" "Calendar event (tag + context)"
+             "* %?\nSCHEDULED: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:"
+             :empty-lines-before 0
+             :empty-lines-after 1)
+            ("C" "Calendar event (tag + notes)"
              entry (file+headline ORG_CALENDAR_FILE "Events")
-             "* %? %^g\nCreated: %U\nStart: %^T\nEnd: %^T\n** Context:\n%i"
-             :empty-lines 0)
+             "* %? %^g\nSCHEDULED: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:\n** Notes:%i"
+             :empty-lines-before 0
+             :empty-lines-after 1)
             ("m" "Meeting"
              entry (file+olp+datetree ORG_MEETINGS_FILE)
-             "* %? :meeting:%^g\nCreated: %U\n** Notes:%i\n** Action Items:\n*** TODO [#B] "
+             "* %? :meeting:%^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n** Notes:%i\n** Action Items:\n*** TODO [#B] "
              :tree-type week
              :clock-in t
              :clock-resume t
-             :empty-lines 0)))
+             :empty-lines-before 0
+             :empty-lines-after 1)))
 
   ;; Custom functionality
   (defun find-file-org ()
@@ -1722,8 +1734,8 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
 
-;;; Developmentk
-;;;; OCaml
+;; Developmentk
+;; OCaml
 (use-package tuareg
   :ensure t
   :pin melpa
@@ -1753,11 +1765,11 @@ that allows to include other templates by their name."
   (keymap-set merlin-type-enclosing-map "C-n" #'merlin-type-enclosing-go-down)
   (keymap-set merlin-type-enclosing-map "C-t" #'merlin-copy-enclosing))
 
-;;;; Proof General (EasyCrypt)
-;;;; Note, proof.el (which is provided by the proof-general package) is what is
-;;;; actually loaded by the proof assistants, not proof-general.el.
-;;;; Hence, we use `use-package proof :ensure proof-general` to
-;;;; use deferred loading as usual
+;; Proof General (EasyCrypt)
+;; Note, proof.el (which is provided by the proof-general package) is what is
+;; actually loaded by the proof assistants, not proof-general.el.
+;; Hence, we use `use-package proof :ensure proof-general` to
+;; use deferred loading as usual
 (use-package proof
   :ensure proof-general
   :pin melpa
@@ -1766,7 +1778,7 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  ;;; General
+  ;; General
   (setopt proof-splash-enable nil
           proof-toolbar-enable nil)
   (setopt proof-delete-empty-windows nil
@@ -1783,7 +1795,7 @@ that allows to include other templates by their name."
           proof-follow-mode 'locked
           proof-auto-action-when-deactivating-scripting 'retract)
   (setopt bufhist-ring-size 32)
-  ;;; EasyCrypt
+  ;; EasyCrypt
   (setopt easycrypt-script-indent nil
           easycrypt-one-command-per-line nil)
   (setopt easycrypt-prog-name "easycrypt")
@@ -1880,14 +1892,14 @@ that allows to include other templates by their name."
   (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode-map)
 
   ;; Custom functionality
-  ;;; Remove bufhist buttons
+  ;; Remove bufhist buttons
   (defun silence-bufhist-insert-buttons (orig-fun &rest args)
     (setq-local bufhist-top-point (point-min)))
 
   (advice-add 'bufhist-insert-buttons :around #'silence-bufhist-insert-buttons))
 
-;;; Themes
-;;;; Doom-themes (general)
+;; Themes
+;; Doom-themes (general)
 (use-package doom-themes
   :ensure t
 
@@ -1930,17 +1942,17 @@ that allows to include other templates by their name."
     '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
     '(proof-active-area-face :inherit 'secondary-selection))
 
-  ;;; Dummy face definitions
-  ;;; (applying theme settings that inherit from these faces
-  ;;; without explicitly loading the packages that apply
-  ;;; initially define them)
+  ;; Dummy face definitions
+  ;; (applying theme settings that inherit from these faces
+  ;; without explicitly loading the packages that apply
+  ;; initially define them)
   (defface avy-lead-face '((t . (:inherit default)))
     "Dummy definition for `avy-lead-face'")
   (defface avy-lead-face-1 '((t . (:inherit default)))
     "Dummy definition for `avy-lead-face-1'"))
 
-;;;; Doom-themes specific
-;;;;; Nord <3
+;; Doom-themes specific
+;; Nord <3
 (use-package doom-nord-theme
   ;; :disabled t ; Don't use this theme
   :demand t ; Use this theme
@@ -2077,7 +2089,7 @@ that allows to include other templates by their name."
   (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t))
 
 
-;;; Corfu + Orderless
+;; Corfu + Orderless
 (use-package corfu
   :after orderless
 
@@ -2087,7 +2099,7 @@ that allows to include other templates by their name."
             (lambda ()
               (setq-local completion-styles '(orderless-literal-only basic)))))
 
-;;; Corfu + Vertico
+;; Corfu + Vertico
 (use-package corfu
   :after vertico
 
@@ -2098,7 +2110,7 @@ that allows to include other templates by their name."
             (not (or (bound-and-true-p vertico--input)
                      (eq (current-local-map) read-passwd-map))))))
 
-;;; EasyCrypt (extension)
+;; EasyCrypt (extension)
 (use-package easycrypt-ext
   :ensure nil ; Provided locally
 
@@ -2134,7 +2146,7 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-p" #'ece-print)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l p" #'ece-print)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l P" #'ece-prompt-print)
-  (keymap-set easycrypt-ext-goals-mode-map "C-c l l" #'ece-prompt-locate)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c l l" #'ece-locate)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l L" #'ece-prompt-locate)
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-s" #'ece-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l s" #'ece-search)
@@ -2154,15 +2166,15 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-response-mode-map "C-c l e" 'ece-exec-map-prefix))
 
 
-;; Hooks
-;;; Frames/windows
+;;; Hooks
+;; Frames/windows
 (when (daemonp)
   (add-hook 'server-after-make-frame-hook #'loc-setup-client-frame)
   (add-hook 'after-make-frame-functions #'loc-setup-frame))
 
 (add-hook 'minibuffer-setup-hook #'loc-setup-mini-mix-mode)
 
-;;; Modes
+;; Modes
 (add-hook 'text-mode-hook #'loc-setup-text-mode)
 
 (add-hook 'tex-mode-hook #'loc-setup-mix-mode)
