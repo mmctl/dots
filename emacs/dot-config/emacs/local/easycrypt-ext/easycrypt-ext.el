@@ -63,14 +63,14 @@
 ;;; Code:
 
 ;; Requirements
-;;; External packages
+;; External packages
 (require 'proof) ; Provided by proof-general
 
-;;; Local
+;; Local
 (require 'easycrypt-ext-consts)
 
 
-;; Constants
+;;; Constants
 (defconst ece--dir
   (file-name-directory (or load-file-name buffer-file-name))
   "Directory where this file is stored (and so also where rest of package should
@@ -85,7 +85,7 @@
   "File where informative code templates for EasyCrypt are stored.")
 
 
-;; Customization options
+;;; Customization options
 (defgroup easycrypt-ext nil
   "Customization group for EasyCrypt extension package."
   :prefix "ece-"
@@ -194,7 +194,7 @@ contains at that time)."
   :group 'easycrypt-ext)
 
 
-;; Utilities
+;;; Utilities
 (defsubst ece--check-feature (feature)
   (unless (featurep feature)
     (user-error "Feature `%s' not detected, but required. Try again after loading." (symbol-name feature))))
@@ -221,7 +221,7 @@ contains at that time)."
   (ece--gen-buffer-loop-symb fun 'easycrypt-ext-mode args))
 
 
-;; Indentation
+;;; Indentation
 (defun ece--insert-tabs-of-whitespace (n)
   "Insert N literal tabs worth of whitespace, respecting `indent-tabs-mode'."
   (if indent-tabs-mode
@@ -230,7 +230,7 @@ contains at that time)."
     ;; Else, insert N * `tab-width' spaces
     (insert (make-string (* n tab-width) ?\s))))
 
-;;; Basic indentation
+;; Basic indentation
 ;;;###autoload
 (defun ece-basic-indent (arg)
   "Indent (ARG > 0) resp. de-indent (ARG < 0) all lines touched by the
@@ -318,7 +318,7 @@ again de-indent line |ARG| times (respecting tab stops)."
   (interactive "p")
   (ece-basic-indent (- arg)))
 
-;;; Contextual indentation
+;; Contextual indentation
 (defun ece--goto-previous-nonblank-line ()
   "Moves point to start of previous non-blank line,
 or beginning of buffer if there is no such line."
@@ -635,8 +635,8 @@ Meant for `post-self-insert-hook'."
       (move-to-column (- orig-col indent-diff)))))
 
 
-;; Auxiliary functionality
-;;; Proof shell commands
+;;; Auxiliary functionality
+;; Proof shell commands
 (defun ece--validate-proof-shell-command (command)
   "Checks if the COMMAND is a valid/supported EasyCrypt proof shell command
 (in the sense that a command below is implemented for it)."
@@ -764,6 +764,7 @@ that the mouse is hovering, not necessarily the active one."
   (interactive "@")
   (ece--check-functionality 'bufhist-next 'proof-general)
   (bufhist-next n))
+
 
 ;;; Shell commands
 (defun ece--validate-subcommand (subcommand)
@@ -1199,8 +1200,8 @@ with functionality checks."
                        (tempel-insert ',template-name))))))
 
 
-;; Configuration
-;;; Indentation
+;;; Configuration
+;; Indentation
 (defvar-local original-indentation-state nil)
 (defvar-local original-local-map nil)
 
@@ -1253,7 +1254,7 @@ with functionality checks."
   (ece--ece-configure-global-from-local
    (if enable #'ece--enable-indentation-local #'ece--disable-indentation-local)))
 
-;;; Keyword completion
+;; Keyword completion
 (defun ece--enable-keyword-completion-local ()
   (unless (and (local-variable-p ece-keyword-completion) ece-keyword-completion)
     (add-to-list 'cape-keyword-list (cons 'easycrypt-mode ece-keywords))
@@ -1275,7 +1276,7 @@ with functionality checks."
   (ece--ece-configure-global-from-local
    (if enable #'ece--enable-keyword-completion-local #'ece--disable-keyword-completion-local)))
 
-;;; Templates
+;; Templates
 (defvar-keymap ece-template-map
   :doc "Keymap for EasyCrypt templates."
   :prefix 'ece-template-map-prefix)
@@ -1343,8 +1344,8 @@ with functionality checks."
    (if enable #'ece--enable-templates-info-local #'ece--disable-templates-info-local)))
 
 
-;; Toggles
-;;; Local
+;;; Toggles
+;; Local
 ;;;###autoload
 (defun ece-toggle-indentation-local ()
   "Toggles EasyCrypt Ext indentation in this buffer."
@@ -1468,8 +1469,8 @@ global defaults in all EasyCrypt buffers."
   (message "EasyCrypt Ext options reset to their default values in all (EasyCrypt Ext) buffers!"))
 
 
-;; Keymaps
-;;; Executable (subcommands)
+;;; Keymaps
+;; Executable (subcommands)
 (defvar-keymap ece-exec-map
   :doc "Keymap for executing EasyCrypt (command line) subcommands."
   :prefix 'ece-exec-map-prefix
@@ -1485,7 +1486,7 @@ global defaults in all EasyCrypt buffers."
   "w" #'ece-why3config-dflt
   "W" #'ece-why3config)
 
-;;; Options (enabling/disabling)
+;; Options (enabling/disabling)
 (defvar-keymap ece-options-map
   :doc "Keymap for managing options for `easycrypt-ext-mode'"
   :prefix 'ece-options-map-prefix
@@ -1505,7 +1506,7 @@ global defaults in all EasyCrypt buffers."
   "r" #'ece-reset-to-defaults-local
   "R" #'ece-reset-to-defaults)
 
-;;; Modes
+;; Modes
 (defvar-keymap easycrypt-ext-mode-map
   :doc "Keymap for `easycrypt-ext-mode'."
   "C-c C-y p" #'ece-print
@@ -1551,7 +1552,7 @@ global defaults in all EasyCrypt buffers."
   "C-S-<wheel-up>" #'ece-bufhist-prev
   "C-S-<wheel-down>" #'ece-bufhist-next)
 
-;;; Repeat
+;; Repeat
 (defvar-keymap ece-proof-mode-process-repeat-map
   :doc "Keymap (repeatable) for processing proof commands."
   :repeat (:hints ((proof-undo-last-successful-command . "p/u: Undo last successful command")
@@ -1575,8 +1576,9 @@ global defaults in all EasyCrypt buffers."
   "l" #'bufhist-last
   "d" #'bufhist-delete)
 
-;; Menus
-;;; Generation (macro)
+
+;;; Menus
+;; Generation (macro)
 (defmacro ece--easy-menu-gen (symb map shell exec options &optional submode)
   `(easy-menu-define ,symb ,map
      ,(format "Menu bar and mode line menu (clickable) for `easycrypt-ext%s-mode'."
@@ -1732,8 +1734,8 @@ global defaults in all EasyCrypt buffers."
     (kill-local-variable ece-templates-info)))
 
 
-;; Minor modes
-;;; Regular
+;;; Minor modes
+;; Regular
 (define-minor-mode easycrypt-ext-mode nil
   :lighter " ECE"
   :keymap easycrypt-ext-mode-map
@@ -1742,13 +1744,13 @@ global defaults in all EasyCrypt buffers."
       (ece-setup)
     (ece-teardown)))
 
-;;; Goals
+;; Goals
 (define-minor-mode easycrypt-ext-goals-mode nil
   :lighter " ECEg"
   :keymap easycrypt-ext-goals-mode-map
   :interactive (easycrypt-goals-mode))
 
-;;; Response
+;; Response
 (define-minor-mode easycrypt-ext-response-mode nil
   :lighter " ECEr"
   :keymap easycrypt-ext-response-mode-map

@@ -471,18 +471,14 @@
 (keymap-global-set "C-c g" 'a-goto-map-prefix)
 
 ;; Search map
-(defvar-keymap a-search-replace-map
-  :doc "Keymap for searching and replacing"
-  :prefix 'a-search-replace-map-prefix
+(defvar-keymap a-search-map
+  :doc "Keymap for searching"
+  :prefix 'a-search-map-prefix
   "f" #'find-file
   "F" #'find-file-other-window
   "C-f" #'find-file-other-frame
-  "o" #'recentf-open
-  "O" #'find-file-read-only
-  "r i" #'isearch-query-replace
-  "r I" #'isearch-query-replace-regexp
-  "r q" #'query-replace
-  "r Q" #'query-replace-regexp
+  "r" #'recentf-open
+  "R" #'find-file-read-only
   "i b" #'isearch-backward
   "i f" #'isearch-forward
   "i s" #'isearch-forward-symbol
@@ -491,7 +487,18 @@
   "i w" #'isearch-forward-word
   "i ." #'isearch-forward-symbol-at-point)
 
-(keymap-global-set "C-c s" 'a-search-replace-map-prefix)
+(keymap-global-set "C-c s" 'a-search-map-prefix)
+
+;; Replace map
+(defvar-keymap a-replace-map
+  :doc "Keymap for replacing"
+  :prefix 'a-replace-map-prefix
+  "i" #'isearch-query-replace
+  "I" #'isearch-query-replace-regexp
+  "q" #'query-replace
+  "Q" #'query-replace-regexp)
+
+(keymap-global-set "C-c r" 'a-replace-map-prefix)
 
 
 ;;; Packages
@@ -712,31 +719,52 @@
   (keymap-set jinx-correct-map "C-p" #'jinx-previous)
   (keymap-set jinx-correct-map "C-n" #'jinx-next))
 
-(use-package anzu
+(use-package visual-replace
   :ensure t
 
+  :bind (("M-r" . visual-replace)
+         (:map isearch-mode-map
+               ("M-r" . visual-replace)))
   :init
   ;; Setup and settings
-  (setopt anzu-input-idle-delay 0.1)
-  (setopt anzu-replace-at-cursor-thing 'sexp)
-  (setopt anzu-replace-to-string-separator "")
+  (setopt visual-replace-keep-incomplete nil)
+  (setopt visual-replace-preview t
+          visual-replace-preview-delay 0.1
+          visual-replace-preview-max-durattion 0.05)
+  (setopt visual-replace-default-to-full-scope t)
+  (setopt visual-replace-default-to-full-scope t)
+  (setopt visual-replace-display-total t)
+  (setopt visual-replace-min-length 2)
 
   :config
+  ;; Custom functionality
+  (defun visual-replace-word-at-point ()
+    (interactive)
+    (visual-replace-thing-at-point 'word))
+  (defun visual-replace-sexp-at-point ()
+    (interactive)
+    (visual-replace-thing-at-point 'sexp))
+
   ;; Keybindings
-  (keymap-global-set "<remap> <query-replace>" #'anzu-query-replace)
-  (keymap-global-set "<remap> <query-replace-regexp>" #'anzu-query-replace-regexp)
-  (keymap-global-set "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
-  (keymap-global-set "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
+  (keymap-global-set "<remap> <query-replace>" #'visual-replace)
+  (keymap-global-set "<remap> <replace-string>" #'visual-replace)
+  (keymap-global-set "<remap> <query-replace-regexp>" #'visual-replace-regexp)
+  (keymap-global-set "<remap> <isearch-query-replace>" #'visual-replace-from-isearch)
+  (keymap-global-set "<remap> <isearch-query-replace-regexp>" #'visual-replace-from-isearch)
 
-  (keymap-set isearch-mode-map "<remap> <isearch-query-replace>" #'anzu-isearch-query-replace)
-  (keymap-set isearch-mode-map "<remap> <isearch-query-replace-regexp>" #'anzu-isearch-query-replace-regexp)
+  (keymap-set a-replace-map "v" #'visual-replace)
+  (keymap-set a-replace-map "V" #'visual-replace-regexp)
+  (keymap-set a-replace-map "r" #'visual-replace-selected)
+  (keymap-set a-replace-map "." #'visual-replace-thing-at-point)
+  (keymap-set a-replace-map "w" #'visual-replace-word-at-point)
+  (keymap-set a-replace-map "s" #'visual-replace-sexp-at-point)
 
-  (keymap-set a-search-replace-map "r ." #'anzu-query-replace-at-cursor)
-  (keymap-set a-search-replace-map "r t" #'anzu-query-replace-at-cursor-thing)
-  (keymap-set a-search-replace-map "r T" #'anzu-replace-at-cursor-thing)
+  (keymap-set visual-replace-mode-map "C-v" #'visual-replace-enter)
+  (keymap-set visual-replace-mode-map "C-p" #'visual-replace-prev-match)
+  (keymap-set visual-replace-mode-map "C-n" #'visual-replace-next-match)
+  (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab)
+  (keymap-set visual-replace-mode-map "M-r" visual-replace-secondary-mode-map))
 
-  ;; Activation
-  (global-anzu-mode 1))
 
 ;; Completion
 (use-package orderless
@@ -781,12 +809,10 @@
   (keymap-set vertico-map "TAB" #'minibuffer-complete)
   (keymap-set vertico-map "<tab>" "TAB")
   (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
-  (keymap-set vertico-map "C-p" #'previous-history-element)
-  (keymap-set vertico-map "C-n" #'next-history-element)
-  (keymap-set vertico-map "C-<prior>" #'vertico-previous-group)
-  (keymap-set vertico-map "C-<next>" #'vertico-next-group)
-  (keymap-set vertico-map "C-<home>" #'vertico-first)
-  (keymap-set vertico-map "C-<end>" #'vertico-last)
+  (keymap-set vertico-map "<next>" #'vertico-scroll-up)
+  (keymap-set vertico-map "<prior>" #'vertico-scroll-down)
+  (keymap-set vertico-map "<home>" #'vertico-first)
+  (keymap-set vertico-map "<end>" #'vertico-last)
 
   ;; Activation
   (vertico-mode 1))
@@ -877,8 +903,8 @@
   (keymap-unset corfu-map "<down>")
   (keymap-set corfu-map "M-<up>" #'corfu-previous)
   (keymap-set corfu-map "M-<down>" #'corfu-next)
-  (keymap-set corfu-map "M-p" #'corfu-scroll-down)
-  (keymap-set corfu-map "M-n" #'corfu-scroll-up)
+  (keymap-set corfu-map "M-\\" #'corfu-scroll-down)
+  (keymap-set corfu-map "M-/" #'corfu-scroll-up)
   (keymap-set corfu-map "M-<" #'corfu-first)
   (keymap-set corfu-map "M->" #'corfu-last)
 
@@ -969,8 +995,8 @@
     :prefix 'a-tempel-map-prefix)
   (keymap-global-set "C-c t" 'a-tempel-map-prefix)
 
-  :bind (("M-o" . tempel-complete)
-         ("M-v" . tempel-expand)
+  :bind (("M-v" . tempel-complete)
+         ("M-V" . tempel-expand)
          (:map a-tempel-map
                ("c" . tempel-complete)
                ("e" . tempel-expand)
@@ -1164,7 +1190,9 @@ that allows to include other templates by their name."
                                      (?y . avy-action-yank)
                                      (?Y . avy-action-teleport)
                                      (?z . avy-action-zap-to-char)
-                                     (?i . avy-action-ispell))))
+                                     (?i . avy-action-ispell)))
+  ;; Keybindings
+  (keymap-unset isearch-mode-map "C-j"))
 
 (use-package consult
   :ensure t
@@ -1207,7 +1235,7 @@ that allows to include other templates by their name."
                ("M" . consult-global-mark)
                ("i" . consult-imenu)
                ("I" . consult-imenu-multi))
-         (:map a-search-replace-map
+         (:map a-search-map
                ("f" . find-file)
                ("F" . find-file-other-window)
                ("C-f" . consult-fd)
@@ -1267,8 +1295,8 @@ that allows to include other templates by their name."
 
   :bind (("M-," . embark-act)
          ("M-." . embark-dwim)
-         ("C-o" . embark-select)
-         ("C-S-v" . embark-export)
+         ("M-o" . embark-select)
+         ("M-O" . embark-export)
          ("C-h C-b" . embark-bindings)
          (:map an-embark-map
                ("a" . embark-act)
@@ -1972,6 +2000,8 @@ that allows to include other templates by their name."
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(cursor :background success)
+    '(visual-replace-delete-match :background base0 :foreground error :weight 'bold :strike-through t)
+    '(visual-replace-replacement :background base0 :foreground success :weight 'bold)
     '(trailing-whitespace :background magenta)
     '(aw-background-face :inherit 'avy-background-face)
     '(aw-leading-char-face :inherit 'avy-lead-face)
