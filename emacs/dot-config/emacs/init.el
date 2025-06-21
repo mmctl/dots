@@ -723,8 +723,16 @@
   :ensure t
 
   :bind (("M-r" . visual-replace)
+         (:map a-replace-map
+               ("r" . visual-replace-selected)
+               ("s" . visual-replace-sexp-at-point)
+               ("v" . visual-replace)
+               ("V" . visual-replace-regexp)
+               ("w" . visual-replace-word-at-point)
+               ("." . visual-replace-thing-at-point))
          (:map isearch-mode-map
                ("M-r" . visual-replace)))
+
   :init
   ;; Setup and settings
   (setopt visual-replace-keep-incomplete nil)
@@ -736,7 +744,6 @@
   (setopt visual-replace-display-total t)
   (setopt visual-replace-min-length 2)
 
-  :config
   ;; Custom functionality
   (defun visual-replace-word-at-point ()
     (interactive)
@@ -752,19 +759,16 @@
   (keymap-global-set "<remap> <isearch-query-replace>" #'visual-replace-from-isearch)
   (keymap-global-set "<remap> <isearch-query-replace-regexp>" #'visual-replace-from-isearch)
 
-  (keymap-set a-replace-map "v" #'visual-replace)
-  (keymap-set a-replace-map "V" #'visual-replace-regexp)
-  (keymap-set a-replace-map "r" #'visual-replace-selected)
-  (keymap-set a-replace-map "." #'visual-replace-thing-at-point)
-  (keymap-set a-replace-map "w" #'visual-replace-word-at-point)
-  (keymap-set a-replace-map "s" #'visual-replace-sexp-at-point)
-
+  :config
+  ;; Keybindings
   (keymap-set visual-replace-mode-map "C-v" #'visual-replace-enter)
   (keymap-set visual-replace-mode-map "C-p" #'visual-replace-prev-match)
   (keymap-set visual-replace-mode-map "C-n" #'visual-replace-next-match)
   (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab)
   (keymap-set visual-replace-mode-map "M-r" visual-replace-secondary-mode-map))
 
+(use-package posframe
+  :ensure t)
 
 ;; Completion
 (use-package orderless
@@ -1360,8 +1364,8 @@ that allows to include other templates by their name."
   (keymap-set embark-consult-async-search-map "G" #'consult-grep)
   (keymap-set embark-consult-async-search-map "M-g" #'consult-git-grep))
 
-;; Tools
-;; Project.el (built-in)
+
+;;; Tools
 (use-package project
   :init
   ;; Setup and settings (before load)
@@ -1370,6 +1374,194 @@ that allows to include other templates by their name."
     "File where known project's are stored.")
   (setopt project-list-file PROJECT_LIST_FILE)
   (setopt project-mode-line t))
+
+(use-package org
+  :ensure t
+
+  :preface
+  (defvar-keymap an-org-map
+    :doc "Keymap for org (outside `org-mode')"
+    :prefix 'an-org-map-prefix)
+  (keymap-global-set "C-c o" 'an-org-map-prefix)
+
+  :bind (("C-c c" . org-capture)
+         (:map an-org-map
+               ("a" . org-agenda)
+               ("c" . org-capture)
+               ("l" . org-store-link)))
+
+  :init
+  ;; Setup and settings (before load)
+  ;; Create and store org root directory
+  (defconst ORG_DIR (file-name-as-directory
+                     (if (getenv "XDG_DATA_HOME")
+                         (file-name-concat (getenv "XDG_DATA_HOME") "org/")
+                       "~/org/"))
+    "Directory used as default location for org files.")
+  (unless (file-directory-p ORG_DIR)
+    (make-directory ORG_DIR t))
+
+  ;; Create and store org calendar file
+  (defconst ORG_CALENDAR_FILE (file-name-concat ORG_DIR "calendar.org")
+    "Default file for calendar events created with org.")
+  (unless (file-regular-p ORG_CALENDAR_FILE)
+    (make-empty-file ORG_CALENDAR_FILE t))
+
+  ;; Create and store org (default) notes file
+  (defconst ORG_NOTES_FILE (file-name-concat ORG_DIR "notes.org")
+    "Default file for notes created with org.")
+  (unless (file-regular-p ORG_NOTES_FILE)
+    (make-empty-file ORG_NOTES_FILE t))
+
+  ;; Create and store org (default) todos file
+  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
+    "Default file for todos created with org.")
+  (unless (file-regular-p ORG_TODOS_FILE)
+    (make-empty-file ORG_TODOS_FILE t))
+
+  ;; Create and store org (default) todos file
+  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
+    "Default file for todos created with org.")
+  (unless (file-regular-p ORG_TODOS_FILE)
+    (make-empty-file ORG_TODOS_FILE t))
+
+  ;; Create and store org (default) meetings file
+  (defconst ORG_MEETINGS_FILE (file-name-concat ORG_DIR "meetings.org")
+    "Default file for todos created with org.")
+  (unless (file-regular-p ORG_MEETINGS_FILE)
+    (make-empty-file ORG_MEETINGS_FILE t))
+
+  (setopt org-default-notes-file ORG_NOTES_FILE)
+
+  (setopt org-replace-disputed-keys t
+          org-disputed-keys '(([(shift up)] . [(meta p)])
+                              ([(shift down)] . [(meta n)])
+                              ([(shift left)] . [(meta b)])
+                              ([(shift right)] . [(meta f)])
+                              ([(control shift up)]	. [(control shift p)])
+                              ([(control shift down)]	. [(control shift n)])
+                              ([(control shift left)]	. [(control shift b)])
+                              ([(control shift right)] . [(control shift f)])
+                              ([(meta shift up)]	. [(meta shift p)])
+                              ([(meta shift down)]	. [(meta shift n)])
+                              ([(meta shift left)]	. [(meta shift b)])
+                              ([(meta shift right)] . [(meta shift f)])))
+
+  (setopt org-return-follows-link t)
+  (setopt org-support-shift-select t)
+
+  (setopt org-startup-folded 'content)
+  (setopt org-enforce-todo-dependencies t
+          org-enforce-todo-checkbox-dependencies t)
+
+  (setopt org-log-done 'time
+          org-log-refile nil)
+
+  (setopt org-refile-allow-creating-parent-nodes 'confirm
+          org-refile-targets '((nil . (:level . 1))
+                               (nil . (:tag . "rftarget"))
+                               (org-agenda-files . (:level . 1))
+                               (org-agenda-files . (:tag . "rftarget"))))
+
+  (setopt org-tag-alist
+          '((:startgroup)
+            ("@work" . ?W) ("@home" . ?H) ("@online" . ?O) ("@elsewhere" . ?E)
+            (:endgroup)
+            (:startgrouptag)
+            ("Project") (:grouptags) ("{proj@.+}" . ?p)
+            (:endgrouptag)
+            (:startgrouptag)
+            ("Area") (:grouptags) ("{area@.+}" . ?a)
+            (:endgrouptag)
+            ("administration" . ?A) ("event" . ?e) ("family-and-friends". ?f) ("finance" . ?F)
+            ("home" . ?h) ("matthias" . ?m) ("meeting" . ?M) ("partner" . ?P)
+            ("research" . ?r) ("rftarget" . ?R) ("study". ?s) ("teach" . ?t)
+            ("travel" . ?T) ("work" . ?w)))
+
+  (setopt org-tags-exclude-from-inheritance '("rftarget"))
+
+  (setopt org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "BLOCKED" "DONE")))
+  (setopt org-todo-keyword-faces
+          '(("TODO" . (:inherit org-todo))
+            ("IN-PROGRESS" . (:inherit org-cite))
+            ("BLOCKED" . (:inherit org-warning))
+            ("DONE" . (:inherit org-done))))
+
+  (setopt org-capture-templates
+          '(("n" "Note"
+             entry (file+headline ORG_NOTES_FILE "Notes")
+             "* %?\n:PROPERTIES:\n:Created: %U\n:END:"
+             :empty-lines 0)
+            ("N" "Note (tag + context)"
+             entry (file+headline ORG_NOTES_FILE "Notes")
+             "* %? %^g\n:PROPERTIES:\n:Created: %U\n:END:\n:CONTEXT:\n%a\n:END:"
+             :empty-lines 0)
+            ("t" "Todo"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %?\n:PROPERTIES:\n:Created: %U\n:END:"
+             :empty-lines 0)
+            ("T" "Todo (tag + context)"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %? %^g\n:PROPERTIES:\n:Created: %U\n:END:\n:CONTEXT:\n%a\n:END:"
+             :empty-lines 0)
+            ("d" "Todo with deadline"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %?\nDEADLINE: %^T\n:PROPERTIES:\n:Created: %U\n:END:"
+             :empty-lines 0)
+            ("D" "Todo with deadline (tag + context)"
+             entry (file+headline ORG_TODOS_FILE "Tasks")
+             "* TODO [#B] %? %^g\nDEADLINE: %^T\n:PROPERTIES:\n:Created: %U\n:END:\n:CONTEXT:\n%a\n:END:"
+             :empty-lines 0)
+            ("c" "Calendar event"
+             entry (file+headline ORG_CALENDAR_FILE "Events")
+             "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T"
+             :empty-lines-before 0
+             :empty-lines-after 1)
+            ("C" "Calendar event (tag + notes)"
+             entry (file+headline ORG_CALENDAR_FILE "Events")
+             "* %? %^g\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i"
+             :empty-lines-before 0
+             :empty-lines-after 1)
+            ("m" "Meeting"
+             entry (file+olp+datetree ORG_MEETINGS_FILE)
+             "* %? :meeting:%^g\n:PROPERTIES:\n:Created: %U\n:END:\n** Notes:%i\n** Action Items:\n*** TODO [#B] "
+             :tree-type week
+             :clock-in t
+             :clock-resume t
+             :empty-lines-before 0
+             :empty-lines-after 1)))
+
+  ;; Custom functionality
+  (defun find-file-org ()
+    "Find file in `ORG_DIR' using `find-file'."
+    (interactive)
+    (let ((default-directory ORG_DIR))
+      (call-interactively #'find-file)))
+
+  ;; Keybindings
+  (keymap-set an-org-map "f" #'find-file-org)
+
+  :config
+  ;; Setup and settings (after load)
+  (add-to-list 'org-agenda-files ORG_CALENDAR_FILE)
+  (add-to-list 'org-agenda-files ORG_TODOS_FILE)
+  (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
+
+  ;; Keybindings
+  (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
+
+  (with-eval-after-load 'org-capture
+    (keymap-set org-capture-mode-map "C-c C-v" #'org-capture-finalize))
+
+  (keymap-unset org-read-date-minibuffer-local-map "C-v")
+  (keymap-unset org-read-date-minibuffer-local-map "M-v")
+  (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
+  (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right)
+
+  ;; Hooks
+  (add-hook 'org-mode-hook #'loc-setup-mix-mode)
+  (add-hook 'org-mode-hook #'org-indent-mode)
+  (add-hook 'org-capture-mode-hook #'loc-setup-mix-mode))
 
 (use-package diff-hl
   :ensure t
@@ -1545,190 +1737,6 @@ that allows to include other templates by their name."
   (add-hook 'pdf-tools-enabled-hook #'(lambda ()
                                         (keymap-unset pdf-sync-minor-mode-map "<double-mouse-1>"))))
 
-(use-package org
-  :ensure t
-
-  :preface
-  (defvar-keymap an-org-map
-    :doc "Keymap for org (outside `org-mode')"
-    :prefix 'an-org-map-prefix)
-  (keymap-global-set "C-c o" 'an-org-map-prefix)
-
-  :bind (("C-c c" . org-capture)
-         (:map an-org-map
-               ("a" . org-agenda)
-               ("c" . org-capture)
-               ("l" . org-store-link)))
-
-  :init
-  ;; Setup and settings (before load)
-  ;; Create and store org root directory
-  (defconst ORG_DIR (file-name-as-directory
-                     (if (getenv "XDG_DATA_HOME")
-                         (file-name-concat (getenv "XDG_DATA_HOME") "org/")
-                       "~/org/"))
-    "Directory used as default location for org files.")
-  (unless (file-directory-p ORG_DIR)
-    (make-directory ORG_DIR t))
-
-  ;; Create and store org calendar file
-  (defconst ORG_CALENDAR_FILE (file-name-concat ORG_DIR "calendar.org")
-    "Default file for calendar events created with org.")
-  (unless (file-regular-p ORG_CALENDAR_FILE)
-    (make-empty-file ORG_CALENDAR_FILE t))
-
-  ;; Create and store org (default) notes file
-  (defconst ORG_NOTES_FILE (file-name-concat ORG_DIR "notes.org")
-    "Default file for notes created with org.")
-  (unless (file-regular-p ORG_NOTES_FILE)
-    (make-empty-file ORG_NOTES_FILE t))
-
-  ;; Create and store org (default) todos file
-  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
-    "Default file for todos created with org.")
-  (unless (file-regular-p ORG_TODOS_FILE)
-    (make-empty-file ORG_TODOS_FILE t))
-
-  ;; Create and store org (default) todos file
-  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
-    "Default file for todos created with org.")
-  (unless (file-regular-p ORG_TODOS_FILE)
-    (make-empty-file ORG_TODOS_FILE t))
-
-  ;; Create and store org (default) meetings file
-  (defconst ORG_MEETINGS_FILE (file-name-concat ORG_DIR "meetings.org")
-    "Default file for todos created with org.")
-  (unless (file-regular-p ORG_MEETINGS_FILE)
-    (make-empty-file ORG_MEETINGS_FILE t))
-
-  (setopt org-default-notes-file ORG_NOTES_FILE)
-
-  (setopt org-replace-disputed-keys t
-          org-disputed-keys '(([(shift up)] . [(meta p)])
-                              ([(shift down)] . [(meta n)])
-                              ([(shift left)] . [(meta b)])
-                              ([(shift right)] . [(meta f)])
-                              ([(control shift up)]	. [(control shift p)])
-                              ([(control shift down)]	. [(control shift n)])
-                              ([(control shift left)]	. [(control shift b)])
-                              ([(control shift right)] . [(control shift f)])
-                              ([(meta shift up)]	. [(meta shift p)])
-                              ([(meta shift down)]	. [(meta shift n)])
-                              ([(meta shift left)]	. [(meta shift b)])
-                              ([(meta shift right)] . [(meta shift f)])))
-
-  (setopt org-return-follows-link t)
-  (setopt org-support-shift-select t)
-
-  (setopt org-log-done 'time
-          org-log-refile nil)
-
-  (setopt org-refile-allow-creating-parent-nodes 'confirm
-          org-refile-targets '((nil . (:level . 1))
-                               (nil . (:tag . "rftarget"))
-                               (org-agenda-files . (:level . 1))
-                               (org-agenda-files . (:tag . "rftarget"))))
-
-  (setopt org-tag-alist
-          '((:startgroup)
-            ("@work" . ?W) ("@home" . ?H) ("@online" . ?O) ("@elsewhere" . ?E)
-            (:endgroup)
-            (:startgrouptag)
-            ("Project") (:grouptags) ("{proj@.+}" . ?p)
-            (:endgrouptag)
-            (:startgrouptag)
-            ("Area") (:grouptags) ("{area@.+}" . ?a)
-            (:endgrouptag)
-            ("administration" . ?A) ("event" . ?e) ("family-and-friends". ?f) ("finance" . ?F)
-            ("home" . ?h) ("matthias" . ?m) ("meeting" . ?M) ("partner" . ?P)
-            ("research" . ?r) ("rftarget" . ?R) ("study". ?s) ("teach" . ?t)
-            ("travel" . ?T) ("work" . ?w)))
-
-  (setopt org-tags-exclude-from-inheritance '("rftarget"))
-
-  (setopt org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "BLOCKED" "DONE")))
-  (setopt org-todo-keyword-faces
-          '(("TODO" . (:inherit org-todo))
-            ("IN-PROGRESS" . (:inherit org-cite))
-            ("BLOCKED" . (:inherit org-warning))
-            ("DONE" . (:inherit org-done))))
-
-  (setopt org-capture-templates
-          '(("n" "Note"
-             entry (file+headline ORG_NOTES_FILE "Notes")
-             "* %?\n:PROPERTIES:\n:CREATED: %U\n:END:"
-             :empty-lines 0)
-            ("N" "Note (tag + context)"
-             entry (file+headline ORG_NOTES_FILE "Notes")
-             "* %? %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n:CONTEXT:\n%a\n:END:"
-             :empty-lines 0)
-            ("t" "Todo"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %?\n:PROPERTIES:\n:CREATED: %U\n:END:"
-             :empty-lines 0)
-            ("T" "Todo (tag + context)"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %? %^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n:CONTEXT:\n%a\n:END:"
-             :empty-lines 0)
-            ("d" "Todo with deadline"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %?\nDEADLINE: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:"
-             :empty-lines 0)
-            ("D" "Todo with deadline (tag + context)"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %? %^g\nDEADLINE: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:\n:CONTEXT:\n%a\n:END:"
-             :empty-lines 0)
-            ("c" "Calendar event"
-             entry (file+headline ORG_CALENDAR_FILE "Events")
-             "* %?\nSCHEDULED: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:"
-             :empty-lines-before 0
-             :empty-lines-after 1)
-            ("C" "Calendar event (tag + notes)"
-             entry (file+headline ORG_CALENDAR_FILE "Events")
-             "* %? %^g\nSCHEDULED: %^T\n:PROPERTIES:\n:CREATED: %U\n:END:\n** Notes:%i"
-             :empty-lines-before 0
-             :empty-lines-after 1)
-            ("m" "Meeting"
-             entry (file+olp+datetree ORG_MEETINGS_FILE)
-             "* %? :meeting:%^g\n:PROPERTIES:\n:CREATED: %U\n:END:\n** Notes:%i\n** Action Items:\n*** TODO [#B] "
-             :tree-type week
-             :clock-in t
-             :clock-resume t
-             :empty-lines-before 0
-             :empty-lines-after 1)))
-
-  ;; Custom functionality
-  (defun find-file-org ()
-    "Find file in `ORG_DIR' using `find-file'."
-    (interactive)
-    (let ((default-directory ORG_DIR))
-      (call-interactively #'find-file)))
-
-  ;; Keybindings
-  (keymap-set an-org-map "f" #'find-file-org)
-
-  :config
-  ;; Setup and settings (after load)
-  (add-to-list 'org-agenda-files ORG_CALENDAR_FILE)
-  (add-to-list 'org-agenda-files ORG_TODOS_FILE)
-  (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
-
-  ;; Keybindings
-  (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
-
-  (with-eval-after-load 'org-capture
-    (keymap-set org-capture-mode-map "C-c C-v" #'org-capture-finalize))
-
-  (keymap-unset org-read-date-minibuffer-local-map "C-v")
-  (keymap-unset org-read-date-minibuffer-local-map "M-v")
-  (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
-  (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right)
-
-  ;; Hooks
-  (add-hook 'org-mode-hook #'loc-setup-mix-mode)
-  (add-hook 'org-mode-hook #'org-indent-mode)
-  (add-hook 'org-capture-mode-hook #'loc-setup-mix-mode))
-
 (use-package markdown-mode
   :ensure t
 
@@ -1762,7 +1770,108 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
 
-;; Developmentk
+;; Assistants
+(use-package gptel
+  :ensure t
+
+  :preface
+  (defvar-keymap an-ai-map
+    :doc "Keymap for AI (assistants)"
+    :prefix 'an-ai-map-prefix)
+  (keymap-global-set "C-c a" 'an-ai-map-prefix)
+
+  :bind (("C-c v" . gptel-send)
+         ("C-c V" . gptel)
+         (:map gptel-mode-map
+               ("C-c C-v" . gptel-send))
+         (:map an-ai-map
+               ("a" . gptel-add)
+               ("f" . gptel-add-file)
+               ("g" . gptel)
+               ("m" . gptel-menu)
+               ("o" . gptel-org-set-topic)
+               ("O" . gptel-org-set-properties)
+               ("q" . gptel-abort)
+               ("r" . gptel-rewrite)
+               ("s" . gptel-send)
+               ("<" . gptel-beginning-of-response)
+               (">" . gptel-end-of-response)))
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt gptel-include-reasoning nil)
+  (setopt gptel-default-mode 'org-mode)
+  (setopt gptel-rewrite-default-action 'dispatch)
+
+  (setopt gptel-prompt-prefix-alist '((org-mode . "*@me*\n")
+                                      (markdown-mode . "*@me*\n")
+                                      (text-mode . "*@me*\n"))
+          gptel-response-prefix-alist '((org-mode . "*@assistant*\n")
+                                        (markdown-mode . "*@assistant*\n")
+                                        (text-mode . "*@assistant*\n")))
+
+  (setopt gptel-org-branching-context t)
+
+  :config
+  ;; Setup and settings (after load)
+  ;; Define and add system directives
+  (defconst DIRECTIVE_SYSTEM_CODING
+    "You are an expert coding assistant across various programming
+languages. Your goal is to assist developers by providing clean, efficient, and
+well-explained code solutions tailored to their needs. Ensure your responses
+include not only the final code but also detailed explanations of changes made
+and best practices followed."
+   "A directive system message used with assistants aimed at coding.")
+
+  (defconst DIRECTIVE_SYSTEM_WRITING_ACADEMIC
+    "You are an expert academic researcher and writer specializing in
+cryptography and formal methods. Your task is to help researchers and
+students enhance their writing by making it more concise, improving flow and
+tone, and providing innovative rewriting ideas. Your responses should be
+tailored to the specific nuances of these fields, ensuring clarity and
+precision throughout."
+    "A directive system message used with assistants aimed at academic writing.")
+
+  (add-to-list 'gptel-directives `(coding . ,DIRECTIVE_SYSTEM_CODING))
+  (add-to-list 'gptel-directives `(writing-academic . ,DIRECTIVE_SYSTEM_WRITING_ACADEMIC))
+
+  ;; Register Ollama backend
+  (setopt gptel-backend (gptel-make-ollama "Ollama"
+                          :host "localhost:11434"
+                          :stream t
+                          :models '(qwen2.5-coder:7b qwen3:4b))
+          gptel-model 'qwen3:4b)
+
+  ;; Presets
+  (gptel-make-preset 'qwen-coding
+    :description "A preset aimed at coding (uses QWEN-2.5-Coder)."
+    :backend "Ollama"
+    :model 'qwen2.5-coder:7b
+    :system DIRECTIVE_SYSTEM_CODING)
+  (gptel-make-preset 'qwen-writing-academic
+    :description "A preset aimed at academic writing (uses QWEN-3)."
+    :backend "Ollama"
+    :model 'qwen3:4b
+    :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
+
+  ;; Hooks
+  (add-hook 'gptel-post-response-functions #'gptel-end-of-response))
+
+(use-package gptel-quick
+  :ensure t
+
+  :vc (:url "https://github.com/karthink/gptel-quick.git"
+            :rev :newest)
+
+  :bind ((:map an-ai-map
+               ("e" . gptel-quick)))
+
+  :init
+  ;; Setup and settings
+  (with-eval-after-load 'embark
+    (keymap-set embark-general-map "?" #'gptel-quick)))
+
+;; Development
 ;; OCaml
 (use-package tuareg
   :ensure t
@@ -1872,6 +1981,7 @@ that allows to include other templates by their name."
     (keymap-unset proof-mode-map "M-e")
     (keymap-unset proof-mode-map "C-M-<up>")
     (keymap-unset proof-mode-map "C-M-<down>")
+    (keymap-unset proof-mode-map "C-c v")
     (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
     (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive)
     (keymap-set proof-mode-map "C-c C-v" #'proof-goto-point)
@@ -1889,7 +1999,8 @@ that allows to include other templates by their name."
     (keymap-set proof-mode-map "C-M-p" #'pg-previous-input)
     (keymap-set proof-mode-map "C-M-n" #'pg-next-input)
     (keymap-set proof-mode-map "C-M-S-p" #'pg-previous-matching-input)
-    (keymap-set proof-mode-map "C-M-S-n" #'pg-next-matching-input))
+    (keymap-set proof-mode-map "C-M-S-n" #'pg-next-matching-input)
+    (keymap-set proof-mode-map "C-c M-v" #'pg-toggle-visibility))
   (defun setup-a-proof-response-mode-map ()
     (keymap-set proof-response-mode-map "C-q" #'bury-buffer)
     (keymap-set proof-response-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
@@ -2160,11 +2271,13 @@ that allows to include other templates by their name."
   :config
   ;; Keybindings
   (keymap-set easycrypt-ext-mode-map "C-c C-p" #'ece-print)
+  (keymap-set easycrypt-ext-mode-map "C-c =" #'ece-prompt-print)
   (keymap-set easycrypt-ext-mode-map "C-c l p" #'ece-print)
   (keymap-set easycrypt-ext-mode-map "C-c l P" #'ece-prompt-print)
   (keymap-set easycrypt-ext-mode-map "C-c l l" #'ece-locate)
   (keymap-set easycrypt-ext-mode-map "C-c l L" #'ece-prompt-locate)
   (keymap-set easycrypt-ext-mode-map "C-c C-s" #'ece-search)
+  (keymap-set easycrypt-ext-mode-map "C-c /" #'ece-prompt-search)
   (keymap-set easycrypt-ext-mode-map "C-c l s" #'ece-search)
   (keymap-set easycrypt-ext-mode-map "C-c l S" #'ece-prompt-search)
   (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
