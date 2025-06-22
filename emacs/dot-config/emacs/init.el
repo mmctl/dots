@@ -136,7 +136,9 @@
 ;; Launching
 (setopt inhibit-splash-screen t)
 (setopt initial-major-mode 'fundamental-mode)
-(setopt initial-scratch-message "// This buffer is for text that is not saved, and for Lisp evaluation \\\\")
+(setopt initial-scratch-message
+        "// This buffer is for text that is not saved,\
+ and for Lisp evaluation \\\\")
 
 ;; Frames/Windows
 (setopt frame-resize-pixelwise t)
@@ -766,9 +768,6 @@
   (keymap-set visual-replace-mode-map "C-n" #'visual-replace-next-match)
   (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab)
   (keymap-set visual-replace-mode-map "M-r" visual-replace-secondary-mode-map))
-
-(use-package posframe
-  :ensure t)
 
 ;; Completion
 (use-package orderless
@@ -1771,20 +1770,54 @@ that allows to include other templates by their name."
 
 
 ;; Assistants
+(defvar-keymap an-ai-map
+  :doc "Keymap for AI (assistants)"
+  :prefix 'an-ai-map-prefix)
+(keymap-global-set "C-c a" 'an-ai-map-prefix)
+
+(use-package aidermacs
+  :ensure t
+
+  :pin melpa
+
+  :bind (("C-c z" . aidermacs-transient-menu)
+         (:map an-ai-map
+               ("a" . aidermacs-transient-menu)))
+
+  :init
+  ;; Setup and settings (before load)
+  ;; (setopt aidermacs-default-chat-mode 'ask)
+  (setopt aidermacs-default-model "openrouter/mistralai/devstral-small:free"
+          aidermacs-weak-model "ollama_chat/qwen2.5-coder:3b")
+
+  (setopt aidermacs-use-architect-mode nil
+          aidermacs-auto-accept-architect nil)
+
+  (setopt aidermacs-show-diff-after-change t
+          aidermacs-auto-commits nil)
+
+
+  :config
+  ;; Keybindings
+  (keymap-set aidermacs-minor-mode-map "C-c C-v" #'aidermacs-send-line-or-region)
+
+  ;; Hooks
+  (add-hook 'aidermacs-before-run-backend-hook
+            #'(lambda ()
+                (setenv "OLLAMA_API_BASE" "http://127.0.0.1:11434"))))
+
 (use-package gptel
   :ensure t
 
   :preface
-  (defvar-keymap an-ai-map
-    :doc "Keymap for AI (assistants)"
-    :prefix 'an-ai-map-prefix)
-  (keymap-global-set "C-c a" 'an-ai-map-prefix)
+  (defvar-keymap a-gptel-map
+    :doc "Keymap for `gptel'"
+    :prefix 'a-gptel-map-prefix)
+  (keymap-set an-ai-map "g" 'a-gptel-map-prefix)
 
   :bind (("C-c v" . gptel-send)
          ("C-c V" . gptel)
-         (:map gptel-mode-map
-               ("C-c C-v" . gptel-send))
-         (:map an-ai-map
+         (:map a-gptel-map
                ("a" . gptel-add)
                ("f" . gptel-add-file)
                ("g" . gptel)
@@ -1816,60 +1849,78 @@ that allows to include other templates by their name."
   ;; Setup and settings (after load)
   ;; Define and add system directives
   (defconst DIRECTIVE_SYSTEM_CODING
-    "You are an expert coding assistant across various programming
-languages. Your goal is to assist developers by providing clean, efficient, and
-well-explained code solutions tailored to their needs. Ensure your responses
-include not only the final code but also detailed explanations of changes made
-and best practices followed."
+    "You are an expert coding assistant across various programming\
+ languages. Your goal is to assist developers by providing clean, efficient, and\
+ well-explained code solutions tailored to their needs. Ensure your responses\
+ include not only the final code but also detailed explanations of changes made\
+ and best practices followed."
    "A directive system message used with assistants aimed at coding.")
 
   (defconst DIRECTIVE_SYSTEM_WRITING_ACADEMIC
-    "You are an expert academic researcher and writer specializing in
-cryptography and formal methods. Your task is to help researchers and
-students enhance their writing by making it more concise, improving flow and
-tone, and providing innovative rewriting ideas. Your responses should be
-tailored to the specific nuances of these fields, ensuring clarity and
-precision throughout."
+    "You are an expert academic researcher and writer specializing in\
+ cryptography and formal methods. Your task is to help researchers and\
+ students enhance their writing by making it more concise, improving flow and\
+ tone, and providing innovative rewriting ideas. Your responses should be\
+ tailored to the specific nuances of these fields, ensuring clarity and\
+ precision throughout."
     "A directive system message used with assistants aimed at academic writing.")
 
   (add-to-list 'gptel-directives `(coding . ,DIRECTIVE_SYSTEM_CODING))
   (add-to-list 'gptel-directives `(writing-academic . ,DIRECTIVE_SYSTEM_WRITING_ACADEMIC))
 
-  ;; Register Ollama backend
-  (setopt gptel-backend (gptel-make-ollama "Ollama"
-                          :host "localhost:11434"
+  ;; Register Ollama (local) backend
+  (gptel-make-ollama "Ollama"
+    :host "localhost:11434"
+    :stream t
+    :models '(qwen2.5-coder:3b
+              qwen2.5-coder:7b
+              qwen2.5-coder:14b
+              qwen3:4b
+              qwen3:8b
+              deepseek-r1:1.5b
+              deepseek-r1:latest))
+
+  ;; Register OpenRouter backend (remote/API) and set it default
+  (setopt gptel-backend (gptel-make-openai "OpenRouter"
+                          :host "openrouter.ai"
+                          :endpoint "/api/v1/chat/completions"
                           :stream t
-                          :models '(qwen2.5-coder:7b qwen3:4b))
-          gptel-model 'qwen3:4b)
+                          :key (getenv "OPENROUTER_API_KEY")
+                          :models '(microsoft/mai-ds-r1:free
+                                    mistralai/mistral-small-3.2-24b-instruct:free
+                                    mistralai/devstral-small:free
+                                    meta-llama/llama-3.3-70b-instruct:free
+                                    google/gemini-2.0-flash-exp:free))
+          gptel-api-key (getenv "OPENROUTER_API_KEY")
+          gptel-model 'google/gemini-2.0-flash-exp:free)
 
   ;; Presets
-  (gptel-make-preset 'qwen-coding
-    :description "A preset aimed at coding (uses QWEN-2.5-Coder)."
+  (gptel-make-preset 'coding-qwen25coder-low-ollama
+    :description "A low-resource preset aimed at coding (uses QWEN-2.5-Coder via Ollama)."
     :backend "Ollama"
-    :model 'qwen2.5-coder:7b
+    :model 'qwen2.5-coder:3b
     :system DIRECTIVE_SYSTEM_CODING)
-  (gptel-make-preset 'qwen-writing-academic
-    :description "A preset aimed at academic writing (uses QWEN-3)."
+  (gptel-make-preset 'academic-writing-qwen3-low-ollama
+    :description "A low-resource preset aimed at academic writing (uses QWEN-3 via Ollama)."
     :backend "Ollama"
     :model 'qwen3:4b
     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
+  (gptel-make-preset 'coding-maidsr1-openrouter
+    :description "A preset aimed at coding (uses MAI-DS R1 via OpenRouter)."
+    :backend "OpenRouter"
+    :model 'microsoft/mai-ds-r1:free
+    :system DIRECTIVE_SYSTEM_CODING)
+  (gptel-make-preset 'academic-writing-llama33-openrouter
+    :description "A preset aimed at academic writing (uses LLama3 via OpenRouter)."
+    :backend "OpenRouter"
+    :model 'meta-llama/llama-3.3-70b-instruct:free
+    :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
+
+  ;; Keybindings
+  (keymap-set gptel-mode-map "C-c C-v" #'gptel-send)
 
   ;; Hooks
   (add-hook 'gptel-post-response-functions #'gptel-end-of-response))
-
-(use-package gptel-quick
-  :ensure t
-
-  :vc (:url "https://github.com/karthink/gptel-quick.git"
-            :rev :newest)
-
-  :bind ((:map an-ai-map
-               ("e" . gptel-quick)))
-
-  :init
-  ;; Setup and settings
-  (with-eval-after-load 'embark
-    (keymap-set embark-general-map "?" #'gptel-quick)))
 
 ;; Development
 ;; OCaml

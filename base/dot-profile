@@ -59,6 +59,10 @@ export PATH="$HOME/.local/bin:$XDG_DATA_HOME/texlive/2025/bin/x86_64-linux:$PATH
 export MANPATH=":$XDG_DATA_HOME/texlive/2025/texmf-dist/doc/man"
 
 
+## Secret(ish)
+source "$HOME/.env"
+
+
 ## Miscellaneous
 ### OPAM initialization (directories and auto-completions)
 test -r "$OPAMROOT/opam-init/init.sh" && . "$OPAMROOT/opam-init/init.sh" > /dev/null 2> /dev/null || true

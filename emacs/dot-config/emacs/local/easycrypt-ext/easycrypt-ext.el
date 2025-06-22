@@ -648,9 +648,8 @@ Meant for `post-self-insert-hook'."
 directly calls the shell with it."
   (ece--check-functionality 'proof-shell-invisible-command 'proof-general)
   ;; proof-shell-ready-prover called inside proof-shell-invisible-command
-  (if args
-      (proof-shell-invisible-command (string-join (cons command args) " "))
-    (proof-shell-invisible-command command)))
+  (let ((cmd (if args (string-join (cons command args) " ") command)))
+    (proof-shell-invisible-command cmd)))
 
 (defun ece--prompt-command (command)
   "Prompts user for arguments that are passed to COMMAND (proof shell) command
@@ -691,17 +690,24 @@ or tries to find a (reasonable) thing at point."
           (thing-at-mouse event 'sexp t)
           (thing-at-mouse event 'word t))
     (if (use-region-p)
-        (buffer-substring-no-properties (region-beginning) (region-end))
+        (prog1
+            (buffer-substring-no-properties (region-beginning) (region-end))
+          ;; This prevents the whole buffer being marked
+          ;; in the goals/response buffers when issuing commands
+          ;; (at least those that update the response buffer)
+          ;; May, e.g., check for goals/response minor modes if this
+          ;; behavior is not desired in regular (proof) buffer
+          (deactivate-mark))
       (or (thing-at-point 'symbol t)
           (thing-at-point 'sexp t)
           (thing-at-point 'word t)))))
 
 (defun ece--command (command event)
   "If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
-(ignoring any active region). Otherwise, takes the active region
-or tries to find a (reasonable) thing at point. The result is used as an
-argument to the COMMAND command of EasyCrypt. If nothing (reasonable) is
-found, prints a message informing the user."
+(ignoring any active region). Otherwise, takes the active region or tries to
+find a (reasonable) thing at point. The result is used as an argument to the
+COMMAND command of EasyCrypt. If nothing (reasonable) is found, prints a message
+informing the user."
   (when (ece--validate-proof-shell-command command)
     (let ((arg (ece--thing-at event)))
       (if arg
@@ -1581,105 +1587,110 @@ global defaults in all EasyCrypt buffers."
 ;; Generation (macro)
 (defmacro ece--easy-menu-gen (symb map shell exec options &optional submode)
   `(easy-menu-define ,symb ,map
-     ,(format "Menu bar and mode line menu (clickable) for `easycrypt-ext%s-mode'."
-              (if (stringp submode) (concat "-" submode) ""))
-     '(,(format "EasyCrypt Ext%s" (if (stringp submode) (format " (%s)" submode) ""))
-       :visible t
-       :active t
-       :help ,(format "Menu exposing functionality provided by EasyCrypt Ext%s."
-                      (if (stringp submode) (format " (%s)" submode) ""))
-       ,@(append
-          (when shell
-           (list
-            ["Locate" ece-locate
-             :help "Locate the item at cursor in the current EasyCrypt context."]
-            ["Locate (prompt)" ece-prompt-locate
-             :help "Locate an item of choice in the current EasyCrypt context."]
-            ["Print" ece-print
-             :help "Print the item at cursor from the current EasyCrypt context."]
-            ["Print (prompt)" ece-prompt-print
-             :help "Print an item of choice from the current EasyCrypt context."]
-            ["Search" ece-search
-             :help "Search for known axioms/lemmas from the current EasyCrypt context containing the item at cursor."]
-            ["Search (prompt)" ece-prompt-search
-             :help "Search for known axioms/lemmas from the current EasyCrypt context containing items of choice."]
-            (when (or exec options) "-----")))
-          (when exec
-            (list
-             '("Executable (\"command line\") commands"
-               :visible t
-               :active t
-               ["Compile file" ece-compile-file
-                :help "Check current EasyCrypt file."]
-               ["Compile directory/project" ece-compile-dir
-                :help "Check EasyCrypt files in current directory and its subdirectories."]
-               ["Compile (prompt)" ece-compile
-                :help "Check EasyCrypt file(s) of choice."]
-               "-----"
-               ["Generate documentation file" ece-docgen-file
-                :help "Generate documentation for current EasyCrypt file."]
-               ["Generate documentation directory/project" ece-docgen-dir
-                :help "Generate documentation for EasyCrypt files in current directory and its subdirectories."]
-               ["Generate documentation" ece-docgen
-                :help "Generate documentation for EasyCrypt file(s) of choice."]
-               "-----"
-               ["Print help (from executable)" ece-help
-                :help "Print help information as provided by the EasyCrypt executable (through \"--help\")."]
-               "-----"
-               ["Run test scenario (default)" ece-runtest-dflt
-                :help "Run default test scenario (for current EasyCrypt file)."]
-               ["Run test scenario (prompt)" ece-runtest
-                :help "Run test scenario of choice."])))
-          (when options
-            (list
-             '("Configuration/Options"
-               :visible t
-               :active t
-               ["Toggle enhanced indentation (local)" ece-toggle-indentation-local
-                :help "Toggle enhanced indentation in this buffer."
-                :style toggle
-                :selected ece-indentation]
-               ["Enable enhanced indentation (global)" ece-enable-indentation
-                :help "Enable enhanced indentation in all EasyCrypt Ext buffers."]
-               ["Disable enhanced indentation (global)" ece-disable-indentation
-                :help "Disable enhanced indentation in all EasyCrypt Ext buffers."]
-               "-----"
-               ["Toggle keyword completion (local)" ece-toggle-keyword-completion-local
-                :help "Toggle keyword completion in this buffer."
-                :style toggle
-                :selected ece-keyword-completion]
-               ["Enable keyword completion (global)" ece-enable-keyword-completion
-                :help "Enable keyword completion in all EasyCrypt Ext buffers."]
-               ["Disable keyword completion (global)" ece-disable-keyword-completion
-                :help "Disable keyword completion in all EasyCrypt Ext buffers."]
-               "-----"
-               ["Toggle templates (local)" ece-toggle-templates-local
-                :help "Toggle templates in this buffer."
-                :style toggle
-                :selected ece-templates]
-               ["Enable templates (global)" ece-enable-templates
-                :help "Enable templates in all EasyCrypt Ext buffers."]
-               ["Disable templates (global)" ece-disable-templates
-                :help "Disable templates in all EasyCrypt Ext buffers."]
-               "-----"
-               ["Toggle informative templates (local)" ece-toggle-templates-info-local
-                :help "Toggle informative templates in this buffer."
-                :style toggle
-                :selected ece-templates-info]
-               ["Enable informative templates (global)" ece-enable-templates-info
-                :help "Enable informative templates in all EasyCrypt Ext buffers."]
-               ["Disable informative templates (global)" ece-disable-templates-info
-                :help "Disable informative templates in all EasyCrypt Ext buffers."]
-               "-----"
-               ["Reset settings (local)" ece-reset-to-defaults-local
-                :help "Reset EasyCrypt Ext settings to their defaults in this buffer."]
-               ["Reset settings (global)" ece-reset-to-defaults
-                :help "Reset EasyCrypt Ext settings to their defaults in all EasyCrypt Ext buffers."])))))))
+     ,@(let* ((mmd (concat "EasyCrypt Ext" (if (stringp submode) (format " (%s)" submode) "")))
+              (mms (format "easycrypt-ext%s-mode" (if (stringp submode) (concat "-" submode) "")))
+              (mmc (intern-soft mms))
+              (hmd (concat "Disable " mmd)))
+         (append
+          `(,(concat "Menu bar and mode line menu (clickable) for " mms))
+          `('(,mmd
+              :visible t
+              :active t
+              :help ,(concat "Menu exposing functionality provided by " mmd)
+              ,@(append
+                 (when shell
+                   (list
+                    ["Locate" ece-locate
+                     :help "Locate the item at cursor in the current EasyCrypt context."]
+                    ["Locate (prompt)" ece-prompt-locate
+                     :help "Locate an item of choice in the current EasyCrypt context."]
+                    ["Print" ece-print
+                     :help "Print the item at cursor from the current EasyCrypt context."]
+                    ["Print (prompt)" ece-prompt-print
+                     :help "Print an item of choice from the current EasyCrypt context."]
+                    ["Search" ece-search
+                     :help "Search for known axioms/lemmas from the current EasyCrypt context containing the item at cursor."]
+                    ["Search (prompt)" ece-prompt-search
+                     :help "Search for known axioms/lemmas from the current EasyCrypt context containing items of choice."]
+                    (when (or exec options) "-----")))
+                 (when exec
+                   (list
+                    '("Executable (\"command line\") commands"
+                      :visible t
+                      :active t
+                      ["Compile file" ece-compile-file
+                       :help "Check current EasyCrypt file."]
+                      ["Compile directory/project" ece-compile-dir
+                       :help "Check EasyCrypt files in current directory and its subdirectories."]
+                      ["Compile (prompt)" ece-compile
+                       :help "Check EasyCrypt file(s) of choice."]
+                      "-----"
+                      ["Generate documentation file" ece-docgen-file
+                       :help "Generate documentation for current EasyCrypt file."]
+                      ["Generate documentation directory/project" ece-docgen-dir
+                       :help "Generate documentation for EasyCrypt files in current directory and its subdirectories."]
+                      ["Generate documentation" ece-docgen
+                       :help "Generate documentation for EasyCrypt file(s) of choice."]
+                      "-----"
+                      ["Print help (from executable)" ece-help
+                       :help "Print help information as provided by the EasyCrypt executable (through \"--help\")."]
+                      "-----"
+                      ["Run test scenario (default)" ece-runtest-dflt
+                       :help "Run default test scenario (for current EasyCrypt file)."]
+                      ["Run test scenario (prompt)" ece-runtest
+                       :help "Run test scenario of choice."])))
+                 (when options
+                   (list
+                    '("Configuration/Options"
+                      :visible t
+                      :active t
+                      ["Toggle enhanced indentation (local)" ece-toggle-indentation-local
+                       :help "Toggle enhanced indentation in this buffer."
+                       :style toggle
+                       :selected ece-indentation]
+                      ["Enable enhanced indentation (global)" ece-enable-indentation
+                       :help "Enable enhanced indentation in all EasyCrypt Ext buffers."]
+                      ["Disable enhanced indentation (global)" ece-disable-indentation
+                       :help "Disable enhanced indentation in all EasyCrypt Ext buffers."]
+                      "-----"
+                      ["Toggle keyword completion (local)" ece-toggle-keyword-completion-local
+                       :help "Toggle keyword completion in this buffer."
+                       :style toggle
+                       :selected ece-keyword-completion]
+                      ["Enable keyword completion (global)" ece-enable-keyword-completion
+                       :help "Enable keyword completion in all EasyCrypt Ext buffers."]
+                      ["Disable keyword completion (global)" ece-disable-keyword-completion
+                       :help "Disable keyword completion in all EasyCrypt Ext buffers."]
+                      "-----"
+                      ["Toggle templates (local)" ece-toggle-templates-local
+                       :help "Toggle templates in this buffer."
+                       :style toggle
+                       :selected ece-templates]
+                      ["Enable templates (global)" ece-enable-templates
+                       :help "Enable templates in all EasyCrypt Ext buffers."]
+                      ["Disable templates (global)" ece-disable-templates
+                       :help "Disable templates in all EasyCrypt Ext buffers."]
+                      "-----"
+                      ["Toggle informative templates (local)" ece-toggle-templates-info-local
+                       :help "Toggle informative templates in this buffer."
+                       :style toggle
+                       :selected ece-templates-info]
+                      ["Enable informative templates (global)" ece-enable-templates-info
+                       :help "Enable informative templates in all EasyCrypt Ext buffers."]
+                      ["Disable informative templates (global)" ece-disable-templates-info
+                       :help "Disable informative templates in all EasyCrypt Ext buffers."]
+                      "-----"
+                      ["Reset settings (local)" ece-reset-to-defaults-local
+                       :help "Reset EasyCrypt Ext settings to their defaults in this buffer."]
+                      ["Reset settings (global)" ece-reset-to-defaults
+                       :help "Reset EasyCrypt Ext settings to their defaults in all EasyCrypt Ext buffers."])))
+                 (append
+                  (when (or shell options exec) '("-----"))
+                  (list `["Disable" (,mmc -1) :help ,hmd])))))))))
 
 (ece--easy-menu-gen easycrypt-ext-mode-menu easycrypt-ext-mode-map t t t)
 (ece--easy-menu-gen easycrypt-ext-goals-mode-menu easycrypt-ext-goals-mode-map t t nil "goals")
 (ece--easy-menu-gen easycrypt-ext-response-mode-menu easycrypt-ext-response-mode-map t t nil "response")
-
 
 ;; Session setup/teardown
 ;;;###autoload
