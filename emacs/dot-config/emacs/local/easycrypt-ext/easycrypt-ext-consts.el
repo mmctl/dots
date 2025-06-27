@@ -25,14 +25,14 @@
 (defconst ece-delimiters-open
   (eval-when-compile
     (append ece-delimiters-comments-open
-            ece-delimiters-expression-open
-            ece-delimiters-code-open)))
+            (mapcar #'string ece-delimiters-expression-open)
+            (mapcar #'string ece-delimiters-code-open))))
 
 (defconst ece-delimiters-close
   (eval-when-compile
     (append ece-delimiters-comments-close
-            ece-delimiters-expression-close
-            ece-delimiters-code-close)))
+            (mapcar #'string ece-delimiters-expression-close)
+            (mapcar #'string ece-delimiters-code-close))))
 
 (defconst ece-delimiters
   (eval-when-compile

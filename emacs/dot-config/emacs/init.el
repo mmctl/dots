@@ -135,10 +135,8 @@
 ;;; Settings (general/UI)
 ;; Launching
 (setopt inhibit-splash-screen t)
-(setopt initial-major-mode 'fundamental-mode)
-(setopt initial-scratch-message
-        "// This buffer is for text that is not saved,\
- and for Lisp evaluation \\\\")
+(setopt initial-major-mode 'emacs-lisp-mode)
+(setopt initial-scratch-message "")
 
 ;; Frames/Windows
 (setopt frame-resize-pixelwise t)
@@ -154,6 +152,8 @@
 (line-number-mode 1)
 (column-number-mode 1)
 
+(setopt display-time-format "%a, %b %d | %H:%M")
+(setopt display-time-day-and-date t)
 (setopt display-time-24hr-format t)
 (setopt display-time-default-load-average nil)
 (setopt display-time-default-load-average nil)
@@ -176,6 +176,8 @@
 (setopt x-stretch-cursor nil)
 (setopt blink-matching-paren t)
 (setopt cursor-in-non-selected-windows nil)
+
+(setopt make-pointer-invisible nil)
 
 (blink-cursor-mode -1)
 
@@ -733,7 +735,7 @@
                ("w" . visual-replace-word-at-point)
                ("." . visual-replace-thing-at-point))
          (:map isearch-mode-map
-               ("M-r" . visual-replace)))
+               ("M-r" . visual-replace-from-isearch)))
 
   :init
   ;; Setup and settings
@@ -953,29 +955,40 @@
   (defalias 'cape-keyword-prefix-2 (cape-capf-prefix-length #'cape-keyword 2))
   (defalias 'cape-file-prefix-2 (cape-capf-prefix-length #'cape-file 2))
   (defalias 'cape-history-prefix-2 (cape-capf-prefix-length #'cape-history 2))
+  (defalias 'elisp-cap-prefix-2 (cape-capf-prefix-length #'elisp-completion-at-point 2))
 
   (defun setup-a-cape-text-mode ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-dict-prefix-2
-                                       #'cape-dabbrev-prefix-2))))
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
   (defun setup-a-cape-mix-mode ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-keyword-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      #'cape-dict-prefix-2)))
+                      #'cape-dict-prefix-2
+                      t)))
   (defun setup-a-cape-code-mode ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2))))
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
   (defun setup-a-cape-minibuffer ()
     (setq-local completion-at-point-functions
                 (list (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-history-prefix-2 #'cape-file-prefix-2
-                                       #'cape-dabbrev-prefix-2))))
-
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
+  (defun setup-a-cape-elisp-mode ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-abbrev-prefix-2
+                                       #'elisp-cap-prefix-2
+                                       #'cape-keyword-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
   ;; Hooks
   (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev-prefix-2 #'cape-dabbrev-prefix-2))
 
@@ -984,7 +997,9 @@
   (add-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
-  (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
+  (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer)
+
+  (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode))
 
 (use-package tempel
   :ensure t
@@ -1177,7 +1192,7 @@ that allows to include other templates by their name."
                ("M-t" . avy-kill-region))
          (:map isearch-mode-map
                ("C-S-j" . avy-isearch)))
-  :bind* ("C-j" . avy-goto-char)
+  :bind* ("C-j" . avy-goto-char-timer)
 
   :init
   ;; Setup and settings (before load)
@@ -1186,6 +1201,7 @@ that allows to include other templates by their name."
           avy-all-windows 'all-frames
           avy-case-fold-search t
           avy-single-candidate-jump nil)
+  (setopt avy-timeout-seconds 0.3)
   (setq-default avy-dispatch-alist '((?q . avy-action-kill-move)
                                      (?Q . avy-action-kill-stay)
                                      (?m . avy-action-mark)
@@ -1194,6 +1210,7 @@ that allows to include other templates by their name."
                                      (?Y . avy-action-teleport)
                                      (?z . avy-action-zap-to-char)
                                      (?i . avy-action-ispell)))
+
   ;; Keybindings
   (keymap-unset isearch-mode-map "C-j"))
 
@@ -1211,7 +1228,18 @@ that allows to include other templates by their name."
          ("C-M-y" . consult-yank-pop)
          ("M-m" . consult-mark)
          ("M-M" . consult-global-mark)
+         ("M-{" . consult-store-register)
+         ("M-}" . consult-load-register)
+         ("C-M-{" . consult-register)
+         ("M-#" . consult-bookmark)
+         ("C-x r s" . consult-store-register)
+         ("C-x p b" . consult-project-buffer)
+         ("C-x r b" . consult-bookmark)
+         ("C-x r c" . consult-register)
+         ("C-x r l" . consult-register-load)
+         ("C-x r s" . consult-register-store)
          ("<remap> <goto-line>" . consult-goto-line)
+         ("<remap> <Info-search>" . consult-info)
          (:map a-consult-map
                ("x" . consult-mode-command)
                ("h" . consult-history)
@@ -1237,7 +1265,9 @@ that allows to include other templates by their name."
                ("m" . consult-mark)
                ("M" . consult-global-mark)
                ("i" . consult-imenu)
-               ("I" . consult-imenu-multi))
+               ("I" . consult-imenu-multi)
+               ("r" . consult-register-load)
+               ("#" . consult-bookmark))
          (:map a-search-map
                ("f" . find-file)
                ("F" . find-file-other-window)
@@ -1511,12 +1541,12 @@ that allows to include other templates by their name."
              entry (file+headline ORG_TODOS_FILE "Tasks")
              "* TODO [#B] %? %^g\nDEADLINE: %^T\n:PROPERTIES:\n:Created: %U\n:END:\n:CONTEXT:\n%a\n:END:"
              :empty-lines 0)
-            ("c" "Calendar event"
+            ("e" "Calendar event"
              entry (file+headline ORG_CALENDAR_FILE "Events")
              "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T"
              :empty-lines-before 0
              :empty-lines-after 1)
-            ("C" "Calendar event (tag + notes)"
+            ("E" "Calendar event (tag + notes)"
              entry (file+headline ORG_CALENDAR_FILE "Events")
              "* %? %^g\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i"
              :empty-lines-before 0
@@ -1780,13 +1810,13 @@ that allows to include other templates by their name."
 
   :pin melpa
 
-  :bind (("C-c z" . aidermacs-transient-menu)
+  :bind (("C-c A" . aidermacs-transient-menu)
          (:map an-ai-map
                ("a" . aidermacs-transient-menu)))
 
   :init
   ;; Setup and settings (before load)
-  ;; (setopt aidermacs-default-chat-mode 'ask)
+  (setopt aidermacs-default-chat-mode 'ask)
   (setopt aidermacs-default-model "openrouter/mistralai/devstral-small:free"
           aidermacs-weak-model "ollama_chat/qwen2.5-coder:3b")
 
@@ -1814,9 +1844,9 @@ that allows to include other templates by their name."
     :doc "Keymap for `gptel'"
     :prefix 'a-gptel-map-prefix)
   (keymap-set an-ai-map "g" 'a-gptel-map-prefix)
+  (keymap-global-set "C-c V" 'a-gptel-map-prefix)
 
   :bind (("C-c v" . gptel-send)
-         ("C-c V" . gptel)
          (:map a-gptel-map
                ("a" . gptel-add)
                ("f" . gptel-add-file)
@@ -1873,12 +1903,8 @@ that allows to include other templates by their name."
     :host "localhost:11434"
     :stream t
     :models '(qwen2.5-coder:3b
-              qwen2.5-coder:7b
-              qwen2.5-coder:14b
               qwen3:4b
-              qwen3:8b
-              deepseek-r1:1.5b
-              deepseek-r1:latest))
+              deepseek-r1:1.5b))
 
   ;; Register OpenRouter backend (remote/API) and set it default
   (setopt gptel-backend (gptel-make-openai "OpenRouter"
@@ -1886,13 +1912,10 @@ that allows to include other templates by their name."
                           :endpoint "/api/v1/chat/completions"
                           :stream t
                           :key (getenv "OPENROUTER_API_KEY")
-                          :models '(microsoft/mai-ds-r1:free
-                                    mistralai/mistral-small-3.2-24b-instruct:free
-                                    mistralai/devstral-small:free
-                                    meta-llama/llama-3.3-70b-instruct:free
-                                    google/gemini-2.0-flash-exp:free))
+                          :models '(mistralai/mistral-small-3.2-24b-instruct:free
+                                    mistralai/devstral-small:free))
           gptel-api-key (getenv "OPENROUTER_API_KEY")
-          gptel-model 'google/gemini-2.0-flash-exp:free)
+          gptel-model 'mistralai/mistral-small-3.2-24b-instruct:free)
 
   ;; Presets
   (gptel-make-preset 'coding-qwen25coder-low-ollama
@@ -1905,15 +1928,15 @@ that allows to include other templates by their name."
     :backend "Ollama"
     :model 'qwen3:4b
     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
-  (gptel-make-preset 'coding-maidsr1-openrouter
-    :description "A preset aimed at coding (uses MAI-DS R1 via OpenRouter)."
+  (gptel-make-preset 'coding-devstral-openrouter
+    :description "A preset aimed at coding (uses Devstral via OpenRouter)."
     :backend "OpenRouter"
-    :model 'microsoft/mai-ds-r1:free
+    :model 'mistralai/devstral-small:free
     :system DIRECTIVE_SYSTEM_CODING)
-  (gptel-make-preset 'academic-writing-llama33-openrouter
-    :description "A preset aimed at academic writing (uses LLama3 via OpenRouter)."
+  (gptel-make-preset 'academic-writing-mistralsmall32-openrouter
+    :description "A preset aimed at academic writing (uses Mistrall Small 3.2 via OpenRouter)."
     :backend "OpenRouter"
-    :model 'meta-llama/llama-3.3-70b-instruct:free
+    :model 'mistralai/mistral-small-3.2-24b-instruct:free
     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
 
   ;; Keybindings
@@ -2105,6 +2128,10 @@ that allows to include other templates by their name."
   (doom-themes-visual-bell-config)
 
   (doom-themes-set-faces nil
+    '(visual-replace-delete-match :inherit 'anzu-replace-highlight)
+    '(visual-replace-replacement :inherit 'anzu-replace-to)
+    '(aw-background-face :inherit 'avy-background-face)
+    '(aw-leading-char-face :inherit 'avy-lead-face)
     '(vertico-current :foreground 'unspecified :background 'unspecified
                       :inherit 'highlight)
     '(vertico-mouse :foreground 'unspecified :background 'unspecified
@@ -2130,12 +2157,24 @@ that allows to include other templates by their name."
     '(proof-mouse-highlight-face :inherit 'lazy-highlight)
     '(proof-region-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
     '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
-    '(proof-active-area-face :inherit 'secondary-selection))
+    '(proof-active-area-face :inherit 'secondary-selection)
+    '(proof-error-face :inherit 'error :weight 'semi-bold)
+    '(proof-warning-face :inherit 'warning :weight 'semi-bold)
+    '(proof-eager-annotation-face :inherit 'proof-warning-face :weight 'normal)
+    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
+    '(easycrypt-tactics-closing-face :inherit 'warning)
+    '(easycrypt-tactics-dangerous-face :inherit 'error))
 
   ;; Dummy face definitions
   ;; (applying theme settings that inherit from these faces
-  ;; without explicitly loading the packages that apply
+  ;; without explicitly loading the packages that
   ;; initially define them)
+  (defface anzu-replace-highlight '((t . (:inherit default)))
+    "Dummy definition for `anzu-replace-highlight'")
+  (defface anzu-replace-to '((t . (:inherit default)))
+    "Dummy definition for `anzu-replace-to'")
+  (defface avy-background-face '((t . (:inherit default)))
+    "Dummy definition for `avy-background-face'")
   (defface avy-lead-face '((t . (:inherit default)))
     "Dummy definition for `avy-lead-face'")
   (defface avy-lead-face-1 '((t . (:inherit default)))
@@ -2144,8 +2183,8 @@ that allows to include other templates by their name."
 ;; Doom-themes specific
 ;; Nord <3
 (use-package doom-nord-theme
-  ;; :disabled t ; Don't use this theme
-  :demand t ; Use this theme
+  :disabled t ; Don't use this theme
+  ;; :demand t ; Use this theme
 
   :ensure nil ; Provided by doom-themes
 
@@ -2154,7 +2193,7 @@ that allows to include other templates by their name."
   (setopt doom-nord-brighter-modeline t
           doom-nord-brighter-comments nil
           doom-nord-comment-bg nil
-          doom-nord-padded-modeline nil
+          doom-nord-padded-modeline t
           doom-nord-region-highlight 'snowstorm)
 
   :config
@@ -2162,78 +2201,98 @@ that allows to include other templates by their name."
   (load-theme 'doom-nord t)
   (doom-themes-set-faces 'doom-nord
     '(cursor :background success)
-    '(visual-replace-delete-match :background base0 :foreground error :weight 'bold :strike-through t)
-    '(visual-replace-replacement :background base0 :foreground success :weight 'bold)
     '(trailing-whitespace :background magenta)
-    '(aw-background-face :inherit 'avy-background-face)
-    '(aw-leading-char-face :inherit 'avy-lead-face)
     '(proof-queue-face :background magenta)
     '(proof-locked-face :background base3)
-    '(proof-script-sticky-error-face :background red :underline yellow)
-    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
-                                        :weight 'semi-bold :slant 'italic)
     '(proof-highlight-dependent-name-face :foreground magenta)
     '(proof-highlight-dependency-name-face :foreground orange)
-    '(proof-declaration-name-face :foreground cyan)
-    '(proof-tacticals-name-face :foreground green)
-    '(proof-tactics-name-face :foreground violet)
-    '(proof-error-face :foreground red :weight 'semi-bold)
-    '(proof-warning-face :foreground yellow :weight 'semi-bold)
+    '(proof-declaration-name-face :foreground type)
+    '(proof-tacticals-name-face :foreground numbers)
+    '(proof-tactics-name-face :foreground functions)
+    '(proof-script-sticky-error-face :background error :underline warning)
+    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                        :weight 'semi-bold :slant 'italic)
     '(proof-debug-message-face :foreground orange)
-    '(proof-boring-face :foreground base5)
-    '(proof-eager-annotation-face :inherit 'proof-warning-face :weight 'normal)
-    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
-    '(easycrypt-tactics-closing-face :foreground yellow)
-    '(easycrypt-tactics-dangerous-face :foreground red))
+    '(proof-boring-face :foreground doc-comments))
 
   ;; Hooks
   (add-hook 'after-init-hook #'(lambda () (unless (daemonp) (enable-theme 'doom-nord)))))
 
-(use-package doom-nord-light-theme
+(use-package doom-solarized-dark-theme
   :disabled t ; Don't use this theme
   ;; :demand t ; Use this theme
 
   :ensure nil ; Provided by doom-themes
 
-  :after doom-themes
-
   :init
   ;; Setup and settings (before load)
-  (setopt doom-nord-light-brighter-modeline t
-          doom-nord-light-brighter-comments nil
-          doom-nord-light-padded-modeline nil
-          doom-nord-light-comment-bg t
-          doom-nord-light-region-highlight 'frost)
+  (setopt doom-solarized-dark-brighter-modeline t
+          doom-solarized-dark-brighter-comments nil
+          doom-solarized-dark-brighter-text t
+          doom-solarized-dark-padded-modeline t)
 
   :config
   ;; Setup and settings (after load)
-  (load-theme 'doom-nord-light t)
-  (doom-themes-set-faces 'doom-nord-light
-    '(cursor :background success)
+  (load-theme 'doom-solarized-dark t)
+  (doom-themes-set-faces 'doom-solarized-dark
+    '(cursor :background highlight)
     '(trailing-whitespace :background magenta)
-    '(aw-background-face :inherit 'avy-background-face)
-    '(aw-leading-char-face :inherit 'avy-lead-face)
-    '(proof-queue-face :background base6)
-    '(proof-locked-face :background base3)
-    '(proof-script-sticky-error-face :background red :underline yellow)
+    '(proof-queue-face :background teal)
+    '(proof-locked-face :background base4)
+    '(proof-highlight-dependent-name-face :foreground violet)
+    '(proof-highlight-dependency-name-face :foreground orange)
+    '(proof-declaration-name-face :foreground type)
+    '(proof-tacticals-name-face :foreground numbers)
+    '(proof-tactics-name-face :foreground functions)
+    '(proof-script-sticky-error-face :background error :underline warning)
     '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
                                         :weight 'semi-bold :slant 'italic)
-    '(proof-highlight-dependent-name-face :foreground magenta)
-    '(proof-highlight-dependency-name-face :foreground orange)
-    '(proof-declaration-name-face :foreground cyan)
-    '(proof-tacticals-name-face :foreground green)
-    '(proof-tactics-name-face :foreground violet)
-    '(proof-error-face :foreground red :weight 'semi-bold)
-    '(proof-warning-face :foreground yellow :weight 'semi-bold)
     '(proof-debug-message-face :foreground orange)
-    '(proof-boring-face :foreground base5)
-    '(proof-eager-annotation-face :inherit 'proof-warning-face :weight 'normal)
-    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
-    '(easycrypt-tactics-closing-face :foreground yellow)
-    '(easycrypt-tactics-dangerous-face :foreground red))
+    '(proof-boring-face :foreground doc-comments)
+    '(font-lock-type-face :foreground type :slant 'normal))
+
 
   ;; Hooks
-  (add-hook 'after-init-hook #'(lambda () (unless (daemonp) (enable-theme 'doom-nord-light)))))
+  (add-hook 'after-init-hook
+            #'(lambda ()
+                (unless (daemonp) (enable-theme 'doom-solarized-dark)))))
+
+(use-package doom-solarized-light-theme
+  ;; :disabled t ; Don't use this theme
+  :demand t ; Use this theme
+
+  :ensure nil ; Provided by doom-themes
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt doom-solarized-light-brighter-modeline t
+          doom-solarized-light-brighter-comments nil
+          doom-solarized-light-padded-modeline t)
+
+  :config
+  ;; Setup and settings (after load)
+  (load-theme 'doom-solarized-light t)
+  (doom-themes-set-faces 'doom-solarized-light
+    '(cursor :background highlight)
+    '(trailing-whitespace :background magenta)
+    '(proof-queue-face :background teal)
+    '(proof-locked-face :background base4)
+    '(proof-highlight-dependent-name-face :foreground violet)
+    '(proof-highlight-dependency-name-face :foreground orange)
+    '(proof-declaration-name-face :foreground type)
+    '(proof-tacticals-name-face :foreground numbers)
+    '(proof-tactics-name-face :foreground functions)
+    '(proof-script-sticky-error-face :background error :underline warning)
+    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                        :weight 'semi-bold :slant 'italic)
+    '(proof-debug-message-face :foreground orange)
+    '(proof-boring-face :foreground doc-comments)
+    '(font-lock-type-face :foreground type :slant 'normal))
+
+  ;; Hooks
+  (add-hook 'after-init-hook
+            #'(lambda ()
+                (unless (daemonp) (enable-theme 'doom-solarized-light)))))
 
 (use-package solaire-mode
   :ensure t
@@ -2256,15 +2315,17 @@ that allows to include other templates by their name."
   ;; Setup and settings (before load)
   (setopt doom-modeline-height (+ (frame-char-height) 4)
           doom-modeline-bar-width 4
-          doom-modeline-width-limit 100
           doom-modeline-icon t
-          doom-modeline-major-mode-icon nil
-          doom-modeline-minor-modes t
+          doom-modeline-major-mode-icon t
+          doom-modeline-minor-modes nil
           doom-modeline-enable-word-count t
-          doom-modeline-buffer-encoding t
+          doom-modeline-buffer-encoding nil
           doom-modeline-default-coding-system 'utf-8
           doom-modeline-total-line-number t
           doom-modeline-time t
+          doom-modeline-time-icon nil
+          doom-modeline-time-live-icon nil
+          doom-modeline-time-analogue-clock nil
           doom-modeline-vcs-max-length 20))
 
 ;; Local/cross-package enhancements
@@ -2338,22 +2399,26 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-mode-map "C-c l e" 'ece-exec-map-prefix)
 
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-p" #'ece-print)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c =" #'ece-prompt-print)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l p" #'ece-print)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l P" #'ece-prompt-print)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l l" #'ece-locate)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l L" #'ece-prompt-locate)
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-s" #'ece-search)
+  (keymap-set easycrypt-ext-goals-mode-map "C-c /" #'ece-prompt-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l s" #'ece-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l S" #'ece-prompt-search)
   (keymap-set easycrypt-ext-goals-mode-map "C-c C-e" 'ece-exec-map-prefix)
   (keymap-set easycrypt-ext-goals-mode-map "C-c l e" 'ece-exec-map-prefix)
 
   (keymap-set easycrypt-ext-response-mode-map "C-c C-p" #'ece-print)
+  (keymap-set easycrypt-ext-response-mode-map "C-c =" #'ece-prompt-print)
   (keymap-set easycrypt-ext-response-mode-map "C-c l p" #'ece-print)
   (keymap-set easycrypt-ext-response-mode-map "C-c l P" #'ece-prompt-print)
   (keymap-set easycrypt-ext-response-mode-map "C-c l l" #'ece-locate)
   (keymap-set easycrypt-ext-response-mode-map "C-c l L" #'ece-prompt-locate)
   (keymap-set easycrypt-ext-response-mode-map "C-c C-s" #'ece-search)
+  (keymap-set easycrypt-ext-response-mode-map "C-c /" #'ece-prompt-search)
   (keymap-set easycrypt-ext-response-mode-map "C-c l s" #'ece-search)
   (keymap-set easycrypt-ext-response-mode-map "C-c l S" #'ece-prompt-search)
   (keymap-set easycrypt-ext-response-mode-map "C-c C-e" 'ece-exec-map-prefix)

@@ -77,11 +77,11 @@
   be).")
 
 (defconst ece--templates-file
-  (file-name-concat ece--dir "easycrypt-ext-templates.eld")
+  (expand-file-name "easycrypt-ext-templates.eld" ece--dir)
   "File where code templates for EasyCrypt are stored.")
 
 (defconst ece--templates-info-file
-  (file-name-concat ece--dir "easycrypt-ext-templates-info.eld")
+  (expand-file-name "easycrypt-ext-templates-info.eld" ece--dir)
   "File where informative code templates for EasyCrypt are stored.")
 
 
@@ -356,7 +356,7 @@ previous non-blank line."
         ;; instantiation in `clone' (and hope it isn't common to end a line
         ;; with a comma outside of `clone').
         (if (and (seq-some (lambda (kw)
-                             (string-match-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b") prev-line))
+                             (string-match-p (format "^[[:blank:]]*%s\\b" (regexp-quote kw)) prev-line))
                            ece-keywords-start)
                  (not (string-match-p "[\\.,][[:blank:]]*\\(?:(\\*.*\\*)\\)?[[:blank:]]*$" prev-line)))
             ;; Then, align with that line + tab
@@ -466,7 +466,7 @@ Here, fallback indentation refers to the indentation computed by
                           (goto-char exprop)
                           (forward-line 0)
                           (while (and (not (bobp))
-                                      (not (seq-some (lambda (kw) (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b")))
+                                      (not (seq-some (lambda (kw) (looking-at-p (format "^[[:blank:]]*%s\\b" (regexp-quote kw))))
                                                      ece-keywords-imperative-spec-start-scope)))
                             (forward-line -1))
                           ;; If we didn't find such a line (i.e., we are at the beginning of a buffer)...
@@ -520,7 +520,7 @@ Here, fallback indentation refers to the indentation computed by
                            "Using fallback indentation.")
                   (setq indent-level (ece--indent-level-fallback))))))
          ;; Else, if we are looking at a proof starter (e.g., proof or realize)
-         ((seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
+         ((seq-some (lambda (kw) (looking-at-p (format "%s\\b" (regexp-quote kw))))
                     ece-keywords-proof-start)
           (let ((bob nil))
             (progn
@@ -532,8 +532,8 @@ Here, fallback indentation refers to the indentation computed by
                 (while (and (not (bobp))
                             (not (seq-some
                                   (lambda (kw)
-                                    (and (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b"))
-                                         (not (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b[[:space:]]*\\[")))))
+                                    (and (looking-at-p (format "^[[:blank:]]*%s\\b" (regexp-quote kw)))
+                                         (not (looking-at-p (format "^[[:blank:]]*%s\\b[[:space:]]*\\[" (regexp-quote kw))))))
                                   ece-keywords-proof-spec-start)))
                   (forward-line -1))
                 ;; If we didn't find such a line (i.e., we are at the beginning of a buffer)...
@@ -547,7 +547,7 @@ Here, fallback indentation refers to the indentation computed by
                 ;; Indent as per the fallback
                 (setq indent-level (ece--indent-level-fallback))))))
          ;; Else, if we are looking at a proof ender (i.e., "qed")
-         ((seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
+         ((seq-some (lambda (kw) (looking-at-p (format "%s\\b" (regexp-quote kw))))
                     ece-keywords-proof-end)
           (let ((bob nil))
             (progn
@@ -555,7 +555,7 @@ Here, fallback indentation refers to the indentation computed by
                 ;; Find line that started the proof (i.e., one that starts with "proof")
                 (forward-line -1)
                 (while (and (not (bobp))
-                            (not (seq-some (lambda (kw) (looking-at-p (concat "^[[:blank:]]*" (regexp-quote kw) "\\b")))
+                            (not (seq-some (lambda (kw) (looking-at-p (format "^[[:blank:]]*%s\\b" (regexp-quote kw))))
                                            ece-keywords-proof-start)))
                   (forward-line -1))
                 ;; If we didn't find such a line (i.e., we are at the beginning of a buffer)...
@@ -616,12 +616,12 @@ Meant for `post-self-insert-hook'."
                         (string-match-p "^[[:blank:]]*$" line-before))
                    (and (eq last-command-event ?\))
                         (string-match-p
-                         (concat "^[[:blank:]]*" (regexp-opt (push (string ?\)) ece-delimiters-comments-close)) "$")
-                         (concat line-before (string ?\)))))
+                         (format "^[[:blank:]]*%s$" (regexp-opt (push (string ?\)) ece-delimiters-comments-close)))
+                         (format "%s)" line-before)))
                    (and (eq last-command-event ?\.)
                         (save-excursion
                           (back-to-indentation)
-                          (seq-some (lambda (kw) (looking-at-p (concat (regexp-quote kw) "\\b")))
+                          (seq-some (lambda (kw) (looking-at-p (format "%s\\b" (regexp-quote kw))))
                                     ece-keywords-proof-delimit)))))
               (orig-col (current-column))
               (indent-level (ece--indent-level))
@@ -633,6 +633,29 @@ Meant for `post-self-insert-hook'."
       ;; And keep point in same relative position
       ;; (`indent-line-to' moves it to end of indentation)
       (move-to-column (- orig-col indent-diff)))))
+
+;;;###autoload
+(defun ece-indent-closer-on-insertion-newline ()
+  "Indent previous line when (1) last input was a newline, and (2)
+it only contains a code, expression, or comment closer (the former two
+may potentially be followed by a period). However, only
+allow de-indents (to prevent automatically indenting
+code that has been manually de-indented; this is a hack
+and a limitation of the localized ad-hoc computation
+of the indent level).
+Meant for `post-self-insert-hook'."
+  (when (eq last-command-event 10) ; 10 = newline
+    (save-excursion
+      (forward-line -1)
+      (when-let* (((or (looking-at-p (format "^[[:blank:]]*%s$" (regexp-opt ece-delimiters-comments-close)))
+                       (looking-at-p (format "^[[:blank:]]*%s\\.?$"
+                                             (regexp-opt (mapcar #'string
+                                                                 (append ece-delimiters-code-close
+                                                                         ece-delimiters-expression-close)))))))
+                  (indent-level (ece--indent-level))
+                  ((< 0 (- (current-indentation) indent-level)))) ; If we are de-indenting...
+        ;; Go to the computed indent level...
+        (indent-line-to indent-level)))))
 
 
 ;;; Auxiliary functionality
@@ -648,8 +671,8 @@ Meant for `post-self-insert-hook'."
 directly calls the shell with it."
   (ece--check-functionality 'proof-shell-invisible-command 'proof-general)
   ;; proof-shell-ready-prover called inside proof-shell-invisible-command
-  (let ((cmd (if args (string-join (cons command args) " ") command)))
-    (proof-shell-invisible-command cmd)))
+  (let ((cmd (if args (format "%s %s" command (string-join args " ")) command)))
+    (proof-shell-invisible-command cmd nil #'ignore)))
 
 (defun ece--prompt-command (command)
   "Prompts user for arguments that are passed to COMMAND (proof shell) command
@@ -692,15 +715,31 @@ or tries to find a (reasonable) thing at point."
     (if (use-region-p)
         (prog1
             (buffer-substring-no-properties (region-beginning) (region-end))
-          ;; This prevents the whole buffer being marked
+          ;; HACK: This prevents the whole buffer being marked
           ;; in the goals/response buffers when issuing commands
           ;; (at least those that update the response buffer)
-          ;; May, e.g., check for goals/response minor modes if this
-          ;; behavior is not desired in regular (proof) buffer
-          (deactivate-mark))
+          ;; Better solution would, e.g., be to try and use some
+          ;; provided PG hooks for remarking region if applicable
+          (when (or easycrypt-ext-goals-mode easycrypt-ext-response-mode)
+            (deactivate-mark)))
       (or (thing-at-point 'symbol t)
           (thing-at-point 'sexp t)
           (thing-at-point 'word t)))))
+
+;; (setq proof-shell-handle-delayed-output-hook '(proof-pbp-focus-on-first-goal))
+;; (add-hook 'proof-shell-handle-delayed-output-hook #'(lambda ()
+;;                                                       (with-current-buffer proof-goals-buffer
+;;                                                         (message "In wcb")
+;;                                                         (goto-char (point-min))
+;;                                                         (re-search-forward "^-+$" nil t)
+;;                                                         (when-let* ((pre (re-search-forward "^pre =" nil t))
+;;                                                                     (post (re-search-forward "^post =" nil t)))
+;;                                                           (message "In wl")
+;;                                                           (goto-char (/ (+ pre post) 2)))
+;;                                                         (message "Ending")
+;;                                                         (goto-char (pos-bol))
+;;                                                         (with-selected-window (get-buffer-window proof-goals-buffer)
+;;                                                           (recenter 0)))))
 
 (defun ece--command (command event)
   "If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
@@ -799,7 +838,7 @@ space-separated in the command; this includes the option flags."
   (ece--validate-subcommand subcommand)
   (let* ((bufnm (format "*EasyCrypt subcommand: %s (%s)*" subcommand (if sync "sync" "async")))
          (buf (get-buffer-create bufnm))
-         (fcom (concat easycrypt-prog-name " " (combine-and-quote-strings (cons subcommand args) " "))))
+         (fcom (format "%s %s" easycrypt-prog-name (combine-and-quote-strings (cons subcommand args) " "))))
     (ece--insert-command-header-in-buffer buf fcom sync)
     (display-buffer buf)
     (if (not sync)
@@ -1209,56 +1248,53 @@ with functionality checks."
 ;;; Configuration
 ;; Indentation
 (defvar-local original-indentation-state nil)
-(defvar-local original-local-map nil)
 
-(defun ece--enable-indentation-local ()
-  (unless (and (local-variable-p ece-indentation) ece-indentation)
-    (if original-indentation-state
-        (setq-local tab-width 2
-                    indent-line-function #'ece-indent-line
-                    electric-indent-mode nil)
-      (setq-local original-indentation-state
-                  (buffer-local-set-state tab-width 2
-                                          indent-line-function #'ece-indent-line
-                                          electric-indent-mode nil)))
-    (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t)
-    (let ((crlm (current-local-map)))
-      (unless original-local-map
-        (setq-local original-local-map crlm)
-        (use-local-map (copy-keymap crlm))))
-    (keymap-local-set "RET" #'newline-and-indent)
-    (keymap-local-set "<return>" "RET")
-    (keymap-local-set "S-<return>" #'newline)
-    (keymap-local-set "TAB" #'ece-basic-indent)
-    (keymap-local-set "<tab>" "TAB")
-    (keymap-local-set "<backtab>" #'ece-basic-deindent)
-    (keymap-local-set "M-i" #'indent-for-tab-command)
-    (keymap-local-set "M-I" #'ece-indent-for-tab-command-inverse-style)
-    (setq-local ece-indentation t)))
+(defun ece--set-indentation-settings-local ()
+  (if original-indentation-state
+      (setq-local tab-width 2
+                  indent-line-function #'ece-indent-line
+                  electric-indent-mode nil)
+    (setq-local original-indentation-state
+                (buffer-local-set-state tab-width 2
+                                        indent-line-function #'ece-indent-line
+                                        electric-indent-mode nil)))
+  ;; (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t))
+  (add-hook 'post-self-insert-hook #'ece-indent-closer-on-insertion-newline t))
 
-(defun ece--disable-indentation-local ()
-  (unless (and (local-variable-p ece-indentation) (not ece-indentation))
-    (setq-local ece-indentation nil)
-    (when original-local-map
-      (keymap-local-unset "RET")
-      (keymap-local-unset "<return>")
-      (keymap-local-unset "S-<return>")
-      (keymap-local-unset "TAB")
-      (keymap-local-unset "<tab>")
-      (keymap-local-unset "<backtab>")
-      (keymap-local-unset "M-i")
-      (keymap-local-unset "M-I"))
-    (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t)
-    (when original-indentation-state
+(defun ece--reset-indentation-settings-local ()
+  (when original-indentation-state
       (buffer-local-restore-state original-indentation-state)
-      (setq-local original-indentation-state nil))))
+      (setq-local original-indentation-state nil))
+  ;; (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t))
+  (remove-hook 'post-self-insert-hook #'ece-indent-closer-on-insertion-newline t))
 
-(defsubst ece--configure-indentation-local (enable)
-  (if enable (ece--enable-indentation-local) (ece--disable-indentation-local)))
+(defun ece--configure-indentation-settings-local (enable)
+  (if enable (ece--set-indentation-settings-local) (ece--reset-indentation-settings-local)))
+
+(defun ece--enable-indentation ()
+  (ece--ece-configure-global-from-local #'ece--set-indentation-settings-local)
+  (keymap-set easycrypt-ext-mode-map "RET" #'newline-and-indent)
+  (keymap-set easycrypt-ext-mode-map "<return>" "RET")
+  (keymap-set easycrypt-ext-mode-map "S-<return>" #'newline)
+  (keymap-set easycrypt-ext-mode-map "TAB" #'ece-basic-indent)
+  (keymap-set easycrypt-ext-mode-map "<tab>" "TAB")
+  (keymap-set easycrypt-ext-mode-map "<backtab>" #'ece-basic-deindent)
+  (keymap-set easycrypt-ext-mode-map "M-i" #'indent-for-tab-command)
+  (keymap-set easycrypt-ext-mode-map "M-I" #'ece-indent-for-tab-command-inverse-style))
+
+(defun ece--disable-indentation ()
+  (keymap-unset easycrypt-ext-mode-map "RET")
+  (keymap-unset easycrypt-ext-mode-map "<return>")
+  (keymap-unset easycrypt-ext-mode-map "S-<return>")
+  (keymap-unset easycrypt-ext-mode-map "TAB")
+  (keymap-unset easycrypt-ext-mode-map "<tab>" "TAB")
+  (keymap-unset easycrypt-ext-mode-map "<backtab>")
+  (keymap-unset easycrypt-ext-mode-map "M-i")
+  (keymap-unset easycrypt-ext-mode-map "M-I")
+  (ece--ece-configure-global-from-local #'ece--reset-indentation-settings-local))
 
 (defsubst ece--configure-indentation (enable)
-  (ece--ece-configure-global-from-local
-   (if enable #'ece--enable-indentation-local #'ece--disable-indentation-local)))
+  (if enable (ece--enable-indentation) (ece--disable-indentation)))
 
 ;; Keyword completion
 (defun ece--enable-keyword-completion-local ()
@@ -1351,23 +1387,12 @@ with functionality checks."
 
 
 ;;; Toggles
-;; Local
-;;;###autoload
-(defun ece-toggle-indentation-local ()
-  "Toggles EasyCrypt Ext indentation in this buffer."
-  (interactive)
-  (ece--configure-indentation-local (not ece-indentation))
-  (message "EasyCrypt Ext indentation %s"
-           (if ece-indentation
-               (format "enabled in this buffer! Current style: %s." (if (eq ece-indentation-style 'local) "local" "non-local"))
-             "disabled in this buffer!")))
-
 ;;;###autoload
 (defun ece-toggle-indentation-style-local ()
   "Toggles EasyCrypt Ext indentation style in this buffer."
   (interactive)
   (setq-local ece-indentation-style (if (eq ece-indentation-style 'local) 'nonlocal 'local))
-  (message "EasyCrypt Ext indentation style set to %s!"
+  (message "EasyCrypt Ext indentation style set to %s in this buffer!"
            (if (eq ece-indentation-style 'local) "local" "non-local")))
 
 ;;;###autoload
@@ -1396,11 +1421,12 @@ with functionality checks."
 
 ;;;###autoload
 (defun ece-reset-to-defaults-local ()
-  "Resets all EasyCrypt Ext functionalities/settings in this buffer
+  "Resets relevant EasyCrypt Ext functionalities/settings in this buffer
 to their global defaults."
   (interactive)
-  (ece--configure-indentation-local (default-value 'ece-indentation))
-  (kill-local-variable ece-indentation-style)
+  ;; (ece--configure-indentation-local (default-value 'ece-indentation))
+  ;; (kill-local-variable ece-indentation-style)
+  (ece--configure-indentation-settings-local (default-value 'ece-indentation))
   (ece--configure-keyword-completion-local (default-value 'ece-keyword-completion))
   (ece--configure-templates-local (default-value 'ece-templates))
   (ece--configure-templates-info-local (default-value 'ece-templates-info))
@@ -1468,7 +1494,7 @@ to their global defaults."
 global defaults in all EasyCrypt buffers."
   (interactive)
   (ece--configure-indentation (default-value 'ece-indentation))
-  (ece--ece-configure-global-from-local #'(lambda () (kill-local-variable ece-indentation-style)))
+  ;; (ece--ece-configure-global-from-local #'(lambda () (kill-local-variable ece-indentation-style)))
   (ece--configure-keyword-completion (default-value 'ece-keyword-completion))
   (ece--configure-templates (default-value 'ece-templates))
   (ece--configure-templates-info (default-value 'ece-templates-info))
@@ -1496,10 +1522,9 @@ global defaults in all EasyCrypt buffers."
 (defvar-keymap ece-options-map
   :doc "Keymap for managing options for `easycrypt-ext-mode'"
   :prefix 'ece-options-map-prefix
-  "i" #'ece-toggle-indentation-local
+  "i" #'ece-toggle-indentation-style-local
   "I" #'ece-enable-indentation
   "C-i" #'ece-disable-indentation
-  "s" #'ece-toggle-indentation-style-local
   "k" #'ece-toggle-keyword-completion-local
   "K" #'ece-enable-keyword-completion
   "C-k" #'ece-disable-keyword-completion
@@ -1696,7 +1721,7 @@ global defaults in all EasyCrypt buffers."
 ;;;###autoload
 (defun ece-setup ()
   "Sets up EasyCrypt extensions."
-  (ece--configure-indentation-local ece-indentation)
+  (ece--configure-indentation ece-indentation)
 
   (let ((cpcnf nil)
         (tpcnf nil))
@@ -1725,12 +1750,19 @@ global defaults in all EasyCrypt buffers."
 (defun ece-teardown ()
   "Tears down EasyCrypt extensions."
   ;; Disable extensions and restore state
-  (when (local-variable-p ece-indentation)
-    (ece--disable-indentation-local)
-    (when original-local-map
-      (use-local-map original-local-map)
-      (setq-local original-local-map nil))
-    (kill-local-variable ece-indentation))
+  ;; (when (local-variable-p ece-indentation)
+  ;;   (ece--disable-indentation-local)
+  ;;   (when original-local-map
+  ;;     (use-local-map original-local-map)
+  ;;     (setq-local original-local-map nil))
+  ;;   (kill-local-variable ece-indentation))
+
+  (if (seq-some #'(lambda (buf)
+                    (and (not (eq buf (current-buffer)))
+                         (with-current-buffer buf easycrypt-ext-mode)))
+                (buffer-list))
+      (ece--reset-indentation-settings-local)
+    (ece--disable-indentation))
 
   (when (local-variable-p ece-keyword-completion)
     (ece--disable-keyword-completion-local)
