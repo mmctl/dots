@@ -163,8 +163,6 @@
                          ece-keywords-functionality
                          ece-keywords-meta
                          ece-keywords-scope
-                         ece-keywords-proof-start
-                         ece-keywords-proof-end
                          ece-keywords-proof-spec-start
                          ece-keywords-functional-spec-start))))
 

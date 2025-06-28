@@ -205,6 +205,12 @@ contains at that time)."
                 (symbol-name fun)
                 (symbol-name feature))))
 
+(defsubst ece--check-other-buffers-mode (mode)
+  (seq-some #'(lambda (buf)
+                (and (not (eq buf (current-buffer)))
+                     (with-current-buffer buf (symbol-value mode))))
+            (buffer-list)))
+
 (defun ece--gen-buffer-loop-pred (fun pred &optional args)
   (dolist (buffer (buffer-list))
     (with-current-buffer buffer
@@ -519,8 +525,8 @@ Here, fallback indentation refers to the indentation computed by
                            "This should not be possible, please report."
                            "Using fallback indentation.")
                   (setq indent-level (ece--indent-level-fallback))))))
-         ;; Else, if we are looking at a proof starter (e.g., proof or realize)
-         ((seq-some (lambda (kw) (looking-at-p (format "%s\\b" (regexp-quote kw))))
+         ;; Else, if we are looking at a terminated proof starter (e.g., "proof." or "realize.")
+         ((seq-some (lambda (kw) (looking-at-p (format "%s\\." (regexp-quote kw))))
                     ece-keywords-proof-start)
           (let ((bob nil))
             (progn
@@ -546,8 +552,8 @@ Here, fallback indentation refers to the indentation computed by
               (when bob
                 ;; Indent as per the fallback
                 (setq indent-level (ece--indent-level-fallback))))))
-         ;; Else, if we are looking at a proof ender (i.e., "qed")
-         ((seq-some (lambda (kw) (looking-at-p (format "%s\\b" (regexp-quote kw))))
+         ;; Else, if we are looking at a terminated proof ender (i.e., "qed.")
+         ((seq-some (lambda (kw) (looking-at-p (format "%s\\." (regexp-quote kw))))
                     ece-keywords-proof-end)
           (let ((bob nil))
             (progn
@@ -651,7 +657,8 @@ Meant for `post-self-insert-hook'."
                        (looking-at-p (format "^[[:blank:]]*%s\\.?$"
                                              (regexp-opt (mapcar #'string
                                                                  (append ece-delimiters-code-close
-                                                                         ece-delimiters-expression-close)))))))
+                                                                         ece-delimiters-expression-close)))))
+                       (looking-at-p (format "^[[:blank:]]*%s\\.$" (regexp-opt ece-keywords-proof-delimit)))))
                   (indent-level (ece--indent-level))
                   ((< 0 (- (current-indentation) indent-level)))) ; If we are de-indenting...
         ;; Go to the computed indent level...
@@ -726,21 +733,6 @@ or tries to find a (reasonable) thing at point."
           (thing-at-point 'sexp t)
           (thing-at-point 'word t)))))
 
-;; (setq proof-shell-handle-delayed-output-hook '(proof-pbp-focus-on-first-goal))
-;; (add-hook 'proof-shell-handle-delayed-output-hook #'(lambda ()
-;;                                                       (with-current-buffer proof-goals-buffer
-;;                                                         (message "In wcb")
-;;                                                         (goto-char (point-min))
-;;                                                         (re-search-forward "^-+$" nil t)
-;;                                                         (when-let* ((pre (re-search-forward "^pre =" nil t))
-;;                                                                     (post (re-search-forward "^post =" nil t)))
-;;                                                           (message "In wl")
-;;                                                           (goto-char (/ (+ pre post) 2)))
-;;                                                         (message "Ending")
-;;                                                         (goto-char (pos-bol))
-;;                                                         (with-selected-window (get-buffer-window proof-goals-buffer)
-;;                                                           (recenter 0)))))
-
 (defun ece--command (command event)
   "If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region or tries to
@@ -812,20 +804,22 @@ that the mouse is hovering, not necessarily the active one."
 
 
 ;;; Shell commands
+(defconst ece--supported-executable-subcommands
+  '("compile" "docgen" "runtest" "why3config" "help" "--help")
+  "List of currently supported (executable) subcommands")
+
 (defun ece--validate-subcommand (subcommand)
   "Checks if COMMAND is a valid/supported subcommand
 for EasyCrypt (executable, not proof shell)."
-  (or (member subcommand '("compile" "docgen" "runtest" "why3config" "--help"))
+  (or (member subcommand ece--supported-executable-subcommands)
       (error "Unknown/Unsupported subcommand `%s'." subcommand)))
 
-(defun ece--insert-command-header-in-buffer (buffer command sync)
+(defun ece--insert-command-header-in-buffer (buffer command)
   (with-current-buffer buffer
     (goto-char (point-max))
     (unless (bobp)
       (newline (if (bolp) 2 3)))
-    (insert (format "Executing command `%s' %s\nCommand output:\n"
-                    command
-                    (if sync "synchronously" "asynchronously")))))
+    (insert (format "Executing command `%s'\nCommand output:\n" command))))
 
 (defun ece--execute-subcommand (subcommand sync &rest args)
   "Executes SUBCOMMAND of EasyCrypt in a separate process. If SYNC is non-nil
@@ -839,11 +833,146 @@ space-separated in the command; this includes the option flags."
   (let* ((bufnm (format "*EasyCrypt subcommand: %s (%s)*" subcommand (if sync "sync" "async")))
          (buf (get-buffer-create bufnm))
          (fcom (format "%s %s" easycrypt-prog-name (combine-and-quote-strings (cons subcommand args) " "))))
-    (ece--insert-command-header-in-buffer buf fcom sync)
     (display-buffer buf)
     (if (not sync)
         (apply #'start-process fcom buf easycrypt-prog-name subcommand args)
+      (ece--insert-command-header-in-buffer buf fcom)
       (apply #'call-process easycrypt-prog-name nil buf t subcommand args))))
+
+(defun ece--exec-execute (subcommand &optional sync &rest args)
+  "Executes SUBCOMMAND of EasyCrypt in a separate process. If SYNC is non-nil
+(resp. `nil'), the process is executed synchronously (resp. asynchronously).
+ARGS is a list of strings, all of which are combined to form the remainder of
+the command. That is, this list contains, in order, the elements that are to be
+space-separated in the command; this includes the option flags."
+  (unless (bound-and-true-p easycrypt-prog-name)
+    (user-error "EasyCrypt executable name not found in expected place. Did you load Proof General in EasyCrypt mode?"))
+  (ece--validate-subcommand subcommand)
+  (let* ((bufnm (format "*EasyCrypt subcommand: %s (%s)*" subcommand (if sync "sync" "async")))
+         (buf (get-buffer-create bufnm))
+         (fcom (format "%s %s" easycrypt-prog-name (combine-and-quote-strings (cons subcommand args) " "))))
+    (display-buffer buf)
+    (if (not sync)
+        (apply #'start-process fcom buf easycrypt-prog-name subcommand args)
+      (ece--insert-command-header-in-buffer buf fcom)
+      (apply #'call-process easycrypt-prog-name nil buf t subcommand args))))
+
+(defun ece--exec-help-internal (&optional sync)
+  "Executes `easycrypt --help' using `ece--exec-execute'
+(passing SYNC directly), which see."
+  (ece--exec-execute "--help" sync))
+
+;;;###autoload
+(defun ece-exec-help ()
+  "Executes `easycrypt --help' asynchronously."
+  (interactive)
+  (ece--exec-help-internal nil))
+
+(defun ece--exec-compile-internal (srcs &optional root subdirs sync &rest options)
+  "Executes `easycrypt compile' using `ece--execute-subcommand' (passing
+SYNC directly), which see, checking the EasyCrypt file SRCS or, if SRCS
+is a directory, EasyCrypt files in (subdirectories of) SRCS. In the
+latter case, subdirectories are considered if SUBDIRS is non-nil. SRCS
+can be absolute or relative. A relative path (for SRCS) is interpreted
+with respect to `default-directory' if ROOT if nil; otherwise, if ROOT
+is non-nil, a relative path (for SRCS) is interpreted with respect to
+ROOT if ROOT itself is absolute, or with respect to
+`default-directory'/ROOT if ROOT itself is relative. OPTIONS are
+concatenated, in order, and the result is passed to the command
+literally."
+  (let ((esrc (expand-file-name srcs root)))
+    (unless (file-readable-p esrc)
+      (user-error "`%s' (resolved as `%s') non-existent or not readable." srcs esrc))
+    (when (and (file-regular-p esrc)
+               (not (string-match-p "^[^.].*\\.eca?$" (file-name-nondirectory esrc))))
+      (user-error "`%s' (resolved as `%s') not recognized as an EasyCrypt source file: extension should be `.ec' or `.eca'."
+                  srcs esrc))
+    (cond
+     ((file-regular-p esrc)
+      (apply #'ece--exec-execute "compile" sync (cons esrc options)))
+     ((and (file-directory-p esrc) (not subdirs))
+      (let ((srcl (directory-files esrc t "^[^.].*\\.eca?$")))
+        (dolist (src srcl) (apply #'ece--exec-execute "compile" sync src options))))
+     ((and (file-directory-p esrc) subdirs)
+      (let ((srcl (directory-files-recursively esrc "^[^.].*\\.eca?$" nil t t)))
+        (dolist (src srcl) (apply #'ece--exec-execute "compile" sync src options))))
+     (t
+      (user-error "`%s' (resolved as `%s') not a regular file nor a directory." srcs esrc)))))
+
+;;;###autoload
+(defun ece-exec-compile (srcs &optional root subdirs &rest options)
+  "Executes `easycrypt compile' asynchronously, checking the EasyCrypt file SRCS or,
+if SRCS is a directory, EasyCrypt files in (subdirectories of) SRCS. In
+the latter case, subdirectories are considered if SUBDIRS is non-nil.
+SRCS can be absolute or relative. A relative path (for SRCS) is
+interpreted with respect to `default-directory' if ROOT if nil;
+otherwise, if ROOT is non-nil, a relative path (for SRCS) is interpreted
+with respect to ROOT if ROOT itself is absolute, or with respect to
+`default-directory'/ROOT if ROOT itself is relative. OPTIONS are
+concatenated, in order, and the result is passed to the command
+literally. Interactively, ROOT is always nil since SRCS should always
+come out the interactive form as an absolute path."
+  (interactive
+   (let* ((projcr (project-current))
+          (defdir (or (when projcr (file-name-as-directory (expand-file-name (project-root projcr))))
+                      default-directory))
+          (srcs (read-file-name (format-prompt "EasyCrypt source file or directory" defdir)
+                                defdir defdir t))
+          (subdirs (when (file-directory-p srcs) (yes-or-no-p "Include subdirectories?")))
+          (opts (split-string-shell-command
+                 (read-string (format-prompt "Further options" "")))))
+     (list srcs nil subdirs opts)))
+  (if-let* ((opts (seq-filter #'stringp (flatten-list options))))
+      (apply #'ece--exec-compile-internal srcs root subdirs nil opts)
+    (ece--exec-compile-internal srcs root subdirs nil)))
+
+;;;###autoload
+(defun ece-exec-compile-file (file &optional root &rest options)
+  "Executes `easycrypt compile' asynchronously,
+checking the EasyCrypt file FILE which, if relative, is interpreted with
+respect to ROOT. OPTIONS are concatenated, in order, and the result is
+passed to the command literally. Interactively, FILE defaults to the
+file visited by the current buffer or, if the current buffer is not
+visiting such a file, asks to specify a file instead.
+Further, (interactively) ROOT is always nil since FILE should always
+come out the interactive form as an absolute path, and no possibility
+of specifying OPTIONS is given."
+  (interactive
+   (let* ((projcr (project-current))
+          (defdir (or (when projcr (file-name-as-directory (expand-file-name (project-root projcr))))
+                      default-directory))
+          (buffn (buffer-file-name))
+          (srcs (if (and buffn (string-match-p "^[^.].*\\.eca?$" (file-name-nondirectory buffn)))
+                    buffn
+                  (read-file-name (format-prompt "EasyCrypt source file" "")
+                                  defdir nil t nil (apply-partially #'string-match-p "^[^.].*\\.eca?$")))))
+     (list srcs nil nil)))
+  (ece--exec-compile-internal srcs nil nil srcs root options))
+
+;;;###autoload
+(defun ece-exec-compile-proj (&optional arg)
+  "Executes `easycrypt compile' command asynchronously, checking the EasyCrypt
+files in `default-directory' and its subdirectories (unless ARG is non-nil), or
+asks to specify a directory if `default-directory' and its subdirectories
+(unless ARG is non-nil) do not contain any such files."
+  (interactive "P")
+  (let* ((srcs (if (or (and (null arg) (directory-files-recursively default-directory "^[^.].*\\.eca?$" nil t t))
+                       (and arg (directory-files default-directory t "^[^.].*\\.eca?$")))
+                   default-directory
+                 (read-directory-name (format-prompt "EasyCrypt %s directory" ""
+                                                     (if arg "source" "project root"))
+                                      nil nil t))))
+    (ece--compile-internal nil srcs (null arg))))
+
+
+;;;###autoload
+(defun ece-exec (subcommand)
+  (interactive (list
+                (completing-read (format-prompt "Subcommand" ece--supported-executable-subcommands)
+                                 ece--supported-executable-subcommands nil t nil nil
+                                 ece--supported-executable-subcommands)))
+  (call-interactively (intern-soft (format "ece-exec-%s" subcommand))))
+
 
 (defun ece--help-internal (sync)
   "Executes `easycrypt --help' command using `ece--execute-subcommand'
@@ -1258,14 +1387,12 @@ with functionality checks."
                 (buffer-local-set-state tab-width 2
                                         indent-line-function #'ece-indent-line
                                         electric-indent-mode nil)))
-  ;; (add-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer nil t))
   (add-hook 'post-self-insert-hook #'ece-indent-closer-on-insertion-newline t))
 
 (defun ece--reset-indentation-settings-local ()
   (when original-indentation-state
       (buffer-local-restore-state original-indentation-state)
       (setq-local original-indentation-state nil))
-  ;; (remove-hook 'post-self-insert-hook #'ece-indent-on-insertion-closer t))
   (remove-hook 'post-self-insert-hook #'ece-indent-closer-on-insertion-newline t))
 
 (defun ece--configure-indentation-settings-local (enable)
@@ -1424,8 +1551,6 @@ with functionality checks."
   "Resets relevant EasyCrypt Ext functionalities/settings in this buffer
 to their global defaults."
   (interactive)
-  ;; (ece--configure-indentation-local (default-value 'ece-indentation))
-  ;; (kill-local-variable ece-indentation-style)
   (ece--configure-indentation-settings-local (default-value 'ece-indentation))
   (ece--configure-keyword-completion-local (default-value 'ece-keyword-completion))
   (ece--configure-templates-local (default-value 'ece-templates))
@@ -1522,18 +1647,18 @@ global defaults in all EasyCrypt buffers."
 (defvar-keymap ece-options-map
   :doc "Keymap for managing options for `easycrypt-ext-mode'"
   :prefix 'ece-options-map-prefix
-  "i" #'ece-toggle-indentation-style-local
-  "I" #'ece-enable-indentation
-  "C-i" #'ece-disable-indentation
-  "k" #'ece-toggle-keyword-completion-local
-  "K" #'ece-enable-keyword-completion
-  "C-k" #'ece-disable-keyword-completion
-  "t" #'ece-toggle-templates-local
-  "T" #'ece-enable-templates
-  "C-t" #'ece-disable-templates
-  "o" #'ece-toggle-templates-info-local
-  "O" #'ece-enable-templates-info
-  "C-o" #'ece-disable-templates-info
+  "i" #'ece-enable-indentation
+  "I" #'ece-disable-indentation
+  "C-i" #'ece-toggle-indentation-style-local
+  "k" #'ece-enable-keyword-completion
+  "K" #'ece-disable-keyword-completion
+  "C-k" #'ece-toggle-keyword-completion-local
+  "t" #'ece-enable-templates
+  "T" #'ece-disable-templates
+  "C-t" #'ece-toggle-templates-local
+  "o" #'ece-enable-templates-info
+  "O" #'ece-disable-templates-info
+  "C-o" #'ece-toggle-templates-info-local
   "r" #'ece-reset-to-defaults-local
   "R" #'ece-reset-to-defaults)
 
@@ -1717,10 +1842,49 @@ global defaults in all EasyCrypt buffers."
 (ece--easy-menu-gen easycrypt-ext-goals-mode-menu easycrypt-ext-goals-mode-map t t nil "goals")
 (ece--easy-menu-gen easycrypt-ext-response-mode-menu easycrypt-ext-response-mode-map t t nil "response")
 
-;; Session setup/teardown
+
+;;; Fundamental
+(defun ece--patch-syntax-table ()
+  "Patches syntax table to better reflect syntactical meaning of
+characters. Particularly, the following changes are applied:
+- , is classified as punctuation instead of whitespace."
+  (modify-syntax-entry ?, "."))
+
+(defun ece--undo-patch-syntax-table ()
+  "Undoes patch of syntax table as performed by `ece--patch-syntax-table',
+which see."
+  (modify-syntax-entry ?, " "))
+
+
+;;; Miscellaneous
+(defun ece--recenter-goals-window ()
+  "Recenters window showing goals buffer.
+Default behavior is as follows:
+- If the goal is a program-logic one, center around the middle
+between (the start of) the precondition and (the start of) the
+post-condition.
+- Else, center around the line that separates the goal's context
+from its conclusion.
+
+Meant for 'proof-shell-handle-delayed-output-hook'."
+  (when-let* ((proof-goals-window (get-buffer-window proof-goals-buffer t)))
+    (with-selected-window proof-goals-window
+      (goto-char (point-min))
+      (re-search-forward "^-+$" nil t)
+      (when-let* ((pre (re-search-forward "^pre =" nil t))
+                  (post (re-search-forward "^post =" nil t)))
+        (goto-char (/ (+ pre post) 2)))
+      (goto-char (pos-bol))
+      (set-window-point (selected-window) (point))
+      (recenter-top-bottom))))
+
+
+;;; Session setup/teardown
 ;;;###autoload
 (defun ece-setup ()
   "Sets up EasyCrypt extensions."
+  (ece--patch-syntax-table)
+
   (ece--configure-indentation ece-indentation)
 
   (let ((cpcnf nil)
@@ -1749,18 +1913,9 @@ global defaults in all EasyCrypt buffers."
 ;;;###autoload
 (defun ece-teardown ()
   "Tears down EasyCrypt extensions."
-  ;; Disable extensions and restore state
-  ;; (when (local-variable-p ece-indentation)
-  ;;   (ece--disable-indentation-local)
-  ;;   (when original-local-map
-  ;;     (use-local-map original-local-map)
-  ;;     (setq-local original-local-map nil))
-  ;;   (kill-local-variable ece-indentation))
+  (ece--undo-patch-syntax-table)
 
-  (if (seq-some #'(lambda (buf)
-                    (and (not (eq buf (current-buffer)))
-                         (with-current-buffer buf easycrypt-ext-mode)))
-                (buffer-list))
+  (if (ece--check-other-buffers-mode 'easycrypt-ext-mode)
       (ece--reset-indentation-settings-local)
     (ece--disable-indentation))
 
@@ -1776,6 +1931,16 @@ global defaults in all EasyCrypt buffers."
     (ece--disable-templates-info-local)
     (kill-local-variable ece-templates-info)))
 
+;;;###autoload
+(defun ece-goals-setup ()
+  "Sets up EasyCrypt extensions (goals)."
+  (add-hook 'proof-shell-handle-delayed-output-hook #'ece--recenter-goals-window 90))
+
+;;;###autoload
+(defun ece-goals-teardown ()
+  "Tears down EasyCrypt extensions (goals)."
+  (unless (ece--check-other-buffers-mode 'easycrypt-ext-goals-mode)
+    (remove-hook 'proof-shell-handle-delayed-output-hook #'ece--recenter-goals-window)))
 
 ;;; Minor modes
 ;; Regular
@@ -1791,7 +1956,10 @@ global defaults in all EasyCrypt buffers."
 (define-minor-mode easycrypt-ext-goals-mode nil
   :lighter " ECEg"
   :keymap easycrypt-ext-goals-mode-map
-  :interactive (easycrypt-goals-mode))
+  :interactive (easycrypt-goals-mode)
+  (if easycrypt-ext-goals-mode
+      (ece-goals-setup)
+    (ece-goals-teardown)))
 
 ;; Response
 (define-minor-mode easycrypt-ext-response-mode nil

@@ -2056,8 +2056,6 @@ that allows to include other templates by their name."
     (keymap-unset proof-mode-map "C-M-<up>")
     (keymap-unset proof-mode-map "C-M-<down>")
     (keymap-unset proof-mode-map "C-c v")
-    (keymap-set proof-mode-map "C-p" #'proof-undo-last-successful-command)
-    (keymap-set proof-mode-map "C-n" #'proof-assert-next-command-interactive)
     (keymap-set proof-mode-map "C-c C-v" #'proof-goto-point)
     (keymap-set proof-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
     (keymap-set proof-mode-map "C-c C-a" #'proof-goto-command-start)
