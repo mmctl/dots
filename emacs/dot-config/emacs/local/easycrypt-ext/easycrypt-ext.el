@@ -667,7 +667,7 @@ Meant for `post-self-insert-hook'."
 ;;; Auxiliary functionality
 ;; Proof shell commands
 (defconst ece--proofshell-supported-commands
-  '("locate" "print" "search")
+  '("locate" "pragma" "print" "search")
   "List of currently supported (proof shell) commands")
 
 (defun ece--proofshell-validate-command (command)
@@ -688,14 +688,28 @@ concatenated to SUBCOMMAND (separated by a space) as is."
   (let ((cmd (if args (concat command  " " args) command)))
     (proof-shell-invisible-command cmd sync callback)))
 
-(defun ece--proofshell-prompt-command (command)
+(defun ece--proofshell-prompt-command (command &optional collection sync callback)
   "Prompts user for arguments that are passed to COMMAND (proof shell) command
-of EasyCrypt."
+of EasyCrypt. If COLLECTION is non-nil, it should be a valid second argument
+to `completing-read', which see. It represents the possible
+arguments for the command, and completion functionality is provided for
+these."
   (when (ece--proofshell-validate-command command)
-    (let ((args (read-string (format-prompt "Provide arguments for '%s'" nil command))))
+    (let ((args (if collection
+                    (completing-read (format-prompt "Argument for '%s'" nil command)
+                                     collection nil t)
+                  (read-string (format-prompt "Provide arguments for '%s'" nil command)))))
       (if args
-          (ece--proofshell-execute command (when (not (string-empty-p args) args)))
+          (ece--proofshell-execute command (when (not (string-empty-p args)) args)
+                                   sync callback)
         (user-error "Please provide an argument")))))
+
+;;;###autoload
+(defun ece-proofshell-prompt-pragma ()
+  "Prompts user for arguments that are passed to the `pragma' (proof shell)
+command of EasyCrypt."
+  (interactive)
+  (ece--proofshell-prompt-command "pragma" ece-pragmas))
 
 ;;;###autoload
 (defun ece-proofshell-prompt-print ()

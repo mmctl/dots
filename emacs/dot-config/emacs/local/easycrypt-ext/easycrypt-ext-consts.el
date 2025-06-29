@@ -3,24 +3,24 @@
 ;; Note: extracting these from source would be more robust
 ;; (E.g., extract syntax elements from syntax table and keywords from parser)
 
-;; Syntax
+;;; Syntax
 (defconst ece-delimiters-comments-open
-  (list "(*" "(*&" "(*^"))
+  '("(*" "(*&" "(*^"))
 
 (defconst ece-delimiters-comments-close
-  (list "*)" "&*)" "^*)"))
+  '("*)" "&*)" "^*)"))
 
 (defconst ece-delimiters-expression-open
-  (list ?\[ ?\())
+  '(?\[ ?\())
 
 (defconst ece-delimiters-expression-close
-  (list ?\] ?\)))
+  '(?\] ?\)))
 
 (defconst ece-delimiters-code-open
-  (list ?\{))
+  '(?\{))
 
 (defconst ece-delimiters-code-close
-  (list ?\}))
+  '(?\}))
 
 (defconst ece-delimiters-open
   (eval-when-compile
@@ -39,28 +39,28 @@
     (append ece-delimiters-open ece-delimiters-close)))
 
 (defconst ece-bullets-proof
-  (list ?+ ?- ?*))
+  '(?+ ?- ?*))
 
-;; "Special" keywords
+;;; "Special" keywords
 (defconst ece-keywords-internal
-  (list "debug" "fail" "pragma" "prover" "time" "timeout"
-        "undo"))
+  '("debug" "fail" "pragma" "prover" "time" "timeout"
+    "undo"))
 
 (defconst ece-keywords-functionality
-  (list "exit" "goal" "locate" "print" "search" "why3"))
+  '("exit" "goal" "locate" "print" "search" "why3"))
 
 (defconst ece-keywords-meta
-  (list "as" "clone" "from" "hint" "export" "import"
-        "include" "remove" "rename" "require" "with"))
+  '("as" "clone" "from" "hint" "export" "import"
+    "include" "remove" "rename" "require" "with"))
 
 (defconst ece-keywords-scope
-  (list "declare" "local" "global"))
+  '("declare" "local" "global"))
 
 (defconst ece-keywords-proof-start
-  (list "proof" "realize"))
+  '("proof" "realize"))
 
 (defconst ece-keywords-proof-end
-  (list "qed"))
+  '("qed"))
 
 (defconst ece-keywords-proof-delimit
   (eval-when-compile
@@ -68,22 +68,22 @@
             ece-keywords-proof-end)))
 
 (defconst ece-keywords-structural
-  (list "section" "Self" "Top"))
+  '("section" "Self" "Top"))
 
-;; Specification keywords
+;;; Specification keywords
 (defconst ece-keywords-proof-spec-start
-  (list "equiv" "hoare" "lemma" "clone"))
+  '("equiv" "hoare" "lemma" "clone"))
 
 (defconst ece-keywords-functional-spec-start
-  (list "abbrev" "abstract" "axiom" "class" "const" "eager"
-        "ehoare" "equiv" "hoare" "inductive" "instance" "lemma"
-        "nosmt" "notation" "op" "phoare" "pred" "subtype"
-        "theory" "type"))
+  '("abbrev" "abstract" "axiom" "class" "const" "eager"
+    "ehoare" "equiv" "hoare" "inductive" "instance" "lemma"
+    "nosmt" "notation" "op" "phoare" "pred" "subtype"
+    "theory" "type"))
 
 (defconst ece-keywords-functional-spec-other
-  (list "axiomatized" "else" "end" "exists" "forall" "fun"
-        "glob" "if" "in" "islossless" "let" "of"
-        "Pr" "res" "then"))
+  '("axiomatized" "else" "end" "exists" "forall" "fun"
+    "glob" "if" "in" "islossless" "let" "of"
+    "Pr" "res" "then"))
 
 (defconst ece-keywords-functional-spec
   (eval-when-compile
@@ -91,7 +91,7 @@
                          ece-keywords-functional-spec-other))))
 
 (defconst ece-keywords-imperative-spec-start
-  (list "elif" "else" "if" "match" "module" "proc" "while"))
+  '("elif" "else" "if" "match" "module" "proc" "while"))
 
 (defconst ece-keywords-imperative-spec-start-scope
   (eval-when-compile
@@ -99,7 +99,7 @@
             ece-keywords-scope)))
 
 (defconst ece-keywords-imperative-spec-other
-  (list "assert" "for" "import" "include" "is" "return" "var"))
+  '("assert" "for" "import" "include" "is" "return" "var"))
 
 (defconst ece-keywords-imperative-spec
   (eval-when-compile
@@ -111,32 +111,32 @@
     (delete-dups (append ece-keywords-functional-spec
                          ece-keywords-imperative-spec))))
 
-;;;; Tactics keywords
+;;; Tactics keywords
 (defconst ece-keywords-tactic-regular
-  (list "algebra" "alias" "apply" "async" "auto" "beta" "byequiv"
-        "byphoare" "bypr" "byupto" "call" "case" "cbv" "cfold"
-        "change" "clear" "congr" "conseq" "cut" "delta"
-        "dump" "eager" "ecall" "ehoare" "elim" "eta" "exfalso"
-        "exlim" "fel" "field" "fieldeq" "fission" "fusion"
-        "gen" "have" "hoare" "idtac" "inline" "interleave"
-        "iota" "kill" "left" "logic" "modpath" "move"
-        "outline" "pose" "pr_bounded" "progress" "rcondf" "rcondt"
-        "replace" "rewrite" "right" "ring" "ringeq" "rnd"
-        "rndsem" "rwnormal" "seq" "sim" "simplify" "skip"
-        "sp" "split" "splitwhile" "subst" "suff" "swap"
-        "symmetry" "transitivity" "trivial" "unroll" "weakmem" "while"
-        "wlog" "wp" "zeta"))
+  '("algebra" "alias" "apply" "async" "auto" "beta" "byequiv"
+    "byphoare" "bypr" "byupto" "call" "case" "cbv" "cfold"
+    "change" "clear" "congr" "conseq" "cut" "delta"
+    "dump" "eager" "ecall" "ehoare" "elim" "eta" "exfalso"
+    "exlim" "fel" "field" "fieldeq" "fission" "fusion"
+    "gen" "have" "hoare" "idtac" "inline" "interleave"
+    "iota" "kill" "left" "logic" "modpath" "move"
+    "outline" "pose" "pr_bounded" "progress" "rcondf" "rcondt"
+    "replace" "rewrite" "right" "ring" "ringeq" "rnd"
+    "rndsem" "rwnormal" "seq" "sim" "simplify" "skip"
+    "sp" "split" "splitwhile" "subst" "suff" "swap"
+    "symmetry" "transitivity" "trivial" "unroll" "weakmem" "while"
+    "wlog" "wp" "zeta"))
 
 (defconst ece-keywords-tactic-close
-  (list "admit" "admitted" "assumption" "by"
-        "check" "done" "edit" "exact" "fix" "reflexivity"
-        "smt" "solve"))
+  '("admit" "admitted" "assumption" "by"
+    "check" "done" "edit" "exact" "fix" "reflexivity"
+    "smt" "solve"))
 
 (defconst ece-keywords-tactic-dangerous
-  (list "admit" "admitted"))
+  '("admit" "admitted"))
 
 (defconst ece-keywords-tactic-tactical
-  (list "do" "expect" "first" "last" "strict" "try"))
+  '("do" "expect" "first" "last" "strict" "try"))
 
 (defconst ece-keywords-tactic
   (eval-when-compile
@@ -146,7 +146,7 @@
                          ece-keywords-tactic-tactical))))
 
 
-;; All keywords
+;;; All keywords
 (defconst ece-keywords
   (eval-when-compile
     (delete-dups (append ece-keywords-internal
@@ -166,6 +166,13 @@
                          ece-keywords-proof-spec-start
                          ece-keywords-functional-spec-start))))
 
+
+;;; Commands
+(defconst ece-pragmas
+  '("Goals:printall" "Goals:printone" "Proofs:check" "Proofs:report"
+    "Proofs:weak" "PrPo:po:ands" "PrPo:po:raw" "PrPo:pr:ands"
+    "PrPo:pr:raw" "silent" "verbose" "-implicits" "+implicits"
+    "-oldip" "+oldip" "-old_mem_restr" "+old_mem_restr"))
 
 (provide 'easycrypt-ext-consts)
 
