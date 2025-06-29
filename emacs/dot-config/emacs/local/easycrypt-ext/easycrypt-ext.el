@@ -664,8 +664,7 @@ Meant for `post-self-insert-hook'."
         (indent-line-to indent-level)))))
 
 
-;;; Auxiliary functionality
-;; Proof shell commands
+;;; Proof shell commands
 (defconst ece--proofshell-supported-commands
   '("locate" "pragma" "print" "search")
   "List of currently supported (proof shell) commands")
@@ -688,6 +687,7 @@ concatenated to SUBCOMMAND (separated by a space) as is."
   (let ((cmd (if args (concat command  " " args) command)))
     (proof-shell-invisible-command cmd sync callback)))
 
+;; Prompted
 (defun ece--proofshell-prompt-command (command &optional collection sync callback)
   "Prompts user for arguments that are passed to COMMAND (proof shell) command
 of EasyCrypt. If COLLECTION is non-nil, it should be a valid second argument
@@ -696,9 +696,9 @@ arguments for the command, and completion functionality is provided for
 these."
   (when (ece--proofshell-validate-command command)
     (let ((args (if collection
-                    (completing-read (format-prompt "Argument for '%s'" nil command)
+                    (completing-read (format-prompt "Argument for `%s'" nil command)
                                      collection nil t)
-                  (read-string (format-prompt "Provide arguments for '%s'" nil command)))))
+                  (read-string (format-prompt "Provide arguments for `%s'" nil command)))))
       (if args
           (ece--proofshell-execute command (when (not (string-empty-p args)) args)
                                    sync callback)
@@ -732,6 +732,19 @@ command of EasyCrypt."
   (interactive)
   (ece--proofshell-prompt-command "locate"))
 
+;;;###autoload
+(defun ece-proofshell-prompt (command)
+  "Entry point for executing any of the supported (proof shell) commands,
+with prompt, as defined in `ece--proofshell-supported-commands'. Provides
+completion for the possible candidates, and directly dispatches the command
+corresponding to the choice upon confirmation."
+  (interactive (list
+                (completing-read (format-prompt "Command" ece--proofshell-supported-commands)
+                                 ece--proofshell-supported-commands nil t nil nil
+                                 ece--proofshell-supported-commands)))
+  (call-interactively (intern-soft (format "ece-proofshell-prompt-%s" command))))
+
+;; Non-prompted (based point location or mouse click)
 (defun ece--thing-at (event)
   "If EVENT is a mouse event, tries to find a (reasonable) thing at mouse
 (ignoring any active region). Otherwise, takes the active region
@@ -1278,6 +1291,10 @@ settings."
 
 ;;;###autoload
 (defun ece-exec (subcommand)
+  "Entry point for executing any of the supported (executable) subcommands,
+as defined in `ece--exec-supported-subcommands'. Provides completion
+for the possible candidates, and directly dispatches the
+command corresponding to the choice upon confirmation."
   (interactive (list
                 (completing-read (format-prompt "Subcommand" ece--exec-supported-subcommands)
                                  ece--exec-supported-subcommands nil t nil nil
@@ -1626,50 +1643,36 @@ global defaults in all EasyCrypt buffers."
   "R" #'ece-reset-to-defaults)
 
 ;; Modes
-(defvar-keymap easycrypt-ext-mode-map
-  :doc "Keymap for `easycrypt-ext-mode'."
+(defvar-keymap easycrypt-ext-general-map
+  :doc "General map containing commands shared by all keymaps
+of EasyCrypt Ext modes. Meant to be used as `parent' keymap for
+mode-specific maps."
+  "C-c C-y e" 'ece-exec-map-prefix
   "C-c C-y p" #'ece-proofshell-print
   "C-c C-y P" #'ece-proofshell-prompt-print
   "C-c C-y l" #'ece-proofshell-locate
   "C-c C-y L" #'ece-proofshell-prompt-locate
   "C-c C-y s" #'ece-proofshell-search
   "C-c C-y S" #'ece-proofshell-prompt-search
-  "C-c C-y o" 'ece-options-map-prefix
-  "C-c C-y t" 'ece-template-map-prefix
-  "C-c C-y e" 'ece-exec-map-prefix
+  "C-c C-y x" #'ece-exec
+  "C-c C-y z" #'ece-proofshell-prompt
   "C-S-<mouse-1>" #'ece-proofshell-print
   "C-S-<mouse-2>" #'ece-proofshell-locate
   "C-S-<mouse-3>" #'ece-proofshell-search)
 
+(defvar-keymap easycrypt-ext-mode-map
+  :doc "Keymap for `easycrypt-ext-mode'."
+  :parent easycrypt-ext-general-map
+  "C-c C-y o" 'ece-options-map-prefix
+  "C-c C-y t" 'ece-template-map-prefix)
+
 (defvar-keymap easycrypt-ext-goals-mode-map
   :doc "Keymap for `easycrypt-ext-goals-mode'."
-  "C-c C-y p" #'ece-proofshell-print
-  "C-c C-y P" #'ece-proofshell-prompt-print
-  "C-c C-y l" #'ece-proofshell-locate
-  "C-c C-y L" #'ece-proofshell-prompt-locate
-  "C-c C-y s" #'ece-proofshell-search
-  "C-c C-y S" #'ece-proofshell-prompt-search
-  "C-c C-y e" 'ece-exec-map-prefix
-  "C-S-<mouse-1>" #'ece-proofshell-print
-  "C-S-<mouse-2>" #'ece-proofshell-locate
-  "C-S-<mouse-3>" #'ece-proofshell-search
-  "C-S-<wheel-up>" #'ece-bufhist-prev
-  "C-S-<wheel-down>" #'ece-bufhist-next)
+  :parent easycrypt-ext-general-map)
 
 (defvar-keymap easycrypt-ext-response-mode-map
   :doc "Keymap for `easycrypt-ext-response-mode'."
-  "C-c C-y p" #'ece-proofshell-print
-  "C-c C-y P" #'ece-proofshell-prompt-print
-  "C-c C-y l" #'ece-proofshell-locate
-  "C-c C-y L" #'ece-proofshell-prompt-locate
-  "C-c C-y s" #'ece-proofshell-search
-  "C-c C-y S" #'ece-proofshell-prompt-search
-  "C-c C-y e" 'ece-exec-map-prefix
-  "C-S-<mouse-1>" #'ece-proofshell-print
-  "C-S-<mouse-2>" #'ece-proofshell-locate
-  "C-S-<mouse-3>" #'ece-proofshell-search
-  "C-S-<wheel-up>" #'ece-bufhist-prev
-  "C-S-<wheel-down>" #'ece-bufhist-next)
+  :parent easycrypt-ext-general-map)
 
 ;; Repeat
 (defvar-keymap ece-proof-mode-process-repeat-map
