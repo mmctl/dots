@@ -2397,8 +2397,8 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix)
   (keymap-set easycrypt-ext-general-map "C-c !" #'ece-exec)
 
-  (keymap-set easycrypt-ext-general-map "C-c l o" 'ece-options-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c C-t" 'ece-template-map-prefix))
+  (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
+  (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix))
 
 
 ;;; Hooks
