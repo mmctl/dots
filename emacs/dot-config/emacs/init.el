@@ -744,7 +744,6 @@
           visual-replace-preview-delay 0.1
           visual-replace-preview-max-durattion 0.05)
   (setopt visual-replace-default-to-full-scope t)
-  (setopt visual-replace-default-to-full-scope t)
   (setopt visual-replace-display-total t)
   (setopt visual-replace-min-length 2)
 
@@ -765,9 +764,11 @@
 
   :config
   ;; Keybindings
+  (keymap-set visual-replace-mode-map "C-o" #'visual-replace-apply-one-repeat)
   (keymap-set visual-replace-mode-map "C-v" #'visual-replace-enter)
   (keymap-set visual-replace-mode-map "C-p" #'visual-replace-prev-match)
   (keymap-set visual-replace-mode-map "C-n" #'visual-replace-next-match)
+  (keymap-set visual-replace-mode-map "M-TAB" #'visual-replace-tab)
   (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab)
   (keymap-set visual-replace-mode-map "M-r" visual-replace-secondary-mode-map))
 
@@ -1071,7 +1072,7 @@ that allows to include other templates by their name."
   ;; Activation
   (global-tempel-abbrev-mode 1))
 
-;; Actions
+;;; Actions
 (use-package move-text
   :ensure t
 
@@ -2361,6 +2362,78 @@ that allows to include other templates by their name."
             (not (or (bound-and-true-p vertico--input)
                      (eq (current-local-map) read-passwd-map))))))
 
+;; Cape + Tempel
+(use-package cape
+  :after tempel
+
+  :config
+  ;; Setup and settings (after load)
+  (defalias 'tempel-complete-prefix-2 (cape-capf-prefix-length #'tempel-complete 2))
+
+  (defun setup-a-cape-tempel-text-mode ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-abbrev-prefix-2
+                                       #'tempel-complete-prefix-2
+                                       #'cape-dict-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
+
+  (defun setup-a-cape-tempel-mix-mode ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-abbrev-prefix-2
+                                       #'tempel-complete-prefix-2
+                                       #'cape-keyword-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      #'cape-dict-prefix-2
+                      t)))
+
+  (defun setup-a-cape-tempel-code-mode ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-abbrev-prefix-2
+                                       #'tempel-complete-prefix-2
+                                       #'cape-keyword-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
+
+  (defun setup-a-cape-tempel-minibuffer ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-abbrev-prefix-2
+                                       #'tempel-complete-prefix-2
+                                       #'cape-history-prefix-2 #'cape-file-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
+
+  (defun setup-a-cape-tempel-elisp-mode ()
+    (setq-local completion-at-point-functions
+                (list (cape-capf-super #'cape-abbrev-prefix-2
+                                       #'tempel-complete-prefix-2
+                                       #'elisp-cap-prefix-2
+                                       #'cape-keyword-prefix-2
+                                       #'cape-dabbrev-prefix-2)
+                      t)))
+
+  ;; Hooks (replace original ones by ones including tempel-complete)
+  (remove-hook 'text-mode-hook #'setup-a-cape-text-mode)
+  (remove-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
+  (remove-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
+  (remove-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
+  (remove-hook 'prog-mode-hook #'setup-a-cape-code-mode)
+  (remove-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer)
+
+  (remove-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode)
+
+  (add-hook 'text-mode-hook #'setup-a-cape-tempel-text-mode)
+  (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-mode)
+  (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-mode)
+  (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-mode)
+  (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-mode)
+  (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer)
+
+  (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode)
+
+  ;; Deactivate global-abbrev-mode
+  (global-tempel-abbrev-mode -1))
+
 ;; EasyCrypt (extension)
 (use-package easycrypt-ext
   :ensure nil ; Provided locally
@@ -2387,6 +2460,7 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-general-map "C-c l l" #'ece-proofshell-locate)
   (keymap-set easycrypt-ext-general-map "C-c l L" #'ece-proofshell-prompt-locate)
   (keymap-set easycrypt-ext-general-map "C-c -" #'ece-proofshell-prompt-locate)
+  (keymap-set easycrypt-ext-general-map "C-c l m" #'ece-proofshell-prompt-pragma)
   (keymap-set easycrypt-ext-general-map "C-c C-s" #'ece-proofshell-search)
   (keymap-set easycrypt-ext-general-map "C-c /" #'ece-proofshell-prompt-search)
   (keymap-set easycrypt-ext-general-map "C-c l s" #'ece-proofshell-search)

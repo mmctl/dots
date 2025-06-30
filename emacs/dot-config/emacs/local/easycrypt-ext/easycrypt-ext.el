@@ -1652,6 +1652,7 @@ mode-specific maps."
   "C-c C-y P" #'ece-proofshell-prompt-print
   "C-c C-y l" #'ece-proofshell-locate
   "C-c C-y L" #'ece-proofshell-prompt-locate
+  "C-c C-y m" #'ece-proofshell-prompt-pragma
   "C-c C-y s" #'ece-proofshell-search
   "C-c C-y S" #'ece-proofshell-prompt-search
   "C-c C-y x" #'ece-exec
@@ -1810,17 +1811,21 @@ mode-specific maps."
 
 
 ;;; Fundamental
+(defvar-local original-syntax-table nil)
+
 (defun ece--patch-syntax-table ()
   "Patches syntax table to better reflect syntactical meaning of
 characters. Particularly, the following changes are applied:
 - , is classified as punctuation instead of whitespace."
-  (modify-syntax-entry ?, "."))
+  (unless original-syntax-table
+    (setq-local original-syntax-table (copy-syntax-table))
+    (modify-syntax-entry ?, ".")))
 
-(defun ece--undo-patch-syntax-table ()
-  "Undoes patch of syntax table as performed by `ece--patch-syntax-table',
+(defun ece--restore-syntax-table ()
+  "Restores original syntax table, undoing the patch performed by `ece--patch-syntax-table',
 which see."
-  (modify-syntax-entry ?, " "))
-
+  (when original-syntax-table
+    (set-syntax-table original-syntax-table)))
 
 ;;; Miscellaneous
 (defun ece--recenter-goals-window ()
@@ -1879,7 +1884,7 @@ Meant for 'proof-shell-handle-delayed-output-hook'."
 ;;;###autoload
 (defun ece-teardown ()
   "Tears down EasyCrypt extensions."
-  (ece--undo-patch-syntax-table)
+  (ece--restore-syntax-table)
 
   (if (ece--check-other-buffers-mode 'easycrypt-ext-mode)
       (ece--reset-indentation-settings-local)
