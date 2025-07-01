@@ -76,6 +76,11 @@
 (load CUSTOM_FILE)
 
 ;; Load path/pointers
+;; Byte (and, if possible, natively) compile all local Elisp files (in LOCAL_DIR)
+(byte-recompile-directory LOCAL_DIR 0 nil t)
+(when (native-comp-available-p)
+  (native-compile-async (list LOCAL_DIR) t))
+
 ;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones
 (add-to-list 'load-path LOCAL_DIR)
 (dolist (file (directory-files-recursively LOCAL_DIR "^[^.].*" t t))
@@ -368,35 +373,20 @@
 
 (keymap-global-set "C-x q" 'a-quit-map-prefix)
 
-;; Killing
-(defvar-keymap a-kill-map
-  :doc "Keymap for killing"
-  :prefix 'a-kill-map-prefix
-  "f" #'delete-frame
-  "F" #'delete-other-frames
-  "w" #'delete-window
-  "W" #'delete-other-windows
-  "C-w" #'delete-windows-on
-  "b" #'kill-current-buffer
-  "B" #'kill-some-buffers
-  "C-b" #'kill-buffer)
-
-(keymap-global-set "C-x k" 'a-kill-map-prefix)
-
 ;; Frames
-(defvar-keymap a-frame-map
-  :doc "Keymap for frame management"
-  :prefix 'a-frame-map-prefix
-  "k" #'delete-frame
-  "K" #'delete-other-frames
-  "u" #'undelete-frame
-  "c" #'clone-frame
-  "m" #'make-frame-command
-  "f" #'find-file-other-frame
-  "g" #'other-frame
-  "s" #'suspend-frame)
+(defvaralias 'a-frame-map 'ctl-x-4-map
+  "Keymap for frame management")
+(defalias 'a-frame-map-prefix #'ctl-x-4-prefix
+  "Prefix for frame management keymap")
 
-(keymap-global-set "C-x ^" 'a-frame-map-prefix)
+(keymap-set a-frame-map "k" #'delete-frame)
+(keymap-set a-frame-map "K" #'delete-other-frames)
+(keymap-set a-frame-map "n" #'make-frame-command)
+(keymap-set a-frame-map "o" #'other-frame)
+(keymap-set a-frame-map "u" #'fit-frame-to-buffer)
+(keymap-set a-frame-map "z" #'suspend-frame)
+
+(keymap-set ctl-x-map "+" 'a-frame-map-prefix)
 
 ;; Windows
 (defvar-keymap a-window-resize-repeat-map
@@ -410,28 +400,31 @@
   "w" #'shrink-window-horizontally
   "W" #'enlarge-window-horizontally)
 
-(defvar-keymap a-window-map
-  :doc "Keymap for window management"
-  :prefix 'a-window-map-prefix
-  "h" #'shrink-window
-  "H" #'enlarge-window
-  "w" #'shrink-window-horizontally
-  "W" #'enlarge-window-horizontally
-  "b" #'balance-windows
-  "k" #'delete-window
-  "K" #'delete-other-windows
-  "C-k" #'delete-windows-on
-  "s" #'split-window-horizontally
-  "S" #'split-window-vertically
-  "f" #'fit-window-to-buffer
-  "g" #'other-window
-  "t" #'tear-off-window
-  "<left>" #'windmove-left
-  "<down>" #'windmove-down
-  "<up>" #'windmove-up
-  "<right>" #'windmove-right)
+(defvaralias 'a-window-map 'ctl-x-4-map
+  "Keymap for window management")
+(defalias 'a-window-map-prefix #'ctl-x-4-prefix
+  "Prefix for window management keymap")
 
-(keymap-global-set "C-x w" 'a-window-map-prefix)
+(keymap-set a-window-map "e" #'balance-windows)
+(keymap-set a-window-map "h" #'shrink-window)
+(keymap-set a-window-map "H" #'enlarge-window)
+(keymap-set a-window-map "k" #'delete-window)
+(keymap-set a-window-map "K" #'delete-other-windows)
+(keymap-set a-window-map "C-k" #'kill-buffer-and-window)
+(keymap-set a-window-map "M-k" #'delete-windows-on)
+(keymap-set a-window-map "s" #'split-window-horizontally)
+(keymap-set a-window-map "S" #'split-window-vertically)
+(keymap-set a-window-map "o" #'other-window)
+(keymap-set a-window-map "t" #'tear-off-window)
+(keymap-set a-window-map "u" #'fit-window-to-buffer)
+(keymap-set a-window-map "w" #'shrink-window-horizontally)
+(keymap-set a-window-map "W" #'enlarge-window-horizontally)
+(keymap-set a-window-map "<left>" #'windmove-left)
+(keymap-set a-window-map "<down>" #'windmove-down)
+(keymap-set a-window-map "<up>" #'windmove-up)
+(keymap-set a-window-map "<right>" #'windmove-right)
+
+(keymap-set ctl-x-map "w" 'a-window-map-prefix)
 
 ;; Buffers
 (defvar-keymap a-buffer-map
@@ -440,6 +433,7 @@
   "k" #'kill-current-buffer
   "K" #'kill-some-buffers
   "C-k" #'kill-buffer
+  "M-k" #'kill-buffer-and-window
   "g" #'switch-to-buffer
   "G" #'switch-to-buffer-other-window
   "M-g" #'switch-to-buffer-other-frame
@@ -451,49 +445,51 @@
 
 (keymap-global-set "C-x b" 'a-buffer-map-prefix)
 
-;; Navigation/searching
+;; Finding/going/searching/replacing
+(defvar-keymap a-find-map
+  :doc "Keymap for finding (i.e., searching, but more meta)"
+  :prefix 'a-find-map-prefix
+  "d" #'dired-jump
+  "D" #'find-dired
+  "f" #'find-file
+  "F" #'find-file-other-window
+  "C-f" #'find-file-other-frame
+  "o" #'find-file-read-only
+  "C-o" #'find-file-read-only-other-window
+  "M-o" #'find-file-read-only-other-frame
+  "r" #'recentf-open
+  "x a" #'xref-find-apropos
+  "x d" #'xref-find-definitions
+  "x r" #'xref-find-references)
+
+(keymap-global-set "M-f" 'a-find-map-prefix)
+
 (keymap-global-set "C-x f" #'find-file)
 (keymap-global-set "C-x F" #'find-file-other-window)
 (keymap-global-set "C-x C-f" #'find-file-other-frame)
 (keymap-global-set "C-x C-r" #'recentf-open)
+(keymap-global-set "C-D" #'dired-jump)
 
-;; Goto map
-(defvar-keymap a-goto-map
-  :doc "Keymap for navigation"
-  :prefix 'a-goto-map-prefix
-  "b" #'switch-to-buffer
-  "B" #'switch-to-buffer-other-window
-  "C-b" #'switch-to-buffer-other-frame
-  "c" #'goto-char
-  "f" #'other-frame
-  "i" #'imenu
-  "l" #'goto-line
-  "m" #'pop-to-mark-command
-  "M" #'pop-global-mark
-  "w" #'other-window)
+(keymap-set goto-map "b" #'switch-to-buffer)
+(keymap-set goto-map "B" #'switch-to-buffer-other-window)
+(keymap-set goto-map "C-b" #'switch-to-buffer-other-frame)
+(keymap-set goto-map "e p" #'previous-error)
+(keymap-set goto-map "e n" #'next-error)
+(keymap-set goto-map "f" #'other-frame)
+(keymap-set goto-map "l" #'goto-line)
+(keymap-set goto-map "m" #'pop-to-mark-command)
+(keymap-set goto-map "M" #'pop-global-mark)
+(keymap-set goto-map "r" #'jump-to-register)
+(keymap-set goto-map "w" #'other-window)
+(keymap-set goto-map "#" #'bookmark-jump)
+(keymap-set goto-map "C-#" #'bookmark-jump-other-window)
+(keymap-set goto-map "M-#" #'bookmark-jump-other-frame)
 
-(keymap-global-set "C-c g" 'a-goto-map-prefix)
+(keymap-set search-map "b" #'isearch-backward)
+(keymap-set search-map "f" #'isearch-forward)
+(keymap-set search-map "s" #'isearch-forward-symbol)
+(keymap-set search-map "g" #'find-grep)
 
-;; Search map
-(defvar-keymap a-search-map
-  :doc "Keymap for searching"
-  :prefix 'a-search-map-prefix
-  "f" #'find-file
-  "F" #'find-file-other-window
-  "C-f" #'find-file-other-frame
-  "r" #'recentf-open
-  "R" #'find-file-read-only
-  "i b" #'isearch-backward
-  "i f" #'isearch-forward
-  "i s" #'isearch-forward-symbol
-  "i r" #'isearch-query-replace
-  "i R" #'isearch-query-replace-regexp
-  "i w" #'isearch-forward-word
-  "i ." #'isearch-forward-symbol-at-point)
-
-(keymap-global-set "C-c s" 'a-search-map-prefix)
-
-;; Replace map
 (defvar-keymap a-replace-map
   :doc "Keymap for replacing"
   :prefix 'a-replace-map-prefix
@@ -502,7 +498,7 @@
   "q" #'query-replace
   "Q" #'query-replace-regexp)
 
-(keymap-global-set "C-c r" 'a-replace-map-prefix)
+(keymap-global-set "M-r" 'a-replace-map-prefix)
 
 
 ;;; Packages
@@ -531,7 +527,7 @@
   (keymap-set isearch-mode-map "C-v" #'isearch-exit)
   (keymap-set isearch-mode-map "C-t" #'isearch-yank-word-or-char)
   (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill)
-  (keymap-set isearch-mode-map "M-r" #'isearch-query-replace)
+  (keymap-set isearch-mode-map "M-r" 'a-replace-map-prefix)
   (keymap-set isearch-mode-map "M-R" #'isearch-query-replace-regexp))
 
 (use-package dired
@@ -1122,8 +1118,6 @@ that allows to include other templates by their name."
                ("C-u" . crux-upcase-region)
                ("C-l" . crux-downcase-region)
                ("C-c" . crux-captialize-region))
-         (:map a-kill-map
-               ("B" . crux-kill-other-buffers))
          (:map a-buffer-map
                ("c" . crux-create-scratch-buffer)
                ("d" . crux-kill-buffer-truename)
@@ -1165,8 +1159,8 @@ that allows to include other templates by their name."
   ;; Keybindings
   (keymap-global-set "C-S-w" #'other-window)
 
-  (keymap-set a-goto-map "w" #'ace-window)
-  (keymap-set a-goto-map "W" #'other-window))
+  (keymap-set goto-map "w" #'ace-window)
+  (keymap-set goto-map "W" #'other-window))
 
 (use-package avy
   :ensure t
@@ -1192,8 +1186,8 @@ that allows to include other templates by their name."
                ("M-l" . avy-kill-whole-line)
                ("M-t" . avy-kill-region))
          (:map isearch-mode-map
-               ("C-S-j" . avy-isearch)))
-  :bind* ("C-j" . avy-goto-char-timer)
+               ("C-M-j" . avy-isearch)))
+  :bind* ("C-S-j" . avy-goto-char-timer)
 
   :init
   ;; Setup and settings (before load)
@@ -1210,10 +1204,7 @@ that allows to include other templates by their name."
                                      (?y . avy-action-yank)
                                      (?Y . avy-action-teleport)
                                      (?z . avy-action-zap-to-char)
-                                     (?i . avy-action-ispell)))
-
-  ;; Keybindings
-  (keymap-unset isearch-mode-map "C-j"))
+                                     (?i . avy-action-ispell))))
 
 (use-package consult
   :ensure t
@@ -1233,28 +1224,23 @@ that allows to include other templates by their name."
          ("M-}" . consult-load-register)
          ("C-M-{" . consult-register)
          ("M-#" . consult-bookmark)
-         ("C-x r s" . consult-store-register)
-         ("C-x p b" . consult-project-buffer)
-         ("C-x r b" . consult-bookmark)
-         ("C-x r c" . consult-register)
-         ("C-x r l" . consult-register-load)
-         ("C-x r s" . consult-register-store)
          ("<remap> <goto-line>" . consult-goto-line)
          ("<remap> <Info-search>" . consult-info)
-         (:map a-consult-map
-               ("x" . consult-mode-command)
-               ("h" . consult-history)
-               ("k" . consult-kmacro)
-               ("l" . consult-man)
-               ("m" . consult-minor-mode-menu)
-               ("i" . consult-info)
-               (":" . consult-complex-command))
-         (:map a-buffer-map
-               ("g" . consult-buffer)
-               ("G" . consult-buffer-other-window)
-               ("M-g" . consult-buffer-other-frame)
-               ("p" . consult-project-buffer))
-         (:map a-goto-map
+         (:map ctl-x-r-map
+               ("b" . consult-bookmark)
+               ("c" . consult-register)
+               ("c" . consult-register-load)
+               ("s" . consult-register-store))
+         (:map project-prefix-map
+               ("b" . consult-project-buffer))
+         (:map isearch-mode-map
+               ("<remap> <isearch-edit-string>" . consult-isearch-history)
+               ("M-s h" . consult-isearch-history)
+               ("M-s l" . consult-line)
+               ("M-s L" . consult-line-multi))
+         (:map minibuffer-local-map
+               ("M-h" . consult-history))
+         (:map goto-map
                ("b" . consult-buffer)
                ("B" . consult-buffer-other-window)
                ("C-b" . consult-buffer-other-frame)
@@ -1269,28 +1255,35 @@ that allows to include other templates by their name."
                ("I" . consult-imenu-multi)
                ("r" . consult-register-load)
                ("#" . consult-bookmark))
-         (:map a-search-map
-               ("f" . find-file)
-               ("F" . find-file-other-window)
-               ("C-f" . consult-fd)
-               ("M-f" . consult-find)
-               ("o" . consult-recent-file)
-               ("c" . consult-locate)
-               ("g" . consult-ripgrep)
+         (:map search-map
+               ("f" . consult-focus-lines)
+               ("g" . consult-grep)
                ("G" . consult-git-grep)
-               ("M-g" . consult-grep)
+               ("h" . consult-isearch-history)
                ("l" . consult-line)
                ("L" . consult-line-multi)
                ("k" . consult-keep-lines)
-               ("u" . consult-focus-lines)
-               ("h" . consult-isearch-history))
-         (:map isearch-mode-map
-               ("<remap> <isearch-edit-string>" . consult-isearch-history)
-               ("M-s h" . consult-isearch-history)
-               ("M-s l" . consult-line)
-               ("M-s L" . consult-line-multi))
-         (:map minibuffer-local-map
-               ("M-h" . consult-history)))
+               ("r" . consult-ripgrep))
+         (:map a-consult-map
+               ("x" . consult-mode-command)
+               ("h" . consult-history)
+               ("k" . consult-kmacro)
+               ("l" . consult-man)
+               ("m" . consult-minor-mode-menu)
+               ("i" . consult-info)
+               (":" . consult-complex-command))
+         (:map a-buffer-map
+               ("g" . consult-buffer)
+               ("G" . consult-buffer-other-window)
+               ("M-g" . consult-buffer-other-frame)
+               ("p" . consult-project-buffer))
+         (:map a-find-map
+               ("C-f" . consult-fd)
+               ("M-f" . consult-find)
+               ("g" . consult-grep)
+               ("G" . consult-git-grep)
+               ("l" . consult-locate)
+               ("r" . consult-recent-file)))
 
   :init
   ;; Setup and settings (before load)
@@ -2057,6 +2050,9 @@ that allows to include other templates by their name."
     (keymap-unset proof-mode-map "C-M-<up>")
     (keymap-unset proof-mode-map "C-M-<down>")
     (keymap-unset proof-mode-map "C-c v")
+    (keymap-set proof-mode-map "C-S-u" #'proof-undo-last-successful-command)
+    (keymap-set proof-mode-map "C-S-p" #'proof-undo-last-successful-command)
+    (keymap-set proof-mode-map "C-S-n" #'proof-assert-next-command-interactive)
     (keymap-set proof-mode-map "C-c C-v" #'proof-goto-point)
     (keymap-set proof-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
     (keymap-set proof-mode-map "C-c C-a" #'proof-goto-command-start)
@@ -2109,6 +2105,50 @@ that allows to include other templates by their name."
     (setq-local bufhist-top-point (point-min)))
 
   (advice-add 'bufhist-insert-buttons :around #'silence-bufhist-insert-buttons))
+
+
+;; EasyCrypt (extension)
+(use-package easycrypt-ext
+  :ensure t
+  :vc (:url "https://github.com/mmctl/easycrypt-ext"
+            :branch "main")
+
+  :after proof
+
+  :hook ((easycrypt-mode . easycrypt-ext-mode)
+         (easycrypt-goals-mode . easycrypt-ext-goals-mode)
+         (easycrypt-response-mode . easycrypt-ext-response-mode))
+
+  :init
+  ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
+  (setopt ece-indentation t)
+  (setopt ece-keyword-completion t)
+  (setopt ece-templates t)
+  (setopt ece-templates-info nil)
+
+  :config
+  ;; Keybindings
+  (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
+  (keymap-set easycrypt-ext-general-map "C-c =" #'ece-proofshell-prompt-print)
+  (keymap-set easycrypt-ext-general-map "C-c l p" #'ece-proofshell-print)
+  (keymap-set easycrypt-ext-general-map "C-c l P" #'ece-proofshell-prompt-print)
+  (keymap-set easycrypt-ext-general-map "C-c l l" #'ece-proofshell-locate)
+  (keymap-set easycrypt-ext-general-map "C-c l L" #'ece-proofshell-prompt-locate)
+  (keymap-set easycrypt-ext-general-map "C-c -" #'ece-proofshell-prompt-locate)
+  (keymap-set easycrypt-ext-general-map "C-c l m" #'ece-proofshell-prompt-pragma)
+  (keymap-set easycrypt-ext-general-map "C-c C-s" #'ece-proofshell-search)
+  (keymap-set easycrypt-ext-general-map "C-c /" #'ece-proofshell-prompt-search)
+  (keymap-set easycrypt-ext-general-map "C-c l s" #'ece-proofshell-search)
+  (keymap-set easycrypt-ext-general-map "C-c l S" #'ece-proofshell-prompt-search)
+  (keymap-set easycrypt-ext-general-map "C-c :" #'ece-proofshell-prompt)
+  (keymap-set easycrypt-ext-general-map "C-c l t" 'ece-template-map-prefix)
+  (keymap-set easycrypt-ext-general-map "C-c C-e" 'ece-exec-map-prefix)
+  (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix)
+  (keymap-set easycrypt-ext-general-map "C-c !" #'ece-exec)
+
+  (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
+  (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix))
+
 
 ;; Themes
 ;; Doom-themes (general)
@@ -2433,47 +2473,6 @@ that allows to include other templates by their name."
 
   ;; Deactivate global-abbrev-mode
   (global-tempel-abbrev-mode -1))
-
-;; EasyCrypt (extension)
-(use-package easycrypt-ext
-  :ensure nil ; Provided locally
-
-  :after proof
-
-  :hook ((easycrypt-mode . easycrypt-ext-mode)
-         (easycrypt-goals-mode . easycrypt-ext-goals-mode)
-         (easycrypt-response-mode . easycrypt-ext-response-mode))
-
-  :init
-  ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
-  (setopt ece-indentation t)
-  (setopt ece-keyword-completion t)
-  (setopt ece-templates t)
-  (setopt ece-templates-info nil)
-
-  :config
-  ;; Keybindings
-  (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
-  (keymap-set easycrypt-ext-general-map "C-c =" #'ece-proofshell-prompt-print)
-  (keymap-set easycrypt-ext-general-map "C-c l p" #'ece-proofshell-print)
-  (keymap-set easycrypt-ext-general-map "C-c l P" #'ece-proofshell-prompt-print)
-  (keymap-set easycrypt-ext-general-map "C-c l l" #'ece-proofshell-locate)
-  (keymap-set easycrypt-ext-general-map "C-c l L" #'ece-proofshell-prompt-locate)
-  (keymap-set easycrypt-ext-general-map "C-c -" #'ece-proofshell-prompt-locate)
-  (keymap-set easycrypt-ext-general-map "C-c l m" #'ece-proofshell-prompt-pragma)
-  (keymap-set easycrypt-ext-general-map "C-c C-s" #'ece-proofshell-search)
-  (keymap-set easycrypt-ext-general-map "C-c /" #'ece-proofshell-prompt-search)
-  (keymap-set easycrypt-ext-general-map "C-c l s" #'ece-proofshell-search)
-  (keymap-set easycrypt-ext-general-map "C-c l S" #'ece-proofshell-prompt-search)
-  (keymap-set easycrypt-ext-general-map "C-c :" #'ece-proofshell-prompt)
-  (keymap-set easycrypt-ext-general-map "C-c l t" 'ece-template-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c C-e" 'ece-exec-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c !" #'ece-exec)
-
-  (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
-  (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix))
-
 
 ;;; Hooks
 ;; Frames/windows
