@@ -1075,7 +1075,8 @@ that allows to include other templates by their name."
   (add-to-list 'tempel-user-elements #'a-tempel-include)
 
   ;; Activation
-  (global-tempel-abbrev-mode 1))
+  (unless tempel-trigger-prefix
+    (global-tempel-abbrev-mode 1)))
 
 ;;; Actions
 (use-package move-text
@@ -2398,8 +2399,6 @@ that allows to include other templates by their name."
 
 ;; Cape + Tempel
 (use-package cape
-  :after tempel
-
   :config
   ;; Setup and settings (after load)
   (defalias 'tempel-complete-prefix-2 (cape-capf-prefix-length #'tempel-complete 2))
@@ -2483,6 +2482,8 @@ that allows to include other templates by their name."
                                                #'cape-dabbrev-prefix-2))
                         completion-at-point-functions)))
 
+  (defsubst setup-a-cape-tempel-auto-or-trigger-mode (triggerhook autohook)
+    (if tempel-trigger-prefix triggerhook autohook))
 
   ;; Hooks (replace original ones by ones including tempel-complete)
   (remove-hook 'text-mode-hook #'setup-a-cape-text-mode)
@@ -2494,22 +2495,25 @@ that allows to include other templates by their name."
 
   (remove-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode)
 
-  (if tempel-trigger-prefix
-      (progn
-        (add-hook 'text-mode-hook #'setup-a-cape-tempel-text-trigger-mode)
-        (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-trigger-mode)
-        (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-trigger-mode)
-        (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-trigger-mode)
-        (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-trigger-mode)
-        (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer-trigger-mode)
-        (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-tempel-elisp-trigger-mode))
-    (add-hook 'text-mode-hook #'setup-a-cape-tempel-text-auto-mode)
-    (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-auto-mode)
-    (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-auto-mode)
-    (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-auto-mode)
-    (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-auto-mode)
-    (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer-auto-mode)
-    (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-tempel-elisp-auto-mode))
-
-  ;; Deactivate global-abbrev-mode
-  (global-tempel-abbrev-mode -1))
+  (let ((texthook (setup-a-cape-tempel-auto-or-trigger-mode
+                   #'setup-a-cape-tempel-text-trigger-mode
+                   #'setup-a-cape-tempel-text-auto-mode))
+        (mixhook (setup-a-cape-tempel-auto-or-trigger-mode
+                  #'setup-a-cape-tempel-mix-trigger-mode
+                  #'setup-a-cape-tempel-mix-auto-mode))
+        (codehook (setup-a-cape-tempel-auto-or-trigger-mode
+                   #'setup-a-cape-tempel-code-trigger-mode
+                   #'setup-a-cape-tempel-code-auto-mode))
+        (mbhook (setup-a-cape-tempel-auto-or-trigger-mode
+                 #'setup-a-cape-tempel-minibuffer-trigger-mode
+                 #'setup-a-cape-tempel-minibuffer-auto-mode))
+        (elhook (setup-a-cape-tempel-auto-or-trigger-mode
+                 #'setup-a-cape-tempel-elisp-trigger-mode
+                 #'setup-a-cape-tempel-elisp-auto-mode)))
+    (add-hook 'text-mode-hook texthook)
+    (add-hook 'tex-mode-hook mixhook)
+    (add-hook 'TeX-mode-hook mixhook)
+    (add-hook 'conf-mode-hook mixhook)
+    (add-hook 'prog-mode-hook codehook)
+    (add-hook 'minibuffer-setup-hook mbhook)
+    (add-hook 'emacs-lisp-mode-hook elhook)))
