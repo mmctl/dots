@@ -754,7 +754,7 @@
   (setopt visual-replace-preview t
           visual-replace-preview-delay 0.1
           visual-replace-preview-max-durattion 0.05)
-  (setopt visual-replace-default-to-full-scope t)
+  (setopt visual-replace-default-to-full-scope nil)
   (setopt visual-replace-display-total t)
   (setopt visual-replace-min-length 2)
 
@@ -971,36 +971,37 @@
 
   (defun setup-a-cape-text-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-dict-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      t)))
+                      completion-at-point-functions)))
   (defun setup-a-cape-mix-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      #'cape-dict-prefix-2
-                      t)))
+                (append (list (cape-capf-super #'cape-abbrev-prefix-2
+                                               #'cape-keyword-prefix-2
+                                               #'cape-dabbrev-prefix-2)
+                              #'cape-dict-prefix-2)
+                        completion-at-point-functions)))
   (defun setup-a-cape-code-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-keyword-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      t)))
+                      completion-at-point-functions)))
   (defun setup-a-cape-minibuffer ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'cape-history-prefix-2 #'cape-file-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      t)))
+                      completion-at-point-functions)))
   (defun setup-a-cape-elisp-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'elisp-cap-prefix-2
                                        #'cape-keyword-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      t)))
+                      completion-at-point-functions)))
+
   ;; Hooks
   (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev-prefix-2 #'cape-dabbrev-prefix-2))
 
@@ -1018,13 +1019,6 @@
 
   :pin melpa
 
-  ;; :preface
-  ;; ;; Keymaps
-  ;; (defvar-keymap a-tempel-map
-  ;;   :doc "Keymap for tempel (global)"
-  ;;   :prefix 'a-tempel-map-prefix)
-  ;; (keymap-global-set "C-c t" 'a-tempel-map-prefix)
-
   :bind
   ("M-v" . tempel-complete)
   ("M-V" . tempel-expand)
@@ -1041,6 +1035,8 @@
   (unless (file-directory-p TEMPEL_DIR)
     (make-directory TEMPEL_DIR t))
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
+
+  (setopt tempel-trigger-prefix "<")
 
   (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
 
@@ -2408,47 +2404,85 @@ that allows to include other templates by their name."
   ;; Setup and settings (after load)
   (defalias 'tempel-complete-prefix-2 (cape-capf-prefix-length #'tempel-complete 2))
 
-  (defun setup-a-cape-tempel-text-mode ()
+  (defun setup-a-cape-tempel-text-auto-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'tempel-complete-prefix-2
                                        #'cape-dict-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      t)))
-
-  (defun setup-a-cape-tempel-mix-mode ()
+                      completion-at-point-functions)))
+  (defun setup-a-cape-tempel-text-trigger-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (append (list #'tempel-complete
+                              (cape-capf-super #'cape-abbrev-prefix-2
+                                               #'cape-dict-prefix-2
+                                               #'cape-dabbrev-prefix-2))
+                        completion-at-point-functions)))
+
+  (defun setup-a-cape-tempel-mix-auto-mode ()
+    (setq-local completion-at-point-functions
+                (append (list (cape-capf-super #'cape-abbrev-prefix-2
+                                               #'tempel-complete-prefix-2
+                                               #'cape-keyword-prefix-2
+                                               #'cape-dabbrev-prefix-2)
+                              #'cape-dict-prefix-2)
+                        completion-at-point-functions)))
+  (defun setup-a-cape-tempel-mix-trigger-mode ()
+    (setq-local completion-at-point-functions
+                (append (list #'tempel-complete
+                              (cape-capf-super #'cape-abbrev-prefix-2
+                                               #'cape-keyword-prefix-2
+                                               #'cape-dabbrev-prefix-2)
+                              #'cape-dict-prefix-2)
+                        completion-at-point-functions)))
+
+  (defun setup-a-cape-tempel-code-auto-mode ()
+    (setq-local completion-at-point-functions
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'tempel-complete-prefix-2
                                        #'cape-keyword-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      #'cape-dict-prefix-2
-                      t)))
-
-  (defun setup-a-cape-tempel-code-mode ()
+                      completion-at-point-functions)))
+  (defun setup-a-cape-tempel-code-trigger-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'tempel-complete-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      t)))
+                (append (list #'tempel-complete
+                              (cape-capf-super #'cape-abbrev-prefix-2
+                                               #'cape-keyword-prefix-2
+                                               #'cape-dabbrev-prefix-2))
+                        completion-at-point-functions)))
 
-  (defun setup-a-cape-tempel-minibuffer ()
+  (defun setup-a-cape-tempel-minibuffer-auto-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'tempel-complete-prefix-2
                                        #'cape-history-prefix-2 #'cape-file-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      t)))
-
-  (defun setup-a-cape-tempel-elisp-mode ()
+                      completion-at-point-functions)))
+  (defun setup-a-cape-tempel-minibuffer-trigger-mode ()
     (setq-local completion-at-point-functions
-                (list (cape-capf-super #'cape-abbrev-prefix-2
+                (append (list #'tempel-complete
+                              (cape-capf-super #'cape-abbrev-prefix-2
+                                               #'cape-history-prefix-2 #'cape-file-prefix-2
+                                               #'cape-dabbrev-prefix-2))
+                        completion-at-point-functions)))
+
+  (defun setup-a-cape-tempel-elisp-auto-mode ()
+    (setq-local completion-at-point-functions
+                (cons (cape-capf-super #'cape-abbrev-prefix-2
                                        #'tempel-complete-prefix-2
                                        #'elisp-cap-prefix-2
                                        #'cape-keyword-prefix-2
                                        #'cape-dabbrev-prefix-2)
-                      t)))
+                      completion-at-point-functions)))
+  (defun setup-a-cape-tempel-elisp-trigger-mode ()
+    (setq-local completion-at-point-functions
+                (append (list #'tempel-complete
+                              (cape-capf-super #'cape-abbrev-prefix-2
+                                               #'elisp-cap-prefix-2
+                                               #'cape-keyword-prefix-2
+                                               #'cape-dabbrev-prefix-2))
+                        completion-at-point-functions)))
+
 
   ;; Hooks (replace original ones by ones including tempel-complete)
   (remove-hook 'text-mode-hook #'setup-a-cape-text-mode)
@@ -2460,14 +2494,22 @@ that allows to include other templates by their name."
 
   (remove-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode)
 
-  (add-hook 'text-mode-hook #'setup-a-cape-tempel-text-mode)
-  (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-mode)
-  (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-mode)
-  (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-mode)
-  (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-mode)
-  (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer)
-
-  (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode)
+  (if tempel-trigger-prefix
+      (progn
+        (add-hook 'text-mode-hook #'setup-a-cape-tempel-text-trigger-mode)
+        (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-trigger-mode)
+        (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-trigger-mode)
+        (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-trigger-mode)
+        (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-trigger-mode)
+        (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer-trigger-mode)
+        (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-tempel-elisp-trigger-mode))
+    (add-hook 'text-mode-hook #'setup-a-cape-tempel-text-auto-mode)
+    (add-hook 'tex-mode-hook #'setup-a-cape-tempel-mix-auto-mode)
+    (add-hook 'TeX-mode-hook #'setup-a-cape-tempel-mix-auto-mode)
+    (add-hook 'conf-mode-hook #'setup-a-cape-tempel-mix-auto-mode)
+    (add-hook 'prog-mode-hook #'setup-a-cape-tempel-code-auto-mode)
+    (add-hook 'minibuffer-setup-hook #'setup-a-cape-tempel-minibuffer-auto-mode)
+    (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-tempel-elisp-auto-mode))
 
   ;; Deactivate global-abbrev-mode
   (global-tempel-abbrev-mode -1))
