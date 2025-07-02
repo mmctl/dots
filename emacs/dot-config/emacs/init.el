@@ -35,7 +35,7 @@
 
 ;; Cache
 (defconst EMACS_CACHE_DIR (file-name-as-directory
-                           (if (getenv "XDG_CACHE_HOME")
+                          (if (getenv "XDG_CACHE_HOME")
                                (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
                              user-emacs-directory))
   "Directory where Emacs cache is stored.")
@@ -117,8 +117,7 @@
         create-lockfiles t)
 
 ;; Custom local functionalities
-(require 'loc-frames)
-(require 'loc-modes)
+(require 'loc-setup)
 (require 'loc-utils)
 
 ;; Package system
@@ -165,8 +164,20 @@
 
 (display-time-mode 1)
 
-(unless (daemonp)
-  (loc-setup-global-frame))
+(if (daemonp)
+    (progn
+      (add-hook 'server-after-make-frame-hook #'loc-setup-client-frame)
+      (add-hook 'after-make-frame-functions #'loc-setup-frame))
+  (add-hook 'after-init-hook #'loc-setup-global-frame))
+
+;; Modes
+(add-hook 'text-mode-hook #'loc-setup-text-mode)
+(add-hook 'tex-mode-hook #'loc-setup-code-mode)
+(add-hook 'TeX-mode-hook #'loc-setup-code-mode)
+(add-hook 'markdown-mode-hook #'loc-setup-code-mode)
+(add-hook 'conf-mode-hook #'loc-setup-code-mode)
+(add-hook 'log-edit-mode-hook #'loc-setup-code-mode)
+(add-hook 'prog-mode-hook #'loc-setup-code-mode)
 
 ;; (Mini)Buffers
 (setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -312,9 +323,6 @@
 ;; Exchanging/Joining
 (keymap-global-set "M-w" #'exchange-word)
 (keymap-global-set "M-W" #'exchange-word-backward)
-
-(keymap-global-set "M-j" #'join-line-stay)
-(keymap-global-set "M-J" #'join-line-forward-stay)
 
 ;; Killing
 (keymap-global-set "M-<backspace>" #'backward-kill-word)
@@ -527,8 +535,14 @@
   (keymap-set isearch-mode-map "C-v" #'isearch-exit)
   (keymap-set isearch-mode-map "C-t" #'isearch-yank-word-or-char)
   (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill)
-  (keymap-set isearch-mode-map "M-r" 'a-replace-map-prefix)
+  (keymap-set isearch-mode-map "M-r" #'isearch-query-replace)
   (keymap-set isearch-mode-map "M-R" #'isearch-query-replace-regexp))
+
+(use-package imenu
+  :init
+  ;; Setup and settings
+  (setopt imenu-max-item-length 100)
+  (setopt imenu-max-items 30))
 
 (use-package dired
   :init
@@ -596,9 +610,6 @@
   ;; Keybindings
   (keymap-set which-key-mode-map "C-x <f3>" #'which-key-C-h-dispatch)
 
-  ;; Hooks
-  (add-hook 'which-key-init-buffer-hook #'loc-setup-mini-mix-mode)
-
   ;; Activation
   (which-key-mode 1))
 
@@ -614,8 +625,9 @@
 (use-package easy-kill
   :ensure t
 
-  :bind (("<remap> <kill-ring-save>" . #'easy-kill)
-         ("<remap> <mark-word>" . #'easy-mark))
+  :bind
+  ("<remap> <kill-ring-save>" . #'easy-kill)
+  ("<remap> <mark-word>" . #'easy-mark)
 
   :init
   ;; Setup and settings (before load)
@@ -696,8 +708,10 @@
 (use-package jinx
   :ensure t
 
-  :bind (("M-$" . jinx-correct)
-         ("C-M-$" . jinx-languages))
+  :bind
+  ("M-$" . jinx-correct)
+  ("C-M-$" . jinx-languages)
+
   :hook (text-mode prog-mode conf-mode)
 
   :init
@@ -722,16 +736,17 @@
 (use-package visual-replace
   :ensure t
 
-  :bind (("M-r" . visual-replace)
-         (:map a-replace-map
-               ("r" . visual-replace-selected)
-               ("s" . visual-replace-sexp-at-point)
-               ("v" . visual-replace)
-               ("V" . visual-replace-regexp)
-               ("w" . visual-replace-word-at-point)
-               ("." . visual-replace-thing-at-point))
-         (:map isearch-mode-map
-               ("M-r" . visual-replace-from-isearch)))
+  :bind
+  ("M-R" . visual-replace)
+  (:map a-replace-map
+        ("r" . visual-replace-selected)
+        ("s" . visual-replace-sexp-at-point)
+        ("v" . visual-replace)
+        ("V" . visual-replace-regexp)
+        ("w" . visual-replace-word-at-point)
+        ("." . visual-replace-thing-at-point))
+  (:map isearch-mode-map
+        ("M-r" . visual-replace-from-isearch))
 
   :init
   ;; Setup and settings
@@ -776,13 +791,14 @@
   ;; Setup and settings (before load)
   (setopt orderless-smart-case t
           orderless-expand-substring 'prefix)
-  (setopt completion-styles '(orderless basic)
-          completion-category-defaults nil
-          completion-category-overrides '((file (styles basic partial-completion))))
 
   :config
   ;; Setup and settings (after load)
   (setopt orderless-matching-styles (list #'orderless-literal #'orderless-flex #'orderless-regexp))
+
+  (setopt completion-styles '(orderless basic)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles basic partial-completion))))
 
   ;; Custom functionality
   (orderless-define-completion-style orderless-flex-only
@@ -857,9 +873,9 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-map "C-y" #'vertico-quick-exit)
-  (keymap-set vertico-map "C-S-y" #'vertico-quick-insert)
-  (keymap-set vertico-map "C-S-j" #'vertico-quick-jump))
+  (keymap-set vertico-map "C-j" #'vertico-quick-exit)
+  (keymap-set vertico-map "C-S-j" #'vertico-quick-insert)
+  (keymap-set vertico-map "C-M-j" #'vertico-quick-jump))
 
 (use-package corfu
   :ensure t
@@ -925,10 +941,9 @@
 
   :config
   ;; Keybindings
-  (keymap-set corfu-map "C-y" #'corfu-quick-insert)
-  (keymap-set corfu-map "C-S-y" #'corfu-quick-complete)
-  (keymap-set corfu-map "C-S-j" #'corfu-quick-jump))
-
+  (keymap-set corfu-map "C-j" #'corfu-quick-insert)
+  (keymap-set corfu-map "C-S-j" #'corfu-quick-complete)
+  (keymap-set corfu-map "C-M-j" #'corfu-quick-jump))
 
 (use-package cape
   :ensure t
@@ -941,7 +956,7 @@
           cape-file-directory-must-exist t)
 
   ;; Keybindings
-  (keymap-global-set "C-c y" #'cape-prefix-map)
+  (keymap-global-set "C-c '" #'cape-prefix-map)
 
   :config
   ;; Custom functionality
@@ -1003,19 +1018,20 @@
 
   :pin melpa
 
-  :preface
-  ;; Keymaps
-  (defvar-keymap a-tempel-map
-    :doc "Keymap for tempel (outside templates)"
-    :prefix 'a-tempel-map-prefix)
-  (keymap-global-set "C-c t" 'a-tempel-map-prefix)
+  ;; :preface
+  ;; ;; Keymaps
+  ;; (defvar-keymap a-tempel-map
+  ;;   :doc "Keymap for tempel (global)"
+  ;;   :prefix 'a-tempel-map-prefix)
+  ;; (keymap-global-set "C-c t" 'a-tempel-map-prefix)
 
-  :bind (("M-v" . tempel-complete)
-         ("M-V" . tempel-expand)
-         (:map a-tempel-map
+  :bind
+  ("M-v" . tempel-complete)
+  ("M-V" . tempel-expand)
+  (:prefix-map a-tempel-map :prefix "C-c t" :prefix-docstring "Keymap for tempel (global)"
                ("c" . tempel-complete)
                ("e" . tempel-expand)
-               ("i" . tempel-insert)))
+               ("i" . tempel-insert))
 
   :init
   ;; Setup and settings (before load)
@@ -1030,9 +1046,6 @@
 
   :config
   ;; Keybindings
-  (tempel-key "f" fixme a-tempel-map)
-  (tempel-key "t" todo a-tempel-map)
-
   (keymap-unset tempel-map "<remap> <beginning-of-buffer>")
   (keymap-unset tempel-map "<remap> <end-of-buffer>")
   (keymap-unset tempel-map "<remap> <backward-paragraph>")
@@ -1072,8 +1085,9 @@ that allows to include other templates by their name."
 (use-package move-text
   :ensure t
 
-  :bind (("M-u" . move-text-up)
-         ("M-U" . move-text-down)))
+  :bind
+  ("M-u" . move-text-up)
+  ("M-U" . move-text-down))
 
 (use-package crux
   :ensure t
@@ -1086,10 +1100,11 @@ that allows to include other templates by their name."
     :prefix 'a-crux-map-prefix)
   (keymap-global-set "C-c x" 'a-crux-map-prefix)
 
-  :bind (("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
-         ("<remap> <kill-whole-line>" . crux-kill-whole-line)
-         ("M-d" . crux-duplicate-current-line-or-region)
-         (:map a-crux-map
+  :bind
+  ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
+  ("<remap> <kill-whole-line>" . crux-kill-whole-line)
+  ("M-d" . crux-duplicate-current-line-or-region)
+  (:prefix-map a-crux-map :prefix "C-c x" :prefix-docstring "Keymap for crux actions (global)"
                ("RET" . crux-smart-open-line)
                ("<return>" . "RET")
                ("S-<return>" . crux-smart-open-line-above)
@@ -1118,18 +1133,19 @@ that allows to include other templates by their name."
                ("C-u" . crux-upcase-region)
                ("C-l" . crux-downcase-region)
                ("C-c" . crux-captialize-region))
-         (:map a-buffer-map
-               ("c" . crux-create-scratch-buffer)
-               ("d" . crux-kill-buffer-truename)
-               ("K" . crux-kill-other-buffers)
-               ("h" . crux-switch-to-previous-buffer))
-         (:map a-window-map
-               ("z" . crux-transpose-windows))))
+  (:map a-buffer-map
+        ("c" . crux-create-scratch-buffer)
+        ("d" . crux-kill-buffer-truename)
+        ("K" . crux-kill-other-buffers)
+        ("h" . crux-switch-to-previous-buffer))
+  (:map a-window-map
+        ("z" . crux-transpose-windows)))
 
 (use-package ace-window
   :ensure t
 
-  :bind ("C-w" . ace-window)
+  :bind
+  ("C-w" . ace-window)
 
   :init
   ;; Setup and settings (before load)
@@ -1164,15 +1180,11 @@ that allows to include other templates by their name."
 
 (use-package avy
   :ensure t
+
   :pin melpa
 
-  :preface
-  (defvar-keymap an-avy-map
-    :doc "Keymap for avy"
-    :prefix 'an-avy-map-prefix)
-  (keymap-global-set "C-c j" 'an-avy-map-prefix)
-
-  :bind ((:map an-avy-map
+  :bind
+  (:prefix-map an-avy-map :prefix "C-c j" :prefix-docstring "Keymap for avy (global)"
                ("c" . avy-goto-char)
                ("C" . avy-goto-char-2)
                ("t" . avy-goto-char-timer)
@@ -1185,9 +1197,11 @@ that allows to include other templates by their name."
                ("C-t" . avy-kill-ring-save-region)
                ("M-l" . avy-kill-whole-line)
                ("M-t" . avy-kill-region))
-         (:map isearch-mode-map
-               ("C-M-j" . avy-isearch)))
-  :bind* ("C-S-j" . avy-goto-char-timer)
+  (:map isearch-mode-map
+        ("C-M-j" . avy-isearch))
+
+  :bind*
+  ("M-j" . avy-goto-char-2)
 
   :init
   ;; Setup and settings (before load)
@@ -1211,60 +1225,23 @@ that allows to include other templates by their name."
 
   :preface
   (defvar-keymap a-consult-map
-    :doc "Keymap for consult (misc)"
+    :doc "Keymap for consult (global)"
     :prefix 'a-consult-map-prefix)
   (keymap-global-set "C-c h" 'a-consult-map-prefix)
 
-  :bind (("C-l" . consult-line)
-         ("C-;" . consult-goto-line)
-         ("C-M-y" . consult-yank-pop)
-         ("M-m" . consult-mark)
-         ("M-M" . consult-global-mark)
-         ("M-{" . consult-store-register)
-         ("M-}" . consult-load-register)
-         ("C-M-{" . consult-register)
-         ("M-#" . consult-bookmark)
-         ("<remap> <goto-line>" . consult-goto-line)
-         ("<remap> <Info-search>" . consult-info)
-         (:map ctl-x-r-map
-               ("b" . consult-bookmark)
-               ("c" . consult-register)
-               ("c" . consult-register-load)
-               ("s" . consult-register-store))
-         (:map project-prefix-map
-               ("b" . consult-project-buffer))
-         (:map isearch-mode-map
-               ("<remap> <isearch-edit-string>" . consult-isearch-history)
-               ("M-s h" . consult-isearch-history)
-               ("M-s l" . consult-line)
-               ("M-s L" . consult-line-multi))
-         (:map minibuffer-local-map
-               ("M-h" . consult-history))
-         (:map goto-map
-               ("b" . consult-buffer)
-               ("B" . consult-buffer-other-window)
-               ("C-b" . consult-buffer-other-frame)
-               ("e" . consult-compile-error)
-               ("d" . consult-flymake)
-               ("l" . consult-goto-line)
-               ("o" . consult-outline)
-               ("p" . consult-project-buffer)
-               ("m" . consult-mark)
-               ("M" . consult-global-mark)
-               ("i" . consult-imenu)
-               ("I" . consult-imenu-multi)
-               ("r" . consult-register-load)
-               ("#" . consult-bookmark))
-         (:map search-map
-               ("f" . consult-focus-lines)
-               ("g" . consult-grep)
-               ("G" . consult-git-grep)
-               ("h" . consult-isearch-history)
-               ("l" . consult-line)
-               ("L" . consult-line-multi)
-               ("k" . consult-keep-lines)
-               ("r" . consult-ripgrep))
-         (:map a-consult-map
+  :bind
+  ("C-l" . consult-line)
+  ("C-;" . consult-goto-line)
+  ("C-M-y" . consult-yank-pop)
+  ("M-m" . consult-mark)
+  ("M-M" . consult-global-mark)
+  ("M-{" . consult-store-register)
+  ("M-}" . consult-load-register)
+  ("C-M-{" . consult-register)
+  ("M-#" . consult-bookmark)
+  ("<remap> <goto-line>" . consult-goto-line)
+  ("<remap> <Info-search>" . consult-info)
+  (:prefix-map a-consult-map :prefix "C-c h" :prefix-docstring "Keymap for consult (global)"
                ("x" . consult-mode-command)
                ("h" . consult-history)
                ("k" . consult-kmacro)
@@ -1272,18 +1249,56 @@ that allows to include other templates by their name."
                ("m" . consult-minor-mode-menu)
                ("i" . consult-info)
                (":" . consult-complex-command))
-         (:map a-buffer-map
-               ("g" . consult-buffer)
-               ("G" . consult-buffer-other-window)
-               ("M-g" . consult-buffer-other-frame)
-               ("p" . consult-project-buffer))
-         (:map a-find-map
-               ("C-f" . consult-fd)
-               ("M-f" . consult-find)
-               ("g" . consult-grep)
-               ("G" . consult-git-grep)
-               ("l" . consult-locate)
-               ("r" . consult-recent-file)))
+  (:map ctl-x-r-map
+        ("b" . consult-bookmark)
+        ("c" . consult-register)
+        ("c" . consult-register-load)
+        ("s" . consult-register-store))
+  (:map project-prefix-map
+        ("b" . consult-project-buffer))
+  (:map isearch-mode-map
+        ("<remap> <isearch-edit-string>" . consult-isearch-history)
+        ("M-s h" . consult-isearch-history)
+        ("M-s l" . consult-line)
+        ("M-s L" . consult-line-multi))
+  (:map minibuffer-local-map
+        ("M-h" . consult-history))
+  (:map goto-map
+        ("b" . consult-buffer)
+        ("B" . consult-buffer-other-window)
+        ("C-b" . consult-buffer-other-frame)
+        ("e" . consult-compile-error)
+        ("d" . consult-flymake)
+        ("l" . consult-goto-line)
+        ("o" . consult-outline)
+        ("p" . consult-project-buffer)
+        ("m" . consult-mark)
+        ("M" . consult-global-mark)
+        ("i" . consult-imenu)
+        ("I" . consult-imenu-multi)
+        ("r" . consult-register-load)
+        ("#" . consult-bookmark))
+  (:map search-map
+        ("f" . consult-focus-lines)
+        ("g" . consult-grep)
+        ("G" . consult-git-grep)
+        ("h" . consult-isearch-history)
+        ("l" . consult-line)
+        ("L" . consult-line-multi)
+        ("k" . consult-keep-lines)
+        ("r" . consult-ripgrep))
+  (:map a-buffer-map
+        ("g" . consult-buffer)
+        ("G" . consult-buffer-other-window)
+        ("M-g" . consult-buffer-other-frame)
+        ("p" . consult-project-buffer))
+  (:map a-find-map
+        ("C-f" . consult-fd)
+        ("M-f" . consult-find)
+        ("g" . consult-grep)
+        ("G" . consult-git-grep)
+        ("l" . consult-locate)
+        ("r" . consult-recent-file))
 
   :init
   ;; Setup and settings (before load)
@@ -1320,12 +1335,13 @@ that allows to include other templates by their name."
     :prefix 'an-embark-map-prefix)
   (keymap-global-set "C-c e" 'an-embark-map-prefix)
 
-  :bind (("M-," . embark-act)
-         ("M-." . embark-dwim)
-         ("M-o" . embark-select)
-         ("M-O" . embark-export)
-         ("C-h C-b" . embark-bindings)
-         (:map an-embark-map
+  :bind
+  ("M-," . embark-act)
+  ("M-." . embark-dwim)
+  ("M-o" . embark-select)
+  ("M-O" . embark-export)
+  ("C-h C-b" . embark-bindings)
+  (:prefix-map an-embark-map :prefix "C-c e" :prefix-docstring "Keymap for embark (global)"
                ("a" . embark-act)
                ("A" . embark-act-all)
                ("b" . embark-bindings)
@@ -1333,8 +1349,8 @@ that allows to include other templates by their name."
                ("d" . embark-dwim)
                ("e" . embark-export)
                ("l" . embark-live))
-         (:map minibuffer-local-map
-               ("M-b" . embark-become)))
+  (:map minibuffer-local-map
+        ("M-b" . embark-become))
 
   :init
   ;; Setup and settings (before load)
@@ -1373,9 +1389,10 @@ that allows to include other templates by their name."
 (use-package avy-embark-collect
   :ensure t
 
-  :bind (:map an-avy-map
-              ("e" . avy-embark-collect-choose)
-              ("E" . avy-embark-collect-act)))
+  :bind
+  (:map an-avy-map
+        ("e" . avy-embark-collect-choose)
+        ("E" . avy-embark-collect-act)))
 
 (use-package embark-consult
   :ensure t
@@ -1402,19 +1419,7 @@ that allows to include other templates by their name."
   :ensure t
 
   :preface
-  (defvar-keymap an-org-map
-    :doc "Keymap for org (outside `org-mode')"
-    :prefix 'an-org-map-prefix)
-  (keymap-global-set "C-c o" 'an-org-map-prefix)
-
-  :bind (("C-c c" . org-capture)
-         (:map an-org-map
-               ("a" . org-agenda)
-               ("c" . org-capture)
-               ("l" . org-store-link)))
-
-  :init
-  ;; Setup and settings (before load)
+  ;; Setup (preface)
   ;; Create and store org root directory
   (defconst ORG_DIR (file-name-as-directory
                      (if (getenv "XDG_DATA_HOME")
@@ -1424,6 +1429,22 @@ that allows to include other templates by their name."
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
 
+  ;; Custom functionality
+  (defun find-file-org ()
+    "Find file in `ORG_DIR' using `find-file'."
+    (interactive)
+    (let ((default-directory ORG_DIR))
+      (call-interactively #'find-file)))
+
+  :bind
+  ("C-c c" . org-capture)
+  (:prefix-map an-org-map :prefix "C-c o" :prefix-docstring "Keymap for org (global)"
+               ("a" . org-agenda)
+               ("c" . org-capture)
+               ("f" . find-file-org)
+               ("l" . org-store-link))
+
+  :init
   ;; Create and store org calendar file
   (defconst ORG_CALENDAR_FILE (file-name-concat ORG_DIR "calendar.org")
     "Default file for calendar events created with org.")
@@ -1554,16 +1575,6 @@ that allows to include other templates by their name."
              :empty-lines-before 0
              :empty-lines-after 1)))
 
-  ;; Custom functionality
-  (defun find-file-org ()
-    "Find file in `ORG_DIR' using `find-file'."
-    (interactive)
-    (let ((default-directory ORG_DIR))
-      (call-interactively #'find-file)))
-
-  ;; Keybindings
-  (keymap-set an-org-map "f" #'find-file-org)
-
   :config
   ;; Setup and settings (after load)
   (add-to-list 'org-agenda-files ORG_CALENDAR_FILE)
@@ -1582,9 +1593,7 @@ that allows to include other templates by their name."
   (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right)
 
   ;; Hooks
-  (add-hook 'org-mode-hook #'loc-setup-mix-mode)
-  (add-hook 'org-mode-hook #'org-indent-mode)
-  (add-hook 'org-capture-mode-hook #'loc-setup-mix-mode))
+  (add-hook 'org-mode-hook #'org-indent-mode))
 
 (use-package diff-hl
   :ensure t
@@ -1617,9 +1626,10 @@ that allows to include other templates by their name."
 (use-package magit
   :ensure t
 
-  :bind (("C-x m" . magit-status)
-         ("C-c m" . magit-dispatch)
-         ("C-c f" . magit-file-dispatch))
+  :bind
+  ("C-x m" . magit-status)
+  ("C-c m" . magit-dispatch)
+  ("C-c f" . magit-file-dispatch)
 
   :init
   ;; Setup and settings (before load)
@@ -1793,20 +1803,14 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
 
-;; Assistants
-(defvar-keymap an-ai-map
-  :doc "Keymap for AI (assistants)"
-  :prefix 'an-ai-map-prefix)
-(keymap-global-set "C-c a" 'an-ai-map-prefix)
-
+;; Assistants (AI)
 (use-package aidermacs
   :ensure t
 
   :pin melpa
 
-  :bind (("C-c A" . aidermacs-transient-menu)
-         (:map an-ai-map
-               ("a" . aidermacs-transient-menu)))
+  :bind
+  ("C-c a" . aidermacs-transient-menu)
 
   :init
   ;; Setup and settings (before load)
@@ -1833,15 +1837,9 @@ that allows to include other templates by their name."
 (use-package gptel
   :ensure t
 
-  :preface
-  (defvar-keymap a-gptel-map
-    :doc "Keymap for `gptel'"
-    :prefix 'a-gptel-map-prefix)
-  (keymap-set an-ai-map "g" 'a-gptel-map-prefix)
-  (keymap-global-set "C-c V" 'a-gptel-map-prefix)
-
-  :bind (("C-c v" . gptel-send)
-         (:map a-gptel-map
+  :bind
+  ("C-c G" . gptel-send)
+  (:prefix-map a-gptel-map :prefix "C-c g"
                ("a" . gptel-add)
                ("f" . gptel-add-file)
                ("g" . gptel)
@@ -1852,7 +1850,7 @@ that allows to include other templates by their name."
                ("r" . gptel-rewrite)
                ("s" . gptel-send)
                ("<" . gptel-beginning-of-response)
-               (">" . gptel-end-of-response)))
+               (">" . gptel-end-of-response))
 
   :init
   ;; Setup and settings (before load)
@@ -2473,21 +2471,3 @@ that allows to include other templates by their name."
 
   ;; Deactivate global-abbrev-mode
   (global-tempel-abbrev-mode -1))
-
-;;; Hooks
-;; Frames/windows
-(when (daemonp)
-  (add-hook 'server-after-make-frame-hook #'loc-setup-client-frame)
-  (add-hook 'after-make-frame-functions #'loc-setup-frame))
-
-(add-hook 'minibuffer-setup-hook #'loc-setup-mini-mix-mode)
-
-;; Modes
-(add-hook 'text-mode-hook #'loc-setup-text-mode)
-
-(add-hook 'tex-mode-hook #'loc-setup-mix-mode)
-(add-hook 'TeX-mode-hook #'loc-setup-mix-mode)
-(add-hook 'markdown-mode-hook #'loc-setup-mix-mode)
-(add-hook 'conf-mode-hook #'loc-setup-mix-mode)
-(add-hook 'log-edit-mode-hook #'loc-setup-mix-mode)
-(add-hook 'prog-mode-hook #'loc-setup-code-mode)
