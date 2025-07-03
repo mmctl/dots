@@ -462,6 +462,9 @@
   "f" #'find-file
   "F" #'find-file-other-window
   "C-f" #'find-file-other-frame
+  "l" #'find-library
+  "L" #'find-library-other-window
+  "C-l" #'find-library-other-frame
   "o" #'find-file-read-only
   "C-o" #'find-file-read-only-other-window
   "M-o" #'find-file-read-only-other-frame
@@ -477,6 +480,9 @@
 (keymap-global-set "C-x C-f" #'find-file-other-frame)
 (keymap-global-set "C-x C-r" #'recentf-open)
 (keymap-global-set "C-D" #'dired-jump)
+
+(keymap-global-set "C-S-r" #'isearch-backward-regexp)
+(keymap-global-set "C-S-s" #'isearch-forward-regexp)
 
 (keymap-set goto-map "b" #'switch-to-buffer)
 (keymap-set goto-map "B" #'switch-to-buffer-other-window)
@@ -494,7 +500,9 @@
 (keymap-set goto-map "M-#" #'bookmark-jump-other-frame)
 
 (keymap-set search-map "b" #'isearch-backward)
+(keymap-set search-map "B" #'isearch-backward-regexp)
 (keymap-set search-map "f" #'isearch-forward)
+(keymap-set search-map "F" #'isearch-forward-regexp)
 (keymap-set search-map "s" #'isearch-forward-symbol)
 (keymap-set search-map "g" #'find-grep)
 
@@ -1036,8 +1044,6 @@
     (make-directory TEMPEL_DIR t))
   (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
 
-  (setopt tempel-trigger-prefix "<")
-
   (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
 
   :config
@@ -1072,11 +1078,7 @@ that allows to include other templates by their name."
     (when (eq (car-safe elt) 'i)
       (when-let (template (alist-get (cadr elt) (tempel--templates)))
         (cons 'l template))))
-  (add-to-list 'tempel-user-elements #'a-tempel-include)
-
-  ;; Activation
-  (unless tempel-trigger-prefix
-    (global-tempel-abbrev-mode 1)))
+  (add-to-list 'tempel-user-elements #'a-tempel-include))
 
 ;;; Actions
 (use-package move-text
@@ -1198,7 +1200,8 @@ that allows to include other templates by their name."
         ("C-M-j" . avy-isearch))
 
   :bind*
-  ("M-j" . avy-goto-char-2)
+  ("M-j" . avy-goto-char-timer)
+  ("M-J" . avy-goto-char)
 
   :init
   ;; Setup and settings (before load)
@@ -1276,14 +1279,14 @@ that allows to include other templates by their name."
         ("r" . consult-register-load)
         ("#" . consult-bookmark))
   (:map search-map
-        ("f" . consult-focus-lines)
         ("g" . consult-grep)
         ("G" . consult-git-grep)
         ("h" . consult-isearch-history)
         ("l" . consult-line)
         ("L" . consult-line-multi)
         ("k" . consult-keep-lines)
-        ("r" . consult-ripgrep))
+        ("r" . consult-ripgrep)
+        ("u" . consult-focus-lines))
   (:map a-buffer-map
         ("g" . consult-buffer)
         ("G" . consult-buffer-other-window)
@@ -1294,7 +1297,7 @@ that allows to include other templates by their name."
         ("M-f" . consult-find)
         ("g" . consult-grep)
         ("G" . consult-git-grep)
-        ("l" . consult-locate)
+        ("p" . consult-locate)
         ("r" . consult-recent-file))
 
   :init
@@ -1491,7 +1494,9 @@ that allows to include other templates by their name."
   (setopt org-return-follows-link t)
   (setopt org-support-shift-select t)
 
-  (setopt org-startup-folded 'content)
+  (setopt org-startup-folded 'content
+          org-startup-indented t)
+
   (setopt org-enforce-todo-dependencies t
           org-enforce-todo-checkbox-dependencies t)
 
@@ -1521,10 +1526,10 @@ that allows to include other templates by their name."
 
   (setopt org-tags-exclude-from-inheritance '("rftarget"))
 
-  (setopt org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "BLOCKED" "DONE")))
+  (setopt org-todo-keywords '((sequence "TODO" "DOING" "BLOCKED" "DONE")))
   (setopt org-todo-keyword-faces
           '(("TODO" . (:inherit org-todo))
-            ("IN-PROGRESS" . (:inherit org-cite))
+            ("DOING" . (:inherit org-cite))
             ("BLOCKED" . (:inherit org-warning))
             ("DONE" . (:inherit org-done))))
 
@@ -1587,10 +1592,45 @@ that allows to include other templates by their name."
   (keymap-unset org-read-date-minibuffer-local-map "C-v")
   (keymap-unset org-read-date-minibuffer-local-map "M-v")
   (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
-  (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right)
+  (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right))
 
-  ;; Hooks
-  (add-hook 'org-mode-hook #'org-indent-mode))
+(use-package org-modern
+  :ensure t
+
+  :hook
+  (org-mode . org-modern-mode)
+  (org-agenda-finalize . org-modern-agenda)
+
+  :init
+  (setopt org-modern-hide-stars nil)
+  (setopt org-modern-table nil)
+  (setopt org-modern-block-name '("‣" . "‣"))
+  (setopt org-modern-list '((?* . "•") (?+ . "‣")))
+  (setopt org-modern-todo-faces '(("TODO" . (:inherit org-todo :inverse-video t))
+                                  ("DOING" . (:inherit org-cite :inverse-video t))
+                                  ("BLOCKED" . (:inherit org-warning :inverse-video t))
+                                  ("DONE" . (:inherit org-done :inverse-video t))))
+
+  :config
+  (when (string-match-p "^Iosevka.*" (face-attribute 'default :family))
+    (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+    (set-face-attribute 'org-modern-label nil :height 0.9 :width 'semi-condensed :weight 'normal)))
+
+
+(use-package org-modern-indent
+  :ensure t
+  :vc (:url https://github.com/jdtsmith/org-modern-indent
+       :branch main
+       :rev :newest)
+
+  :after org
+
+  :config
+  (defun setup-an-org-modern-indent-mode ()
+    (org-indent-mode 1)
+    (org-modern-indent-mode 1))
+
+  (add-hook 'org-mode #'setup-an-org-modern-indent-mode 90))
 
 (use-package diff-hl
   :ensure t
@@ -1679,23 +1719,18 @@ that allows to include other templates by their name."
             (output-dvi "xdvi")
             (output-pdf "PDF Tools")
             (output-html "xdg-open")))
-
   (setopt TeX-PDF-mode t)
-
   (setopt TeX-master nil)
-
   (setopt TeX-parse-self t
           TeX-auto-regexp-list 'TeX-auto-full-regexp-list)
-
   (setopt TeX-file-line-error t
           TeX-display-help t)
-
   (setopt TeX-save-query t
           TeX-auto-save t
           TeX-auto-untabify t)
-
   (setopt TeX-source-correlate-method '((dvi . source-specials)
                                         (pdf . synctex)))
+  (setopt TeX-electric-math '("$" . "$"))
 
   :config
   ;; Hooks
@@ -2106,7 +2141,8 @@ that allows to include other templates by their name."
 (use-package easycrypt-ext
   :ensure t
   :vc (:url "https://github.com/mmctl/easycrypt-ext"
-            :branch "main")
+            :branch "main"
+            :rev :newest)
 
   :after proof
 
@@ -2396,124 +2432,3 @@ that allows to include other templates by their name."
           (lambda ()
             (not (or (bound-and-true-p vertico--input)
                      (eq (current-local-map) read-passwd-map))))))
-
-;; Cape + Tempel
-(use-package cape
-  :config
-  ;; Setup and settings (after load)
-  (defalias 'tempel-complete-prefix-2 (cape-capf-prefix-length #'tempel-complete 2))
-
-  (defun setup-a-cape-tempel-text-auto-mode ()
-    (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'tempel-complete-prefix-2
-                                       #'cape-dict-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
-  (defun setup-a-cape-tempel-text-trigger-mode ()
-    (setq-local completion-at-point-functions
-                (append (list #'tempel-complete
-                              (cape-capf-super #'cape-abbrev-prefix-2
-                                               #'cape-dict-prefix-2
-                                               #'cape-dabbrev-prefix-2))
-                        completion-at-point-functions)))
-
-  (defun setup-a-cape-tempel-mix-auto-mode ()
-    (setq-local completion-at-point-functions
-                (append (list (cape-capf-super #'cape-abbrev-prefix-2
-                                               #'tempel-complete-prefix-2
-                                               #'cape-keyword-prefix-2
-                                               #'cape-dabbrev-prefix-2)
-                              #'cape-dict-prefix-2)
-                        completion-at-point-functions)))
-  (defun setup-a-cape-tempel-mix-trigger-mode ()
-    (setq-local completion-at-point-functions
-                (append (list #'tempel-complete
-                              (cape-capf-super #'cape-abbrev-prefix-2
-                                               #'cape-keyword-prefix-2
-                                               #'cape-dabbrev-prefix-2)
-                              #'cape-dict-prefix-2)
-                        completion-at-point-functions)))
-
-  (defun setup-a-cape-tempel-code-auto-mode ()
-    (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'tempel-complete-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
-  (defun setup-a-cape-tempel-code-trigger-mode ()
-    (setq-local completion-at-point-functions
-                (append (list #'tempel-complete
-                              (cape-capf-super #'cape-abbrev-prefix-2
-                                               #'cape-keyword-prefix-2
-                                               #'cape-dabbrev-prefix-2))
-                        completion-at-point-functions)))
-
-  (defun setup-a-cape-tempel-minibuffer-auto-mode ()
-    (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'tempel-complete-prefix-2
-                                       #'cape-history-prefix-2 #'cape-file-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
-  (defun setup-a-cape-tempel-minibuffer-trigger-mode ()
-    (setq-local completion-at-point-functions
-                (append (list #'tempel-complete
-                              (cape-capf-super #'cape-abbrev-prefix-2
-                                               #'cape-history-prefix-2 #'cape-file-prefix-2
-                                               #'cape-dabbrev-prefix-2))
-                        completion-at-point-functions)))
-
-  (defun setup-a-cape-tempel-elisp-auto-mode ()
-    (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'tempel-complete-prefix-2
-                                       #'elisp-cap-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
-  (defun setup-a-cape-tempel-elisp-trigger-mode ()
-    (setq-local completion-at-point-functions
-                (append (list #'tempel-complete
-                              (cape-capf-super #'cape-abbrev-prefix-2
-                                               #'elisp-cap-prefix-2
-                                               #'cape-keyword-prefix-2
-                                               #'cape-dabbrev-prefix-2))
-                        completion-at-point-functions)))
-
-  (defsubst setup-a-cape-tempel-auto-or-trigger-mode (triggerhook autohook)
-    (if tempel-trigger-prefix triggerhook autohook))
-
-  ;; Hooks (replace original ones by ones including tempel-complete)
-  (remove-hook 'text-mode-hook #'setup-a-cape-text-mode)
-  (remove-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
-  (remove-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
-  (remove-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
-  (remove-hook 'prog-mode-hook #'setup-a-cape-code-mode)
-  (remove-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer)
-
-  (remove-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode)
-
-  (let ((texthook (setup-a-cape-tempel-auto-or-trigger-mode
-                   #'setup-a-cape-tempel-text-trigger-mode
-                   #'setup-a-cape-tempel-text-auto-mode))
-        (mixhook (setup-a-cape-tempel-auto-or-trigger-mode
-                  #'setup-a-cape-tempel-mix-trigger-mode
-                  #'setup-a-cape-tempel-mix-auto-mode))
-        (codehook (setup-a-cape-tempel-auto-or-trigger-mode
-                   #'setup-a-cape-tempel-code-trigger-mode
-                   #'setup-a-cape-tempel-code-auto-mode))
-        (mbhook (setup-a-cape-tempel-auto-or-trigger-mode
-                 #'setup-a-cape-tempel-minibuffer-trigger-mode
-                 #'setup-a-cape-tempel-minibuffer-auto-mode))
-        (elhook (setup-a-cape-tempel-auto-or-trigger-mode
-                 #'setup-a-cape-tempel-elisp-trigger-mode
-                 #'setup-a-cape-tempel-elisp-auto-mode)))
-    (add-hook 'text-mode-hook texthook)
-    (add-hook 'tex-mode-hook mixhook)
-    (add-hook 'TeX-mode-hook mixhook)
-    (add-hook 'conf-mode-hook mixhook)
-    (add-hook 'prog-mode-hook codehook)
-    (add-hook 'minibuffer-setup-hook mbhook)
-    (add-hook 'emacs-lisp-mode-hook elhook)))
