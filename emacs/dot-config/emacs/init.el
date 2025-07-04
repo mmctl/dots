@@ -479,7 +479,7 @@
 (keymap-global-set "C-x F" #'find-file-other-window)
 (keymap-global-set "C-x C-f" #'find-file-other-frame)
 (keymap-global-set "C-x C-r" #'recentf-open)
-(keymap-global-set "C-D" #'dired-jump)
+(keymap-global-set "C-S-d" #'dired-jump)
 
 (keymap-global-set "C-S-r" #'isearch-backward-regexp)
 (keymap-global-set "C-S-s" #'isearch-forward-regexp)
@@ -2062,17 +2062,17 @@ that allows to include other templates by their name."
                      (bufhist-delete . "d: Delete current history element")))
     "p" #'bufhist-prev
     "n" #'bufhist-next
-    "f" #'bufhist-first
-    "l" #'bufhist-last
+    "<" #'bufhist-first
+    ">" #'bufhist-last
     "d" #'bufhist-delete)
 
   (defun setup-a-bufhist-map ()
-    (keymap-set bufhist-mode-map "C-p" #'bufhist-prev)
-    (keymap-set bufhist-mode-map "C-n" #'bufhist-next)
-    (keymap-set bufhist-mode-map "C-<" #'bufhist-first)
-    (keymap-set bufhist-mode-map "C->" #'bufhist-last)
-    (keymap-set bufhist-mode-map "M-c" #'bufhist-clear)
-    (keymap-set bufhist-mode-map "M-d" #'bufhist-delete))
+    (keymap-set bufhist-mode-map "p" #'bufhist-prev)
+    (keymap-set bufhist-mode-map "n" #'bufhist-next)
+    (keymap-set bufhist-mode-map "<" #'bufhist-first)
+    (keymap-set bufhist-mode-map ">" #'bufhist-last)
+    (keymap-set bufhist-mode-map "c" #'bufhist-clear)
+    (keymap-set bufhist-mode-map "d" #'bufhist-delete))
   (defun setup-a-proof-mode-map ()
     (keymap-unset proof-mode-map "M-a")
     (keymap-unset proof-mode-map "M-e")
