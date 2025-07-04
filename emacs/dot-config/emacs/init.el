@@ -1528,44 +1528,33 @@ that allows to include other templates by their name."
 
   (setopt org-todo-keywords '((sequence "TODO" "DOING" "BLOCKED" "DONE")))
   (setopt org-todo-keyword-faces
-          '(("TODO" . (:inherit org-todo))
-            ("DOING" . (:inherit org-cite))
-            ("BLOCKED" . (:inherit org-warning))
-            ("DONE" . (:inherit org-done))))
+          '(("TODO" . (:inherit org-todo :weight bold))
+            ("DOING" . (:inherit org-cite :weight medium))
+            ("BLOCKED" . (:inherit org-warning :weight bold))
+            ("DONE" . (:inherit org-done :weight normal))))
+
+  (setopt org-priority-lowest ?C
+          org-priority-hightest ?A)
+  (setopt org-priority-faces '((?A . (:inherit org-priority :weight bold))
+                               (?B . (:inherit org-warning :weight medium))
+                               (?C . (:inherit org-cite :weight normal :slant oblique))))
 
   (setopt org-capture-templates
           '(("n" "Note"
              entry (file+headline ORG_NOTES_FILE "Notes")
              "* %?\n:PROPERTIES:\n:Created: %U\n:END:"
              :empty-lines 0)
-            ("N" "Note (tag + context)"
-             entry (file+headline ORG_NOTES_FILE "Notes")
-             "* %? %^g\n:PROPERTIES:\n:Created: %U\n:END:\n:CONTEXT:\n%a\n:END:"
-             :empty-lines 0)
             ("t" "Todo"
              entry (file+headline ORG_TODOS_FILE "Tasks")
              "* TODO [#B] %?\n:PROPERTIES:\n:Created: %U\n:END:"
-             :empty-lines 0)
-            ("T" "Todo (tag + context)"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %? %^g\n:PROPERTIES:\n:Created: %U\n:END:\n:CONTEXT:\n%a\n:END:"
              :empty-lines 0)
             ("d" "Todo with deadline"
              entry (file+headline ORG_TODOS_FILE "Tasks")
              "* TODO [#B] %?\nDEADLINE: %^T\n:PROPERTIES:\n:Created: %U\n:END:"
              :empty-lines 0)
-            ("D" "Todo with deadline (tag + context)"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
-             "* TODO [#B] %? %^g\nDEADLINE: %^T\n:PROPERTIES:\n:Created: %U\n:END:\n:CONTEXT:\n%a\n:END:"
-             :empty-lines 0)
             ("e" "Calendar event"
              entry (file+headline ORG_CALENDAR_FILE "Events")
-             "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T"
-             :empty-lines-before 0
-             :empty-lines-after 1)
-            ("E" "Calendar event (tag + notes)"
-             entry (file+headline ORG_CALENDAR_FILE "Events")
-             "* %? %^g\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i"
+             "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i"
              :empty-lines-before 0
              :empty-lines-after 1)
             ("m" "Meeting"
@@ -1606,15 +1595,17 @@ that allows to include other templates by their name."
   (setopt org-modern-table nil)
   (setopt org-modern-block-name '("‣" . "‣"))
   (setopt org-modern-list '((?* . "•") (?+ . "‣")))
-  (setopt org-modern-todo-faces '(("TODO" . (:inherit org-todo :inverse-video t))
-                                  ("DOING" . (:inherit org-cite :inverse-video t))
-                                  ("BLOCKED" . (:inherit org-warning :inverse-video t))
-                                  ("DONE" . (:inherit org-done :inverse-video t))))
-
+  (setopt org-modern-todo-faces '(("TODO" . (:inherit org-todo :weight bold :inverse-video t))
+                                  ("DOING" . (:inherit org-cite :weight medium :inverse-video t))
+                                  ("BLOCKED" . (:inherit org-warning :weight bold :inverse-video t))
+                                  ("DONE" . (:inherit org-done :weight normal :inverse-video t))))
+  (setopt org-modern-priority-faces '((?A . (:inherit org-priority :weight bold :inverse-video t))
+                                      (?B . (:inherit org-warning :weight medium :inverse-video t))
+                                      (?C . (:inherit org-cite :weight normal :slant oblique :inverse-video t))))
   :config
   (when (string-match-p "^Iosevka.*" (face-attribute 'default :family))
     (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
-    (set-face-attribute 'org-modern-label nil :height 0.9 :width 'semi-condensed :weight 'normal)))
+    (set-face-attribute 'org-modern-label nil :height 0.9 :width 'semi-condensed :weight 'medium)))
 
 
 (use-package org-modern-indent
@@ -1741,6 +1732,14 @@ that allows to include other templates by their name."
 
   ;; Activation
   (TeX-source-correlate-mode 1))
+
+(use-package cdlatex
+  :ensure t
+
+  :hook (latex-mode LaTeX-mode)
+
+  :init
+  (setopt cdlatex-auto-help-delay 1))
 
 (use-package pdf-tools
   :ensure t
