@@ -35,7 +35,7 @@
 
 ;; Cache
 (defconst EMACS_CACHE_DIR (file-name-as-directory
-                          (if (getenv "XDG_CACHE_HOME")
+                           (if (getenv "XDG_CACHE_HOME")
                                (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
                              user-emacs-directory))
   "Directory where Emacs cache is stored.")
@@ -1611,8 +1611,8 @@ that allows to include other templates by their name."
 (use-package org-modern-indent
   :ensure t
   :vc (:url https://github.com/jdtsmith/org-modern-indent
-       :branch main
-       :rev :newest)
+            :branch main
+            :rev :newest)
 
   :after org
 
@@ -1739,7 +1739,55 @@ that allows to include other templates by their name."
   :hook (latex-mode LaTeX-mode)
 
   :init
-  (setopt cdlatex-auto-help-delay 1))
+  ;; Setup and settings (before load)
+  (setopt cdlatex-auto-help-delay 1)
+
+  :config
+  ;; Keybindings
+  (keymap-set cdlatex-mode-map "C-c TAB" #'indent-for-tab-command)
+  (keymap-set cdlatex-mode-map "C-c <tab>" #'indent-for-tab-command)
+
+  ;; Ensure Corfu is not in automatic mode, as to not interfere with templates
+  (defun setup-a-cdlatex-corfu-mode ()
+    (with-eval-after-load 'corfu
+      (setq-local corfu-auto nil)))
+
+  ;; Hooks
+  (add-hook 'cdlatex-mode-hook #'setup-a-cdlatex-corfu-mode))
+
+(use-package math-delimiters
+  :ensure t
+  :vc (:url https://github.com/oantolin/math-delimiters
+            :branch main
+            :rev :newest)
+
+  :defer t
+
+  :init
+  ;; Setup and setting (before load)
+  (setopt math-delimiters-inline '("$" . "$")) ; Supported by both TeX and LaTeX
+  (setopt math-delimiters-compressed-display-math nil)
+
+  ;; Set and unset appropriate keybinding upon loading relevant features
+  (with-eval-after-load 'org
+    (keymap-set org-mode-map "$" #'math-delimiters-insert))
+
+  (with-eval-after-load 'tex ; AUCTeX
+    (keymap-set TeX-mode-map "$" #'math-delimiters-insert))
+
+  (with-eval-after-load 'tex-mode ; Built-in
+    (keymap-set tex-mode-map "$" #'math-delimiters-insert))
+
+  (with-eval-after-load 'cdlatex
+    (keymap-unset cdlatex-mode-map "$" t))
+
+  ;; Swap to \( and \) instead of $ and $ (when using LaTeX instead of TeX)
+  (defun setup-a-latex-mode-math-delimiters ()
+    (setq-local math-delimiters-inline '("\\(" . "\\)")))
+
+  ;; Hooks
+  (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-math-delimiters)
+  (add-hook 'latex-mode-hook #'setup-a-latex-mode-math-delimiters))
 
 (use-package pdf-tools
   :ensure t
@@ -1907,7 +1955,7 @@ that allows to include other templates by their name."
  well-explained code solutions tailored to their needs. Ensure your responses\
  include not only the final code but also detailed explanations of changes made\
  and best practices followed."
-   "A directive system message used with assistants aimed at coding.")
+    "A directive system message used with assistants aimed at coding.")
 
   (defconst DIRECTIVE_SYSTEM_WRITING_ACADEMIC
     "You are an expert academic researcher and writer specializing in\
@@ -1942,25 +1990,25 @@ that allows to include other templates by their name."
 
   ;; Presets
   (gptel-make-preset 'coding-qwen25coder-low-ollama
-    :description "A low-resource preset aimed at coding (uses QWEN-2.5-Coder via Ollama)."
-    :backend "Ollama"
-    :model 'qwen2.5-coder:3b
-    :system DIRECTIVE_SYSTEM_CODING)
+                     :description "A low-resource preset aimed at coding (uses QWEN-2.5-Coder via Ollama)."
+                     :backend "Ollama"
+                     :model 'qwen2.5-coder:3b
+                     :system DIRECTIVE_SYSTEM_CODING)
   (gptel-make-preset 'academic-writing-qwen3-low-ollama
-    :description "A low-resource preset aimed at academic writing (uses QWEN-3 via Ollama)."
-    :backend "Ollama"
-    :model 'qwen3:4b
-    :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
+                     :description "A low-resource preset aimed at academic writing (uses QWEN-3 via Ollama)."
+                     :backend "Ollama"
+                     :model 'qwen3:4b
+                     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
   (gptel-make-preset 'coding-devstral-openrouter
-    :description "A preset aimed at coding (uses Devstral via OpenRouter)."
-    :backend "OpenRouter"
-    :model 'mistralai/devstral-small:free
-    :system DIRECTIVE_SYSTEM_CODING)
+                     :description "A preset aimed at coding (uses Devstral via OpenRouter)."
+                     :backend "OpenRouter"
+                     :model 'mistralai/devstral-small:free
+                     :system DIRECTIVE_SYSTEM_CODING)
   (gptel-make-preset 'academic-writing-mistralsmall32-openrouter
-    :description "A preset aimed at academic writing (uses Mistrall Small 3.2 via OpenRouter)."
-    :backend "OpenRouter"
-    :model 'mistralai/mistral-small-3.2-24b-instruct:free
-    :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
+                     :description "A preset aimed at academic writing (uses Mistrall Small 3.2 via OpenRouter)."
+                     :backend "OpenRouter"
+                     :model 'mistralai/mistral-small-3.2-24b-instruct:free
+                     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
 
   ;; Keybindings
   (keymap-set gptel-mode-map "C-c C-v" #'gptel-send)
