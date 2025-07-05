@@ -791,6 +791,17 @@
   (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab)
   (keymap-set visual-replace-mode-map "M-r" visual-replace-secondary-mode-map))
 
+(use-package olivetti
+  :ensure t
+
+  :defer t
+
+  :init
+  (setopt olivetti-body-width 0.50
+          olivetti-minimum-body-width 70)
+  (setopt olivetti-style t))
+
+
 ;; Completion
 (use-package orderless
   :ensure t
@@ -1541,15 +1552,15 @@ that allows to include other templates by their name."
 
   (setopt org-capture-templates
           '(("n" "Note"
-             entry (file+headline ORG_NOTES_FILE "Notes")
+             entry (file+headline ORG_NOTES_FILE "General Notes")
              "* %?\n:PROPERTIES:\n:Created: %U\n:END:"
              :empty-lines 0)
             ("t" "Todo"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
+             entry (file+headline ORG_TODOS_FILE "General Tasks")
              "* TODO [#B] %?\n:PROPERTIES:\n:Created: %U\n:END:"
              :empty-lines 0)
             ("d" "Todo with deadline"
-             entry (file+headline ORG_TODOS_FILE "Tasks")
+             entry (file+headline ORG_TODOS_FILE "General Tasks")
              "* TODO [#B] %?\nDEADLINE: %^T\n:PROPERTIES:\n:Created: %U\n:END:"
              :empty-lines 0)
             ("e" "Calendar event"
@@ -1565,6 +1576,33 @@ that allows to include other templates by their name."
              :clock-resume t
              :empty-lines-before 0
              :empty-lines-after 1)))
+
+  (setopt org-deadline-warning-days 7)
+
+  (setopt org-agenda-span 'day
+          org-agenda-start-day "+0"
+          org-agenda-start-on-weekday 1)
+  (setopt org-agenda-skip-timestamp-if-done t
+          org-agenda-skip-scheduled-if-done t
+          org-agenda-skip-deadline-if-done t)
+  (setopt org-agenda-current-time-string ""
+          org-agenda-time-grid '((daily today) nil "" ""))
+  (setopt org-agenda-hide-tags-regexp ".*")
+  (setopt org-agenda-prefix-format '((agenda . "%-2i %?-12t")
+                                     (todo . "%-2i %?-12t")
+                                     (tags . "%-2i %?-12t")
+                                     (search . "%-2i %?-12t")))
+   (with-eval-after-load 'nerd-icons
+     (setq-default org-agenda-category-icon-alist
+                   `(("Notes" ,(list (nerd-icons-faicon "nf-fa-note_sticky" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
+                     ("Tasks" ,(list (nerd-icons-faicon "nf-fa-tasks" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
+                     ("Events" ,(list (nerd-icons-faicon "nf-fa-calendar_day" :face 'nerd-icons-lblue :v-adjust 0.05)) nil nil :ascent center)
+                     ("Appointments" ,(list (nerd-icons-faicon "nf-fa-user_clock" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
+                     ("Projects" ,(list (nerd-icons-faicon "nf-fa-folder_open" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
+                     ("Study" ,(list (nerd-icons-faicon "nf-fa-book_open" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
+                     ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center))))
+
+  (setopt org-agenda-compact-blocks t)
 
   :config
   ;; Setup and settings (after load)
@@ -1582,6 +1620,35 @@ that allows to include other templates by their name."
   (keymap-unset org-read-date-minibuffer-local-map "M-v")
   (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
   (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right))
+
+(use-package org-super-agenda
+  :ensure t
+
+  :after org-agenda
+  :hook org-agenda-mode
+
+  :init
+  (setopt org-super-agenda-header-prefix "")
+  (setopt org-super-agenda-final-group-separator "\n")
+
+  (setq-default org-super-agenda-groups
+                '((:name " Overdue"
+                         :scheduled past
+                         :deadline past
+                         :order 2
+                         :face 'org-warning)
+                  (:name "Projects"
+                         :and (:category ("Projects" "Research" "Study") :not (:tag "event"))
+                         :order 3)
+                  (:name "Tasks"
+                         :and (:category "Tasks" :not (:tag "event"))
+                         :order 3)
+                  (:name "Today"
+                         :time-grid t
+                         :date today
+                         :scheduled today
+                         :deadline today
+                         :order 1))))
 
 (use-package org-modern
   :ensure t
@@ -2271,6 +2338,7 @@ that allows to include other templates by their name."
                    :inherit 'lazy-highlight)
     '(tempel-form :foreground 'unspecified :background 'unspecified
                   :inherit 'match)
+    '(org-super-agenda-header :inherit 'org-agenda-date :height 1.1)
     '(proof-mouse-highlight-face :inherit 'lazy-highlight)
     '(proof-region-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
     '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
