@@ -1,9 +1,0 @@
-
-- Templates:
-   - async while?
-   - code positions?
-   - indicate optional fields in info templates?
-   - indicate potential for side in info templates?
-   - rndsem
-   - outline
-  
