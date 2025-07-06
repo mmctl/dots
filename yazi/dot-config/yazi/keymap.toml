@@ -1,7 +1,7 @@
 # Yazi configuration file (keymap)
 
 ## Manager
-[manager]
+[mgr]
 keymap = [
     # Escape/Close/Suspend
     { on = [ "q", "q" ], run = "quit --no-cwd-file", desc = "Quit the process without outputting cwd-file" },
