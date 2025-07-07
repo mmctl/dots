@@ -313,7 +313,8 @@
 (keymap-global-set "M-M" #'pop-global-mark)
 
 ;; Selection
-(keymap-global-set "M-h" #'set-mark-command)
+(keymap-global-set "M-h" #'mark-word)
+(keymap-global-set "M-H" #'set-mark-command)
 
 ;; Manipulation
 ;; Copying
@@ -655,6 +656,7 @@
   :config
   ;; Keybindings
   (keymap-set easy-kill-base-map "<remap> <kill-ring-save>" #'easy-kill-cycle)
+  (keymap-set easy-kill-base-map "<remap> <mark-word>" #'easy-kill-cycle)
   (keymap-set easy-kill-base-map "<" #'easy-kill-shrink)
   (keymap-set easy-kill-base-map ">" #'easy-kill-expand)
   (keymap-set easy-kill-base-map "a"  #'easy-kill-append)
@@ -1269,6 +1271,7 @@ that allows to include other templates by their name."
         ("b" . consult-project-buffer))
   (:map isearch-mode-map
         ("<remap> <isearch-edit-string>" . consult-isearch-history)
+        ("M-h" . consult-isearch-history)
         ("M-s h" . consult-isearch-history)
         ("M-s l" . consult-line)
         ("M-s L" . consult-line-multi))
@@ -1577,7 +1580,7 @@ that allows to include other templates by their name."
              :empty-lines-before 0
              :empty-lines-after 1)))
 
-  (setopt org-deadline-warning-days 7)
+  (setopt org-deadline-warning-days 14)
 
   (setopt org-agenda-span 'day
           org-agenda-start-day "+0"
@@ -1588,10 +1591,16 @@ that allows to include other templates by their name."
   (setopt org-agenda-current-time-string ""
           org-agenda-time-grid '((daily today) nil "" ""))
   (setopt org-agenda-hide-tags-regexp ".*")
-  (setopt org-agenda-prefix-format '((agenda . "%-2i %?-12t")
-                                     (todo . "%-2i %?-12t")
-                                     (tags . "%-2i %?-12t")
-                                     (search . "%-2i %?-12t")))
+  (setopt org-agenda-prefix-format '((agenda . "%-2i %?-12t %?-12s")
+                                     (todo . "%-2i %?-12t %?-12s")
+                                     (tags . "%-2i %?-12t %?-12s")
+                                     (search . "%-2i %?-12t %?-12s")))
+  (setopt org-agenda-sorting-strategy '((agenda habit-down timestamp-up urgency-down category-keep)
+                                        (todo urgency-down timestamp-up category-keep todo-state-up)
+                                        (tags urgency-down category-keep)
+                                        (search category-keep))
+          org-agenda-sort-notime-is-late t)
+
    (with-eval-after-load 'nerd-icons
      (setq-default org-agenda-category-icon-alist
                    `(("Notes" ,(list (nerd-icons-faicon "nf-fa-note_sticky" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
@@ -1600,7 +1609,8 @@ that allows to include other templates by their name."
                      ("Appointments" ,(list (nerd-icons-faicon "nf-fa-user_clock" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
                      ("Projects" ,(list (nerd-icons-faicon "nf-fa-folder_open" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
                      ("Study" ,(list (nerd-icons-faicon "nf-fa-book_open" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
-                     ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center))))
+                     ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center)
+                     ("Development" ,(list (nerd-icons-faicon "nf-fa-code" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center))))
 
   (setopt org-agenda-compact-blocks t)
 
@@ -1632,23 +1642,64 @@ that allows to include other templates by their name."
   (setopt org-super-agenda-final-group-separator "\n")
 
   (setq-default org-super-agenda-groups
-                '((:name " Overdue"
+                '((:name "  Overdue"
                          :scheduled past
                          :deadline past
                          :order 2
                          :face 'org-warning)
-                  (:name "Projects"
-                         :and (:category ("Projects" "Research" "Study") :not (:tag "event"))
-                         :order 3)
-                  (:name "Tasks"
-                         :and (:category "Tasks" :not (:tag "event"))
-                         :order 3)
-                  (:name "Today"
+                  (:name "  Upcoming"
+                         :scheduled future
+                         :deadline future
+                         :order 3
+                         :face 'org-upcoming-deadline)
+                  (:name "  Today"
                          :time-grid t
                          :date today
                          :scheduled today
                          :deadline today
-                         :order 1))))
+                         :order 1)
+                  (:name "  Another Day"
+                         :date t
+                         :order 4)))
+
+  :config
+  (add-to-list 'org-agenda-custom-commands
+               '("p" "Priority view (TODOs)"
+                 alltodo ""
+                 ((org-agenda-overriding-header "TODOs, Prioritized")
+                  (org-super-agenda-groups
+                   '((:name "  Overdue"
+                            :scheduled past
+                            :deadline past
+                            :order 1
+                            :face 'org-warning)
+                     (:name "  Critical (#A)"
+                            :priority "A"
+                            :order 2)
+                     (:name "  Non-Critical (< #A)"
+                            :priority< "A"
+                            :order 3))))))
+  (add-to-list 'org-agenda-custom-commands
+               '("c" "Category view (TODOs)"
+                 alltodo ""
+                 ((org-agenda-overriding-header "TODOs, Categorized")
+                  (org-super-agenda-groups
+                   '((:name "  Projects: Research" :category "Research" :order 1)
+                     (:name "  Projects: Development" :category "Development" :order 2)
+                     (:name "  Projects: Study" :category "Study" :order 3)
+                     (:name "  Projects: Other" :category "Projects" :order 4)
+                     (:name "Miscellaneous" :anything t :order 5))))))
+  (add-to-list 'org-agenda-custom-commands
+               '("o" "Organize view (TODOs)"
+                 ((alltodo ""
+                           ((org-agenda-overriding-header "TODOs, Schedule")
+                            (org-super-agenda-groups
+                             '((:name "Unscheduled" :scheduled nil)
+                               (:discard (:anything t))))))
+                  (tags-todo "-{.*}"
+                             ((org-agenda-overriding-header "TODOs, Tag")
+                              (org-super-agenda-groups
+                               '((:name "Untagged" :anything t)))))))))
 
 (use-package org-modern
   :ensure t
@@ -2253,10 +2304,11 @@ that allows to include other templates by their name."
 
 ;; EasyCrypt (extension)
 (use-package easycrypt-ext
-  :ensure t
-  :vc (:url "https://github.com/mmctl/easycrypt-ext"
-            :branch "main"
-            :rev :newest)
+  :load-path "~/projects/emacs-dev/easycrypt-ext/"
+  ;; :ensure t
+  ;; :vc (:url "https://github.com/mmctl/easycrypt-ext"
+  ;;           :branch "main"
+  ;;           :rev :newest)
 
   :after proof
 
@@ -2267,11 +2319,24 @@ that allows to include other templates by their name."
   :init
   ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
   (setopt ece-indentation t)
+  (setopt ece-imenu t)
   (setopt ece-keyword-completion t)
   (setopt ece-templates t)
   (setopt ece-templates-info nil)
 
   :config
+  ;; External integration
+  (with-eval-after-load 'consult-imenu
+    (add-to-list 'consult-imenu-config '(easycrypt-mode :types
+                                                        ((?t "Types" font-lock-type-face)
+                                                         (?o "Operators" font-lock-function-name-face)
+                                                         (?c "Constants" font-lock-constant-face)
+                                                         (?m "Modules" font-lock-property-use-face)
+                                                         (?M "Module Types" font-lock-type-face)
+                                                         (?a "Axioms" font-lock-builtin-face)
+                                                         (?l "Lemmas" font-lock-keyword-face)
+                                                         (?T "Theories" font-lock-type-face)))))
+
   ;; Keybindings
   (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
   (keymap-set easycrypt-ext-general-map "C-c =" #'ece-proofshell-prompt-print)
