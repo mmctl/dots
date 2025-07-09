@@ -260,7 +260,7 @@
 (recentf-mode 1)
 
 
-;;; Bindings (general)
+;;; Keybindings (general)
 ;; Translations
 (keymap-set function-key-map "C-S-<iso-lefttab>" "C-<backtab>")
 (keymap-set function-key-map "M-S-<iso-lefttab>" "M-<backtab>")
@@ -277,94 +277,32 @@
 (keymap-global-set "M-S-<up>" #'windmove-swap-states-up)
 (keymap-global-set "M-S-<right>" #'windmove-swap-states-right)
 
-(keymap-global-set "<left>" #'left-char)
-(keymap-global-set "<right>" #'right-char)
+(keymap-global-set "C-b" #'switch-to-prev-buffer) ; from: backward-char
+(keymap-global-set "C-f" #'switch-to-next-buffer) ; from: forward-char
 
-(keymap-global-set "C-<left>" #'backward-word)
-(keymap-global-set "C-<right>" #'forward-word)
+(keymap-global-set "C-p" #'backward-sexp) ; from: previous-line
+(keymap-global-set "C-n" #'forward-sexp)  ; from: next-line
 
-(keymap-global-set "C-a" #'move-beginning-of-line)
-(keymap-global-set "C-e" #'move-end-of-line)
+(keymap-global-set "<home>" #'beginning-of-buffer) ; from: beginning-of-line
+(keymap-global-set "<end>" #'end-of-buffer)        ; from: end-of-line
 
-(keymap-global-set "<up>" #'previous-line)
-(keymap-global-set "<down>" #'next-line)
-
-(keymap-global-set "C-<up>" #'backward-paragraph)
-(keymap-global-set "C-<down>" #'forward-paragraph)
-
-(keymap-global-set "<home>" #'beginning-of-buffer)
-(keymap-global-set "<end>" #'end-of-buffer)
-
-(keymap-global-set "C-<prior>" #'scroll-other-window-down)
-(keymap-global-set "C-<next>" #'scroll-other-window)
-
-(keymap-global-set "C-<home>" #'beginning-of-buffer-other-window)
-(keymap-global-set "C-<end>" #'end-of-buffer-other-window)
-
-(keymap-global-set "C-b" #'switch-to-prev-buffer)
-(keymap-global-set "C-f" #'switch-to-next-buffer)
-
-(keymap-global-set "C-p" #'backward-sexp)
-(keymap-global-set "C-n" #'forward-sexp)
-
-(keymap-global-set "C-w" #'other-window)
-
-(keymap-global-set "M-m" #'pop-to-mark-command)
+(keymap-global-set "M-m" #'pop-to-mark-command) ; from: back-to-indentation
 (keymap-global-set "M-M" #'pop-global-mark)
 
 ;; Selection
-(keymap-global-set "M-h" #'mark-word)
-(keymap-global-set "M-H" #'set-mark-command)
+(keymap-global-set "M-h" #'mark-word) ; from: mark-paragraph
 
 ;; Manipulation
 ;; Copying
-(keymap-global-set "C-t" #'kill-ring-save)
-(keymap-global-set "C-S-t" #'clipboard-kill-ring-save)
-
-;; Exchanging/Joining
-(keymap-global-set "M-w" #'exchange-word)
-(keymap-global-set "M-W" #'exchange-word-backward)
-
-;; Killing
-(keymap-global-set "M-<backspace>" #'backward-kill-word)
-(keymap-global-set "M-<delete>" #'kill-word)
-
-(keymap-global-set "M-a" #'backward-kill-line)
-(keymap-global-set "M-e" #'kill-line)
-(keymap-global-set "M-l" #'kill-whole-line)
-
-(keymap-global-set "M-p" #'backward-kill-sexp)
-(keymap-global-set "M-n" #'kill-sexp)
-
-(keymap-global-set "M-P" #'backward-kill-sentence)
-(keymap-global-set "M-N" #'kill-sentence)
-
-(keymap-global-set "M-t" #'kill-region)
-(keymap-global-set "M-T" #'clipboard-kill-region)
-
-(keymap-global-set "M-;" #'undo)
-(keymap-global-set "M-/" #'undo-redo)
-
-;; Yanking
-(keymap-global-set "M-y" #'yank)
-(keymap-global-set "M-Y" #'clipboard-yank)
-(keymap-global-set "C-M-y" #'yank-pop)
+(keymap-global-set "C-S-<backspace>" #'backward-kill-line) ; from: kill-whole-line
+(keymap-global-set "C-S-<delete>" #'kill-line)
+(keymap-global-set "C-S-k" #'kill-whole-line)
 
 ;; Deleting
-(keymap-global-set "C-k" #'cycle-spacing)
-(keymap-global-set "M-k" #'delete-all-space)
-
-(keymap-global-set "M-A" #'backward-delete-line)
-(keymap-global-set "M-E" #'forward-delete-line)
-(keymap-global-set "M-D" #'delete-whole-line-or-region)
-
-;; Replacing
-(keymap-global-set "M-r" #'query-replace)
-(keymap-global-set "M-R" #'query-replace-regexp)
+(keymap-global-set "M-S-SPC" #'delete-all-space)
 
 ;; Miscellaneous
-(keymap-global-set "M-c" #'comment-dwim)
-(keymap-global-set "M-C" #'comment-line)
+(keymap-global-set "C-;" #'comment-line)
 
 ;; Management
 ;; Quitting
@@ -383,9 +321,9 @@
 (keymap-global-set "C-x q" 'a-quit-map-prefix)
 
 ;; Frames
-(defvaralias 'a-frame-map 'ctl-x-4-map
+(defvaralias 'a-frame-map 'ctl-x-5-map
   "Keymap for frame management")
-(defalias 'a-frame-map-prefix #'ctl-x-4-prefix
+(defalias 'a-frame-map-prefix #'ctl-x-5-prefix
   "Prefix for frame management keymap")
 
 (keymap-set a-frame-map "k" #'delete-frame)
@@ -447,6 +385,7 @@
   "G" #'switch-to-buffer-other-window
   "M-g" #'switch-to-buffer-other-frame
   "m" #'switch-to-minibuffer
+  "p" #'project-switch-to-buffer
   "s" #'save-buffer
   "S" #'save-some-buffers
   "r" #'revert-buffer
@@ -540,12 +479,7 @@
 
   :config
   ;; Keybindings
-  (keymap-unset isearch-mode-map "C-w")
-  (keymap-set isearch-mode-map "C-v" #'isearch-exit)
-  (keymap-set isearch-mode-map "C-t" #'isearch-yank-word-or-char)
-  (keymap-set isearch-mode-map "M-y" #'isearch-yank-kill)
-  (keymap-set isearch-mode-map "M-r" #'isearch-query-replace)
-  (keymap-set isearch-mode-map "M-R" #'isearch-query-replace-regexp))
+  (keymap-set isearch-mode-map "C-v" #'isearch-exit))
 
 (use-package imenu
   :init
@@ -571,12 +505,10 @@
   ;; Keybindings
   (keymap-set dired-mode-map "C-v" #'dired-find-file)
   (keymap-set dired-mode-map "RET" #'dired-find-file)
-  (keymap-set dired-mode-map "<return>" "RET")
+  (keymap-set dired-mode-map "<return>" #'dired-find-file)
   (keymap-set dired-mode-map "C-o" #'dired-display-file)
-  (keymap-set dired-mode-map "C-<up>" #'dired-prev-dirline)
-  (keymap-set dired-mode-map "C-<down>" #'dired-next-dirline)
-  (keymap-set dired-mode-map "C-p" #'dired-prev-marked-file)
-  (keymap-set dired-mode-map "C-n" #'dired-next-marked-file)
+  (keymap-set dired-mode-map "C-<up>" #'dired-prev-marked-file)
+  (keymap-set dired-mode-map "C-<down>" #'dired-next-marked-file)
   (keymap-set dired-mode-map "C-q" #'dired-up-directory))
 
 (use-package dabbrev
@@ -755,8 +687,6 @@
         ("V" . visual-replace-regexp)
         ("w" . visual-replace-word-at-point)
         ("." . visual-replace-thing-at-point))
-  (:map isearch-mode-map
-        ("M-r" . visual-replace-from-isearch))
 
   :init
   ;; Setup and settings
@@ -829,7 +759,6 @@
     (orderless-style-dispatchers nil)
     (orderless-matching-styles '(orderless-literal))))
 
-
 (use-package vertico
   :ensure t
 
@@ -846,7 +775,7 @@
   (keymap-set vertico-map "C-v" #'vertico-exit)
   (keymap-set vertico-map "C-M-v" #'vertico-exit-input)
   (keymap-set vertico-map "TAB" #'minibuffer-complete)
-  (keymap-set vertico-map "<tab>" "TAB")
+  (keymap-set vertico-map "<tab>" #'minibuffer-complete)
   (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
   (keymap-set vertico-map "<next>" #'vertico-scroll-up)
   (keymap-set vertico-map "<prior>" #'vertico-scroll-down)
@@ -863,7 +792,7 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-map "C-d" #'vertico-directory-enter)
+  (keymap-set vertico-map "M-d" #'vertico-directory-enter)
   (keymap-set vertico-map "<backspace>" #'vertico-directory-delete-char)
   (keymap-set vertico-map "M-<backspace>" #'vertico-directory-delete-word)
 
@@ -894,9 +823,8 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-map "C-j" #'vertico-quick-exit)
-  (keymap-set vertico-map "C-S-j" #'vertico-quick-insert)
-  (keymap-set vertico-map "C-M-j" #'vertico-quick-jump))
+  (keymap-set vertico-map "C-S-j" #'vertico-quick-exit)
+  (keymap-set vertico-map "C-M-j" #'vertico-quick-insert))
 
 (use-package corfu
   :ensure t
@@ -927,7 +855,7 @@
   ;; All modes
   (keymap-set corfu-map "C-o" #'corfu-complete)
   (keymap-set corfu-map "TAB" #'corfu-complete)
-  (keymap-set corfu-map "<tab>" "TAB")
+  (keymap-set corfu-map "<tab>" #'corfu-complete)
   (keymap-set corfu-map "C-v" #'corfu-send)
   (keymap-set corfu-map "M-SPC" #'corfu-insert-separator)
   ;; Auto mode
@@ -962,9 +890,8 @@
 
   :config
   ;; Keybindings
-  (keymap-set corfu-map "C-j" #'corfu-quick-insert)
-  (keymap-set corfu-map "C-S-j" #'corfu-quick-complete)
-  (keymap-set corfu-map "C-M-j" #'corfu-quick-jump))
+  (keymap-set corfu-map "C-S-j" #'corfu-quick-insert)
+  (keymap-set corfu-map "C-M-j" #'corfu-quick-complete))
 
 (use-package cape
   :ensure t
@@ -1041,8 +968,8 @@
   :pin melpa
 
   :bind
-  ("M-v" . tempel-complete)
-  ("M-V" . tempel-expand)
+  ("M-c" . tempel-complete) ; original: capitalize-word
+  ("M-C" . tempel-expand)
   (:prefix-map a-tempel-map :prefix "C-c t" :prefix-docstring "Keymap for tempel (global)"
                ("c" . tempel-complete)
                ("e" . tempel-expand)
@@ -1098,24 +1025,17 @@ that allows to include other templates by their name."
   :ensure t
 
   :bind
-  ("M-u" . move-text-up)
+  ("M-u" . move-text-up) ; from: upcase-word
   ("M-U" . move-text-down))
 
 (use-package crux
   :ensure t
   :pin melpa
 
-  :preface
-  ;; Keymaps
-  (defvar-keymap a-crux-map
-    :doc "Keymap for crux actions"
-    :prefix 'a-crux-map-prefix)
-  (keymap-global-set "C-c x" 'a-crux-map-prefix)
-
   :bind
   ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
   ("<remap> <kill-whole-line>" . crux-kill-whole-line)
-  ("M-d" . crux-duplicate-current-line-or-region)
+  ("M-b" . crux-duplicate-current-line-or-region) ; from: backward-word
   (:prefix-map a-crux-map :prefix "C-c x" :prefix-docstring "Keymap for crux actions (global)"
                ("RET" . crux-smart-open-line)
                ("<return>" . "RET")
@@ -1156,8 +1076,8 @@ that allows to include other templates by their name."
 (use-package ace-window
   :ensure t
 
-  :bind
-  ("C-w" . ace-window)
+  :bind*
+  ("M-J" . ace-window)
 
   :init
   ;; Setup and settings (before load)
@@ -1185,7 +1105,7 @@ that allows to include other templates by their name."
 
   :config
   ;; Keybindings
-  (keymap-global-set "C-S-w" #'other-window)
+  ;; (keymap-global-set "C-S-w" #'other-window)
 
   (keymap-set goto-map "w" #'ace-window)
   (keymap-set goto-map "W" #'other-window))
@@ -1214,7 +1134,6 @@ that allows to include other templates by their name."
 
   :bind*
   ("M-j" . avy-goto-char-timer)
-  ("M-J" . avy-goto-char)
 
   :init
   ;; Setup and settings (before load)
@@ -1236,23 +1155,16 @@ that allows to include other templates by their name."
 (use-package consult
   :ensure t
 
-  :preface
-  (defvar-keymap a-consult-map
-    :doc "Keymap for consult (global)"
-    :prefix 'a-consult-map-prefix)
-  (keymap-global-set "C-c h" 'a-consult-map-prefix)
-
   :bind
-  ("C-l" . consult-line)
-  ("C-;" . consult-goto-line)
-  ("C-M-y" . consult-yank-pop)
-  ("M-m" . consult-mark)
+  ("M-l" . consult-line) ; from: downcase-word
+  ("M-m" . consult-mark) ; from: back-to-indentation
   ("M-M" . consult-global-mark)
-  ("M-{" . consult-store-register)
-  ("M-}" . consult-load-register)
+  ("M-{" . consult-store-register) ; from: backward-paragraph
+  ("M-}" . consult-load-register)  ; from: forward-paragraph
   ("C-M-{" . consult-register)
   ("M-#" . consult-bookmark)
   ("<remap> <goto-line>" . consult-goto-line)
+  ("<remap> <yank-pop>" . consult-yank-pop)
   ("<remap> <Info-search>" . consult-info)
   (:prefix-map a-consult-map :prefix "C-c h" :prefix-docstring "Keymap for consult (global)"
                ("x" . consult-mode-command)
@@ -1263,49 +1175,48 @@ that allows to include other templates by their name."
                ("i" . consult-info)
                (":" . consult-complex-command))
   (:map ctl-x-r-map
-        ("b" . consult-bookmark)
-        ("c" . consult-register)
-        ("c" . consult-register-load)
-        ("s" . consult-register-store))
+        ("b" . consult-bookmark) ; from: bookmark-jump
+        ("j" . consult-register) ; from: jump-to-register
+        ("g" . consult-register-load) ; from: insert-register
+        ("s" . consult-register-store)) ; from: copy-to-register
   (:map project-prefix-map
-        ("b" . consult-project-buffer))
+        ("b" . consult-project-buffer)) ; from: project-switch-to-buffer
   (:map isearch-mode-map
         ("<remap> <isearch-edit-string>" . consult-isearch-history)
         ("M-h" . consult-isearch-history)
-        ("M-s h" . consult-isearch-history)
         ("M-s l" . consult-line)
         ("M-s L" . consult-line-multi))
   (:map minibuffer-local-map
         ("M-h" . consult-history))
   (:map goto-map
-        ("b" . consult-buffer)
-        ("B" . consult-buffer-other-window)
+        ("b" . consult-buffer) ; from: switch-to-buffer
+        ("B" . consult-buffer-other-window) ; from: switch-to-buffer-other-window
         ("C-b" . consult-buffer-other-frame)
-        ("e" . consult-compile-error)
+        ("e" . consult-compile-error) ; from: prefix (error)
         ("d" . consult-flymake)
-        ("l" . consult-goto-line)
+        ("l" . consult-goto-line) ; from: goto-line
         ("o" . consult-outline)
-        ("p" . consult-project-buffer)
-        ("m" . consult-mark)
-        ("M" . consult-global-mark)
-        ("i" . consult-imenu)
+        ("p" . consult-project-buffer) ; from: previous-error
+        ("m" . consult-mark) ; from: pop-to-mark-command
+        ("M" . consult-global-mark) ; from: pop-global-mark
+        ("i" . consult-imenu) ; from: imenu
         ("I" . consult-imenu-multi)
-        ("r" . consult-register-load)
-        ("#" . consult-bookmark))
+        ("r" . consult-register-load) ; from: jump-to-register
+        ("#" . consult-bookmark)) ; from: bookmark-jump
   (:map search-map
-        ("g" . consult-grep)
+        ("g" . consult-grep) ; from: find-grep
         ("G" . consult-git-grep)
-        ("h" . consult-isearch-history)
+        ("h" . consult-isearch-history) ; from: prefix (highlight)
         ("l" . consult-line)
         ("L" . consult-line-multi)
         ("k" . consult-keep-lines)
         ("r" . consult-ripgrep)
         ("u" . consult-focus-lines))
   (:map a-buffer-map
-        ("g" . consult-buffer)
-        ("G" . consult-buffer-other-window)
-        ("M-g" . consult-buffer-other-frame)
-        ("p" . consult-project-buffer))
+        ("g" . consult-buffer) ; from: switch-to-buffer
+        ("G" . consult-buffer-other-window) ; from: switch-to-buffer-other-window
+        ("M-g" . consult-buffer-other-frame) ; from: switch-to-buffer-other-frame
+        ("p" . consult-project-buffer)) ; from: project-switch-to-buffer
   (:map a-find-map
         ("C-f" . consult-fd)
         ("M-f" . consult-find)
@@ -1316,8 +1227,8 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  (setopt consult-narrow-key "C-<"
-          consult-widen-key "C->")
+  (setopt consult-narrow-key "<"
+          consult-widen-key ">")
   (setopt consult-async-refresh-delay 0.1
           consult-async-input-thottle 0.3
           consult-async-input-debounce 0.1
@@ -1343,12 +1254,6 @@ that allows to include other templates by their name."
   :ensure t
   :pin melpa
 
-  :preface
-  (defvar-keymap an-embark-map
-    :doc "Keymap for embark (global)"
-    :prefix 'an-embark-map-prefix)
-  (keymap-global-set "C-c e" 'an-embark-map-prefix)
-
   :bind
   ("M-," . embark-act)
   ("M-." . embark-dwim)
@@ -1373,9 +1278,6 @@ that allows to include other templates by their name."
 
   :config
   ;; Keybindings
-  (keymap-unset embark-general-map "SPC")
-
-  (keymap-set embark-general-map "t" #'embark-copy-as-kill)
   (keymap-set embark-general-map "C-o" #'embark-select)
 
   (keymap-set embark-file-map "F" #'find-file-other-window)
@@ -1411,15 +1313,125 @@ that allows to include other templates by their name."
 (use-package embark-consult
   :ensure t
 
-  :after (embark consult)
-
-  :config
-  (keymap-set embark-consult-async-search-map "g" #'consult-ripgrep)
-  (keymap-set embark-consult-async-search-map "G" #'consult-grep)
-  (keymap-set embark-consult-async-search-map "M-g" #'consult-git-grep))
+  :after (embark consult))
 
 
 ;;; Tools
+(use-package dired-filter
+  :ensure t
+
+  :hook
+  (dired-mode . dired-filter-mode)
+  (dired-mode . dired-filter-group-mode)
+
+  :bind
+  (:map dired-mode-map
+        ("M-/" . dired-filter-mode)
+        ("M-@" . dired-filter-group-mode))
+  (:map dired-filter-group-mode-map
+        ("C-p" . 'dired-filter-group-backward-drawer)
+        ("C-n" . 'dired-filter-group-forward-drawer))
+  (:map dired-filter-group-header-map
+        ("TAB" . 'dired-filter-group-toggle-header)
+        ("<tab>" . 'dired-filter-group-toggle-header))
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt dired-filter-save-with-custom nil)
+
+  (setopt dired-filter-prefix "/"
+          dired-filter-mark-prefix "?")
+
+  (setopt dired-filter-group-saved-groups '(("default"
+                                             ("Directories" (directory . nil))
+                                             ("Files" (file . nil))
+                                             ("Symlinks" (symlink . nil)))))
+
+  :config
+  ;; Keybindings
+  (keymap-unset dired-filter-group-mode-map "TAB")
+  (keymap-unset dired-filter-group-mode-map "<tab>"))
+
+
+
+(use-package dired-subtree
+  :ensure t
+
+  :preface
+  (defvar-keymap a-dired-subtree-map
+    :doc "Keymap for dired-subtree (to be bound in `dired-mode-map')"
+    :prefix 'a-dired-subtree-map-prefix)
+
+  :bind
+  (:map dired-mode-map
+        ("TAB" . dired-subtree-toggle)
+        ("<tab>" . dired-subtree-toggle)
+        ("M-TAB" . dired-subtree-cycle)
+        ("M-<tab>" . dired-subtree-cycle)
+        ("M-t" . a-dired-subtree-map-prefix))
+  (:map a-dired-subtree-map
+        ("a" . dired-subtree-apply-filter)
+        ("c" . dired-subtree-cycle)
+        ("d" . dired-subtree-only-this-directory)
+        ("e" . dired-subtree-end)
+        ("f" . dired-subtree-only-this-file)
+        ("i" . dired-subtree-insert)
+        ("j" . dired-subtree-down)
+        ("k" . dired-subtree-up)
+        ("m" . dired-subtree-mark-subtree)
+        ("n" . dired-subtree-next-sibling)
+        ("N" . dired-subtree-narrow)
+        ("p" . dired-subtree-previous-sibling)
+        ("r" . dired-subtree-revert)
+        ("R" . dired-subtree-remove)
+        ("t" . dired-subtree-toggle)
+        ("u" . dired-subtree-unmark-subtree)
+        ("<down>" . dired-subtree-down)
+        ("<up>" . dired-subtree-up))
+
+  :config
+  ;; Custom functionality
+  ;; Prevent dired-insert-subtree from executing on empty directories,
+  ;; fixes some unexpected behavior
+  (defun dired-subtree-insert-check-empty-directory (dsi &rest args)
+    (when-let* ((dfn (dired-get-filename nil t)))
+      (if (directory-empty-p dfn)
+          (user-error "Directory at point is empty, cannot insert subtree.")
+        (apply dsi args))))
+
+  (advice-add #'dired-subtree-insert :around #'dired-subtree-insert-check-empty-directory))
+
+(use-package dired-narrow
+  :ensure t
+
+  :bind
+  (:map dired-mode-map
+        ("M-n" . dired-narrow-fuzzy)
+        ("M-N" . dired-narrow))
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt dired-narrow-blink-time 0.3))
+
+(use-package dired-collapse
+  :ensure t
+
+  :hook dired-mode
+
+  :bind
+  (:map dired-mode-map
+        ("M-_" . dired-collapse-mode)))
+
+(use-package diredfl
+  :ensure t
+  :pin melpa
+
+  :hook dired-mode
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt diredfl-ignore-compressed-flag nil))
+
 (use-package project
   :init
   ;; Setup and settings (before load)
@@ -1431,6 +1443,8 @@ that allows to include other templates by their name."
 
 (use-package org
   :ensure t
+
+  :defer t
 
   :preface
   ;; Setup (preface)
@@ -1580,6 +1594,9 @@ that allows to include other templates by their name."
              :empty-lines-before 0
              :empty-lines-after 1)))
 
+  (setopt org-read-date-popup-calendar t
+          org-read-date-display-live t)
+
   (setopt org-deadline-warning-days 14)
 
   (setopt org-agenda-span 'day
@@ -1588,17 +1605,16 @@ that allows to include other templates by their name."
   (setopt org-agenda-skip-timestamp-if-done t
           org-agenda-skip-scheduled-if-done t
           org-agenda-skip-deadline-if-done t)
-  (setopt org-agenda-current-time-string ""
-          org-agenda-time-grid '((daily today) nil "" ""))
+  (setopt org-agenda-current-time-string "<< Now >>")
   (setopt org-agenda-hide-tags-regexp ".*")
   (setopt org-agenda-prefix-format '((agenda . "%-2i %?-12t %?-12s")
                                      (todo . "%-2i %?-12t %?-12s")
                                      (tags . "%-2i %?-12t %?-12s")
                                      (search . "%-2i %?-12t %?-12s")))
-  (setopt org-agenda-sorting-strategy '((agenda habit-down timestamp-up urgency-down category-keep)
-                                        (todo urgency-down timestamp-up category-keep todo-state-up)
-                                        (tags urgency-down category-keep)
-                                        (search category-keep))
+  (setopt org-agenda-sorting-strategy '((agenda . (habit-down time-up urgency-down category-keep))
+                                        (todo . (urgency-down timestamp-up category-keep todo-state-up))
+                                        (tags . (urgency-down category-keep))
+                                        (search . (category-keep)))
           org-agenda-sort-notime-is-late t)
 
    (with-eval-after-load 'nerd-icons
@@ -1642,27 +1658,26 @@ that allows to include other templates by their name."
   (setopt org-super-agenda-final-group-separator "\n")
 
   (setq-default org-super-agenda-groups
-                '((:name "  Overdue"
-                         :scheduled past
-                         :deadline past
-                         :order 2
-                         :face 'org-warning)
-                  (:name "  Upcoming"
-                         :scheduled future
-                         :deadline future
-                         :order 3
-                         :face 'org-upcoming-deadline)
-                  (:name "  Today"
+                '((:name "  Today"
                          :time-grid t
                          :date today
                          :scheduled today
                          :deadline today
                          :order 1)
-                  (:name "  Another Day"
+                  (:name "  Overdue (Deadline/Schedule)"
+                         :scheduled past
+                         :deadline past
+                         :order 2
+                         :face org-warning)
+                  (:name "  Upcoming (Deadline/Schedule)"
+                         :scheduled future
+                         :deadline future
+                         :order 3
+                         :face org-upcoming-deadline)
+                  (:name "  Another Day (Timestamp)"
                          :date t
                          :order 4)))
 
-  :config
   (add-to-list 'org-agenda-custom-commands
                '("p" "Priority view (TODOs)"
                  alltodo ""
@@ -1692,12 +1707,13 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-custom-commands
                '("o" "Organize view (TODOs)"
                  ((alltodo ""
-                           ((org-agenda-overriding-header "TODOs, Schedule")
+                           ((org-agenda-overriding-header "TODOs, To Schedule")
                             (org-super-agenda-groups
                              '((:name "Unscheduled" :scheduled nil)
                                (:discard (:anything t))))))
                   (tags-todo "-{.*}"
-                             ((org-agenda-overriding-header "TODOs, Tag")
+                             ((org-agenda-overriding-header "TODOs, To Tag")
+                              (org-agenda-sorting-strategy '(urgency-down timestamp-up category-keep todo-state-up))
                               (org-super-agenda-groups
                                '((:name "Untagged" :anything t)))))))))
 
@@ -1724,7 +1740,6 @@ that allows to include other templates by their name."
   (when (string-match-p "^Iosevka.*" (face-attribute 'default :family))
     (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
     (set-face-attribute 'org-modern-label nil :height 0.9 :width 'semi-condensed :weight 'medium)))
-
 
 (use-package org-modern-indent
   :ensure t
@@ -1797,13 +1812,13 @@ that allows to include other templates by their name."
   (add-to-list 'magit-no-confirm 'safe-with-wip)
 
   ;; Keybindings
-  (keymap-unset magit-mode-map "C-w" )
-  (keymap-unset magit-mode-map "M-w")
-  (keymap-unset magit-mode-map "C-c C-w")
+  ;; (keymap-unset magit-mode-map "C-w" )
+  ;; (keymap-unset magit-mode-map "M-w")
+  ;; (keymap-unset magit-mode-map "C-c C-w")
   (keymap-set magit-mode-map "C-v" #'magit-visit-thing)
-  (keymap-set magit-mode-map "C-t" #'magit-copy-section-value)
-  (keymap-set magit-mode-map "C-S-t" #'magit-copy-buffer-revision)
-  (keymap-set magit-mode-map "C-c C-t" #'magit-copy-thing)
+  ;; (keymap-set magit-mode-map "C-t" #'magit-copy-section-value)
+  ;; (keymap-set magit-mode-map "C-S-t" #'magit-copy-buffer-revision)
+  ;; (keymap-set magit-mode-map "C-c C-t" #'magit-copy-thing)
 
   (keymap-set magit-diff-section-map "C-v" #'magit-diff-visit-worktree-file)
 
@@ -1848,6 +1863,12 @@ that allows to include other templates by their name."
 
   (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 
+  ;; Swap to \( and \) instead of $ and $ (when using LaTeX instead of TeX)
+  (defun setup-a-latex-mode-electric-math ()
+    (setq-local TeX-electric-math '("\\(" . "\\)")))
+
+  (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-electric-math)
+
   ;; Activation
   (TeX-source-correlate-mode 1))
 
@@ -1859,6 +1880,7 @@ that allows to include other templates by their name."
   :init
   ;; Setup and settings (before load)
   (setopt cdlatex-auto-help-delay 1)
+  (setopt cdlatex-use-dollar-to-ensure-math t)
 
   :config
   ;; Keybindings
@@ -1870,8 +1892,14 @@ that allows to include other templates by their name."
     (with-eval-after-load 'corfu
       (setq-local corfu-auto nil)))
 
+  ;; Swap to \( and \) instead of $ and $ (when using LaTeX instead of TeX)
+  (defun setup-a-latex-mode-not-use-dollar ()
+    (setq-local cdlatex-use-dollar-to-ensure-math nil))
+
   ;; Hooks
-  (add-hook 'cdlatex-mode-hook #'setup-a-cdlatex-corfu-mode))
+  (add-hook 'cdlatex-mode-hook #'setup-a-cdlatex-corfu-mode)
+  (add-hook 'latex-mode-hook #'setup-a-latex-mode-not-use-dollar)
+  (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-not-use-dollar))
 
 (use-package math-delimiters
   :ensure t
@@ -1926,38 +1954,24 @@ that allows to include other templates by their name."
 
   ;; Keybindings
   (keymap-set pdf-view-mode-map "q" #'kill-this-buffer)
-  (keymap-set pdf-view-mode-map "<down>" #'pdf-view-next-line-or-next-page)
-  (keymap-set pdf-view-mode-map "<up>" #'pdf-view-previous-line-or-previous-page)
-  (keymap-set pdf-view-mode-map "n" #'pdf-view-next-page-command)
-  (keymap-set pdf-view-mode-map "p" #'pdf-view-previous-page-command)
-  (keymap-set pdf-view-mode-map "<next>" #'pdf-view-next-page-command)
-  (keymap-set pdf-view-mode-map "<prior>" #'pdf-view-previous-page-command)
-  (keymap-set pdf-view-mode-map "C-n" #'pdf-view-scroll-up-or-next-page)
-  (keymap-set pdf-view-mode-map "C-p" #'pdf-view-scroll-down-or-previous-page)
-  (keymap-set pdf-view-mode-map "SPC" #'pdf-view-scroll-up-or-next-page)
-  (keymap-set pdf-view-mode-map "DEL" #'pdf-view-scroll-down-or-previous-page)
   (keymap-set pdf-view-mode-map "<backspace>" "DEL")
   (keymap-set pdf-view-mode-map "<end>" #'pdf-view-last-page)
   (keymap-set pdf-view-mode-map "<home>" #'pdf-view-first-page)
   (keymap-set pdf-view-mode-map "z" #'pdf-view-shrink)
   (keymap-set pdf-view-mode-map "Z" #'pdf-view-enlarge)
-  (keymap-set pdf-view-mode-map "0" #'pdf-view-scale-reset)
-  (keymap-set pdf-view-mode-map "r" #'pdf-view-rotate)
-  (keymap-set pdf-view-mode-map "R" #'revert-buffer)
-  (keymap-set pdf-view-mode-map "a c" #'pdf-view-center-in-window)
-  (keymap-set pdf-view-mode-map "a l" #'pdf-view-align-left)
-  (keymap-set pdf-view-mode-map "a r" #'pdf-view-align-right)
-  (keymap-set pdf-view-mode-map "a w" #'pdf-view-fit-width-to-window)
-  (keymap-set pdf-view-mode-map "a h" #'pdf-view-fit-height-to-window)
-  (keymap-set pdf-view-mode-map "a p" #'pdf-view-fit-page-to-window)
-  (keymap-set pdf-view-mode-map "m" #'pdf-view-position-to-register)
-  (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
+  (keymap-set pdf-view-mode-map "r" #'revert-buffer)
+  (keymap-set pdf-view-mode-map "v c" #'pdf-view-center-in-window)
+  (keymap-set pdf-view-mode-map "v l" #'pdf-view-align-left)
+  (keymap-set pdf-view-mode-map "v r" #'pdf-view-align-right)
+  (keymap-set pdf-view-mode-map "v w" #'pdf-view-fit-width-to-window)
+  (keymap-set pdf-view-mode-map "v h" #'pdf-view-fit-height-to-window)
+  (keymap-set pdf-view-mode-map "v p" #'pdf-view-fit-page-to-window)
   (keymap-set pdf-view-mode-map "v d" #'pdf-view-dark-minor-mode)
   (keymap-set pdf-view-mode-map "v m" #'pdf-view-midnight-minor-mode)
   (keymap-set pdf-view-mode-map "v t" #'pdf-view-themed-minor-mode)
   (keymap-set pdf-view-mode-map "v p" #'pdf-view-printer-minor-mode)
-  (keymap-set pdf-view-mode-map "C-l" #'pdf-view-goto-label)
-  (keymap-set pdf-view-mode-map "C-;" #'pdf-view-goto-page)
+  (keymap-set pdf-view-mode-map "m" #'pdf-view-position-to-register)
+  (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
 
   ;; Hooks
   (add-hook 'pdf-tools-enabled-hook #'(lambda ()
@@ -1970,7 +1984,6 @@ that allows to include other templates by their name."
 (use-package markdown-mode
   :ensure t
 
-  :defer t
 
   :mode ("README\\.md\\'" . gfm-mode)
 
@@ -1991,8 +2004,8 @@ that allows to include other templates by their name."
 
   :config
   ;; Keybindings
-  (keymap-set markdown-mode-command-map "t" #'markdown-kill-ring-save)
-  (keymap-set markdown-mode-command-map "z" #'markdown-table-transpose)
+  ;; (keymap-set markdown-mode-command-map "t" #'markdown-kill-ring-save)
+  ;; (keymap-set markdown-mode-command-map "z" #'markdown-table-transpose)
 
   (keymap-set markdown-view-mode-map "<prior>" #'scroll-up-command)
   (keymap-set markdown-view-mode-map "<next>" #'scroll-down-command)
@@ -2159,11 +2172,12 @@ that allows to include other templates by their name."
   ;; Keybindings
   (keymap-unset merlin-type-enclosing-map "C-<up>")
   (keymap-unset merlin-type-enclosing-map "C-<down>")
-  (keymap-unset merlin-type-enclosing-map "C-w")
+  ;; (keymap-unset merlin-type-enclosing-map "C-w")
 
   (keymap-set merlin-type-enclosing-map "C-p" #'merlin-type-enclosing-go-up)
   (keymap-set merlin-type-enclosing-map "C-n" #'merlin-type-enclosing-go-down)
-  (keymap-set merlin-type-enclosing-map "C-t" #'merlin-copy-enclosing))
+  ;; (keymap-set merlin-type-enclosing-map "C-t" #'merlin-copy-enclosing)
+  )
 
 ;; Proof General (EasyCrypt)
 ;; Note, proof.el (which is provided by the proof-general package) is what is
@@ -2556,6 +2570,11 @@ that allows to include other templates by their name."
   ;; Setup and settings (before load)
   (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
 
+(use-package nerd-icons-dired
+  :ensure t
+
+  :hook dired-mode)
+
 (use-package doom-modeline
   :ensure t
 
@@ -2579,18 +2598,16 @@ that allows to include other templates by their name."
           doom-modeline-vcs-max-length 20))
 
 ;; Local/cross-package enhancements
-(use-package loc-avy
+(use-package loc-pkgs
   :ensure nil ; Provided locally
-
-  :after avy
 
   :commands (avy-action-embark-act avy-action-embark-dwim)
 
   :init
-  ;; Setup and settings (before load of this package, but after load of packages listed in `:after`)
-  (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
-  (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t))
-
+  ;; Setup and settings (before load)
+  (with-eval-after-load 'avy
+    (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
+    (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t)))
 
 ;; Corfu + Orderless
 (use-package corfu
