@@ -6,6 +6,6 @@
 --clear-after=120
 --action=copy
 --target=password
---keybindings=Ctrl+t:copy:username,Ctrl+T:copy:password,Alt+m::menu,Alt+s:sync,Alt+p:print:username:password,Alt+x:type:username:tab:password:enter
---menu-keybindings=Ctrl+t:copy,Alt+t:type,Alt+p:print
+--keybindings=Alt+w:copy:username,Ctrl+w:copy:password,Alt+m::menu,Alt+s:sync,Alt+p:print:username:password,Alt+x:type:username:tab:password:enter
+--menu-keybindings=Alt+w:copy,Alt+t:type,Alt+p:print
 --prompt='Search entry'

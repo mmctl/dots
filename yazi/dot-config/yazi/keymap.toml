@@ -66,11 +66,11 @@ keymap = [
     { on = "<C-o>", run = "plugin augment-command -- open --interactive", desc = "Open files interactively" },
     { on = "<C-v>", run = "plugin augment-command -- open", desc = "Open files" },
     ## Copy/Cut/Paste
-    { on = "<C-t>", run = [ "yank", 'shell -- echo "$@" | xclip -i -selection clipboard -t text/uri-list' ], desc = "Copy files (in client and to clipboard, as uri)" },
-    { on = "<A-t>", run = "yank --cut", desc = "Kill/Cut files" },
+    { on = "<A-w>", run = [ "yank", 'shell -- echo "$@" | xclip -i -selection clipboard -t text/uri-list' ], desc = "Copy files (in client and to clipboard, as uri)" },
+    { on = "<C-w>", run = "yank --cut", desc = "Kill/Cut files" },
     { on = "<C-u>", run = "unyank", desc = "Uncopy/Unkill/Uncut (cancel copy status)" },
-    { on = "<A-y>", run = "plugin augment-command -- paste", desc = "Paste files in CWD" },
-    { on = "<A-S-y>", run = "plugin augment-command -- paste --force", desc = "Paste files in CWD, overwriting" },
+    { on = "<C-y>", run = "plugin augment-command -- paste", desc = "Paste files in CWD" },
+    { on = "<C-S-y>", run = "plugin augment-command -- paste --force", desc = "Paste files in CWD, overwriting" },
     { on = "<C-A-y>", run = "plugin augment-command -- paste --smart", desc = "Paste files in hovered directory (or else CWD)" },
     { on = "<C-A-S-y>", run = "plugin augment-command -- paste --force --smart", desc = "Paste files in hovered directory (or else CWD), overwriting" },
     ## Delete/Remove
@@ -97,7 +97,7 @@ keymap = [
 
     # Meta-level operation (cd, sort, tabs, etc.)
     ## Copy/Cut/Paste (to/from clipboard)
-    { on = [ "<C-x>", "<C-t>" ], run = "plugin copy-file-contents", desc = "Copy files (raw) to clipboard" },
+    { on = [ "<C-x>", "<A-w>" ], run = "plugin copy-file-contents", desc = "Copy files (raw) to clipboard" },
     ## CD (goto)
     { on = [ "g", "h" ], run = "cd $HOME", desc = "Go to user home directory"},
     { on = [ "g", "c" ], run = "cd $XDG_CONFIG_HOME", desc = "Go to config directory"},
@@ -226,7 +226,7 @@ keymap = [
     { on = "<l>", run = "sweep 1", desc = "Swipe to previous file" },
 
     # Copy
-    { on = "<C-t>", run = "copy cell", desc = "Copy cell" },
+    { on = "<A-w>", run = "copy cell", desc = "Copy cell" },
 
     # Help
     { on = "~", run = "help", desc = "Open help"},
@@ -293,21 +293,22 @@ keymap = [
     # Kill (insert mode)
     ## Word-wise
     { on = "<A-Backspace>", run = "kill backward", desc = "Kill previous (backward) word" },
-    { on = "<A-w>", run = "kill forward", desc = "Kill next (forward) word" },
+    { on = "<C-Backspace>", run = "kill backward", desc = "Kill previous (backward) word" },
+    { on = "<A-k>", run = "kill forward", desc = "Kill next (forward) word" },
     ## Line-wise
-    { on = "<A-a>", run = "kill bol", desc = "Kill to beginning of line (BOL)" },
-    { on = "<A-e>", run = "kill eol", desc = "Kill to end of line (EOL)" },
+    { on = "<C-S-Backspace>", run = "kill bol", desc = "Kill to beginning of line (BOL)" },
+    { on = "<C-k>", run = "kill eol", desc = "Kill to end of line (EOL)" },
 
     # Yank/Cut/Paste (normal mode)
-    { on = "<C-t>", run = "yank", desc = "Yank (copy)" },
-    { on = "<A-t>", run = "delete --cut", desc = "Cut" },
+    { on = "<A-w>", run = "yank", desc = "Yank (copy)" },
+    { on = "<C-w>", run = "delete --cut", desc = "Cut" },
     { on = "<Delete>", run = "delete", desc = "Delete" },
-    { on = "<A-y>", run = "paste", desc = "Paste copied material after cursor" },
-    { on = "<A-S-y>", run = "paste --before", desc = "Paste copied material before cursor" },
+    { on = "<C-y>", run = "paste", desc = "Paste copied material after cursor" },
+    { on = "<C-S-y>", run = "paste --before", desc = "Paste copied material before cursor" },
 
     # Undo/Redo (normal mode)
-    { on = "<A-;>", run = "undo", desc = "Undo last operation" },
-    { on = "<A-/>", run = "redo", desc = "Redo last operation" },
+    { on = "<C-_>", run = "undo", desc = "Undo last operation" },
+    { on = "<A-_>", run = "redo", desc = "Redo last operation" },
 
     # Mode switch (normal mode)
     { on = [ "<C-x>", "v" ], run = "visual", desc = "Enter visual mode" },
