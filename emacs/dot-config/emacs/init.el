@@ -479,7 +479,7 @@
 
   :config
   ;; Keybindings
-  (keymap-set isearch-mode-map "C-v" #'isearch-exit))
+  (keymap-set isearch-mode-map "M-v" #'isearch-exit))
 
 (use-package imenu
   :init
@@ -503,10 +503,10 @@
 
   :config
   ;; Keybindings
-  (keymap-set dired-mode-map "C-v" #'dired-find-file)
+  (keymap-set dired-mode-map "M-v" #'dired-find-file)
   (keymap-set dired-mode-map "RET" #'dired-find-file)
   (keymap-set dired-mode-map "<return>" #'dired-find-file)
-  (keymap-set dired-mode-map "C-o" #'dired-display-file)
+  (keymap-set dired-mode-map "C-v" #'dired-display-file)
   (keymap-set dired-mode-map "C-<up>" #'dired-prev-marked-file)
   (keymap-set dired-mode-map "C-<down>" #'dired-next-marked-file)
   (keymap-set dired-mode-map "C-q" #'dired-up-directory))
@@ -715,8 +715,8 @@
 
   :config
   ;; Keybindings
-  (keymap-set visual-replace-mode-map "C-o" #'visual-replace-apply-one-repeat)
-  (keymap-set visual-replace-mode-map "C-v" #'visual-replace-enter)
+  (keymap-set visual-replace-mode-map "C-v" #'visual-replace-apply-one-repeat)
+  (keymap-set visual-replace-mode-map "M-v" #'visual-replace-enter)
   (keymap-set visual-replace-mode-map "C-p" #'visual-replace-prev-match)
   (keymap-set visual-replace-mode-map "C-n" #'visual-replace-next-match)
   (keymap-set visual-replace-mode-map "M-TAB" #'visual-replace-tab)
@@ -771,9 +771,9 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-map "C-o" #'vertico-insert)
-  (keymap-set vertico-map "C-v" #'vertico-exit)
-  (keymap-set vertico-map "C-M-v" #'vertico-exit-input)
+  (keymap-set vertico-map "C-v" #'vertico-insert)
+  (keymap-set vertico-map "M-v" #'vertico-exit)
+  (keymap-set vertico-map "M-V" #'vertico-exit-input)
   (keymap-set vertico-map "TAB" #'minibuffer-complete)
   (keymap-set vertico-map "<tab>" #'minibuffer-complete)
   (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
@@ -808,8 +808,8 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-mouse-map "<mouse-1>" (vertico-mouse--click "C-v"))
-  (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-o")))
+  (keymap-set vertico-mouse-map "<mouse-1>" (vertico-mouse--click "M-v"))
+  (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-v")))
 
 (use-package vertico-quick
   :ensure nil ; Provided by vertico
@@ -853,10 +853,10 @@
   :config
   ;; Keybindings
   ;; All modes
-  (keymap-set corfu-map "C-o" #'corfu-complete)
+  (keymap-set corfu-map "C-v" #'corfu-complete)
   (keymap-set corfu-map "TAB" #'corfu-complete)
   (keymap-set corfu-map "<tab>" #'corfu-complete)
-  (keymap-set corfu-map "C-v" #'corfu-send)
+  (keymap-set corfu-map "M-v" #'corfu-send)
   (keymap-set corfu-map "M-SPC" #'corfu-insert-separator)
   ;; Auto mode
   (keymap-unset corfu-map "<remap> <beginning-of-buffer>")
@@ -997,7 +997,7 @@
   (keymap-set tempel-map "M--" #'tempel-beginning)
   (keymap-set tempel-map "M-_" #'tempel-end)
   (keymap-set tempel-map "M-k" #'tempel-kill)
-  (keymap-set tempel-map "C-v" #'tempel-done)
+  (keymap-set tempel-map "M-v" #'tempel-done)
   (keymap-set tempel-map "M-q" #'tempel-abort)
 
   (defun a-tempel-placeholder-form-as-lit (elt)
@@ -1142,7 +1142,7 @@ that allows to include other templates by their name."
           avy-all-windows 'all-frames
           avy-case-fold-search t
           avy-single-candidate-jump nil)
-  (setopt avy-timeout-seconds 0.3)
+  (setopt avy-timeout-seconds 0.2)
   (setq-default avy-dispatch-alist '((?q . avy-action-kill-move)
                                      (?Q . avy-action-kill-stay)
                                      (?m . avy-action-mark)
@@ -1432,6 +1432,42 @@ that allows to include other templates by their name."
   ;; Setup and settings (before load)
   (setopt diredfl-ignore-compressed-flag nil))
 
+(use-package ediff
+  :bind
+  (:prefix-map an-ediff-map :prefix "C-c d" :prefix-docstring "Keymap for ediff (global)"
+               ("b" . ediff-buffers)
+               ("B" . ediff-buffers3)
+               ("d" . ediff-directories)
+               ("D" . ediff-directories3)
+               ("f" . ediff-files)
+               ("F" . ediff-files3)
+               ("m b" . ediff-merge-buffers)
+               ("m B" . ediff-merge-buffers-with-ancestor)
+               ("m d" . ediff-merge-directories)
+               ("m D" . ediff-merge-directories-with-ancestor)
+               ("m e" . ediff-merge-directories)
+               ("m E" . ediff-merge-directories-with-ancestor)
+               ("m f" . ediff-merge-files)
+               ("m F" . ediff-merge-files-with-ancestor)
+               ("m v" . ediff-merge-revisions)
+               ("m V" . ediff-merge-revisions-with-ancestor)
+               ("p" . ediff-patch-file)
+               ("P" . ediff-patch-buffer)
+               ("r" . ediff-regions-wordwise)
+               ("R" . ediff-regions-linewise)
+               ("s" . ediff-show-registry)
+               ("v" . ediff-revision)
+               ("V" . ediff-directory-revisions)
+               ("w" . ediff-windows-wordwise)
+               ("W" . ediff-windows-linewise)
+               ("?" . ediff-documentation))
+
+  :init
+  (setopt ediff-use-last-dir t)
+  (setopt ediff-keep-variants nil)
+  (setopt ediff-window-setup-function #'ediff-setup-windows-default
+          ediff-split-window-function #'split-window-horizontally))
+
 (use-package project
   :init
   ;; Setup and settings (before load)
@@ -1440,6 +1476,9 @@ that allows to include other templates by their name."
     "File where known project's are stored.")
   (setopt project-list-file PROJECT_LIST_FILE)
   (setopt project-mode-line t))
+
+(use-package ediff
+  )
 
 (use-package org
   :ensure t
@@ -1637,11 +1676,6 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
 
   ;; Keybindings
-  (keymap-set org-mode-map "S-<return>" #'org-return-and-maybe-indent)
-
-  (with-eval-after-load 'org-capture
-    (keymap-set org-capture-mode-map "C-c C-v" #'org-capture-finalize))
-
   (keymap-unset org-read-date-minibuffer-local-map "C-v")
   (keymap-unset org-read-date-minibuffer-local-map "M-v")
   (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
@@ -1812,20 +1846,11 @@ that allows to include other templates by their name."
   (add-to-list 'magit-no-confirm 'safe-with-wip)
 
   ;; Keybindings
-  ;; (keymap-unset magit-mode-map "C-w" )
-  ;; (keymap-unset magit-mode-map "M-w")
-  ;; (keymap-unset magit-mode-map "C-c C-w")
-  (keymap-set magit-mode-map "C-v" #'magit-visit-thing)
-  ;; (keymap-set magit-mode-map "C-t" #'magit-copy-section-value)
-  ;; (keymap-set magit-mode-map "C-S-t" #'magit-copy-buffer-revision)
-  ;; (keymap-set magit-mode-map "C-c C-t" #'magit-copy-thing)
+  (keymap-set magit-mode-map "M-v" #'magit-visit-thing)
 
-  (keymap-set magit-diff-section-map "C-v" #'magit-diff-visit-worktree-file)
+  (keymap-set magit-diff-section-map "M-v" #'magit-diff-visit-worktree-file)
 
-  (keymap-set magit-module-section-map "C-v" #'magit-submodule-visit)
-
-  (keymap-set with-editor-mode-map "C-c C-v" #'with-editor-finish)
-  (keymap-set with-editor-mode-map "C-c C-q" #'with-editor-cancel)
+  (keymap-set magit-module-section-map "M-v" #'magit-submodule-visit)
 
   ;; Activation
   (magit-wip-mode 1))
@@ -1975,10 +2000,6 @@ that allows to include other templates by their name."
 
   ;; Hooks
   (add-hook 'pdf-tools-enabled-hook #'(lambda ()
-                                        (keymap-set pdf-annot-edit-contents-minor-mode-map
-                                                    "C-c C-v"
-                                                    #'pdf-annot-edit-contents-commit)))
-  (add-hook 'pdf-tools-enabled-hook #'(lambda ()
                                         (keymap-unset pdf-sync-minor-mode-map "<double-mouse-1>"))))
 
 (use-package markdown-mode
@@ -2036,9 +2057,6 @@ that allows to include other templates by their name."
 
 
   :config
-  ;; Keybindings
-  (keymap-set aidermacs-minor-mode-map "C-c C-v" #'aidermacs-send-line-or-region)
-
   ;; Hooks
   (add-hook 'aidermacs-before-run-backend-hook
             #'(lambda ()
@@ -2141,9 +2159,6 @@ that allows to include other templates by their name."
                      :model 'mistralai/mistral-small-3.2-24b-instruct:free
                      :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
 
-  ;; Keybindings
-  (keymap-set gptel-mode-map "C-c C-v" #'gptel-send)
-
   ;; Hooks
   (add-hook 'gptel-post-response-functions #'gptel-end-of-response))
 
@@ -2172,12 +2187,9 @@ that allows to include other templates by their name."
   ;; Keybindings
   (keymap-unset merlin-type-enclosing-map "C-<up>")
   (keymap-unset merlin-type-enclosing-map "C-<down>")
-  ;; (keymap-unset merlin-type-enclosing-map "C-w")
 
   (keymap-set merlin-type-enclosing-map "C-p" #'merlin-type-enclosing-go-up)
-  (keymap-set merlin-type-enclosing-map "C-n" #'merlin-type-enclosing-go-down)
-  ;; (keymap-set merlin-type-enclosing-map "C-t" #'merlin-copy-enclosing)
-  )
+  (keymap-set merlin-type-enclosing-map "C-n" #'merlin-type-enclosing-go-down))
 
 ;; Proof General (EasyCrypt)
 ;; Note, proof.el (which is provided by the proof-general package) is what is
