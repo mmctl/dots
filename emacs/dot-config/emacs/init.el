@@ -1434,7 +1434,7 @@ that allows to include other templates by their name."
 
 (use-package ediff
   :bind
-  (:prefix-map an-ediff-map :prefix "C-c d" :prefix-docstring "Keymap for ediff (global)"
+  (:prefix-map an-ediff-map :prefix "C-c d" :prefix-docstring "Keymap for ediff entry points (global)"
                ("b" . ediff-buffers)
                ("B" . ediff-buffers3)
                ("d" . ediff-directories)
@@ -1463,10 +1463,29 @@ that allows to include other templates by their name."
                ("?" . ediff-documentation))
 
   :init
+  ;; Setup and settings (before load)
   (setopt ediff-use-last-dir t)
   (setopt ediff-keep-variants nil)
-  (setopt ediff-window-setup-function #'ediff-setup-windows-default
-          ediff-split-window-function #'split-window-horizontally))
+  (setopt ediff-window-setup-function #'ediff-setup-windows-plain
+          ediff-split-window-function #'split-window-horizontally)
+
+  :config
+  ;; Hooks
+  ;; Save/restore window configuration when starting/quitting ediff
+  (defvar an-ediff-preceding-window-configuration
+    "Window configuration before starting ediff.")
+  (defun an-ediff-store-window-configuration ()
+    "Stores window configuration in `an-ediff-preceding-window-configuration'"
+    (setq an-ediff-preceding-window-configuration (current-window-configuration)))
+  (defun an-ediff-restore-window-configuration ()
+    "Restores window configuration stored in
+`an-ediff-preceding-window-configuration', if any, and resets it."
+    (when an-ediff-preceding-window-configuration
+      (set-window-configuration an-ediff-preceding-window-configuration)
+      (setq an-ediff-preceding-window-configuration nil)))
+
+  (add-hook #'ediff-before-setup-hook #'an-ediff-store-window-configuration)
+  (add-hook #'ediff-quit-hook #'an-ediff-restore-window-configuration 90))
 
 (use-package project
   :init
@@ -1476,9 +1495,6 @@ that allows to include other templates by their name."
     "File where known project's are stored.")
   (setopt project-list-file PROJECT_LIST_FILE)
   (setopt project-mode-line t))
-
-(use-package ediff
-  )
 
 (use-package org
   :ensure t
