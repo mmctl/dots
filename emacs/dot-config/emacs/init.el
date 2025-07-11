@@ -277,9 +277,6 @@
 (keymap-global-set "M-S-<up>" #'windmove-swap-states-up)
 (keymap-global-set "M-S-<right>" #'windmove-swap-states-right)
 
-(keymap-global-set "C-b" #'switch-to-prev-buffer) ; from: backward-char
-(keymap-global-set "C-f" #'switch-to-next-buffer) ; from: forward-char
-
 (keymap-global-set "C-p" #'backward-sexp) ; from: previous-line
 (keymap-global-set "C-n" #'forward-sexp)  ; from: next-line
 
@@ -518,13 +515,6 @@
           dabbrev-case-distinction nil
           dabbrev-case-replace nil))
 
-(use-package calendar
-  :config
-  ;; Keybindings
-  (keymap-unset calendar-mode-map "C-b")
-  (keymap-unset calendar-mode-map "C-f"))
-
-
 ;; Helpers
 (use-package which-key
   :ensure t
@@ -619,16 +609,12 @@
   ;; Keybindings
   (keymap-set undo-tree-map "<remap> <undo-redo>" #'undo-tree-redo)
 
-  (keymap-unset undo-tree-visualizer-mode-map "C-f")
-  (keymap-unset undo-tree-visualizer-mode-map "C-b")
   (keymap-set undo-tree-visualizer-mode-map "h" #'undo-tree-visualizer-scroll-left)
   (keymap-set undo-tree-visualizer-mode-map "j" #'undo-tree-visualizer-scroll-down)
   (keymap-set undo-tree-visualizer-mode-map "k" #'undo-tree-visualizer-scroll-up)
   (keymap-set undo-tree-visualizer-mode-map "l" #'undo-tree-visualizer-scroll-right)
 
-  (keymap-unset undo-tree-visualizer-selection-mode-map "C-f")
-  (keymap-unset undo-tree-visualizer-selection-mode-map "C-b")
-  (keymap-set undo-tree-visualizer-selection-mode-map "C-v" #'undo-tree-visualizer-set)
+  (keymap-set undo-tree-visualizer-selection-mode-map "M-v" #'undo-tree-visualizer-set)
 
   ;; Activation
   (global-undo-tree-mode 1))
@@ -1352,8 +1338,6 @@ that allows to include other templates by their name."
   (keymap-unset dired-filter-group-mode-map "TAB")
   (keymap-unset dired-filter-group-mode-map "<tab>"))
 
-
-
 (use-package dired-subtree
   :ensure t
 
@@ -1602,12 +1586,11 @@ that allows to include other templates by their name."
             (:startgrouptag)
             ("Area") (:grouptags) ("{area@.+}" . ?a)
             (:endgrouptag)
-            ("administration" . ?A) ("event" . ?e) ("family-and-friends". ?f) ("finance" . ?F)
-            ("home" . ?h) ("matthias" . ?m) ("meeting" . ?M) ("partner" . ?P)
-            ("research" . ?r) ("rftarget" . ?R) ("study". ?s) ("teach" . ?t)
-            ("travel" . ?T) ("work" . ?w)))
+            ("administration" . ?A) ("event" . ?e) ("familyandfriends". ?f)
+            ("home" . ?h) ("me" . ?m) ("meeting" . ?M) ("noshow" . ?n) ("partner" . ?P)
+            ("rftarget" . ?r) ("study". ?s) ("travel" . ?t) ("work" . ?w)))
 
-  (setopt org-tags-exclude-from-inheritance '("rftarget"))
+  (setopt org-tags-exclude-from-inheritance '("rftarget" "noshow"))
 
   (setopt org-todo-keywords '((sequence "TODO" "DOING" "BLOCKED" "DONE")))
   (setopt org-todo-keyword-faces
@@ -1637,12 +1620,12 @@ that allows to include other templates by their name."
              :empty-lines 0)
             ("e" "Calendar event"
              entry (file+headline ORG_CALENDAR_FILE "Events")
-             "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i"
+             "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i :noshow:"
              :empty-lines-before 0
              :empty-lines-after 1)
             ("m" "Meeting"
              entry (file+olp+datetree ORG_MEETINGS_FILE)
-             "* %? :meeting:%^g\n:PROPERTIES:\n:Created: %U\n:END:\n** Notes:%i\n** Action Items:\n*** TODO [#B] "
+             "* %? :meeting:%^g\n:PROPERTIES:\n:Created: %U\n:END:\n** Notes:%i :noshow:\n** Action Items: :noshow:\n*** TODO [#B] "
              :tree-type week
              :clock-in t
              :clock-resume t
@@ -1671,19 +1654,20 @@ that allows to include other templates by their name."
                                         (tags . (urgency-down category-keep))
                                         (search . (category-keep)))
           org-agenda-sort-notime-is-late t)
-
-   (with-eval-after-load 'nerd-icons
-     (setq-default org-agenda-category-icon-alist
-                   `(("Notes" ,(list (nerd-icons-faicon "nf-fa-note_sticky" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
-                     ("Tasks" ,(list (nerd-icons-faicon "nf-fa-tasks" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
-                     ("Events" ,(list (nerd-icons-faicon "nf-fa-calendar_day" :face 'nerd-icons-lblue :v-adjust 0.05)) nil nil :ascent center)
-                     ("Appointments" ,(list (nerd-icons-faicon "nf-fa-user_clock" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
-                     ("Projects" ,(list (nerd-icons-faicon "nf-fa-folder_open" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
-                     ("Study" ,(list (nerd-icons-faicon "nf-fa-book_open" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
-                     ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center)
-                     ("Development" ,(list (nerd-icons-faicon "nf-fa-code" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center))))
-
+  (setopt org-agenda-sticky t)
   (setopt org-agenda-compact-blocks t)
+
+  (with-eval-after-load 'nerd-icons
+    (setq-default org-agenda-category-icon-alist
+                  `(("Notes" ,(list (nerd-icons-faicon "nf-fa-note_sticky" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
+                    ("Tasks" ,(list (nerd-icons-faicon "nf-fa-tasks" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
+                    ("Events" ,(list (nerd-icons-faicon "nf-fa-calendar_day" :face 'nerd-icons-lblue :v-adjust 0.05)) nil nil :ascent center)
+                    ("Appointments" ,(list (nerd-icons-faicon "nf-fa-user_clock" :face 'nerd-icons-lred :v-adjust 0.05)) nil nil :ascent center)
+                    ("Meetings" ,(list (nerd-icons-faicon "nf-fa-users" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
+                    ("Projects" ,(list (nerd-icons-faicon "nf-fa-folder_open" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
+                    ("Study" ,(list (nerd-icons-faicon "nf-fa-book_open" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
+                    ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center)
+                    ("Development" ,(list (nerd-icons-faicon "nf-fa-code" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center))))
 
   :config
   ;; Setup and settings (after load)
@@ -1729,9 +1713,10 @@ that allows to include other templates by their name."
                          :order 4)))
 
   (add-to-list 'org-agenda-custom-commands
-               '("p" "Priority view (TODOs)"
+               '("P" "Priority view (TODOs)"
                  alltodo ""
-                 ((org-agenda-overriding-header "TODOs, Prioritized")
+                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
+                  (org-agenda-overriding-header "TODOs, Prioritized")
                   (org-super-agenda-groups
                    '((:name "  Overdue"
                             :scheduled past
@@ -1747,7 +1732,8 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-custom-commands
                '("c" "Category view (TODOs)"
                  alltodo ""
-                 ((org-agenda-overriding-header "TODOs, Categorized")
+                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
+                  (org-agenda-overriding-header "TODOs, Categorized")
                   (org-super-agenda-groups
                    '((:name "  Projects: Research" :category "Research" :order 1)
                      (:name "  Projects: Development" :category "Development" :order 2)
@@ -1763,9 +1749,24 @@ that allows to include other templates by their name."
                                (:discard (:anything t))))))
                   (tags-todo "-{.*}"
                              ((org-agenda-overriding-header "TODOs, To Tag")
-                              (org-agenda-sorting-strategy '(urgency-down timestamp-up category-keep todo-state-up))
                               (org-super-agenda-groups
-                               '((:name "Untagged" :anything t)))))))))
+                               '((:name "Untagged" :anything t))))))
+                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE)))))
+  (add-to-list 'org-agenda-custom-commands
+               '("p" "Project/Area view (TODOs + Notes)"
+                 tags "+{^proj@.*\\|^area@.*}-noshow-rftarget-TODO=\"DONE\""
+                 ((org-agenda-files `(,ORG_NOTES_FILE ,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
+                  (org-agenda-hide-tags-regexp nil)
+                  (org-agenda-overriding-header "Projects and Areas")
+                  (org-super-agenda-groups
+                   '((:auto-map (lambda (item)
+                                  (cond
+                                   ((string-match ":proj@\\([[:word:]]+\\)?:" item)
+                                    (concat "Project: " (match-string 1 item)))
+                                   ((string-match ":area@\\([[:word:]]+\\)?:" item)
+                                    (concat "Area: " (match-string 1 item)))
+                                   (t
+                                    "Miscellaneous"))))))))))
 
 (use-package org-modern
   :ensure t
@@ -1775,6 +1776,7 @@ that allows to include other templates by their name."
   (org-agenda-finalize . org-modern-agenda)
 
   :init
+  (setopt org-modern-star 'replace)
   (setopt org-modern-hide-stars nil)
   (setopt org-modern-table nil)
   (setopt org-modern-block-name '("‣" . "‣"))
