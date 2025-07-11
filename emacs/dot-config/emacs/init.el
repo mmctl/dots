@@ -1252,6 +1252,7 @@ that allows to include other templates by their name."
                ("b" . embark-bindings)
                ("c" . embark-collect)
                ("d" . embark-dwim)
+               ("s" . embark-select)
                ("e" . embark-export)
                ("l" . embark-live))
   (:map minibuffer-local-map
@@ -2631,13 +2632,23 @@ that allows to include other templates by their name."
 (use-package loc-pkgs
   :ensure nil ; Provided locally
 
-  :commands (avy-action-embark-act avy-action-embark-dwim)
+  :commands
+  (an-avy-action-embark-act
+   an-avy-action-embark-dwim
+   an-embark-select-vertico-previous
+   an-embark-select-vertico-next)
 
   :init
   ;; Setup and settings (before load)
   (with-eval-after-load 'avy
-    (add-to-list 'avy-dispatch-alist '(?, . avy-action-embark-act) t)
-    (add-to-list 'avy-dispatch-alist '(?. . avy-action-embark-dwim) t)))
+    (add-to-list 'avy-dispatch-alist '(?, . an-avy-action-embark-act) t)
+    (add-to-list 'avy-dispatch-alist '(?. . an-avy-action-embark-dwim) t))
+
+  (with-eval-after-load 'vertico
+    (add-hook 'minibuffer-setup-hook (lambda ()
+                                       (when (bound-and-true-p vertico--input)
+                                         (keymap-set minibuffer-local-map "C-c e p" #'an-embark-select-vertico-previous)
+                                         (keymap-set minibuffer-local-map "C-c e n" #'an-embark-select-vertico-next))))))
 
 ;; Corfu + Orderless
 (use-package corfu
