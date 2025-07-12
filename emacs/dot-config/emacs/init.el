@@ -1593,10 +1593,9 @@ that allows to include other templates by their name."
             (:startgrouptag)
             ("Area" . ?A) (:grouptags) ("{area@.+}" . ?a)
             (:endgrouptag)
-            ("area@admin" . ?d) ("event" . ?E) ("area@faf". ?f) ("area@gov". ?f)
-            ("area@home" . ?h) ("meeting" . ?M) ("noshow" . ?N) ("area@prod" . ?p)
-            ("area@relation" . ?r) ("rftarget" . ?R) ("area@tinker" . ?t) ("area@travel" . ?T)
-            ("area@work" . ?w)))
+            ("area@admin" . ?d) ("event" . ?E) ("area@faf". ?f) ("area@home" . ?h)
+            ("meeting" . ?M) ("noshow" . ?N) ("area@relation" . ?r) ("rftarget" . ?R)
+            ("area@tinker" . ?t) ("area@travel" . ?T) ("area@work" . ?w)))
 
   (setopt org-tags-exclude-from-inheritance '("rftarget" "noshow"))
 
