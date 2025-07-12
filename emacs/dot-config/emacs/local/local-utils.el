@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t -*-
-;; loc-utils.el
+;; local-utils.el
 
 ;; Exchanging
 (defun exchange-word (arg)
@@ -130,6 +130,6 @@ automatically saving all buffers without asking."
   (interactive)
   (save-buffers-kill-emacs t t))
 
-(provide 'loc-utils)
+(provide 'local-utils)
 
-;;; loc-utils.el ends here
+;;; local-utils.el ends here

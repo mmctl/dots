@@ -1,21 +1,21 @@
 ;; -*- lexical-binding: t -*-
-;; loc-setup.el (frames/modes)
+;; local-setup.el (frames/modes)
 
 ;;; Utilities
 ;; Re-enable custom themes
-(defsubst reenable-custom-themes ()
+(defsubst local-reenable-custom-themes ()
   "Re-enable currently enabled custom themes"
   (let ((revcenth (reverse custom-enabled-themes)))
     (dolist (cth revcenth) (enable-theme cth))))
 
 ;;; Frames
 ;; TTY
-(defun loc-setup-tty-frame (frame)
+(defun local-setup-tty-frame (frame)
   "Setup TTY frame."
   (setopt display-line-numbers-width 3))
 
 ;; GUI
-(defun loc-setup-gui-frame (frame)
+(defun local-setup-gui-frame (frame)
   "Setup GUI frame."
   ;; Faces
   ;; Default/Fixed-pitch
@@ -56,36 +56,36 @@
   (setopt display-line-numbers-width 3))
 
 ;; General
-(defun loc-setup-frame (&optional frame)
+(defun local-setup-frame (&optional frame)
   "Setup any (TTY or GUI) frame. Assumes no global/default setup."
   (if (display-graphic-p frame)
-      (loc-setup-gui-frame frame)
-    (loc-setup-tty-frame frame)))
+      (local-setup-gui-frame frame)
+    (local-setup-tty-frame frame)))
 
-(defun loc-setup-frame-after (&optional frame)
+(defun local-setup-frame-after (&optional frame)
   "Setup any (TTY or GUI) frame. Assumes global/default setup.")
 
 ;; Client
-(defun loc-setup-client-frame ()
+(defun local-setup-client-frame ()
   "Setup inital client frame created by daemon/server. Assumes no global/default
 setup."
-  (loc-setup-frame (selected-frame))
+  (local-setup-frame (selected-frame))
   ;; Fixes bug of server not properly applying custom themes for first frame
-  (reenable-custom-themes))
+  (local-reenable-custom-themes))
 
-(defun loc-setup-client-frame-after ()
+(defun local-setup-client-frame-after ()
   "Setup inital client frame created by daemon/server. Assumes global/default
   setup.")
 
 ;; Global/Default
-(defun loc-setup-global-frame ()
+(defun local-setup-global-frame ()
   "Setup global/default frame for whole session."
-  (loc-setup-frame))
+  (local-setup-frame))
 
 
 ;;; Modes
 ;; Text
-(defun loc-setup-text-mode ()
+(defun local-setup-text-mode ()
   "Setup modes mainly dealing with text."
   (setq-local display-line-numbers-type t)
   (display-line-numbers-mode 1)
@@ -93,7 +93,7 @@ setup."
   (visual-line-mode 1))
 
 ;; Code/Prog
-(defun loc-setup-code-mode ()
+(defun local-setup-code-mode ()
   "Setup modes mainly dealing with code."
   (setq-local show-trailing-whitespace t)
   (setq-local display-line-numbers-type 'relative)
@@ -102,6 +102,6 @@ setup."
   (hl-line-mode 1)
   (visual-line-mode 0))
 
-(provide 'loc-setup)
+(provide 'local-setup)
 
-;;; loc-setup.el ends here
+;;; local-setup.el ends here

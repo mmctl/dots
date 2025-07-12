@@ -76,16 +76,19 @@
 (load CUSTOM_FILE)
 
 ;; Load path/pointers
+;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones,
+;; and generate autoloads if possible
+(dolist (file (cons LOCAL_DIR (directory-files-recursively LOCAL_DIR "^[^.].*" t t)))
+  (when (file-directory-p file)
+    (add-to-list 'load-path file)
+    (loaddefs-generate file (expand-file-name (concat (file-name-nondirectory (directory-file-name file)) "-autoloads.el")
+                                              file))))
+
+
 ;; Byte (and, if possible, natively) compile all local Elisp files (in LOCAL_DIR)
 (byte-recompile-directory LOCAL_DIR 0 nil t)
 (when (native-comp-available-p)
   (native-compile-async (list LOCAL_DIR) t))
-
-;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones
-(add-to-list 'load-path LOCAL_DIR)
-(dolist (file (directory-files-recursively LOCAL_DIR "^[^.].*" t t))
-  (when (file-directory-p file)
-    (add-to-list 'load-path file)))
 
 (add-to-list 'load-path MISC_DIR)
 
@@ -117,8 +120,8 @@
         create-lockfiles t)
 
 ;; Custom local functionalities
-(require 'loc-setup)
-(require 'loc-utils)
+(require 'local-setup)
+(require 'local-utils)
 
 ;; Package system
 (require 'package)
@@ -166,18 +169,18 @@
 
 (if (daemonp)
     (progn
-      (add-hook 'server-after-make-frame-hook #'loc-setup-client-frame)
-      (add-hook 'after-make-frame-functions #'loc-setup-frame))
-  (add-hook 'after-init-hook #'loc-setup-global-frame))
+      (add-hook 'server-after-make-frame-hook #'local-setup-client-frame)
+      (add-hook 'after-make-frame-functions #'local-setup-frame))
+  (add-hook 'after-init-hook #'local-setup-global-frame))
 
 ;; Modes
-(add-hook 'text-mode-hook #'loc-setup-text-mode)
-(add-hook 'tex-mode-hook #'loc-setup-code-mode)
-(add-hook 'TeX-mode-hook #'loc-setup-code-mode)
-(add-hook 'markdown-mode-hook #'loc-setup-code-mode)
-(add-hook 'conf-mode-hook #'loc-setup-code-mode)
-(add-hook 'log-edit-mode-hook #'loc-setup-code-mode)
-(add-hook 'prog-mode-hook #'loc-setup-code-mode)
+(add-hook 'text-mode-hook #'local-setup-text-mode)
+(add-hook 'tex-mode-hook #'local-setup-code-mode)
+(add-hook 'TeX-mode-hook #'local-setup-code-mode)
+(add-hook 'markdown-mode-hook #'local-setup-code-mode)
+(add-hook 'conf-mode-hook #'local-setup-code-mode)
+(add-hook 'log-edit-mode-hook #'local-setup-code-mode)
+(add-hook 'prog-mode-hook #'local-setup-code-mode)
 
 ;; (Mini)Buffers
 (setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
@@ -1484,8 +1487,6 @@ that allows to include other templates by their name."
 (use-package org
   :ensure t
 
-  :defer t
-
   :preface
   ;; Setup (preface)
   ;; Create and store org root directory
@@ -1521,27 +1522,34 @@ that allows to include other templates by their name."
 
   ;; Create and store org (default) notes file
   (defconst ORG_NOTES_FILE (file-name-concat ORG_DIR "notes.org")
-    "Default file for notes created with org.")
+    "Default file for notes (org).")
   (unless (file-regular-p ORG_NOTES_FILE)
     (make-empty-file ORG_NOTES_FILE t))
 
   ;; Create and store org (default) todos file
   (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
-    "Default file for todos created with org.")
-  (unless (file-regular-p ORG_TODOS_FILE)
-    (make-empty-file ORG_TODOS_FILE t))
-
-  ;; Create and store org (default) todos file
-  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
-    "Default file for todos created with org.")
+    "Default file for storing todos (org).")
   (unless (file-regular-p ORG_TODOS_FILE)
     (make-empty-file ORG_TODOS_FILE t))
 
   ;; Create and store org (default) meetings file
   (defconst ORG_MEETINGS_FILE (file-name-concat ORG_DIR "meetings.org")
-    "Default file for todos created with org.")
+    "Default file for meetings (org).")
   (unless (file-regular-p ORG_MEETINGS_FILE)
     (make-empty-file ORG_MEETINGS_FILE t))
+
+  ;; PARA
+  ;; Create and store org (default) projects file
+  (defconst ORG_PROJECTS_FILE (file-name-concat ORG_DIR "projects.org")
+    "Default file for projects (org).")
+  (unless (file-regular-p ORG_PROJECTS_FILE)
+    (make-empty-file ORG_PROJECTS_FILE t))
+
+  ;; Create and store org (default) projects file
+  (defconst ORG_AREAS_FILE (file-name-concat ORG_DIR "areas.org")
+    "Default file for areas (org).")
+  (unless (file-regular-p ORG_AREAS_FILE)
+    (make-empty-file ORG_AREAS_FILE t))
 
   (setopt org-default-notes-file ORG_NOTES_FILE)
 
@@ -1575,21 +1583,20 @@ that allows to include other templates by their name."
           org-refile-targets '((nil . (:level . 1))
                                (nil . (:tag . "rftarget"))
                                (org-agenda-files . (:level . 1))
-                               (org-agenda-files . (:tag . "rftarget"))))
+                               (org-agenda-files . (:tag . "rftarget")))
+          org-refile-use-outline-path t)
 
   (setopt org-tag-alist
-          '((:startgroup)
-            ("@work" . ?W) ("@home" . ?H) ("@online" . ?O) ("@elsewhere" . ?E)
-            (:endgroup)
-            (:startgrouptag)
-            ("Project") (:grouptags) ("{proj@.+}" . ?p)
+          '((:startgrouptag)
+            ("Project" . ?P) (:grouptags) ("{proj@.+}" . ?p)
             (:endgrouptag)
             (:startgrouptag)
-            ("Area") (:grouptags) ("{area@.+}" . ?a)
+            ("Area" . ?A) (:grouptags) ("{area@.+}" . ?a)
             (:endgrouptag)
-            ("administration" . ?A) ("event" . ?e) ("familyandfriends". ?f)
-            ("home" . ?h) ("me" . ?m) ("meeting" . ?M) ("noshow" . ?n) ("partner" . ?P)
-            ("rftarget" . ?r) ("study". ?s) ("travel" . ?t) ("work" . ?w)))
+            ("area@admin" . ?d) ("event" . ?E) ("area@faf". ?f) ("area@gov". ?f)
+            ("area@home" . ?h) ("meeting" . ?M) ("noshow" . ?N) ("area@prod" . ?p)
+            ("area@relation" . ?r) ("rftarget" . ?R) ("area@tinker" . ?t) ("area@travel" . ?T)
+            ("area@work" . ?w)))
 
   (setopt org-tags-exclude-from-inheritance '("rftarget" "noshow"))
 
@@ -1614,10 +1621,6 @@ that allows to include other templates by their name."
             ("t" "Todo"
              entry (file+headline ORG_TODOS_FILE "General Tasks")
              "* TODO [#B] %?\n:PROPERTIES:\n:Created: %U\n:END:"
-             :empty-lines 0)
-            ("d" "Todo with deadline"
-             entry (file+headline ORG_TODOS_FILE "General Tasks")
-             "* TODO [#B] %?\nDEADLINE: %^T\n:PROPERTIES:\n:Created: %U\n:END:"
              :empty-lines 0)
             ("e" "Calendar event"
              entry (file+headline ORG_CALENDAR_FILE "Events")
@@ -1668,13 +1671,23 @@ that allows to include other templates by their name."
                     ("Projects" ,(list (nerd-icons-faicon "nf-fa-folder_open" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
                     ("Study" ,(list (nerd-icons-faicon "nf-fa-book_open" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
                     ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center)
-                    ("Development" ,(list (nerd-icons-faicon "nf-fa-code" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center))))
+                    ("Development" ,(list (nerd-icons-faicon "nf-fa-code" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center)
+                    ("Areas" ,(list (nerd-icons-faicon "nf-fa-layer_group" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
+                    ("Administration" ,(list (nerd-icons-faicon "nf-fa-briefcase" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
+                    ("FriendsAndFamily" ,(list (nerd-icons-faicon "nf-fa-user_group" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center)
+                    ("Home" ,(list (nerd-icons-faicon "nf-fa-home" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
+                    ("Relationship" ,(list (nerd-icons-faicon "nf-fa-heart" :face 'nerd-icons-lred :v-adjust 0.05)) nil nil :ascent center)
+                    ("Tinker" ,(list (nerd-icons-faicon "nf-fa-screwdriver_wrench" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
+                    ("Travel" ,(list (nerd-icons-faicon "nf-fa-plane_departure" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
+                    ("Work" ,(list (nerd-icons-faicon "nf-fa-user_tie" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center))))
 
   :config
   ;; Setup and settings (after load)
   (add-to-list 'org-agenda-files ORG_CALENDAR_FILE)
   (add-to-list 'org-agenda-files ORG_TODOS_FILE)
   (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
+  (add-to-list 'org-agenda-files ORG_PROJECTS_FILE)
+  (add-to-list 'org-agenda-files ORG_AREAS_FILE)
 
   ;; Keybindings
   (keymap-unset org-read-date-minibuffer-local-map "C-v")
@@ -1714,9 +1727,40 @@ that allows to include other templates by their name."
                          :order 4)))
 
   (add-to-list 'org-agenda-custom-commands
-               '("P" "Priority view (TODOs)"
+               '("g" "Project/Area view (projects, areas; todos, notes)"
+                 ((tags "+{^proj@.*}-noshow-rftarget-TODO=\"DONE\""
+                        ((org-agenda-files `(,ORG_PROJECTS_FILE))
+                         (org-agenda-overriding-header " Projects")
+                         (org-super-agenda-groups
+                          '((:auto-outline-path t)))))
+                  (tags "+{^area@.*}-noshow-rftarget-TODO=\"DONE\""
+                        ((org-agenda-files `(,ORG_AREAS_FILE))
+                         (org-agenda-overriding-header " Areas")
+                         (org-super-agenda-groups
+                          '((:auto-outline-path t))))))
+                 ((org-agenda-compact-blocks nil))))
+  (add-to-list 'org-agenda-custom-commands
+               '("c" "Comprehensive todo view (projects, areas, misc)"
+                 ((alltodo ""
+                           ((org-agenda-files `(,ORG_PROJECTS_FILE))
+                            (org-agenda-overriding-header " Projects")
+                            (org-super-agenda-groups
+                             '((:auto-outline-path t)))))
+                  (alltodo ""
+                           ((org-agenda-files `(,ORG_AREAS_FILE))
+                            (org-agenda-overriding-header " Areas")
+                            (org-super-agenda-groups
+                             '((:auto-outline-path t)))))
+                  (alltodo ""
+                           ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
+                            (org-agenda-overriding-header "Miscellaneous")
+                            (org-super-agenda-groups
+                             '((:auto-outline-path t))))))
+                 ((org-agenda-compact-blocks nil))))
+  (add-to-list 'org-agenda-custom-commands
+               '("p" "Priority view (TODOs)"
                  alltodo ""
-                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
+                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_PROJECTS_FILE ,ORG_AREAS_FILE ,ORG_MEETINGS_FILE))
                   (org-agenda-overriding-header "TODOs, Prioritized")
                   (org-super-agenda-groups
                    '((:name "  Overdue"
@@ -1731,17 +1775,6 @@ that allows to include other templates by their name."
                             :priority< "A"
                             :order 3))))))
   (add-to-list 'org-agenda-custom-commands
-               '("c" "Category view (TODOs)"
-                 alltodo ""
-                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
-                  (org-agenda-overriding-header "TODOs, Categorized")
-                  (org-super-agenda-groups
-                   '((:name "  Projects: Research" :category "Research" :order 1)
-                     (:name "  Projects: Development" :category "Development" :order 2)
-                     (:name "  Projects: Study" :category "Study" :order 3)
-                     (:name "  Projects: Other" :category "Projects" :order 4)
-                     (:name "Miscellaneous" :anything t :order 5))))))
-  (add-to-list 'org-agenda-custom-commands
                '("o" "Organize view (TODOs)"
                  ((alltodo ""
                            ((org-agenda-overriding-header "TODOs, To Schedule")
@@ -1752,22 +1785,7 @@ that allows to include other templates by their name."
                              ((org-agenda-overriding-header "TODOs, To Tag")
                               (org-super-agenda-groups
                                '((:name "Untagged" :anything t))))))
-                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE)))))
-  (add-to-list 'org-agenda-custom-commands
-               '("p" "Project/Area view (TODOs + Notes)"
-                 tags "+{^proj@.*\\|^area@.*}-noshow-rftarget-TODO=\"DONE\""
-                 ((org-agenda-files `(,ORG_NOTES_FILE ,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
-                  (org-agenda-hide-tags-regexp nil)
-                  (org-agenda-overriding-header "Projects and Areas")
-                  (org-super-agenda-groups
-                   '((:auto-map (lambda (item)
-                                  (cond
-                                   ((string-match ":proj@\\([[:word:]]+\\)?:" item)
-                                    (concat "Project: " (match-string 1 item)))
-                                   ((string-match ":area@\\([[:word:]]+\\)?:" item)
-                                    (concat "Area: " (match-string 1 item)))
-                                   (t
-                                    "Miscellaneous"))))))))))
+                 ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_PROJECTS_FILE ,ORG_AREAS_FILE ,ORG_MEETINGS_FILE))))))
 
 (use-package org-modern
   :ensure t
@@ -2629,26 +2647,21 @@ that allows to include other templates by their name."
           doom-modeline-vcs-max-length 20))
 
 ;; Local/cross-package enhancements
-(use-package loc-pkgs
+(use-package local-pkgs
   :ensure nil ; Provided locally
-
-  :commands
-  (an-avy-action-embark-act
-   an-avy-action-embark-dwim
-   an-embark-select-vertico-previous
-   an-embark-select-vertico-next)
 
   :init
   ;; Setup and settings (before load)
   (with-eval-after-load 'avy
+    (add-to-list 'avy-dispatch-alist '(?o . an-avy-action-embark-select) t)
     (add-to-list 'avy-dispatch-alist '(?, . an-avy-action-embark-act) t)
     (add-to-list 'avy-dispatch-alist '(?. . an-avy-action-embark-dwim) t))
 
   (with-eval-after-load 'vertico
     (add-hook 'minibuffer-setup-hook (lambda ()
                                        (when (bound-and-true-p vertico--input)
-                                         (keymap-set minibuffer-local-map "C-c e p" #'an-embark-select-vertico-previous)
-                                         (keymap-set minibuffer-local-map "C-c e n" #'an-embark-select-vertico-next))))))
+                                         (keymap-set minibuffer-local-map "M-P" #'an-embark-select-vertico-previous)
+                                         (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next))))))
 
 ;; Corfu + Orderless
 (use-package corfu
