@@ -84,8 +84,7 @@
     (loaddefs-generate file (expand-file-name (concat (file-name-nondirectory (directory-file-name file)) "-autoloads.el")
                                               file))))
 
-
-;; Byte (and, if possible, natively) compile all local Elisp files (in LOCAL_DIR)
+;; Byte (and, if possible, natively) compile all local Elisp files (in LOCAL_DIR and subdirectories)
 (byte-recompile-directory LOCAL_DIR 0 nil t)
 (when (native-comp-available-p)
   (native-compile-async (list LOCAL_DIR) t))
@@ -297,11 +296,15 @@
 (keymap-global-set "C-S-<backspace>" #'backward-kill-line) ; from: kill-whole-line
 (keymap-global-set "C-S-<delete>" #'kill-line)
 (keymap-global-set "C-S-k" #'kill-whole-line)
+(keymap-global-set "M-D" #'kill--)
 
 ;; Deleting
 (keymap-global-set "M-S-SPC" #'delete-all-space)
 
 ;; Miscellaneous
+(keymap-global-set "M-t" #'exchange-word) ; from: transpose-words
+(keymap-global-set "M-T" #'exchange-word-backward)
+
 (keymap-global-set "C-;" #'comment-line)
 
 ;; Management
@@ -1065,8 +1068,8 @@ that allows to include other templates by their name."
 (use-package ace-window
   :ensure t
 
-  :bind*
-  ("M-J" . ace-window)
+  :bind
+  ("<remap> <other-window>" . ace-window)
 
   :init
   ;; Setup and settings (before load)
@@ -1090,14 +1093,7 @@ that allows to include other templates by their name."
                   (?h aw-split-window-horz "Split window horizontally")
                   (?v aw-split-window-vert "Split window vertically")
                   (?t aw-transpose-frame "Transpose frames")
-                  (?? aw-show-dispatch-help)))
-
-  :config
-  ;; Keybindings
-  ;; (keymap-global-set "C-S-w" #'other-window)
-
-  (keymap-set goto-map "w" #'ace-window)
-  (keymap-set goto-map "W" #'other-window))
+                  (?? aw-show-dispatch-help))))
 
 (use-package avy
   :ensure t
@@ -1114,10 +1110,10 @@ that allows to include other templates by their name."
                ("s" . avy-goto-subword-1)
                ("S" . avy-goto-subword-0)
                ("l" . avy-goto-line)
-               ("C-l" . avy-kill-ring-save-whole-line)
-               ("C-t" . avy-kill-ring-save-region)
-               ("M-l" . avy-kill-whole-line)
-               ("M-t" . avy-kill-region))
+               ("M-l" . avy-kill-ring-save-whole-line)
+               ("M-w" . avy-kill-ring-save-region)
+               ("C-l" . avy-kill-whole-line)
+               ("C-w" . avy-kill-region))
   (:map isearch-mode-map
         ("C-M-j" . avy-isearch))
 
@@ -1133,11 +1129,12 @@ that allows to include other templates by their name."
           avy-single-candidate-jump nil)
   (setopt avy-timeout-seconds 0.2)
   (setq-default avy-dispatch-alist '((?q . avy-action-kill-move)
-                                     (?Q . avy-action-kill-stay)
+                                     (?k . avy-action-kill-stay)
                                      (?m . avy-action-mark)
-                                     (?t . avy-action-copy)
+                                     (?w . avy-action-copy)
                                      (?y . avy-action-yank)
-                                     (?Y . avy-action-teleport)
+                                     (?Y . avy-action-yank-line)
+                                     (?t . avy-action-teleport)
                                      (?z . avy-action-zap-to-char)
                                      (?i . avy-action-ispell))))
 
@@ -1584,7 +1581,8 @@ that allows to include other templates by their name."
                                (nil . (:tag . "rftarget"))
                                (org-agenda-files . (:level . 1))
                                (org-agenda-files . (:tag . "rftarget")))
-          org-refile-use-outline-path t)
+          org-refile-use-outline-path t
+          org-outline-path-complete-in-steps nil)
 
   (setopt org-tag-alist
           '((:startgrouptag)
@@ -2649,12 +2647,28 @@ that allows to include other templates by their name."
 (use-package local-pkgs
   :ensure nil ; Provided locally
 
+  :bind
+  (:map an-avy-map
+        ("r" . an-avy-region-char)
+        ("R" . an-avy-region-timer))
+  :bind*
+  ("M-J" . an-avy-region-char)
+
   :init
   ;; Setup and settings (before load)
   (with-eval-after-load 'avy
-    (add-to-list 'avy-dispatch-alist '(?o . an-avy-action-embark-select) t)
-    (add-to-list 'avy-dispatch-alist '(?, . an-avy-action-embark-act) t)
-    (add-to-list 'avy-dispatch-alist '(?. . an-avy-action-embark-dwim) t))
+    (add-to-list 'avy-dispatch-alist '(?Q . avy-action-a-kill-line-move) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-q . avy-action-a-kill-whole-line-move) t)
+    (add-to-list 'avy-dispatch-alist '(?K . avy-action-a-kill-line-stay) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-k . avy-action-a-kill-whole-line-stay) t)
+    (add-to-list 'avy-dispatch-alist '(?W . avy-action-a-copy-line) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-w . avy-action-a-copy-whole-line) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-y . avy-action-a-yank-whole-line) t)
+    (add-to-list 'avy-dispatch-alist '(?T . avy-action-a-teleport-line) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-t . avy-action-a-teleport-whole-line) t)
+    (add-to-list 'avy-dispatch-alist '(?o . avy-action-an-embark-select) t)
+    (add-to-list 'avy-dispatch-alist '(?, . avy-action-an-embark-act) t)
+    (add-to-list 'avy-dispatch-alist '(?. . avy-action-an-embark-dwim) t))
 
   (with-eval-after-load 'vertico
     (add-hook 'minibuffer-setup-hook (lambda ()

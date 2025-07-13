@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t -*-
 ;; local-utils.el
 
-;; Exchanging
+;;; Transposing/Exchanging
 (defun exchange-word (arg)
   "Exchanges word at point or, if there is none,
 next word after point, with following (ARG > 0) or
@@ -16,7 +16,8 @@ preceding (ARG < 0) word |ARG| times."
   (interactive "p")
   (exchange-word (- arg)))
 
-;; Joining
+
+;;; Joining
 (defun join-line-stay ()
   "Calls `join-line', which see, but keeps point
 in same relative position."
@@ -39,7 +40,19 @@ in same relative position."
     (join-line-forward)))
 
 
-;; Killing
+;;; Killing
+(defun kill-whole-word (&optional arg)
+  "Kills word at point or, if no word at point, next word.
+If there is also no next word anymore, does nothing.
+With ARG, kills word |ARG| words forward (ARG > 0)
+or backward (ARG < 0). Does not move point (beyond
+the displacement that may happen from killing words)."
+  (interactive "p")
+  (save-excursion
+    (forward-word arg)
+    (when-let* ((bnds (bounds-of-thing-at-point 'word)))
+      (kill-region (car bnds) (cdr bnds)))))
+
 (defun backward-kill-line (&optional arg)
   "Kills from point to beginning of line.
 If point is at beginning of line, then
@@ -59,7 +72,7 @@ corresponding negated numeric value."
       (kill-line 0))))
 
 
-;; Deleting
+;;; Deleting
 (defun forward-delete-line (&optional arg)
   "Deletes from point to end of line.
 If point is at end of line, then delete
@@ -105,7 +118,8 @@ nothing. In exchange, the behavior is a bit more intuitive."
       (call-interactively #'delete-region)
     (delete-region (pos-bol) (pos-bol (+ arg 1)))))
 
-;; Quitting
+
+;;; Quitting
 (defun save-buffers-kill-terminal-silent ()
   "Executes `save-buffers-kill-terminal', which see,
 automatically saving all buffers without asking."
