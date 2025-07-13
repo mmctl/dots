@@ -1,7 +1,6 @@
 ;; -*- lexical-binding: t -*-
 ;; local-pkgs.el
 
-
 ;;; Avy
 (require 'avy)
 
@@ -209,8 +208,11 @@ overwrite the former). The window scope is determined by `avy-all-windows' or
       (if (not (eq (cdr begpos) (cdr endpos)))
           (user-error "Selected region points are not in the same window")
         (funcall avy-pre-action begpos)
-        (let ((action (or avy-action #'avy-action-region-copy)))
-          (funcall action (caar begpos) (caar endpos)))))))
+        (let* ((begpnt (caar begpos))
+               (endpnt (caar endpos))
+               (endpnt (if (< endpnt (point-max)) (1+ endpnt) endpnt))
+               (action (or avy-action #'avy-action-region-copy)))
+          (funcall action begpnt endpnt))))))
 
 ;;;###autoload
 (defun an-avy-region-char (&optional arg)
@@ -239,8 +241,11 @@ functionality for determining the region beginning/end."
       (if (not (eq (cdr begpos) (cdr endpos)))
           (user-error "Selected region points are not in the same window")
         (funcall avy-pre-action begpos)
-        (let ((action (or avy-action #'avy-action-region-copy)))
-          (funcall action (caar begpos) (caar endpos)))))))
+        (let* ((begpnt (caar begpos))
+               (endpnt (caar endpos))
+               (endpnt (if (< endpnt (point-max)) (1+ endpnt) endpnt))
+               (action (or avy-action #'avy-action-region-copy)))
+          (funcall action begpnt endpnt))))))
 
 
 ;;; Embark
