@@ -296,7 +296,6 @@
 (keymap-global-set "C-S-<backspace>" #'backward-kill-line) ; from: kill-whole-line
 (keymap-global-set "C-S-<delete>" #'kill-line)
 (keymap-global-set "C-S-k" #'kill-whole-line)
-(keymap-global-set "M-D" #'kill--)
 
 ;; Deleting
 (keymap-global-set "M-S-SPC" #'delete-all-space)
