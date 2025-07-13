@@ -1127,8 +1127,8 @@ that allows to include other templates by their name."
           avy-case-fold-search t
           avy-single-candidate-jump nil)
   (setopt avy-timeout-seconds 0.2)
-  (setq-default avy-dispatch-alist '((?q . avy-action-kill-move)
-                                     (?k . avy-action-kill-stay)
+  (setq-default avy-dispatch-alist '((?p . avy-action-kill-move)
+                                     (?q . avy-action-kill-stay)
                                      (?m . avy-action-mark)
                                      (?w . avy-action-copy)
                                      (?y . avy-action-yank)
@@ -2656,10 +2656,10 @@ that allows to include other templates by their name."
   :init
   ;; Setup and settings (before load)
   (with-eval-after-load 'avy
-    (add-to-list 'avy-dispatch-alist '(?Q . avy-action-a-kill-line-move) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-q . avy-action-a-kill-whole-line-move) t)
-    (add-to-list 'avy-dispatch-alist '(?K . avy-action-a-kill-line-stay) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-k . avy-action-a-kill-whole-line-stay) t)
+    (add-to-list 'avy-dispatch-alist '(?P . avy-action-a-kill-line-move) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-p . avy-action-a-kill-whole-line-move) t)
+    (add-to-list 'avy-dispatch-alist '(?Q . avy-action-a-kill-line-stay) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-q . avy-action-a-kill-whole-line-stay) t)
     (add-to-list 'avy-dispatch-alist '(?W . avy-action-a-copy-line) t)
     (add-to-list 'avy-dispatch-alist '(?\C-w . avy-action-a-copy-whole-line) t)
     (add-to-list 'avy-dispatch-alist '(?\C-y . avy-action-a-yank-whole-line) t)

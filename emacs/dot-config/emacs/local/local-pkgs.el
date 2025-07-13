@@ -113,7 +113,7 @@
 
 ;; Region-based extension
 (defvar an-avy-region-dispatch-alist
-  '((?k . avy-action-region-kill)
+  '((?q . avy-action-region-kill)
     (?m . avy-action-region-mark)
     (?t . avy-action-region-teleport)
     (?y . avy-action-region-yank)
@@ -121,16 +121,18 @@
   "Analog of `avy-dispatch-alist' for region-based actions.")
 
 (defun avy-action-region-copy (beg end)
-  "Copies region defined by BEG and END, and pops
-an avy mark afterward (using `avy-pop-mark')."
+  "Copies region defined by BEG and END, returning
+to starting point afterward."
   (copy-region-as-kill beg end)
-  (avy-pop-mark))
+  (select-window
+     (cdr (ring-ref avy-ring 0))))
 
 (defun avy-action-region-kill (beg end)
-  "Kills region defined by BEG and END, and pops
-an avy mark afterward (using `avy-pop-mark')."
+  "Kills region defined by BEG and END, returning
+to starting point afterward."
   (kill-region beg end)
-  (avy-pop-mark))
+  (select-window
+     (cdr (ring-ref avy-ring 0))))
 
 (defun avy-action-region-mark (beg end)
   "Marks region defined by BEG and END, pushing current mark
