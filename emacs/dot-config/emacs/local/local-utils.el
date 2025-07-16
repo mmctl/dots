@@ -40,17 +40,58 @@ in same relative position."
     (join-line-forward)))
 
 
+;;; Copying
+(defun kill-ring-save-line (&optional arg)
+  "Copies line at point. Calling this once copies the line
+from indentation up to (but not including) the trailing whitespace
+or newline. Calling this twice (or more) in a row copies
+the whole line, including indentation, trailing whitespace, and newline.
+With ARG, moves |ARG| lines forward (ARG > 0) or backward (ARG < 0),
+then performs its action for that line. Leaves point as is."
+  (interactive "P")
+  (save-excursion
+    (forward-line (or arg 0))
+    (when-let* ((bnds (if (eq last-command this-command)
+                          (bounds-of-thing-at-point 'line)
+                        (cons (progn (back-to-indentation) (point))
+                              (progn (end-of-line)
+                                     (re-search-backward "[^[:blank:]]" (pos-bol) t)
+                                     (1+ (point)))))))
+      (kill-ring-save (car bnds) (cdr bnds)))))
+
+
+;;; Yanking
+(defun yank-whole-line (&optional arg)
+  "Yanks (in place) whole line at point.
+With ARG, moves |ARG| lines forward (ARG > 0) or backward (ARG < 0),
+then copies that line. Does not move point."
+  (interactive "P")
+  (kill-ring-save-whole-line arg)
+  (yank))
+
+
 ;;; Killing
 (defun kill-whole-word (&optional arg)
   "Kills word at point or, if no word at point, next word.
-If there is also no next word anymore, does nothing.
+If there is also no next word, does nothing. With ARG, moves |ARG| words forward
+(ARG > 0) or backward (ARG < 0), then kills that word. Does not move
+point (beyond the displacement that may happen from killing words)."
+  (interactive "p")
+  (save-excursion
+    (forward-word arg)
+    (when-let* ((bnds (bounds-of-thing-at-point 'word)))
+      (kill-region (car bnds) (cdr bnds)))))
+
+(defun kill-whole-symbol (&optional arg)
+  "Kills symbol at point or, if no symbol at point, next symbol.
+If there is also no next symbol, does nothing.
 With ARG, kills word |ARG| words forward (ARG > 0)
 or backward (ARG < 0). Does not move point (beyond
 the displacement that may happen from killing words)."
   (interactive "p")
   (save-excursion
-    (forward-word arg)
-    (when-let* ((bnds (bounds-of-thing-at-point 'word)))
+    (forward-symbol arg)
+    (when-let* ((bnds (bounds-of-thing-at-point 'symbol)))
       (kill-region (car bnds) (cdr bnds)))))
 
 (defun backward-kill-line (&optional arg)

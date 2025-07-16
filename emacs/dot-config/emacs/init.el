@@ -292,7 +292,12 @@
 (keymap-global-set "M-h" #'mark-word) ; from: mark-paragraph
 
 ;; Manipulation
-;; Copying
+(keymap-global-set "M-W" #'kill-ring-save-line)
+
+(keymap-global-set "C-S-y" #'yank-whole-line)
+
+(keymap-global-set "M-D" #'kill-whole-symbol)
+
 (keymap-global-set "C-S-<backspace>" #'backward-kill-line) ; from: kill-whole-line
 (keymap-global-set "C-S-<delete>" #'kill-line)
 (keymap-global-set "C-S-k" #'kill-whole-line)
@@ -501,7 +506,8 @@
           dired-auto-revert-buffer #'dired-directory-changed-p
           dired-recursive-deletes 'top
           dired-switches-in-mode-line 'as-is
-          dired-recursive-copies 'top)
+          dired-recursive-copies 'top
+          dired-kill-when-opening-new-dired-buffer t)
 
   :config
   ;; Keybindings
@@ -1127,7 +1133,7 @@ that allows to include other templates by their name."
           avy-case-fold-search t
           avy-single-candidate-jump nil)
   (setopt avy-timeout-seconds 0.2)
-  (setq-default avy-dispatch-alist '((?p . avy-action-kill-move)
+  (setq-default avy-dispatch-alist '((?x . avy-action-kill-move)
                                      (?q . avy-action-kill-stay)
                                      (?m . avy-action-mark)
                                      (?w . avy-action-copy)
@@ -2418,6 +2424,10 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
   (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix))
 
+(use-package easycrypt-ext-avy
+  :load-path "~/projects/emacs-dev/easycrypt-ext/"
+
+  :defer t)
 
 ;; Themes
 ;; Doom-themes (general)
@@ -2656,8 +2666,8 @@ that allows to include other templates by their name."
   :init
   ;; Setup and settings (before load)
   (with-eval-after-load 'avy
-    (add-to-list 'avy-dispatch-alist '(?P . avy-action-a-kill-line-move) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-p . avy-action-a-kill-whole-line-move) t)
+    (add-to-list 'avy-dispatch-alist '(?X . avy-action-a-kill-line-move) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-x . avy-action-a-kill-whole-line-move) t)
     (add-to-list 'avy-dispatch-alist '(?Q . avy-action-a-kill-line-stay) t)
     (add-to-list 'avy-dispatch-alist '(?\C-q . avy-action-a-kill-whole-line-stay) t)
     (add-to-list 'avy-dispatch-alist '(?W . avy-action-a-copy-line) t)

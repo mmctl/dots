@@ -31,13 +31,9 @@
 ;;;###autoload
 (defun avy-action-a-kill-whole-line-move (pt)
   "Executes `kill-whole-line' at PT (selected with Avy), leaving point."
-  (unwind-protect
-      (progn
-        (goto-char pt)
-        (kill-whole-line))
-    (select-window
-     (cdr (ring-ref avy-ring 0))))
-  t)
+  (goto-char pt)
+  (kill-whole-line)
+  (point))
 
 ;;;###autoload
 (defun avy-action-a-copy-line (pt)
