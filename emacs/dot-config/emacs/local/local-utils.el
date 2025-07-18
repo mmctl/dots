@@ -1,6 +1,43 @@
 ;; -*- lexical-binding: t -*-
 ;; local-utils.el
 
+;;; Movement
+(defun move-beginning-of-line-indentation (&optional arg)
+  (interactive "^P")
+  (let ((orig-point (point)))
+    (forward-to-indentation (or arg 0))
+    (when (= (point) orig-point)
+      (move-beginning-of-line nil))))
+
+(defun move-end-of-line-whitespace (&optional arg)
+  (interactive "^P")
+  (let ((orig-point (point)))
+    (move-end-of-line arg)
+    (re-search-backward "[^[:blank:]]" (line-beginning-position) t)
+    (forward-char)
+    (when (and show-trailing-whitespace (= (point) orig-point))
+      (move-end-of-line nil))))
+
+;;; Duplication
+(defun duplicate-line-or-region (&optional arg)
+  (interactive "p")
+  (let* ((pntbeg (= (point) (region-beginning)))
+         (rgn (if (use-region-p)
+                  (buffer-substring-no-properties
+                   (save-excursion
+                     (goto-char (region-beginning))
+                     (line-beginning-position (when (and pntbeg (bolp)) 2)))
+                   (save-excursion
+                     (goto-char (region-end))
+                     (line-end-position (when (and (not pntbeg) (bolp) 0)))))
+                (buffer-substring-no-properties (line-beginning-position)
+                                                (line-end-position)))))
+    (dotimes (i arg)
+      (end-of-line)
+      (newline)
+      (insert rgn))))
+
+
 ;;; Transposing/Exchanging
 (defun exchange-word (arg)
   "Exchanges word at point or, if there is none,
@@ -50,14 +87,20 @@ With ARG, moves |ARG| lines forward (ARG > 0) or backward (ARG < 0),
 then performs its action for that line. Leaves point as is."
   (interactive "P")
   (save-excursion
-    (forward-line (or arg 0))
-    (when-let* ((bnds (if (eq last-command this-command)
-                          (bounds-of-thing-at-point 'line)
-                        (cons (progn (back-to-indentation) (point))
-                              (progn (end-of-line)
-                                     (re-search-backward "[^[:blank:]]" (pos-bol) t)
-                                     (1+ (point)))))))
-      (kill-ring-save (car bnds) (cdr bnds)))))
+    (when arg
+      (forward-line (prefix-numeric-value arg)))
+    (let* ((rep (eq last-command this-command))
+           (bnds (if rep
+                     (bounds-of-thing-at-point 'line)
+                   (cons (progn (back-to-indentation) (point))
+                         (progn (end-of-line)
+                                (re-search-backward "[^[:blank:]]" (line-beginning-position) t)
+                                (1+ (point)))))))
+      (when bnds
+        (kill-ring-save (car bnds) (cdr bnds))
+        (message "Copied %s%s"
+                 (if rep "entire line (content + whitespace)" "line (or field) content")
+                 (if arg (format " at %s" arg) ""))))))
 
 
 ;;; Yanking

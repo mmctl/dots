@@ -684,6 +684,8 @@
         ("V" . visual-replace-regexp)
         ("w" . visual-replace-word-at-point)
         ("." . visual-replace-thing-at-point))
+  (:map isearch-mode-map
+        ("M-R" . visual-replace-from-isearch))
 
   :init
   ;; Setup and settings
@@ -1133,6 +1135,7 @@ that allows to include other templates by their name."
           avy-case-fold-search t
           avy-single-candidate-jump nil)
   (setopt avy-timeout-seconds 0.2)
+
   (setq-default avy-dispatch-alist '((?x . avy-action-kill-move)
                                      (?q . avy-action-kill-stay)
                                      (?m . avy-action-mark)
@@ -2369,11 +2372,10 @@ that allows to include other templates by their name."
 
 ;; EasyCrypt (extension)
 (use-package easycrypt-ext
-  :load-path "~/projects/emacs-dev/easycrypt-ext/"
-  ;; :ensure t
-  ;; :vc (:url "https://github.com/mmctl/easycrypt-ext"
-  ;;           :branch "main"
-  ;;           :rev :newest)
+  :ensure t
+  :vc (:url "https://github.com/mmctl/easycrypt-ext"
+            :branch "main"
+            :rev :newest)
 
   :after proof
 
@@ -2425,9 +2427,41 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix))
 
 (use-package easycrypt-ext-avy
-  :load-path "~/projects/emacs-dev/easycrypt-ext/"
+  :ensure nil
 
-  :defer t)
+  :defer t
+
+  :init
+  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown (mode)
+    "Adds (resp. removes) EasyCrypt Ext Avy dispatch actions to the list upon
+activating (resp. deactivating) MODE."
+    (with-eval-after-load 'avy
+      (let ((avy-ece-dal '((?= . avy-action-ece-proofshell-print-stay)
+                           (?+ . avy-action-ece-proofshell-print-move)
+                           (?/ . avy-action-ece-proofshell-search-stay)
+                           (?\\ . avy-action-ece-proofshell-search-move)
+                           (?- . avy-action-ece-proofshell-locate-stay)
+                           (?_ . avy-action-ece-proofshell-locate-move))))
+        (if (symbol-value mode)
+            (setq-local avy-dispatch-alist (append avy-dispatch-alist avy-ece-dal))
+          (when (local-variable-p 'avy-dispatch-alist)
+            (setq-local avy-dispatch-alist (delq nil
+                                                 (mapcar #'(lambda (dpa)
+                                                             (unless (member dpa avy-ece-dal) dpa))
+                                                         avy-dispatch-alist)))
+            (when (equal avy-dispatch-alist (default-value 'avy-dispatch-alist))
+              (kill-local-variable 'avy-dispatch-alist)))))))
+  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode ()
+    (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-mode))
+  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode ()
+    (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-goals-mode))
+  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode ()
+    (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-response-mode))
+
+  ;; Hooks
+  (add-hook 'easycrypt-ext-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode)
+  (add-hook 'easycrypt-ext-goals-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode)
+  (add-hook 'easycrypt-ext-response-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode))
 
 ;; Themes
 ;; Doom-themes (general)
