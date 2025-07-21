@@ -285,6 +285,10 @@
 (keymap-global-set "<home>" #'beginning-of-buffer) ; from: beginning-of-line
 (keymap-global-set "<end>" #'end-of-buffer)        ; from: end-of-line
 
+(keymap-global-set "C-a" #'move-beginning-of-line-or-indentation)
+(keymap-global-set "C-e" #'move-end-of-line-or-whitespace)
+(keymap-global-set "M-b" #'duplicate-line-or-lines-in-region) ; from: backward-word
+
 (keymap-global-set "M-m" #'pop-to-mark-command) ; from: back-to-indentation
 (keymap-global-set "M-M" #'pop-global-mark)
 
@@ -300,7 +304,7 @@
 
 (keymap-global-set "C-S-<backspace>" #'backward-kill-line) ; from: kill-whole-line
 (keymap-global-set "C-S-<delete>" #'kill-line)
-(keymap-global-set "C-S-k" #'kill-whole-line)
+(keymap-global-set "C-S-k" #'kill-whole-line-back-to-indentation)
 
 ;; Deleting
 (keymap-global-set "M-S-SPC" #'delete-all-space)
@@ -404,11 +408,16 @@
 (defvar-keymap a-find-map
   :doc "Keymap for finding (i.e., searching, but more meta)"
   :prefix 'a-find-map-prefix
-  "d" #'dired-jump
-  "D" #'find-dired
+  "d" #'dired
+  "D" #'dired-jump
+  "C-d" #'find-dired
+  "M-d" #'dired-as-root
+  "C-S-d" #'dired-default-directory-as-root
   "f" #'find-file
   "F" #'find-file-other-window
   "C-f" #'find-file-other-frame
+  "M-f" #'find-file-as-root
+  "C-S-f" #'reopen-file-as-root
   "l" #'find-library
   "L" #'find-library-other-window
   "C-l" #'find-library-other-frame
@@ -425,8 +434,10 @@
 (keymap-global-set "C-x f" #'find-file)
 (keymap-global-set "C-x F" #'find-file-other-window)
 (keymap-global-set "C-x C-f" #'find-file-other-frame)
+(keymap-global-set "C-x M-f" #'find-file-as-root)
 (keymap-global-set "C-x C-r" #'recentf-open)
 (keymap-global-set "C-S-d" #'dired-jump)
+(keymap-global-set "C-M-S-d" #'dired-default-directory-as-root)
 
 (keymap-global-set "C-S-r" #'isearch-backward-regexp)
 (keymap-global-set "C-S-s" #'isearch-forward-regexp)
@@ -1027,51 +1038,6 @@ that allows to include other templates by their name."
   ("M-u" . move-text-up) ; from: upcase-word
   ("M-U" . move-text-down))
 
-(use-package crux
-  :ensure t
-  :pin melpa
-
-  :bind
-  ("<remap> <move-beginning-of-line>" . crux-move-beginning-of-line)
-  ("<remap> <kill-whole-line>" . crux-kill-whole-line)
-  ("M-b" . crux-duplicate-current-line-or-region) ; from: backward-word
-  (:prefix-map a-crux-map :prefix "C-c x" :prefix-docstring "Keymap for crux actions (global)"
-               ("RET" . crux-smart-open-line)
-               ("<return>" . "RET")
-               ("S-<return>" . crux-smart-open-line-above)
-               ("c" . crux-copy-file-preserve-attributes)
-               ("C" . crux-cleanup-buffer-or-region)
-               ("d" . crux-duplicate-current-line-or-region)
-               ("D" . crux-duplicate-and-comment-current-line-or-region)
-               ("e" . crux-eval-and-replace)
-               ("f f" . crux-recentf-find-file)
-               ("f d" . crux-recentf-find-directory)
-               ("f i" . crux-find-user-init-file)
-               ("f c" . crux-find-user-custom-file)
-               ("f s" . crux-find-shell-init-file)
-               ("f l" . crux-find-current-directory-dir-locals-file)
-               ("F" . crux-recentf-find-file)
-               ("i" . crux-indent-rigidly-and-copy-to-clipboard)
-               ("j" . crux-top-join-line)
-               ("J" . crux-kill-and-join-forward)
-               ("k" . crux-delete-file-and-buffer)
-               ("l" . crux-kill-whole-line)
-               ("r" . crux-rename-file-and-buffer)
-               ("s" . crux-sudo-edit)
-               ("u" . crux-view-url)
-               ("x" . crux-visit-term-buffer)
-               ("X" . crux-visit-shell-buffer)
-               ("C-u" . crux-upcase-region)
-               ("C-l" . crux-downcase-region)
-               ("C-c" . crux-captialize-region))
-  (:map a-buffer-map
-        ("c" . crux-create-scratch-buffer)
-        ("d" . crux-kill-buffer-truename)
-        ("K" . crux-kill-other-buffers)
-        ("h" . crux-switch-to-previous-buffer))
-  (:map a-window-map
-        ("z" . crux-transpose-windows)))
-
 (use-package ace-window
   :ensure t
 
@@ -1212,12 +1178,10 @@ that allows to include other templates by their name."
         ("M-g" . consult-buffer-other-frame) ; from: switch-to-buffer-other-frame
         ("p" . consult-project-buffer)) ; from: project-switch-to-buffer
   (:map a-find-map
-        ("C-f" . consult-fd)
-        ("M-f" . consult-find)
-        ("g" . consult-grep)
-        ("G" . consult-git-grep)
-        ("p" . consult-locate)
-        ("r" . consult-recent-file))
+        ("c" . consult-fd)
+        ("C" . consult-find)
+        ("C-c" . consult-recent-file)
+        ("M-c" . consult-locate))
 
   :init
   ;; Setup and settings (before load)
@@ -1561,16 +1525,16 @@ that allows to include other templates by their name."
   (setopt org-replace-disputed-keys t
           org-disputed-keys '(([(shift up)] . [(meta p)])
                               ([(shift down)] . [(meta n)])
-                              ([(shift left)] . [(meta b)])
-                              ([(shift right)] . [(meta f)])
+                              ([(shift left)] . [(meta -)])
+                              ([(shift right)] . [(meta +)])
                               ([(control shift up)]	. [(control shift p)])
                               ([(control shift down)]	. [(control shift n)])
-                              ([(control shift left)]	. [(control shift b)])
-                              ([(control shift right)] . [(control shift f)])
+                              ([(control shift left)]	. [(control shift -)])
+                              ([(control shift right)] . [(control shift +)])
                               ([(meta shift up)]	. [(meta shift p)])
                               ([(meta shift down)]	. [(meta shift n)])
-                              ([(meta shift left)]	. [(meta shift b)])
-                              ([(meta shift right)] . [(meta shift f)])))
+                              ([(meta shift left)]	. [(meta shift -)])
+                              ([(meta shift right)]	. [(meta shift +)])))
 
   (setopt org-return-follows-link t)
   (setopt org-support-shift-select t)
@@ -2379,9 +2343,10 @@ that allows to include other templates by their name."
 
   :after proof
 
-  :hook ((easycrypt-mode . easycrypt-ext-mode)
-         (easycrypt-goals-mode . easycrypt-ext-goals-mode)
-         (easycrypt-response-mode . easycrypt-ext-response-mode))
+  :hook
+  (easycrypt-mode . easycrypt-ext-mode)
+  (easycrypt-goals-mode . easycrypt-ext-goals-mode)
+  (easycrypt-response-mode . easycrypt-ext-response-mode)
 
   :init
   ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
@@ -2427,41 +2392,44 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix))
 
 (use-package easycrypt-ext-avy
-  :ensure nil
+  :ensure nil ; Provided by `easycrypt-ext'
 
-  :defer t
+  :hook
+  (easycrypt-ext-mode . easycrypt-ext-mode-avy-setup)
+  (easycrypt-ext-goals-mode . easycrypt-ext-goals-mode-avy-setup)
+  (easycrypt-ext-response-mode . easycrypt-ext-response-mode-avy-setup))
 
-  :init
-  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown (mode)
-    "Adds (resp. removes) EasyCrypt Ext Avy dispatch actions to the list upon
-activating (resp. deactivating) MODE."
-    (with-eval-after-load 'avy
-      (let ((avy-ece-dal '((?= . avy-action-ece-proofshell-print-stay)
-                           (?+ . avy-action-ece-proofshell-print-move)
-                           (?/ . avy-action-ece-proofshell-search-stay)
-                           (?\\ . avy-action-ece-proofshell-search-move)
-                           (?- . avy-action-ece-proofshell-locate-stay)
-                           (?_ . avy-action-ece-proofshell-locate-move))))
-        (if (symbol-value mode)
-            (setq-local avy-dispatch-alist (append avy-dispatch-alist avy-ece-dal))
-          (when (local-variable-p 'avy-dispatch-alist)
-            (setq-local avy-dispatch-alist (delq nil
-                                                 (mapcar #'(lambda (dpa)
-                                                             (unless (member dpa avy-ece-dal) dpa))
-                                                         avy-dispatch-alist)))
-            (when (equal avy-dispatch-alist (default-value 'avy-dispatch-alist))
-              (kill-local-variable 'avy-dispatch-alist)))))))
-  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode ()
-    (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-mode))
-  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode ()
-    (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-goals-mode))
-  (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode ()
-    (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-response-mode))
+;;   :init
+;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown (mode)
+;;     "Adds (resp. removes) EasyCrypt Ext Avy dispatch actions to the list upon
+;; activating (resp. deactivating) MODE."
+;;     (with-eval-after-load 'avy
+;;       (let ((avy-ece-dal '((?= . avy-action-ece-proofshell-print-stay)
+;;                            (?+ . avy-action-ece-proofshell-print-move)
+;;                            (?/ . avy-action-ece-proofshell-search-stay)
+;;                            (?\\ . avy-action-ece-proofshell-search-move)
+;;                            (?- . avy-action-ece-proofshell-locate-stay)
+;;                            (?_ . avy-action-ece-proofshell-locate-move))))
+;;         (if (symbol-value mode)
+;;             (setq-local avy-dispatch-alist (append avy-dispatch-alist avy-ece-dal))
+;;           (when (local-variable-p 'avy-dispatch-alist)
+;;             (setq-local avy-dispatch-alist (delq nil
+;;                                                  (mapcar #'(lambda (dpa)
+;;                                                              (unless (member dpa avy-ece-dal) dpa))
+;;                                                          avy-dispatch-alist)))
+;;             (when (equal avy-dispatch-alist (default-value 'avy-dispatch-alist))
+;;               (kill-local-variable 'avy-dispatch-alist)))))))
+;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode ()
+;;     (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-mode))
+;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode ()
+;;     (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-goals-mode))
+;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode ()
+;;     (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-response-mode))
 
-  ;; Hooks
-  (add-hook 'easycrypt-ext-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode)
-  (add-hook 'easycrypt-ext-goals-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode)
-  (add-hook 'easycrypt-ext-response-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode))
+;;   ;; Hooks
+;;   (add-hook 'easycrypt-ext-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode)
+;;   (add-hook 'easycrypt-ext-goals-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode)
+;;   (add-hook 'easycrypt-ext-response-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode))
 
 ;; Themes
 ;; Doom-themes (general)
@@ -2692,10 +2660,10 @@ activating (resp. deactivating) MODE."
 
   :bind
   (:map an-avy-map
-        ("r" . an-avy-region-char)
+        ("r" . an-avy-region-char-1)
         ("R" . an-avy-region-timer))
   :bind*
-  ("M-J" . an-avy-region-char)
+  ("M-J" . an-avy-region-timer)
 
   :init
   ;; Setup and settings (before load)

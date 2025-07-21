@@ -2,40 +2,55 @@
 ;; local-utils.el
 
 ;;; Movement
-(defun move-beginning-of-line-indentation (&optional arg)
+(defun move-beginning-of-line-or-indentation (&optional arg)
+  "Moves point to indentation or, if point is already there, to beginning of line.
+With ARG, moves to indentation ARG lines forward."
   (interactive "^P")
-  (let ((orig-point (point)))
-    (forward-to-indentation (or arg 0))
-    (when (= (point) orig-point)
-      (move-beginning-of-line nil))))
+  (if arg
+      (forward-to-indentation (prefix-numeric-value arg))
+    (let ((orig-point (point)))
+      (back-to-indentation)
+      (when (= (point) orig-point)
+        (move-beginning-of-line nil)))))
 
-(defun move-end-of-line-whitespace (&optional arg)
+(defun move-end-of-line-or-whitespace (&optional arg)
+  "Moves point to beginning of whitespace at the end of the line or,
+if point is already there and `show-trailing-whitespace' is non-nil,
+to (actual) end of line. With ARG, moves to end of line
+ARG - 1 lines forward."
   (interactive "^P")
   (let ((orig-point (point)))
     (move-end-of-line arg)
     (re-search-backward "[^[:blank:]]" (line-beginning-position) t)
     (forward-char)
-    (when (and show-trailing-whitespace (= (point) orig-point))
+    (when (and (null arg) show-trailing-whitespace (= (point) orig-point))
       (move-end-of-line nil))))
 
+
 ;;; Duplication
-(defun duplicate-line-or-region (&optional arg)
+(defun duplicate-line-or-lines-in-region (&optional arg)
+  "Duplicates current line or, when region is active, lines in current region.
+With ARG, duplicates |ARG| times forward (ARG > 0), putting point at
+end of final duplication, or backward (ARG < 0), putting point at
+beginning of final duplication."
   (interactive "p")
-  (let* ((pntbeg (= (point) (region-beginning)))
-         (rgn (if (use-region-p)
-                  (buffer-substring-no-properties
-                   (save-excursion
-                     (goto-char (region-beginning))
-                     (line-beginning-position (when (and pntbeg (bolp)) 2)))
-                   (save-excursion
-                     (goto-char (region-end))
-                     (line-end-position (when (and (not pntbeg) (bolp) 0)))))
-                (buffer-substring-no-properties (line-beginning-position)
-                                                (line-end-position)))))
-    (dotimes (i arg)
-      (end-of-line)
+  (pcase-let* ((neg (< arg 0))
+               (`(,beg . ,end) (if (use-region-p)
+                                   (cons (save-excursion
+                                           (goto-char (region-beginning))
+                                           (line-beginning-position))
+                                         (save-excursion
+                                           (goto-char (region-end))
+                                           (line-end-position)))
+                                 (cons (line-beginning-position)
+                                       (line-end-position))))
+               (content (buffer-substring-no-properties beg end)))
+    (goto-char (if neg beg end))
+    (dotimes (_ (abs arg))
       (newline)
-      (insert rgn))))
+      (when neg (beginning-of-line 0))
+      (insert content)
+      (when neg (beginning-of-line)))))
 
 
 ;;; Transposing/Exchanging
@@ -55,26 +70,30 @@ preceding (ARG < 0) word |ARG| times."
 
 
 ;;; Joining
-(defun join-line-stay ()
-  "Calls `join-line', which see, but keeps point
-in same relative position."
-  (interactive)
+(defun join-line-stay (&optional arg)
+  "Calls `join-line' |ARG| times, which see, but keeps point
+in same relative position. If ARG is negative, calls
+`join-line' with a prefix argument."
+  (interactive "^p")
   (save-excursion
-    (join-line)))
+    (dotimes (_ (abs arg))
+      (join-line (< arg 0)))))
 
-(defun join-line-forward ()
-  "Joins current line to the following line and
-fix up whitespace at join. Simply calls `join-line'
-with a prefix argument internally, which see."
-  (interactive)
-  (join-line t))
+(defun join-line-forward (&optional arg)
+  "Joins current line to the following |ARG| lines and
+fix up whitespace at join. If ARG is negative, joins
+with the preceding |ARG| lines instead. Simply calls `join-line'
+internally, which see."
+  (interactive "^p")
+  (dotimes (_ (abs arg))
+      (join-line (<= 0 arg))))
 
-(defun join-line-forward-stay ()
-  "Calls `join-line-forward', which see, but keeps point
+(defun join-line-forward-stay (&optional arg)
+  "Calls `join-line-forward' with ARG, which see, but keeps point
 in same relative position."
-  (interactive)
+  (interactive "^p")
   (save-excursion
-    (join-line-forward)))
+    (join-line-forward arg)))
 
 
 ;;; Copying
@@ -105,11 +124,11 @@ then performs its action for that line. Leaves point as is."
 
 ;;; Yanking
 (defun yank-whole-line (&optional arg)
-  "Yanks (in place) whole line at point.
+  "Yanks (in place) line at point.
 With ARG, moves |ARG| lines forward (ARG > 0) or backward (ARG < 0),
 then copies that line. Does not move point."
   (interactive "P")
-  (kill-ring-save-whole-line arg)
+  (kill-ring-save-line arg)
   (yank))
 
 
@@ -155,6 +174,13 @@ corresponding negated numeric value."
             (delete-horizontal-space t)))
       (kill-line 0))))
 
+(defun kill-whole-line-back-to-indentation (&optional arg)
+  "Kills whole line using `kill-whole-line' and moves back
+to indentation using `back-to-indentation'. Passes ARG
+directly to `kill-whole-line'"
+  (interactive "p")
+  (kill-whole-line arg)
+  (back-to-indentation))
 
 ;;; Deleting
 (defun forward-delete-line (&optional arg)
@@ -201,6 +227,63 @@ nothing. In exchange, the behavior is a bit more intuitive."
   (if (use-region-p)
       (call-interactively #'delete-region)
     (delete-region (pos-bol) (pos-bol (+ arg 1)))))
+
+
+;;; Files and directories
+(defun find-file-as-root (filename &optional arg)
+  "Find FILENAME as root using `find-file', taking remote
+connections into account. With ARG, use `find-alternate-file' instead."
+  (interactive
+   (list (expand-file-name
+          (read-file-name (format-prompt "Find file as root"
+                                         buffer-file-name)
+                          nil
+                          buffer-file-name
+                          'confirm))
+         current-prefix-arg))
+  (let* ((remote-method (file-remote-p default-directory 'method))
+         (remote-host (file-remote-p default-directory 'host))
+         (remote-localname (file-remote-p filename 'localname))
+         (fileid (format "/%s:root@%s:%s"
+                         (or remote-method "sudo")
+                         (or remote-host "localhost")
+                         (or remote-localname filename))))
+    (if arg
+        (find-alternate-file fileid)
+      (find-file fileid))))
+
+(defun reopen-file-as-root ()
+  "Reopen file visited by current buffer
+as root using `find-alternate-file'."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Current buffer not visiting a file"))
+  (find-file-as-root buffer-file-name t))
+
+(defun dired-as-root (dirname)
+  "Find DIRNAME as root using `dired', taking remote
+connections into account."
+  (interactive
+   (list (expand-file-name
+          (read-directory-name (format-prompt "Find directory as root"
+                                              default-directory)
+                               nil
+                               default-directory
+                               'confirm))))
+   (let* ((remote-method (file-remote-p default-directory 'method))
+          (remote-host (file-remote-p default-directory 'host))
+          (remote-localname (file-remote-p dirname 'localname))
+          (dirid (format "/%s:root@%s:%s"
+                         (or remote-method "sudo")
+                         (or remote-host "localhost")
+                         (or remote-localname dirname))))
+     (dired dirid)))
+
+(defun dired-default-directory-as-root ()
+  "Open directory (specifically, `default-directory')
+of current buffer as root using `dired'."
+  (interactive)
+  (dired-as-root (expand-file-name default-directory)))
 
 
 ;;; Quitting

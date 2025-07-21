@@ -174,74 +174,84 @@ but simply returns the entire chosen position (including window)."
      (t
       res))))
 
-;;;###autoload
-(defun an-avy-region-timer (&optional arg)
-  "Acts on the region defined by the positions determined through
-Avy's timer-based reading functionality. `avy-dispatch-alist' is set
-to `an-avy-region-dispatch-alist', enabling the selection of the
-dispatch actions contained therein. (You can select a dispatch action
-during the reading of both region end-points, but the latter will
-overwrite the former). The window scope is determined by `avy-all-windows' or
-`avy-all-windows-alt' when ARG is non-nil."
+(defun an-avy-region-validate-position (position)
+  "Checks whether POSITION is valid for use with
+Avy region functions, meaning it is a list of the form
+((BEG . END) WINDOW), where BEG and END are numbers
+and WINDOW is a window."
+  (or (and position
+           (listp position)
+           (numberp (caar position))
+           (numberp (cdar position))
+           (windowp (cdr position)))
+      (user-error "Invalid position: %s" position)))
+
+(defun an-avy-region-position-reader-regex (regex)
+  "Reads region position based on user input, using REGEX to
+search for candidates."
+  (let ((position (an-avy-process-noaction (avy--regex-candidates regex))))
+    (when (an-avy-region-validate-position position)
+      position)))
+
+(defun an-avy-region-position-reader-timer ()
+  "Reads region position based on user input, using Avy's timer functionality to
+search for candidates,  akin to `avy-goto-char-timer'."
+  (let ((position (an-avy-process-noaction (avy--read-candidates))))
+    (when (an-avy-region-validate-position position)
+      position)))
+
+(defun an-avy-region-reader-char-1 ()
+  "Defines region based on user input, using
+a single character to search for candidates
+for each position, akin to `avy-goto-char-1'."
   (interactive)
-  (avy-with an-avy-region-timer
-    (when-let* ((avy-all-windows (if arg avy-all-windows-alt avy-all-windows))
-                (avy-dispatch-alist an-avy-region-dispatch-alist)
-                (begpos (an-avy-process-noaction (avy--read-candidates)))
-                ((if (or (null begpos)
-                         (not (listp begpos))
-                         (not (numberp (caar begpos)))
-                         (not (windowp (cdr begpos))))
-                     (user-error "Failed to select beginning of region")
-                   t))
-                (endpos (an-avy-process-noaction (avy--read-candidates)))
-                ((if (or (null endpos)
-                         (not (listp endpos))
-                         (not (numberp (caar endpos)))
-                         (not (windowp (cdr endpos))))
-                     (user-error "Failed to select end of region")
-                   t)))
-      (if (not (eq (cdr begpos) (cdr endpos)))
-          (user-error "Selected region points are not in the same window")
-        (funcall avy-pre-action begpos)
-        (let* ((begpnt (caar begpos))
-               (endpnt (caar endpos))
-               (endpnt (if (< endpnt (point-max)) (1+ endpnt) endpnt))
-               (action (or avy-action #'avy-action-region-copy)))
-          (funcall action begpnt endpnt))))))
+  (let* ((begch (read-char (format-prompt "char (region begin)" "")))
+         (begpos (an-avy-region-position-reader-regex (regexp-quote (string begch))))
+         (endch (read-char (format-prompt "char (region end)" "")))
+         (endpos (an-avy-region-position-reader-regex (regexp-quote (string endch)))))
+    (cons begpos endpos)))
+
+(defun an-avy-region-reader-timer ()
+  "Defines region based on user input, sing Avy's timer functionality to
+search for candidates for each position, akin to `avy-goto-char-timer'."
+  (interactive)
+  (let* ((begpos (an-avy-region-position-reader-timer))
+         (endpos (an-avy-region-position-reader-timer)))
+    (cons begpos endpos)))
+
+(defun an-avy-region-command (cmd &optional arg)
+  "Acts on the region defined through CMD. `avy-dispatch-alist' is set to
+`an-avy-region-dispatch-alist', enabling the selectijon of the dispatch actions
+contained therein. (You can select a dispatch action during the reading of both
+region end-points, but the latter will overwrite the former). The window scope
+is determined by `avy-all-windows' or `avy-all-windows-alt' when ARG is non-nil."
+  (pcase-let* ((avy-all-windows (if arg avy-all-windows-alt avy-all-windows))
+               (avy-dispatch-alist an-avy-region-dispatch-alist)
+               (`(,begpos . ,endpos) (funcall cmd))
+               (`((,begpnt . _) . ,begwin) begpos)
+               (`((,endpnt . _) . ,endwin) endpos))
+    (if (not (eq begwin endwin))
+        (user-error "Selected region points are not in the same window")
+      (funcall avy-pre-action begpos)
+      (let ((endpnt (if (< endpnt (point-max)) (1+ endpnt) endpnt))
+            (action (or avy-action #'avy-action-region-copy)))
+        (funcall action begpnt endpnt)))))
 
 ;;;###autoload
-(defun an-avy-region-char (&optional arg)
-  "As `an-avy-region-timer', but uses the non-timer (single-char) reading
-functionality for determining the region beginning/end."
+(defun an-avy-region-char-1 (&optional arg)
+  "Executes `an-avy-region-timer' with `an-avy-region-reader-char-1',
+which see both. ARG is passed directly."
   (interactive)
   (avy-with an-avy-region-timer
-    (when-let* ((avy-all-windows (if arg avy-all-windows-alt avy-all-windows))
-                (avy-dispatch-alist an-avy-region-dispatch-alist)
-                (begch (read-char (format-prompt "char (region begin)" "")))
-                (begpos (an-avy-process-noaction (avy--regex-candidates (regexp-quote (string begch)))))
-                ((if (or (null begpos)
-                         (not (listp begpos))
-                         (not (numberp (caar begpos)))
-                         (not (windowp (cdr begpos))))
-                     (user-error "Failed to select begin of region")
-                   t))
-                (endch (read-char (format-prompt "char (region end)" "")))
-                (endpos (an-avy-process-noaction (avy--regex-candidates (regexp-quote (string endch)))))
-                ((if (or (null endpos)
-                         (not (listp endpos))
-                         (not (numberp (caar endpos)))
-                         (not (windowp (cdr endpos))))
-                     (user-error "Failed to select end of region")
-                   t)))
-      (if (not (eq (cdr begpos) (cdr endpos)))
-          (user-error "Selected region points are not in the same window")
-        (funcall avy-pre-action begpos)
-        (let* ((begpnt (caar begpos))
-               (endpnt (caar endpos))
-               (endpnt (if (< endpnt (point-max)) (1+ endpnt) endpnt))
-               (action (or avy-action #'avy-action-region-copy)))
-          (funcall action begpnt endpnt))))))
+    (an-avy-region-command #'an-avy-region-reader-char-1 arg)))
+
+;;;###autoload
+(defun an-avy-region-timer (&optional arg)
+  "Executes `an-avy-region-timer' with `an-avy-region-reader-timer',
+which see both. ARG is passed directly."
+  (interactive)
+  (avy-with an-avy-region-timer
+    (an-avy-region-command #'an-avy-region-reader-timer arg)))
 
 
 ;;; Embark
