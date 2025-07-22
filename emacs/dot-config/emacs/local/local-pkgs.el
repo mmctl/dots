@@ -6,6 +6,30 @@
 
 ;; Actions (additional)
 ;;;###autoload
+(defun avy-action-a-push-mark-no-activate (pt)
+  "Executes `push-mark' at PT (selected with Avy), not activating mark,
+leaving point."
+  (unwind-protect
+      (save-excursion
+        (goto-char pt)
+        (push-mark pt))
+    (select-window
+     (cdr (ring-ref avy-ring 0))))
+  t)
+
+;;;###autoload
+(defun avy-action-a-push-mark-activate (pt)
+  "Executes `push-mark' at PT (selected with Avy), activating mark, leaving
+point."
+  (unwind-protect
+      (save-excursion
+        (goto-char pt)
+        (push-mark-command nil))
+    (select-window
+     (cdr (ring-ref avy-ring 0))))
+  t)
+
+;;;###autoload
 (defun avy-action-a-kill-line-stay (pt)
   "Executes `avy-action-kill-stay', but kills till end of line current."
   (let ((avy-command 'avy-goto-line))
@@ -19,7 +43,7 @@
 
 ;;;###autoload
 (defun avy-action-a-kill-whole-line-stay (pt)
-  "Executes `kill-whole-line' at PT (selected with Avy), moving point."
+  "Executes `kill-whole-line' at PT (selected with Avy), leaving point."
   (unwind-protect
       (save-excursion
         (goto-char pt)
@@ -30,7 +54,7 @@
 
 ;;;###autoload
 (defun avy-action-a-kill-whole-line-move (pt)
-  "Executes `kill-whole-line' at PT (selected with Avy), leaving point."
+  "Executes `kill-whole-line' at PT (selected with Avy), moving point."
   (goto-char pt)
   (kill-whole-line)
   (point))

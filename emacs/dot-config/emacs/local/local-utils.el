@@ -26,6 +26,18 @@ ARG - 1 lines forward."
     (when (and (null arg) show-trailing-whitespace (= (point) orig-point))
       (move-end-of-line nil))))
 
+(defun push-mark-no-activate (&optional location)
+  "Pushes LOCATION (defaults to `point') to `mark-ring' without
+activating it."
+  (interactive)
+  (push-mark (or location (point))))
+
+(defun exchange-point-and-mark-invert (&optional arg)
+  "Identical to `exchange-point-and-mark' but inverts the prefix argument,
+meaning that (with Transient Mark mode on) it defaults to deactivating the mark
+if it is active and not reactivating mark."
+  (interactive "P")
+  (exchange-point-and-mark (null arg)))
 
 ;;; Duplication
 (defun duplicate-line-or-lines-in-region (&optional arg)
@@ -229,7 +241,7 @@ nothing. In exchange, the behavior is a bit more intuitive."
   (interactive "p")
   (if (use-region-p)
       (call-interactively #'delete-region)
-    (delete-region (pos-bol) (pos-bol (+ arg 1)))))
+    (delete-region (line-beginning-position) (line-beginning-position (+ arg 1)))))
 
 
 ;;; Files and directories

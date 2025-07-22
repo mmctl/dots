@@ -81,8 +81,10 @@
 (dolist (file (cons LOCAL_DIR (directory-files-recursively LOCAL_DIR "^[^.].*" t t)))
   (when (file-directory-p file)
     (add-to-list 'load-path file)
-    (loaddefs-generate file (expand-file-name (concat (file-name-nondirectory (directory-file-name file)) "-autoloads.el")
-                                              file))))
+    (let ((fileal (expand-file-name (concat (file-name-nondirectory (directory-file-name file)) "-autoloads.el")
+                                    file)))
+      (loaddefs-generate file fileal)
+      (load fileal))))
 
 ;; Byte (and, if possible, natively) compile all local Elisp files (in LOCAL_DIR and subdirectories)
 (byte-recompile-directory LOCAL_DIR 0 nil t)
@@ -136,6 +138,8 @@
 
 (unless package-archive-contents
   (package-refresh-contents))
+
+
 
 
 ;;; Settings (general/UI)
@@ -247,7 +251,7 @@
                                 (delete-space-after 0)
                                 restore))
 
-(setopt shift-select-mode t)
+(setopt shift-select-mode nil)
 (repeat-mode 1)
 
 
@@ -274,10 +278,10 @@
 (keymap-global-set "C-M-<up>" #'windmove-up)
 (keymap-global-set "C-M-<right>" #'windmove-right)
 
-(keymap-global-set "M-S-<left>" #'windmove-swap-states-left)
-(keymap-global-set "M-S-<down>" #'windmove-swap-states-down)
-(keymap-global-set "M-S-<up>" #'windmove-swap-states-up)
-(keymap-global-set "M-S-<right>" #'windmove-swap-states-right)
+(keymap-global-set "C-M-S-<left>" #'windmove-swap-states-left)
+(keymap-global-set "C-M-S-<down>" #'windmove-swap-states-down)
+(keymap-global-set "C-M-S-<up>" #'windmove-swap-states-up)
+(keymap-global-set "C-M-S-<right>" #'windmove-swap-states-right)
 
 (keymap-global-set "C-p" #'backward-sexp) ; from: previous-line
 (keymap-global-set "C-n" #'forward-sexp)  ; from: next-line
@@ -289,8 +293,12 @@
 (keymap-global-set "C-e" #'move-end-of-line-or-whitespace)
 (keymap-global-set "M-b" #'duplicate-line-or-lines-in-region) ; from: backward-word
 
-(keymap-global-set "M-m" #'pop-to-mark-command) ; from: back-to-indentation
-(keymap-global-set "M-M" #'pop-global-mark)
+(keymap-global-set "C-`" #'push-mark-no-activate)
+(keymap-global-set "M-`" #'pop-to-mark-command)
+(keymap-global-set "M-~" #'pop-global-mark) ; from: not-modified
+(keymap-global-set "<remap> <exchange-point-and-mark>" #'exchange-point-and-mark-invert)
+
+
 
 ;; Selection
 (keymap-global-set "M-h" #'mark-word) ; from: mark-paragraph
@@ -1118,9 +1126,9 @@ that allows to include other templates by their name."
   ("M-l" . consult-line) ; from: downcase-word
   ("M-m" . consult-mark) ; from: back-to-indentation
   ("M-M" . consult-global-mark)
-  ("M-{" . consult-store-register) ; from: backward-paragraph
-  ("M-}" . consult-load-register)  ; from: forward-paragraph
-  ("C-M-{" . consult-register)
+  ("M-+" . consult-store-register)
+  ("M-*" . consult-load-register)
+  ("C-M-*" . consult-register)
   ("M-#" . consult-bookmark)
   ("<remap> <goto-line>" . consult-goto-line)
   ("<remap> <yank-pop>" . consult-yank-pop)
@@ -1520,20 +1528,6 @@ that allows to include other templates by their name."
     (make-empty-file ORG_AREAS_FILE t))
 
   (setopt org-default-notes-file ORG_NOTES_FILE)
-
-  (setopt org-replace-disputed-keys t
-          org-disputed-keys '(([(shift up)] . [(meta p)])
-                              ([(shift down)] . [(meta n)])
-                              ([(shift left)] . [(meta -)])
-                              ([(shift right)] . [(meta +)])
-                              ([(control shift up)]	. [(control shift p)])
-                              ([(control shift down)]	. [(control shift n)])
-                              ([(control shift left)]	. [(control shift -)])
-                              ([(control shift right)] . [(control shift +)])
-                              ([(meta shift up)]	. [(meta shift p)])
-                              ([(meta shift down)]	. [(meta shift n)])
-                              ([(meta shift left)]	. [(meta shift -)])
-                              ([(meta shift right)]	. [(meta shift +)])))
 
   (setopt org-return-follows-link t)
   (setopt org-support-shift-select t)
@@ -2398,38 +2392,6 @@ that allows to include other templates by their name."
   (easycrypt-ext-goals-mode . easycrypt-ext-goals-mode-avy-setup)
   (easycrypt-ext-response-mode . easycrypt-ext-response-mode-avy-setup))
 
-;;   :init
-;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown (mode)
-;;     "Adds (resp. removes) EasyCrypt Ext Avy dispatch actions to the list upon
-;; activating (resp. deactivating) MODE."
-;;     (with-eval-after-load 'avy
-;;       (let ((avy-ece-dal '((?= . avy-action-ece-proofshell-print-stay)
-;;                            (?+ . avy-action-ece-proofshell-print-move)
-;;                            (?/ . avy-action-ece-proofshell-search-stay)
-;;                            (?\\ . avy-action-ece-proofshell-search-move)
-;;                            (?- . avy-action-ece-proofshell-locate-stay)
-;;                            (?_ . avy-action-ece-proofshell-locate-move))))
-;;         (if (symbol-value mode)
-;;             (setq-local avy-dispatch-alist (append avy-dispatch-alist avy-ece-dal))
-;;           (when (local-variable-p 'avy-dispatch-alist)
-;;             (setq-local avy-dispatch-alist (delq nil
-;;                                                  (mapcar #'(lambda (dpa)
-;;                                                              (unless (member dpa avy-ece-dal) dpa))
-;;                                                          avy-dispatch-alist)))
-;;             (when (equal avy-dispatch-alist (default-value 'avy-dispatch-alist))
-;;               (kill-local-variable 'avy-dispatch-alist)))))))
-;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode ()
-;;     (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-mode))
-;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode ()
-;;     (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-goals-mode))
-;;   (defun an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode ()
-;;     (an-easycrypt-ext-avy-action-dispatch-setup-teardown 'easycrypt-ext-response-mode))
-
-;;   ;; Hooks
-;;   (add-hook 'easycrypt-ext-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-mode)
-;;   (add-hook 'easycrypt-ext-goals-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-goals-mode)
-;;   (add-hook 'easycrypt-ext-response-mode-hook #'an-easycrypt-ext-avy-action-dispatch-setup-teardown-response-mode))
-
 ;; Themes
 ;; Doom-themes (general)
 (use-package doom-themes
@@ -2667,6 +2629,8 @@ that allows to include other templates by their name."
   :init
   ;; Setup and settings (before load)
   (with-eval-after-load 'avy
+    (add-to-list 'avy-dispatch-alist '(?p . avy-action-a-push-mark-no-activate) t)
+    (add-to-list 'avy-dispatch-alist '(?P . avy-action-a-push-mark-activate) t)
     (add-to-list 'avy-dispatch-alist '(?X . avy-action-a-kill-line-move) t)
     (add-to-list 'avy-dispatch-alist '(?\C-x . avy-action-a-kill-whole-line-move) t)
     (add-to-list 'avy-dispatch-alist '(?Q . avy-action-a-kill-line-stay) t)
