@@ -730,8 +730,7 @@
   (keymap-set visual-replace-mode-map "C-p" #'visual-replace-prev-match)
   (keymap-set visual-replace-mode-map "C-n" #'visual-replace-next-match)
   (keymap-set visual-replace-mode-map "M-TAB" #'visual-replace-tab)
-  (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab)
-  (keymap-set visual-replace-mode-map "M-r" visual-replace-secondary-mode-map))
+  (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab))
 
 (use-package olivetti
   :ensure t

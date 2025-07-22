@@ -30,9 +30,8 @@ ARG - 1 lines forward."
 ;;; Duplication
 (defun duplicate-line-or-lines-in-region (&optional arg)
   "Duplicates current line or, when region is active, lines in current region.
-With ARG, duplicates |ARG| times forward (ARG > 0), putting point at
-end of final duplication, or backward (ARG < 0), putting point at
-beginning of final duplication."
+With ARG, duplicates |ARG| times forward (ARG > 0) or backward (ARG < 0),
+putting point at same relative position in final duplication."
   (interactive "p")
   (pcase-let* ((neg (< arg 0))
                (`(,beg . ,end) (if (use-region-p)
@@ -44,13 +43,17 @@ beginning of final duplication."
                                            (line-end-position)))
                                  (cons (line-beginning-position)
                                        (line-end-position))))
+               (relpnt (- (point) (if neg beg end)))
                (content (buffer-substring-no-properties beg end)))
     (goto-char (if neg beg end))
     (dotimes (_ (abs arg))
-      (newline)
-      (when neg (beginning-of-line 0))
-      (insert content)
-      (when neg (beginning-of-line)))))
+      (if neg
+          (save-excursion
+            (insert content)
+            (newline))
+        (newline)
+        (insert content)))
+    (forward-char relpnt)))
 
 
 ;;; Transposing/Exchanging
