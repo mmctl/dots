@@ -26,6 +26,129 @@ ARG - 1 lines forward."
     (when (and (null arg) show-trailing-whitespace (= (point) orig-point))
       (move-end-of-line nil))))
 
+(defun move-it-region-updown (start end &optional arg)
+  "Moves region defined by START and END lines up or down, depending on ARG
+(defaults to 1 line down). With ARG, moves |ARG| lines down (up if ARG is
+negative)."
+  (let ((arg (or arg 1))
+        (lnstart (line-number-at-pos start))
+        (lnend (line-number-at-pos end)))
+    (when (and (< arg 0) (= 1 lnstart))
+      (user-error "Start of region on first line of buffer, cannot move line up"))
+    (when (and (< 0 arg) (= (1- (line-number-at-pos (point-max))) lnend))
+      (user-error "End of region on last line of buffer, cannot move line down"))
+    (let* ((mrkpnt (< (mark) (point)))
+           (startcol (save-excursion
+                       (goto-char start)
+                       (current-column)))
+           (content (delete-and-extract-region start end)))
+      (forward-line arg)
+      (move-to-column startcol)
+      (save-excursion
+        (insert content)
+        (set-mark (point)))
+      (when mrkpnt
+        (exchange-point-and-mark))
+      (setq deactivate-mark nil))))
+
+(defun move-it-wholeline-region-updown (start end &optional arg)
+  "Moves whole lines in region defined by START and END lines up or down,
+depending on ARG (defaults to 1 line down). With ARG, moves |ARG| lines down (up
+if ARG is negative)."
+  (let ((arg (or arg 1))
+        (down (< 0 arg))
+        (lnstart (line-number-at-pos start))
+        (lnend (line-number-at-pos end)))
+    (when (and (< arg 0) (= 1 lnstart))
+      (user-error "Start of region on first line of buffer, cannot move line up"))
+    (when (and down (= (1- (line-number-at-pos (point-max))) lnend))
+      (user-error "End of region on last line of buffer, cannot move line down"))
+    (let* ((mrkpnt (< (mark) (point)))
+           (start (save-excursion
+                     (goto-char start)
+                     (line-beginning-position)))
+           (end (save-excursion
+                     (goto-char end)
+                     (line-end-position)))
+           (content (delete-and-extract-region start end))
+           (content (if (looking-at-p "\n")
+                        (progn
+                          (delete-char 1)
+                          (concat content "\n"))
+                      content)))
+      (forward-line arg)
+      (save-excursion
+        (insert content)
+        (when (equal (char-before) ?\n)
+          (forward-char -1))
+        (set-mark (point)))
+      (when mrkpnt
+        (exchange-point-and-mark))
+      (setq deactivate-mark nil))))
+
+(defun move-it-region-up (start end &optional arg)
+  "Moves region defined by START and END
+one line up. With ARG, moves |ARG|
+lines up instead (down if ARG is negative)."
+  (interactive "r\np")
+  (if (= (line-number-at-pos start) (line-number-at-pos end))
+      (move-it-region-updown start end (- arg))
+    (move-it-wholeline-region-updown start end (- arg))))
+
+(defun move-it-region-down (start end &optional arg)
+  "Moves region defined by START and END
+one line down. With ARG, moves |ARG|
+lines down (up if ARG is negative)."
+  (interactive "r\np")
+  (if (= (line-number-at-pos start) (line-number-at-pos end))
+      (move-it-region-updown start end arg)
+    (move-it-wholeline-region-updown start end arg)))
+
+(defun move-it-line-updown (&optional arg)
+  "Moves line at point up or down, depending on ARG
+(defaults to one line down). With ARG, moves |ARG|
+lines down (up if ARG is negative)."
+  (let ((arg (or arg 1))
+        (ln (line-number-at-pos)))
+    (when (and (< arg 0) (= 1 ln))
+      (user-error "On first line of buffer, cannot move line up"))
+    (when (and (< 0 arg) (= (1- (line-number-at-pos (point-max))) ln))
+      (user-error "On last line of buffer, cannot move line down"))
+    (pcase-let* ((col (current-column))
+                 (`(,beg . ,end) (bounds-of-thing-at-point 'line))
+                 (line (delete-and-extract-region beg end)))
+      (forward-line arg)
+      (save-excursion (insert line))
+      (move-to-column col))))
+
+(defun move-it-line-up (&optional arg)
+  "Moves line at point ARG lines up (defaults to 1)."
+  (interactive "p")
+  (move-it-line-updown (- arg)))
+
+(defun move-it-line-down (&optional arg)
+  "Moves line at point ARG lines down (defaults to 1)."
+  (interactive "p")
+  (move-it-line-updown arg))
+
+(defun move-it-up (&optional arg)
+  "If region is active, moves region or whole lines in region ARG lines up
+(down if ARG is negative). If region is not active, moves line at point
+ARG lines up (down if ARG is negative). Defaults to 1 line up."
+  (interactive "p")
+  (if (use-region-p)
+      (move-it-region-up (region-beginning) (region-end) arg)
+    (move-it-line-up arg)))
+
+(defun move-it-down (&optional arg)
+  "If region is active, moves region or whole lines in region ARG lines down
+(up if ARG is negative). If region is not active, moves line at point ARG
+lines down (up if ARG is negative). Defaults to 1 line down."
+  (interactive "p")
+  (if (use-region-p)
+      (move-it-region-down (region-beginning) (region-end) arg)
+    (move-it-line-down arg)))
+
 (defun push-mark-no-activate (&optional location)
   "Pushes LOCATION (defaults to `point') to `mark-ring' without
 activating it."
@@ -56,7 +179,7 @@ putting point at same relative position in final duplication."
                                  (cons (line-beginning-position)
                                        (line-end-position))))
                (relpnt (- (point) (if neg beg end)))
-               (content (buffer-substring-no-properties beg end)))
+               (content (buffer-substring beg end)))
     (goto-char (if neg beg end))
     (dotimes (_ (abs arg))
       (if neg

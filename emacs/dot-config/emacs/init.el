@@ -298,8 +298,6 @@
 (keymap-global-set "M-~" #'pop-global-mark) ; from: not-modified
 (keymap-global-set "<remap> <exchange-point-and-mark>" #'exchange-point-and-mark-invert)
 
-
-
 ;; Selection
 (keymap-global-set "M-h" #'mark-word) ; from: mark-paragraph
 
@@ -313,6 +311,9 @@
 (keymap-global-set "C-S-<backspace>" #'backward-kill-line) ; from: kill-whole-line
 (keymap-global-set "C-S-<delete>" #'kill-line)
 (keymap-global-set "C-S-k" #'kill-whole-line-back-to-indentation)
+
+(keymap-global-set "M-<up>" #'move-it-up)
+(keymap-global-set "M-<down>" #'move-it-down)
 
 ;; Deleting
 (keymap-global-set "M-S-SPC" #'delete-all-space)
@@ -1038,12 +1039,12 @@ that allows to include other templates by their name."
   (add-to-list 'tempel-user-elements #'a-tempel-include))
 
 ;;; Actions
-(use-package move-text
-  :ensure t
+;; (use-package move-text
+;;   :ensure t
 
-  :bind
-  ("M-u" . move-text-up) ; from: upcase-word
-  ("M-U" . move-text-down))
+;;   :bind
+;;   ("M-u" . move-text-up) ; from: upcase-word
+;;   ("M-U" . move-text-down))
 
 (use-package ace-window
   :ensure t
