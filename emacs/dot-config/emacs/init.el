@@ -314,6 +314,8 @@
 
 (keymap-global-set "M-<up>" #'move-it-up)
 (keymap-global-set "M-<down>" #'move-it-down)
+(keymap-global-set "M-<left>" #'move-it-left)
+(keymap-global-set "M-<right>" #'move-it-right)
 
 ;; Deleting
 (keymap-global-set "M-S-SPC" #'delete-all-space)
@@ -608,15 +610,9 @@
 
   :config
   ;; Keybindings
-  (keymap-set easy-kill-base-map "<remap> <kill-ring-save>" #'easy-kill-cycle)
-  (keymap-set easy-kill-base-map "<remap> <mark-word>" #'easy-kill-cycle)
+  (keymap-set easy-kill-base-map "^" #'easy-kill-cycle)
   (keymap-set easy-kill-base-map "<" #'easy-kill-shrink)
-  (keymap-set easy-kill-base-map ">" #'easy-kill-expand)
-  (keymap-set easy-kill-base-map "a"  #'easy-kill-append)
-  (keymap-set easy-kill-base-map "k"  #'easy-kill-region)
-  (keymap-set easy-kill-base-map "K"  #'easy-kill-delete-region)
-  (keymap-set easy-kill-base-map "q"  #'easy-kill-abort)
-  (keymap-set easy-kill-base-map "p"  #'easy-kill-exchange-point-and-mark))
+  (keymap-set easy-kill-base-map ">" #'easy-kill-expand))
 
 (use-package undo-tree
   :ensure t
@@ -661,8 +657,8 @@
 
   :config
   ;; Keybindings
-  (keymap-set minibuffer-mode-map "C-r" #'marginalia-cycle)
-  (keymap-set minibuffer-local-map "C-r" #'marginalia-cycle))
+  (keymap-set minibuffer-mode-map "C-^" #'marginalia-cycle)
+  (keymap-set minibuffer-local-map "C-^" #'marginalia-cycle))
 
 (use-package jinx
   :ensure t
