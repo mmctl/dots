@@ -173,9 +173,15 @@ lines down (up if ARG is negative)."
   "Moves line at point left or right, depending on ARG
 (defaults to one character right). With ARG, moves |ARG|
 characters right (left if ARG is negative).
-This is equivalent to performing `indent-rigidly' on the current line."
+This is essentially equivalent to performing `indent-rigidly' on the
+current line, but inserts/deletes whitespace before point
+when on an empty line (for consistency in behavior)."
   (pcase-let ((`(,beg . ,end) (bounds-of-thing-at-point 'line)))
-    (indent-rigidly beg end (or arg 1))))
+    (if (string-empty-p (string-trim (buffer-substring-no-properties beg end)))
+        (if (<= 0 arg)
+            (insert (make-string arg ?\s))
+          (delete-region (max beg (- (point) (abs arg))) (point)))
+     (indent-rigidly beg end (or arg 1)))))
 
 (defun move-it-line-up (&optional arg)
   "Moves line at point ARG lines up (defaults to 1)."
