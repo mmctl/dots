@@ -548,7 +548,6 @@
           dabbrev-case-distinction nil
           dabbrev-case-replace nil))
 
-;; Helpers
 (use-package which-key
   :ensure t
 
@@ -576,6 +575,32 @@
 
   ;; Activation
   (which-key-mode 1))
+
+(use-package completion-preview
+  :init
+  ;; Setup and settings (before load)
+  (setopt completion-preview-minimum-symbol-length 2)
+
+  :config
+  ;; Keybindings
+  (keymap-set completion-preview-active-mode-map "M-p" #'completion-preview-prev-candidate)
+  (keymap-set completion-preview-active-mode-map "M-n" #'completion-preview-next-candidate)
+
+  ;; Activation
+  (global-completion-preview-mode 1))
+
+;; Helpers
+(use-package move-it
+  :ensure t
+  :vc (:url "https://github.com/mmctl/move-it"
+            :branch "main"
+            :rev :newest)
+
+  :bind
+  ("M-<left>" . move-it-left)
+  ("M-<down>" . move-it-down)
+  ("M-<up>" . move-it-up)
+  ("M-<right>" . move-it-right))
 
 (use-package goggles
   :ensure t
@@ -845,49 +870,41 @@
 
   :init
   ;; Setup and settings (before load)
-  (setopt corfu-count 10
-          corfu-scroll-margin 2
-          corfu-min-width 15
-          corfu-max-width 80
-          corfu-cycle nil
-          corfu-preview-current nil
-          corfu-quit-at-boundary 'separator
-          corfu-quit-no-match 'separator
+  (setopt corfu-on-exact-match nil
+          corfu-preview-current 'insert
           corfu-left-margin-width 0.5
           corfu-right-margin-width 0.5
-          corfu-bar-width 0.25
-          corfu-auto-prefix 2
-          corfu-auto-delay 0.25
+          corfu-bar-width 0.25)
           ;; Auto mode
-          corfu-on-exact-match nil
-          corfu-preselect 'valid
-          corfu-auto t)
+          ;; corfu-auto-prefix 2
+          ;; corfu-auto-delay 0.25
+          ;; corfu-on-exact-match nil
+          ;; corfu-preselect 'valid
+          ;; corfu-auto t)
   (setopt text-mode-ispell-word-completion nil)
-
   :config
   ;; Keybindings
   ;; All modes
   (keymap-set corfu-map "C-v" #'corfu-complete)
-  (keymap-set corfu-map "TAB" #'corfu-complete)
-  (keymap-set corfu-map "<tab>" #'corfu-complete)
   (keymap-set corfu-map "M-v" #'corfu-send)
-  (keymap-set corfu-map "M-SPC" #'corfu-insert-separator)
+  (keymap-set corfu-map "<prior>" #'corfu-scroll-down)
+  (keymap-set corfu-map "<next>" #'corfu-scroll-up)
   ;; Auto mode
-  (keymap-unset corfu-map "<remap> <beginning-of-buffer>")
-  (keymap-unset corfu-map "<remap> <end-of-buffer>")
-  (keymap-unset corfu-map "<remap> <previous-line>")
-  (keymap-unset corfu-map "<remap> <next-line>")
-  (keymap-unset corfu-map "<remap> <move-beginning-of-line>")
-  (keymap-unset corfu-map "<remap> <move-end-of-line>")
-  (keymap-unset corfu-map "RET")
-  (keymap-unset corfu-map "<up>")
-  (keymap-unset corfu-map "<down>")
-  (keymap-set corfu-map "M-<up>" #'corfu-previous)
-  (keymap-set corfu-map "M-<down>" #'corfu-next)
-  (keymap-set corfu-map "M-\\" #'corfu-scroll-down)
-  (keymap-set corfu-map "M-/" #'corfu-scroll-up)
-  (keymap-set corfu-map "M-<" #'corfu-first)
-  (keymap-set corfu-map "M->" #'corfu-last)
+  ;; (keymap-unset corfu-map "<remap> <beginning-of-buffer>")
+  ;; (keymap-unset corfu-map "<remap> <end-of-buffer>")
+  ;; (keymap-unset corfu-map "<remap> <previous-line>")
+  ;; (keymap-unset corfu-map "<remap> <next-line>")
+  ;; (keymap-unset corfu-map "<remap> <move-beginning-of-line>")
+  ;; (keymap-unset corfu-map "<remap> <move-end-of-line>")
+  ;; (keymap-unset corfu-map "RET")
+  ;; (keymap-unset corfu-map "<up>")
+  ;; (keymap-unset corfu-map "<down>")
+  ;; (keymap-set corfu-map "M-<up>" #'corfu-previous)
+  ;; (keymap-set corfu-map "M-<down>" #'corfu-next)
+  ;; (keymap-set corfu-map "M-\\" #'corfu-scroll-down)
+  ;; (keymap-set corfu-map "M-/" #'corfu-scroll-up)
+  ;; (keymap-set corfu-map "M-<" #'corfu-first)
+  ;; (keymap-set corfu-map "M->" #'corfu-last)
 
   ;; Activation
   (global-corfu-mode 1))
@@ -907,6 +924,15 @@
   (keymap-set corfu-map "C-S-j" #'corfu-quick-insert)
   (keymap-set corfu-map "C-M-j" #'corfu-quick-complete))
 
+(use-package corfu-history
+  :ensure nil ; Provided by Corfu
+
+  :after corfu
+
+  :config
+  ;; Activation
+  (corfu-history-mode 1))
+
 (use-package cape
   :ensure t
 
@@ -918,7 +944,7 @@
           cape-file-directory-must-exist t)
 
   ;; Keybindings
-  (keymap-global-set "C-c '" #'cape-prefix-map)
+  (keymap-global-set "C-c p" #'cape-prefix-map)
 
   :config
   ;; Custom functionality
@@ -933,45 +959,29 @@
 
   (defun setup-a-cape-text-mode ()
     (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'cape-dict-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
-  (defun setup-a-cape-mix-mode ()
-    (setq-local completion-at-point-functions
-                (append (list (cape-capf-super #'cape-abbrev-prefix-2
-                                               #'cape-keyword-prefix-2
-                                               #'cape-dabbrev-prefix-2)
-                              #'cape-dict-prefix-2)
+                (append '(cape-dabbrev-prefix-2 cape-dict-prefix-2)
                         completion-at-point-functions)))
   (defun setup-a-cape-code-mode ()
     (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
+                (append '(cape-keyword-prefix-2 cape-dabbrev-prefix-2)
+                        completion-at-point-functions)))
   (defun setup-a-cape-minibuffer ()
     (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'cape-history-prefix-2 #'cape-file-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
+                (append '(cape-history-prefix-2 cape-file-prefix-2 cape-dabbrev-prefix-2)
+                        completion-at-point-functions)))
   (defun setup-a-cape-elisp-mode ()
-    (setq-local completion-at-point-functions
-                (cons (cape-capf-super #'cape-abbrev-prefix-2
-                                       #'elisp-cap-prefix-2
-                                       #'cape-keyword-prefix-2
-                                       #'cape-dabbrev-prefix-2)
-                      completion-at-point-functions)))
+    (setq-local completion-at-point-functions (cons #'elisp-cap-prefix-2 completion-at-point-functions)))
 
   ;; Hooks
-  (add-hook 'completion-at-point-functions (cape-capf-super #'cape-abbrev-prefix-2 #'cape-dabbrev-prefix-2))
+  (add-hook 'completion-at-point-functions #'cape-dabbrev-prefix-2)
 
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
-  (add-hook 'tex-mode-hook #'setup-a-cape-mix-mode)
-  (add-hook 'TeX-mode-hook #'setup-a-cape-mix-mode)
-  (add-hook 'conf-mode-hook #'setup-a-cape-mix-mode)
+
+  (add-hook 'tex-mode-hook #'setup-a-cape-code-mode)
+  (add-hook 'TeX-mode-hook #'setup-a-cape-code-mode)
+  (add-hook 'conf-mode-hook #'setup-a-cape-code-mode)
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
+
   (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer)
 
   (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode))
@@ -1006,42 +1016,11 @@
   (keymap-unset tempel-map "<remap> <end-of-buffer>")
   (keymap-unset tempel-map "<remap> <backward-paragraph>")
   (keymap-unset tempel-map "<remap> <forward-paragraph>")
-  (keymap-set tempel-map "M-<left>" #'tempel-previous)
-  (keymap-set tempel-map "M-<right>" #'tempel-next)
-  (keymap-set tempel-map "M--" #'tempel-beginning)
-  (keymap-set tempel-map "M-_" #'tempel-end)
-  (keymap-set tempel-map "M-k" #'tempel-kill)
-  (keymap-set tempel-map "M-v" #'tempel-done)
-  (keymap-set tempel-map "M-q" #'tempel-abort)
-
-  (defun a-tempel-placeholder-form-as-lit (elt)
-    "Define slight adjustment of regular placeholder element
-so that a prompt form evaluating to a string is inserted as
-default value in the same way as a literal string prompt."
-    (pcase elt
-      (`(pfl ,prompt . ,rest)
-       (let ((evprompt (eval prompt)))
-         (if (stringp evprompt)
-             `(p ,evprompt ,@rest)
-           `('p ,prompt ,@rest))))))
-  (add-to-list 'tempel-user-elements #'a-tempel-placeholder-form-as-lit)
-
-  (defun a-tempel-include (elt)
-    "Define `include' element (taken and slightly adjusted from TempEL github repo)
-that allows to include other templates by their name."
-    (when (eq (car-safe elt) 'i)
-      (when-let (template (alist-get (cadr elt) (tempel--templates)))
-        (cons 'l template))))
-  (add-to-list 'tempel-user-elements #'a-tempel-include))
+  (keymap-set tempel-map "M-<" #'tempel-beginning)
+  (keymap-set tempel-map "M->" #'tempel-end)
+  (keymap-set tempel-map "M-v" #'tempel-done))
 
 ;;; Actions
-;; (use-package move-text
-;;   :ensure t
-
-;;   :bind
-;;   ("M-u" . move-text-up) ; from: upcase-word
-;;   ("M-U" . move-text-down))
-
 (use-package ace-window
   :ensure t
 
@@ -1905,6 +1884,8 @@ that allows to include other templates by their name."
 
   :config
   ;; Keybindings
+  (keymap-unset cdlatex-mode-map "TAB")
+  (keymap-set cdlatex-mode-map "<backtab>" #'cdlatex-tab)
   (keymap-set cdlatex-mode-map "C-c TAB" #'indent-for-tab-command)
   (keymap-set cdlatex-mode-map "C-c <tab>" #'indent-for-tab-command)
 
@@ -2648,14 +2629,15 @@ that allows to include other templates by their name."
                                          (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next))))))
 
 ;; Corfu + Orderless
-(use-package corfu
-  :after orderless
+;; (Mainly for Corfu in auto mode (cheaper filtering))
+;; (use-package corfu
+;;   :after orderless
 
-  :config
-  ;; Hooks
-  (add-hook 'corfu-mode-hook
-            (lambda ()
-              (setq-local completion-styles '(orderless-literal-only basic)))))
+;;   :config
+;;   ;; Hooks
+;;   (add-hook 'corfu-mode-hook
+;;             (lambda ()
+;;               (setq-local completion-styles '(orderless-literal-only basic)))))
 
 ;; Corfu + Vertico
 (use-package corfu

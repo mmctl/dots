@@ -26,221 +26,6 @@ ARG - 1 lines forward."
     (when (and (null arg) show-trailing-whitespace (= (point) orig-point))
       (move-end-of-line nil))))
 
-(defun move-it-region-vertically (start end &optional arg)
-  "Moves region defined by START and END lines up or down, depending on ARG
-(defaults to 1 line down). With ARG, moves |ARG| lines down (up if ARG is
-negative)."
-  (let ((arg (or arg 1))
-        (lnstart (line-number-at-pos start))
-        (lnend (line-number-at-pos end)))
-    (when (and (< arg 0) (<= lnstart 1))
-      (user-error "Start of region on first line of buffer, cannot move up"))
-    (when (and (< 0 arg) (<= (1- (line-number-at-pos (point-max))) lnend))
-      (user-error "End of region on last line of buffer, cannot move down"))
-    (let* ((ltmp (< (mark) (point)))
-           (startcol (save-excursion
-                       (goto-char start)
-                       (current-column)))
-           (content (delete-and-extract-region start end)))
-      (forward-line arg)
-      (move-to-column startcol)
-      (save-excursion
-        (insert content)
-        (set-mark (point)))
-      (when ltmp
-        (exchange-point-and-mark))
-      (setq deactivate-mark nil))))
-
-(defun move-it-region-horizontally (start end &optional arg)
-  "Moves region defined by START and END characters left or
-right, depending on ARG (defaults to 1 character right).
-With ARG, moves |ARG| characters right (left if ARG is negative)."
-  (let ((arg (or arg 1)))
-    (when (and (< arg 0) (= start (point-min)))
-      (user-error "Start of region at beginning of buffer, cannot move left"))
-    (when (and (< 0 arg) (= end (point-max)))
-      (user-error "End of region at end of buffer, cannot move right"))
-    (let* ((ltmp (= (mark) start))
-           (content (delete-and-extract-region start end)))
-      (forward-char arg)
-      (save-excursion
-        (insert content)
-        (set-mark (point)))
-      (when ltmp
-        (exchange-point-and-mark))
-      (setq deactivate-mark nil))))
-
-(defun move-it-wholeline-region-vertically (start end &optional arg)
-  "Moves whole lines in region defined by START and END lines up or down,
-depending on ARG (defaults to 1 line down). With ARG, moves |ARG| lines down (up
-if ARG is negative)."
-  (let ((arg (or arg 1))
-        (down (< 0 arg))
-        (lnstart (line-number-at-pos start))
-        (lnend (line-number-at-pos end)))
-    (when (and (< arg 0) (<= lnstart 1))
-      (user-error "Start of region on first line of buffer, cannot move up"))
-    (when (and down (<= (1- (line-number-at-pos (point-max))) lnend))
-      (user-error "End of region on last line of buffer, cannot move down"))
-    (let* ((ltmp (= (mark) start))
-           (origstart start)
-           (origend end)
-           (start (save-excursion
-                    (goto-char origstart)
-                    (line-beginning-position)))
-           (end (save-excursion
-                  (goto-char origend)
-                  (end-of-line)
-                  (if (looking-at-p "\n") (1+ (point)) (point))))
-           (rtob (- origstart start))
-           (rtoe (- end origend))
-           (content (delete-and-extract-region start end)))
-      (forward-line arg)
-      (save-excursion
-        (insert content)
-        (set-mark (- (point) rtoe)))
-      (forward-char rtob)
-      (when ltmp
-        (exchange-point-and-mark))
-      (setq deactivate-mark nil))))
-
-(defun move-it-wholeline-region-horizontally (start end &optional arg)
-  "Moves whole lines in region defined by START and END characters left or
-right, depending on ARG (defaults to 1 character right).
-With ARG, moves |ARG| characters right (left if ARG is negative).
-This is mostly equivalent to `indent-rigidly', which see, but includes
-all lines with content in region, not only those that start in region."
-  (let* ((start (save-excursion
-                  (goto-char start)
-                  (line-beginning-position))))
-    (indent-rigidly start end (or arg 1))
-    (setq deactivate-mark nil)))
-
-(defun move-it-region-up (start end &optional arg)
-  "Moves region defined by START and END
-one line up. With ARG, moves |ARG|
-lines up instead (down if ARG is negative)."
-  (interactive "r\np")
-  (if (= (line-number-at-pos start) (line-number-at-pos end))
-      (move-it-region-vertically start end (- arg))
-    (move-it-wholeline-region-vertically start end (- arg))))
-
-(defun move-it-region-down (start end &optional arg)
-  "Moves region defined by START and END
-one line down. With ARG, moves |ARG|
-lines down (up if ARG is negative)."
-  (interactive "r\np")
-  (if (= (line-number-at-pos start) (line-number-at-pos end))
-      (move-it-region-vertically start end arg)
-    (move-it-wholeline-region-vertically start end arg)))
-
-(defun move-it-region-left (start end &optional arg)
-  "Moves region defined by START and END
-one character left. With ARG, moves |ARG|
-lines up instead (down if ARG is negative)."
-  (interactive "r\np")
-  (if (= (line-number-at-pos start) (line-number-at-pos end))
-      (move-it-region-horizontally start end (- arg))
-    (move-it-wholeline-region-horizontally start end (- arg))))
-
-(defun move-it-region-right (start end &optional arg)
-  "Moves region defined by START and END
-one character right. With ARG, moves |ARG|
-lines down (up if ARG is negative)."
-  (interactive "r\np")
-  (if (= (line-number-at-pos start) (line-number-at-pos end))
-      (move-it-region-horizontally start end arg)
-    (move-it-wholeline-region-horizontally start end arg)))
-
-(defun move-it-line-vertically (&optional arg)
-  "Moves line at point up or down, depending on ARG
-(defaults to one line down). With ARG, moves |ARG|
-lines down (up if ARG is negative)."
-  (let ((arg (or arg 1))
-        (ln (line-number-at-pos)))
-    (when (and (< arg 0) (<= ln 1))
-      (user-error "On first line of buffer, cannot move up"))
-    (when (and (< 0 arg) (<= (1- (line-number-at-pos (point-max))) ln))
-      (user-error "On last line of buffer, cannot move down"))
-    (pcase-let* ((col (current-column))
-                 (`(,beg . ,end) (bounds-of-thing-at-point 'line))
-                 (line (delete-and-extract-region beg end)))
-      (forward-line arg)
-      (save-excursion (insert line))
-      (move-to-column col))))
-
-(defun move-it-line-horizontally (&optional arg)
-  "Moves line at point left or right, depending on ARG
-(defaults to one character right). With ARG, moves |ARG|
-characters right (left if ARG is negative).
-This is essentially equivalent to performing `indent-rigidly' on the
-current line, but inserts/deletes whitespace before point
-when on an empty line (for consistency in behavior)."
-  (pcase-let ((`(,beg . ,end) (bounds-of-thing-at-point 'line)))
-    (if (string-empty-p (string-trim (buffer-substring-no-properties beg end)))
-        (if (<= 0 arg)
-            (insert (make-string arg ?\s))
-          (delete-region (max beg (- (point) (abs arg))) (point)))
-     (indent-rigidly beg end (or arg 1)))))
-
-(defun move-it-line-up (&optional arg)
-  "Moves line at point ARG lines up (defaults to 1)."
-  (interactive "p")
-  (move-it-line-vertically (- arg)))
-
-(defun move-it-line-down (&optional arg)
-  "Moves line at point ARG lines down (defaults to 1)."
-  (interactive "p")
-  (move-it-line-vertically arg))
-
-(defun move-it-line-left (&optional arg)
-  "Moves line at point ARG characters left (defaults to 1)."
-  (interactive "p")
-  (move-it-line-horizontally (- arg)))
-
-(defun move-it-line-right (&optional arg)
-  "Moves line at point ARG characters right (defaults to 1)."
-  (interactive "p")
-  (move-it-line-horizontally arg))
-
-(defun move-it-up (&optional arg)
-  "If region is active, moves region or whole lines in region |ARG| lines up
-(down if ARG is negative). If region is not active, moves line at point
-|ARG| lines up (down if ARG is negative). Defaults to 1 line up."
-  (interactive "p")
-  (if (use-region-p)
-      (move-it-region-up (region-beginning) (region-end) arg)
-    (move-it-line-up arg)))
-
-(defun move-it-down (&optional arg)
-  "If region is active, moves region or whole lines in region |ARG| lines down
-(up if ARG is negative). If region is not active, moves line at point |ARG|
-lines down (up if ARG is negative). Defaults to 1 line down."
-  (interactive "p")
-  (if (use-region-p)
-      (move-it-region-down (region-beginning) (region-end) arg)
-    (move-it-line-down arg)))
-
-(defun move-it-left (&optional arg)
-  "If region is active, moves region or whole  lines in region |ARG| characters
-left (right if ARG is negative). If region is not active, moves line
-at point |ARG| characters left (right if ARG is negative).
-Defaults to 1 character left."
-  (interactive "p")
-  (if (use-region-p)
-      (move-it-region-left (region-beginning) (region-end) arg)
-    (move-it-line-left arg)))
-
-(defun move-it-right (&optional arg)
-  "If region is active, moves region or whole lines in region |ARG| characters
-right (left if ARG is negative). If region is not active, moves line
-a point |ARG| characters right (left if ARG is negative).
-Defaults to 1 character right."
-  (interactive "p")
-  (if (use-region-p)
-      (move-it-region-right (region-beginning) (region-end) arg)
-    (move-it-line-right arg)))
-
 (defun push-mark-no-activate (&optional location)
   "Pushes LOCATION (defaults to `point') to `mark-ring' without
 activating it."
@@ -363,28 +148,32 @@ then copies that line. Does not move point."
 
 
 ;;; Killing
-(defun kill-whole-word (&optional arg)
-  "Kills word at point or, if no word at point, next word.
-If there is also no next word, does nothing. With ARG, moves |ARG| words forward
-(ARG > 0) or backward (ARG < 0), then kills that word. Does not move
-point (beyond the displacement that may happen from killing words)."
-  (interactive "p")
+(defun kill-whole-thing (thing &optional arg)
+  "Kills whole THING at point or, if no THING at point, up to and including next
+whole THING. If there is also no next THING, does nothing. With ARG, kills from
+beginning/end of THING at point to end/beginning of |ARG| THINGs forward (ARG >
+0)/backward (ARG < 0). Does not move point (beyond the displacement that may
+happen from killing THINGs). Does nothing when ARG = 0."
   (save-excursion
-    (forward-word arg)
-    (when-let* ((bnds (bounds-of-thing-at-point 'word)))
-      (kill-region (car bnds) (cdr bnds)))))
+    (let* ((arg (or arg 1))
+           (bnds (bounds-of-thing-at-point thing)))
+      (when (and bnds (not (zerop arg)))
+        (goto-char (if (< 0 arg) (car bnds) (cdr bnds))))
+      (let ((fixpnt (point)))
+        (forward-thing thing arg)
+        (kill-region fixpnt (point))))))
+
+(defun kill-whole-word (&optional arg)
+  "Executes `kill-whole-thing', which see,
+using `word' for thing, and directly passing ARG."
+  (interactive "p")
+  (kill-whole-thing 'word arg))
 
 (defun kill-whole-symbol (&optional arg)
-  "Kills symbol at point or, if no symbol at point, next symbol.
-If there is also no next symbol, does nothing.
-With ARG, kills word |ARG| words forward (ARG > 0)
-or backward (ARG < 0). Does not move point (beyond
-the displacement that may happen from killing words)."
+  "Executes `kill-whole-thing', which see,
+using `symbol' for thing, and directly passing ARG."
   (interactive "p")
-  (save-excursion
-    (forward-symbol arg)
-    (when-let* ((bnds (bounds-of-thing-at-point 'symbol)))
-      (kill-region (car bnds) (cdr bnds)))))
+  (kill-whole-thing 'symbol arg))
 
 (defun backward-kill-line (&optional arg)
   "Kills from point to beginning of line.
@@ -411,53 +200,6 @@ directly to `kill-whole-line'"
   (interactive "p")
   (kill-whole-line arg)
   (back-to-indentation))
-
-;;; Deleting
-(defun forward-delete-line (&optional arg)
-  "Deletes from point to end of line.
-If point is at end of line, then delete
-the succeeding newline character.
-If ARG is non-nil, delete from point to end
-of ARG-th line after current line."
-  (interactive "P")
-  (if arg
-      (delete-region (point) (pos-eol (prefix-numeric-value (+ arg 1))))
-    (if (eolp)
-        (delete-char 1)
-      (delete-region (point) (pos-eol)))))
-
-(defun backward-delete-line (&optional arg)
-  "Deletes from point to beginning of line.
-If point is at beginning of line, then
-delete the preceding newline character and,
-if `show-trailing-whitespace' is nil,
-delete the trailing whitespace of the preceding line as well.
-If ARG is non-nil, delete from point to beginning
-of ARG-th line before current line."
-  (interactive "P")
-  (if arg
-      (delete-region (pos-bol (prefix-numeric-value (+ arg 1))) (point))
-    (if (bolp)
-        (progn
-          (delete-char (- 1))
-          (unless show-trailing-whitespace
-            (delete-horizontal-space t)))
-      (delete-region (pos-bol) (point)))))
-
-(defun delete-whole-line-or-region (arg)
-  "Deletes whole line (i.e., including terminating newline)
-or region (if active).
-If no region is active and ARG <= 0, then
-delete previous -ARG whole lines *before* current one.
-If no region is active and ARG > 0, then
-delete next ARG whole lines *including* current one.
-Note that this means that, if ARG = 0, this function does
-nothing. In exchange, the behavior is a bit more intuitive."
-  (interactive "p")
-  (if (use-region-p)
-      (call-interactively #'delete-region)
-    (delete-region (line-beginning-position) (line-beginning-position (+ arg 1)))))
-
 
 ;;; Files and directories
 (defun find-file-as-root (filename &optional arg)
