@@ -777,23 +777,15 @@
 (use-package orderless
   :ensure t
 
-  :init
-  ;; Setup and settings (before load)
-  (setopt orderless-smart-case t
-          orderless-expand-substring 'prefix)
-
   :config
   ;; Setup and settings (after load)
-  (setopt orderless-matching-styles (list #'orderless-literal #'orderless-flex #'orderless-regexp))
+  (setopt orderless-matching-styles (list #'orderless-literal #'orderless-regexp #'orderless-flex))
 
   (setopt completion-styles '(orderless basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles basic partial-completion))))
 
   ;; Custom functionality
-  (orderless-define-completion-style orderless-flex-only
-    (orderless-style-dispatchers nil)
-    (orderless-matching-styles '(orderless-flex)))
   (orderless-define-completion-style orderless-literal-only
     (orderless-style-dispatchers nil)
     (orderless-matching-styles '(orderless-literal))))
@@ -804,9 +796,7 @@
   :init
   ;; Setup and settings (before load)
   (setopt vertico-count 15
-          vertico-preselect 'first
-          vertico-scroll-margin 2
-          vertico-cycle nil)
+          vertico-preselect 'first)
 
   :config
   ;; Keybindings
@@ -909,6 +899,15 @@
   ;; Activation
   (global-corfu-mode 1))
 
+(use-package corfu-history
+  :ensure nil ; Provided by Corfu
+
+  :after corfu
+
+  :config
+  ;; Activation
+  (corfu-history-mode 1))
+
 (use-package corfu-quick
   :ensure nil ; Provided by Corfu
 
@@ -924,15 +923,6 @@
   (keymap-set corfu-map "C-S-j" #'corfu-quick-insert)
   (keymap-set corfu-map "C-M-j" #'corfu-quick-complete))
 
-(use-package corfu-history
-  :ensure nil ; Provided by Corfu
-
-  :after corfu
-
-  :config
-  ;; Activation
-  (corfu-history-mode 1))
-
 (use-package cape
   :ensure t
 
@@ -947,33 +937,24 @@
   (keymap-global-set "C-c p" #'cape-prefix-map)
 
   :config
-  ;; Custom functionality
-  (defalias 'cape-abbrev-prefix-2 (cape-capf-prefix-length #'cape-abbrev 2))
-  (defalias 'cape-dabbrev-prefix-2 (cape-capf-prefix-length #'cape-dabbrev 2))
-  (defalias 'cape-line-prefix-3 (cape-capf-prefix-length #'cape-line 3))
-  (defalias 'cape-dict-prefix-2 (cape-capf-prefix-length #'cape-dict 2))
-  (defalias 'cape-keyword-prefix-2 (cape-capf-prefix-length #'cape-keyword 2))
-  (defalias 'cape-file-prefix-2 (cape-capf-prefix-length #'cape-file 2))
-  (defalias 'cape-history-prefix-2 (cape-capf-prefix-length #'cape-history 2))
-  (defalias 'elisp-cap-prefix-2 (cape-capf-prefix-length #'elisp-completion-at-point 2))
-
   (defun setup-a-cape-text-mode ()
     (setq-local completion-at-point-functions
-                (append '(cape-dabbrev-prefix-2 cape-dict-prefix-2)
+                (append '(cape-dabbrev cape-dict)
                         completion-at-point-functions)))
   (defun setup-a-cape-code-mode ()
     (setq-local completion-at-point-functions
-                (append '(cape-keyword-prefix-2 cape-dabbrev-prefix-2)
+                (append '(cape-keyword cape-dabbrev)
                         completion-at-point-functions)))
   (defun setup-a-cape-minibuffer ()
     (setq-local completion-at-point-functions
-                (append '(cape-history-prefix-2 cape-file-prefix-2 cape-dabbrev-prefix-2)
+                (append '(cape-history cape-file cape-dabbrev)
                         completion-at-point-functions)))
   (defun setup-a-cape-elisp-mode ()
-    (setq-local completion-at-point-functions (cons #'elisp-cap-prefix-2 completion-at-point-functions)))
+    (setq-local completion-at-point-functions
+                (cons #'elisp-completion-at-point completion-at-point-functions)))
 
   ;; Hooks
-  (add-hook 'completion-at-point-functions #'cape-dabbrev-prefix-2)
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
 
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
 
@@ -1018,7 +999,16 @@
   (keymap-unset tempel-map "<remap> <forward-paragraph>")
   (keymap-set tempel-map "M-<" #'tempel-beginning)
   (keymap-set tempel-map "M->" #'tempel-end)
-  (keymap-set tempel-map "M-v" #'tempel-done))
+  (keymap-set tempel-map "M-v" #'tempel-done)
+
+  ;; Custom functionality
+  (defun a-tempel-include (elt)
+    "Define `include' element (taken and slightly adjusted from TempEL github repo)
+that allows to include other templates by their name."
+    (when (eq (car-safe elt) 'i)
+      (when-let (template (alist-get (cadr elt) (tempel--templates)))
+        (cons 'l template))))
+  (add-to-list 'tempel-user-elements #'a-tempel-include))
 
 ;;; Actions
 (use-package ace-window
@@ -1031,21 +1021,18 @@
   ;; Setup and settings (before load)
   (setopt aw-keys '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
   (setopt aw-scope 'visible
-          aw-minibuffer-flag nil
-          aw-ignore-current nil
-          aw-background t
           aw-dispatch-always t)
   (setq-default aw-dispatch-alist
                 '((?k aw-delete-window "Kill window")
                   (?K delete-other-windows "Kill other windows")
                   (?s aw-swap-window "Swap buffers between windows")
                   (?m aw-move-window "Move current buffer to window")
-                  (?y aw-copy-window "Copy current buffer to window")
+                  (?w aw-copy-window "Copy current buffer to window")
                   (?g aw-switch-buffer-in-window "Select buffer in window")
                   (?G aw-switch-buffer-other-window "Select buffer in other window")
                   (?r aw-flip-window)
                   (?x aw-execute-command-other-window "Execute command in other window")
-                  (?w aw-split-window-fair "Split window fairly")
+                  (?f aw-split-window-fair "Split window fairly")
                   (?h aw-split-window-horz "Split window horizontally")
                   (?v aw-split-window-vert "Split window vertically")
                   (?t aw-transpose-frame "Transpose frames")
@@ -1772,9 +1759,7 @@
   :init
   ;; Setup and settings (before load)
   (setopt diff-hl-global-modes '(not term-mode image-mode doc-view-mode pdf-view-mode))
-  (setopt diff-hl-command-prefix (kbd "C-x v"))
   (setopt diff-hl-update-async t)
-  (setq-default diff-hl-lighter " DiffHL")
 
   :config
   ;; Keybindings
@@ -2002,9 +1987,6 @@
 
   :config
   ;; Keybindings
-  ;; (keymap-set markdown-mode-command-map "t" #'markdown-kill-ring-save)
-  ;; (keymap-set markdown-mode-command-map "z" #'markdown-table-transpose)
-
   (keymap-set markdown-view-mode-map "<prior>" #'scroll-up-command)
   (keymap-set markdown-view-mode-map "<next>" #'scroll-down-command)
   (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
@@ -2629,7 +2611,7 @@
                                          (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next))))))
 
 ;; Corfu + Orderless
-;; (Mainly for Corfu in auto mode (cheaper filtering))
+;; Efficient/cheap filtering for Corfu auto mode
 ;; (use-package corfu
 ;;   :after orderless
 
