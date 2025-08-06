@@ -204,9 +204,9 @@
 (blink-cursor-mode -1)
 
 ;; Scrolling/Mouse
-(setopt hscroll-margin 2)
+(setopt hscroll-margin 0)
 (setopt hscroll-step 1)
-(setopt scroll-conservatively 10)
+(setopt scroll-conservatively 101)
 (setopt scroll-margin 0)
 (setopt scroll-preserve-screen-position t)
 (setopt auto-window-vscroll nil)
@@ -218,6 +218,7 @@
 (setopt mouse-wheel-scroll-amount '(2 ((shift) . hscroll)))
 (setopt mouse-wheel-scroll-amount-horizontal 2)
 
+(setopt pixel-scroll-precision-interpolate-page t)
 (pixel-scroll-precision-mode 1)
 
 ;; Editor/interaction
@@ -590,6 +591,18 @@
   (global-completion-preview-mode 1))
 
 ;; Helpers
+(use-package ultra-scroll
+  :ensure t
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt scroll-margin 0)
+
+  :config
+  ;; Activation
+  (ultra-scroll-mode 1))
+
+
 (use-package move-it
   :ensure t
   :vc (:url "https://github.com/mmctl/move-it"
@@ -928,32 +941,25 @@
 
   :init
   ;; Setup and settings (before load)
-  (setopt cape-dict-limit 50
-          cape-dabbrev-check-other-buffers #'cape-same-mode-buffers
-          cape-file-prefix '("file:" "f:")
-          cape-file-directory-must-exist t)
+  (setopt cape-file-prefix '("file:" "f:"))
 
+  :config
   ;; Keybindings
   (keymap-global-set "C-c p" #'cape-prefix-map)
 
-  :config
-  (defun setup-a-cape-text-mode ()
-    (setq-local completion-at-point-functions
-                (append '(cape-dabbrev cape-dict)
-                        completion-at-point-functions)))
-  (defun setup-a-cape-code-mode ()
-    (setq-local completion-at-point-functions
-                (append '(cape-keyword cape-dabbrev)
-                        completion-at-point-functions)))
-  (defun setup-a-cape-minibuffer ()
-    (setq-local completion-at-point-functions
-                (append '(cape-history cape-file cape-dabbrev)
-                        completion-at-point-functions)))
-  (defun setup-a-cape-elisp-mode ()
-    (setq-local completion-at-point-functions
-                (cons #'elisp-completion-at-point completion-at-point-functions)))
-
   ;; Hooks
+  (defun setup-a-cape-text-mode ()
+    (add-hook 'completion-at-point-functions #'cape-dabbrev nil t)
+    (add-hook 'completion-at-point-functions #'cape-dict nil t))
+  (defun setup-a-cape-code-mode ()
+    (add-hook 'completion-at-point-functions #'cape-keyword nil t))
+  (defun setup-a-cape-minibuffer ()
+    (add-hook 'completion-at-point-functions #'cape-history nil t)
+    (add-hook 'completion-at-point-functions #'cape-file nil t))
+  (defun setup-a-cape-elisp-mode ()
+    (add-hook 'completion-at-point-functions #'elisp-completion-at-point nil t))
+
+  (add-hook 'completion-at-point-functions #'cape-abbrev)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
 
   (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
@@ -2281,10 +2287,10 @@ that allows to include other templates by their name."
 
   ;; Custom functionality
   ;; Remove bufhist buttons
-  (defun silence-bufhist-insert-buttons (orig-fun &rest args)
+  (defun silence-bufhist-insert-buttons (&rest args)
     (setq-local bufhist-top-point (point-min)))
 
-  (advice-add 'bufhist-insert-buttons :around #'silence-bufhist-insert-buttons))
+  (advice-add 'bufhist-insert-buttons :override #'silence-bufhist-insert-buttons))
 
 
 ;; EasyCrypt (extension)

@@ -21,10 +21,10 @@ ARG - 1 lines forward."
   (interactive "^P")
   (let ((orig-point (point)))
     (move-end-of-line arg)
-    (re-search-backward "[^[:blank:]]" (line-beginning-position) t)
-    (forward-char)
-    (when (and (null arg) show-trailing-whitespace (= (point) orig-point))
-      (move-end-of-line nil))))
+    (when (re-search-backward "[^[:blank:]]" (line-beginning-position) t)
+      (forward-char)
+      (when (and (null arg) show-trailing-whitespace (= (point) orig-point))
+        (move-end-of-line nil)))))
 
 (defun push-mark-no-activate (&optional location)
   "Pushes LOCATION (defaults to `point') to `mark-ring' without
