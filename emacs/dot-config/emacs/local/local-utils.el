@@ -20,7 +20,7 @@ to (actual) end of line. With ARG, moves to end of line
 ARG - 1 lines forward."
   (interactive "^P")
   (let ((orig-point (point)))
-    (move-end-of-line arg)
+    (move-end-of-line (prefix-numeric-value arg))
     (when (re-search-backward "[^[:blank:]]" (line-beginning-position) t)
       (forward-char)
       (when (and (null arg) show-trailing-whitespace (= (point) orig-point))

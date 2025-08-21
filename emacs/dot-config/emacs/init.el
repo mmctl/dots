@@ -591,6 +591,13 @@
   (global-completion-preview-mode 1))
 
 ;; Helpers
+(use-package wgrep
+  :ensure t
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt wgrep-too-many-file-length 15))
+
 (use-package ultra-scroll
   :ensure t
 
@@ -792,13 +799,15 @@
 
   :config
   ;; Setup and settings (after load)
-  (setopt orderless-matching-styles (list #'orderless-literal #'orderless-regexp #'orderless-flex))
+  (setopt orderless-matching-styles '(orderless-literal orderless-regexp))
 
   (setopt completion-styles '(orderless basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles basic partial-completion))))
 
   ;; Custom functionality
+  (orderless-define-completion-style orderless-literal-regexp-flex
+    (orderless-matching-styles '(orderless-literal orderless-regexp orderless-flex)))
   (orderless-define-completion-style orderless-literal-only
     (orderless-style-dispatchers nil)
     (orderless-matching-styles '(orderless-literal))))
@@ -878,12 +887,6 @@
           corfu-left-margin-width 0.5
           corfu-right-margin-width 0.5
           corfu-bar-width 0.25)
-          ;; Auto mode
-          ;; corfu-auto-prefix 2
-          ;; corfu-auto-delay 0.25
-          ;; corfu-on-exact-match nil
-          ;; corfu-preselect 'valid
-          ;; corfu-auto t)
   (setopt text-mode-ispell-word-completion nil)
   :config
   ;; Keybindings
@@ -892,22 +895,6 @@
   (keymap-set corfu-map "M-v" #'corfu-send)
   (keymap-set corfu-map "<prior>" #'corfu-scroll-down)
   (keymap-set corfu-map "<next>" #'corfu-scroll-up)
-  ;; Auto mode
-  ;; (keymap-unset corfu-map "<remap> <beginning-of-buffer>")
-  ;; (keymap-unset corfu-map "<remap> <end-of-buffer>")
-  ;; (keymap-unset corfu-map "<remap> <previous-line>")
-  ;; (keymap-unset corfu-map "<remap> <next-line>")
-  ;; (keymap-unset corfu-map "<remap> <move-beginning-of-line>")
-  ;; (keymap-unset corfu-map "<remap> <move-end-of-line>")
-  ;; (keymap-unset corfu-map "RET")
-  ;; (keymap-unset corfu-map "<up>")
-  ;; (keymap-unset corfu-map "<down>")
-  ;; (keymap-set corfu-map "M-<up>" #'corfu-previous)
-  ;; (keymap-set corfu-map "M-<down>" #'corfu-next)
-  ;; (keymap-set corfu-map "M-\\" #'corfu-scroll-down)
-  ;; (keymap-set corfu-map "M-/" #'corfu-scroll-up)
-  ;; (keymap-set corfu-map "M-<" #'corfu-first)
-  ;; (keymap-set corfu-map "M->" #'corfu-last)
 
   ;; Activation
   (global-corfu-mode 1))
@@ -936,6 +923,19 @@
   (keymap-set corfu-map "C-S-j" #'corfu-quick-insert)
   (keymap-set corfu-map "C-M-j" #'corfu-quick-complete))
 
+(use-package corfu-popupinfo
+  :ensure nil ; Provided by Corfu
+
+  :after corfu
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt corfu-popupinfo-max-height (1+ corfu-count))
+
+  :config
+  ;; Activation
+  (corfu-popupinfo-mode 1))
+
 (use-package cape
   :ensure t
 
@@ -949,15 +949,13 @@
 
   ;; Hooks
   (defun setup-a-cape-text-mode ()
-    (add-hook 'completion-at-point-functions #'cape-dabbrev nil t)
-    (add-hook 'completion-at-point-functions #'cape-dict nil t))
+    (add-hook 'completion-at-point-functions #'cape-dabbrev 90 t)
+    (add-hook 'completion-at-point-functions #'cape-dict 90 t))
   (defun setup-a-cape-code-mode ()
-    (add-hook 'completion-at-point-functions #'cape-keyword nil t))
+    (add-hook 'completion-at-point-functions #'cape-keyword 90 t))
   (defun setup-a-cape-minibuffer ()
-    (add-hook 'completion-at-point-functions #'cape-history nil t)
-    (add-hook 'completion-at-point-functions #'cape-file nil t))
-  (defun setup-a-cape-elisp-mode ()
-    (add-hook 'completion-at-point-functions #'elisp-completion-at-point nil t))
+    (add-hook 'completion-at-point-functions #'cape-history 90 t)
+    (add-hook 'completion-at-point-functions #'cape-file 90 t))
 
   (add-hook 'completion-at-point-functions #'cape-abbrev)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
@@ -969,9 +967,7 @@
   (add-hook 'conf-mode-hook #'setup-a-cape-code-mode)
   (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
 
-  (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer)
-
-  (add-hook 'emacs-lisp-mode-hook #'setup-a-cape-elisp-mode))
+  (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
 
 (use-package tempel
   :ensure t
@@ -1653,7 +1649,7 @@ that allows to include other templates by their name."
                          :deadline future
                          :order 3
                          :face org-upcoming-deadline)
-                  (:name "  Another Day (Timestamp)"
+                  (:name "  Miscellaneous"
                          :date t
                          :order 4)))
 
@@ -2214,8 +2210,8 @@ that allows to include other templates by their name."
     :doc "Keymap (repeatable) for browsing and managing buffer history"
     :repeat (:hints ((bufhist-prev . "p: Go to previous history element")
                      (bufhist-next . "n: Go to next history element")
-                     (bufhist-first . "f: Go to first history element")
-                     (bufhist-last . "l: Go to last history element")
+                     (bufhist-first . "<: Go to first history element")
+                     (bufhist-last . ">: Go to last history element")
                      (bufhist-delete . "d: Delete current history element")))
     "p" #'bufhist-prev
     "n" #'bufhist-next
@@ -2231,8 +2227,8 @@ that allows to include other templates by their name."
     (keymap-set bufhist-mode-map "c" #'bufhist-clear)
     (keymap-set bufhist-mode-map "d" #'bufhist-delete))
   (defun setup-a-proof-mode-map ()
-    (keymap-unset proof-mode-map "M-a")
-    (keymap-unset proof-mode-map "M-e")
+    (keymap-unset proof-mode-map "M-<up>")
+    (keymap-unset proof-mode-map "M-<down>")
     (keymap-unset proof-mode-map "C-M-<up>")
     (keymap-unset proof-mode-map "C-M-<down>")
     (keymap-unset proof-mode-map "C-c v")
@@ -2307,14 +2303,6 @@ that allows to include other templates by their name."
   (easycrypt-goals-mode . easycrypt-ext-goals-mode)
   (easycrypt-response-mode . easycrypt-ext-response-mode)
 
-  :init
-  ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
-  (setopt ece-indentation t)
-  (setopt ece-imenu t)
-  (setopt ece-keyword-completion t)
-  (setopt ece-templates t)
-  (setopt ece-templates-info nil)
-
   :config
   ;; External integration
   (with-eval-after-load 'consult-imenu
@@ -2330,25 +2318,32 @@ that allows to include other templates by their name."
 
   ;; Keybindings
   (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
-  (keymap-set easycrypt-ext-general-map "C-c =" #'ece-proofshell-prompt-print)
   (keymap-set easycrypt-ext-general-map "C-c l p" #'ece-proofshell-print)
   (keymap-set easycrypt-ext-general-map "C-c l P" #'ece-proofshell-prompt-print)
   (keymap-set easycrypt-ext-general-map "C-c l l" #'ece-proofshell-locate)
   (keymap-set easycrypt-ext-general-map "C-c l L" #'ece-proofshell-prompt-locate)
-  (keymap-set easycrypt-ext-general-map "C-c -" #'ece-proofshell-prompt-locate)
   (keymap-set easycrypt-ext-general-map "C-c l m" #'ece-proofshell-prompt-pragma)
   (keymap-set easycrypt-ext-general-map "C-c C-s" #'ece-proofshell-search)
-  (keymap-set easycrypt-ext-general-map "C-c /" #'ece-proofshell-prompt-search)
   (keymap-set easycrypt-ext-general-map "C-c l s" #'ece-proofshell-search)
   (keymap-set easycrypt-ext-general-map "C-c l S" #'ece-proofshell-prompt-search)
-  (keymap-set easycrypt-ext-general-map "C-c :" #'ece-proofshell-prompt)
   (keymap-set easycrypt-ext-general-map "C-c l t" 'ece-template-map-prefix)
   (keymap-set easycrypt-ext-general-map "C-c C-e" 'ece-exec-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c !" #'ece-exec)
+  (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix))
 
-  (keymap-set easycrypt-ext-mode-map "C-c l o" 'ece-options-map-prefix)
-  (keymap-set easycrypt-ext-mode-map "C-c C-t" 'ece-template-map-prefix))
+(use-package easycrypt-ext-cape
+  :ensure nil ; Provided by `easycrypt-ext'
+
+  :hook
+  (easycrypt-ext-mode . easycrypt-ext-mode-cape-setup))
+
+(use-package easycrypt-ext-tempel
+  :ensure nil ; Provided by `easycrypt-ext'
+
+  :hook
+  (easycrypt-ext-mode . easycrypt-ext-mode-tempel-setup)
+
+  :init
+  (setopt ece-tempel-template-map-prefix "C-c l t"))
 
 (use-package easycrypt-ext-avy
   :ensure nil ; Provided by `easycrypt-ext'
@@ -2617,7 +2612,6 @@ that allows to include other templates by their name."
                                          (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next))))))
 
 ;; Corfu + Orderless
-;; Efficient/cheap filtering for Corfu auto mode
 ;; (use-package corfu
 ;;   :after orderless
 
