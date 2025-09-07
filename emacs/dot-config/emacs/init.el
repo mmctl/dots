@@ -140,8 +140,6 @@
   (package-refresh-contents))
 
 
-
-
 ;;; Settings (general/UI)
 ;; Launching
 (setopt inhibit-splash-screen t)
@@ -475,6 +473,8 @@
 (keymap-set search-map "F" #'isearch-forward-regexp)
 (keymap-set search-map "s" #'isearch-forward-symbol)
 (keymap-set search-map "g" #'find-grep)
+(keymap-set search-map "." #'isearch-forward-thing-at-point) ; from: isearch-forward-symbol-at-point
+(keymap-set search-map "M-." #'isearch-forward-symbol-at-point) ; from: isearch-forward-thing-at-point
 
 (defvar-keymap a-replace-map
   :doc "Keymap for replacing"
@@ -482,7 +482,9 @@
   "i" #'isearch-query-replace
   "I" #'isearch-query-replace-regexp
   "q" #'query-replace
-  "Q" #'query-replace-regexp)
+  "Q" #'query-replace-regexp
+  "." #'query-replace-thing-at-point
+  "M-." #'query-replace-regexp-thing-at-point)
 
 (keymap-global-set "M-r" 'a-replace-map-prefix)
 
@@ -505,11 +507,7 @@
           isearch-allow-scroll 'unlimited
           isearch-allow-motion t)
   (setopt lazy-count-prefix-format nil
-          lazy-count-suffix-format " [%s of %s]")
-
-  :config
-  ;; Keybindings
-  (keymap-set isearch-mode-map "M-v" #'isearch-exit))
+          lazy-count-suffix-format " [%s of %s]"))
 
 (use-package imenu
   :init
@@ -534,13 +532,11 @@
 
   :config
   ;; Keybindings
-  (keymap-set dired-mode-map "M-v" #'dired-find-file)
   (keymap-set dired-mode-map "RET" #'dired-find-file)
-  (keymap-set dired-mode-map "<return>" #'dired-find-file)
-  (keymap-set dired-mode-map "C-v" #'dired-display-file)
+  (keymap-set dired-mode-map "M-RET" #'dired-find-file-other-window)
+  (keymap-set dired-mode-map "TAB" #'dired-display-file)
   (keymap-set dired-mode-map "C-<up>" #'dired-prev-marked-file)
-  (keymap-set dired-mode-map "C-<down>" #'dired-next-marked-file)
-  (keymap-set dired-mode-map "C-q" #'dired-up-directory))
+  (keymap-set dired-mode-map "C-<down>" #'dired-next-marked-file))
 
 (use-package dabbrev
   :init
@@ -566,9 +562,7 @@
           which-key-sort-uppercase-first nil
           which-key-sort-order 'which-key-key-order-alpha
           which-key-use-C-h-commands nil
-          which-key-show-early-on-C-h nil
-          which-key-paging-prefixes '("C-x")
-          which-key-paging-key "<f3>")
+          which-key-show-early-on-C-h nil)
 
   :config
   ;; Keybindings
@@ -650,14 +644,8 @@
                             (?l line           "\n")
                             (?b buffer-file-name "\n")))
   (setopt easy-kill-cycle-ignored '(list filename defun defun-name buffer-file-name)
-          easy-kill-try-things '(url email word line)
-          easy-mark-try-things '(url email word sexp))
-
-  :config
-  ;; Keybindings
-  (keymap-set easy-kill-base-map "^" #'easy-kill-cycle)
-  (keymap-set easy-kill-base-map "<" #'easy-kill-shrink)
-  (keymap-set easy-kill-base-map ">" #'easy-kill-expand))
+          easy-kill-try-things '(url symbol word line)
+          easy-mark-try-things '(url symbol word sexp)))
 
 (use-package undo-tree
   :ensure t
@@ -671,22 +659,12 @@
     (make-directory UNDO_DIR t))
   (setopt undo-tree-history-directory-alist `(("." . ,UNDO_DIR)))
 
-  (setopt undo-tree-mode-lighter " UT")
   (setopt undo-tree-incompatible-major-modes '(term-mode image-mode doc-view-mode pdf-view-mode))
-  (setopt undo-tree-auto-save-history t
-          undo-tree-enable-undo-in-region t
-          undo-tree-visualizer-diff t)
+  (setopt undo-tree-visualizer-diff t)
 
   :config
   ;; Keybindings
   (keymap-set undo-tree-map "<remap> <undo-redo>" #'undo-tree-redo)
-
-  (keymap-set undo-tree-visualizer-mode-map "h" #'undo-tree-visualizer-scroll-left)
-  (keymap-set undo-tree-visualizer-mode-map "j" #'undo-tree-visualizer-scroll-down)
-  (keymap-set undo-tree-visualizer-mode-map "k" #'undo-tree-visualizer-scroll-up)
-  (keymap-set undo-tree-visualizer-mode-map "l" #'undo-tree-visualizer-scroll-right)
-
-  (keymap-set undo-tree-visualizer-selection-mode-map "M-v" #'undo-tree-visualizer-set)
 
   ;; Activation
   (global-undo-tree-mode 1))
@@ -722,75 +700,7 @@
                                (conf-mode font-lock-comment-face
                                           font-lock-doc-face)
                                (yaml-mode . conf-mode)
-                               (yaml-ts-mode . conf-mode)))
-
-  :config
-  ;; Keybindings
-  (keymap-set jinx-overlay-map "C-p" #'jinx-previous)
-  (keymap-set jinx-overlay-map "C-n" #'jinx-next)
-  (keymap-set jinx-repeat-map "C-p" #'jinx-previous)
-  (keymap-set jinx-repeat-map "C-n" #'jinx-next)
-  (keymap-set jinx-correct-map "C-p" #'jinx-previous)
-  (keymap-set jinx-correct-map "C-n" #'jinx-next))
-
-(use-package visual-replace
-  :ensure t
-
-  :bind
-  ("M-R" . visual-replace)
-  (:map a-replace-map
-        ("r" . visual-replace-selected)
-        ("s" . visual-replace-sexp-at-point)
-        ("v" . visual-replace)
-        ("V" . visual-replace-regexp)
-        ("w" . visual-replace-word-at-point)
-        ("." . visual-replace-thing-at-point))
-  (:map isearch-mode-map
-        ("M-R" . visual-replace-from-isearch))
-
-  :init
-  ;; Setup and settings
-  (setopt visual-replace-keep-incomplete nil)
-  (setopt visual-replace-preview t
-          visual-replace-preview-delay 0.1
-          visual-replace-preview-max-durattion 0.05)
-  (setopt visual-replace-default-to-full-scope nil)
-  (setopt visual-replace-display-total t)
-  (setopt visual-replace-min-length 2)
-
-  ;; Custom functionality
-  (defun visual-replace-word-at-point ()
-    (interactive)
-    (visual-replace-thing-at-point 'word))
-  (defun visual-replace-sexp-at-point ()
-    (interactive)
-    (visual-replace-thing-at-point 'sexp))
-
-  ;; Keybindings
-  (keymap-global-set "<remap> <query-replace>" #'visual-replace)
-  (keymap-global-set "<remap> <replace-string>" #'visual-replace)
-  (keymap-global-set "<remap> <query-replace-regexp>" #'visual-replace-regexp)
-  (keymap-global-set "<remap> <isearch-query-replace>" #'visual-replace-from-isearch)
-  (keymap-global-set "<remap> <isearch-query-replace-regexp>" #'visual-replace-from-isearch)
-
-  :config
-  ;; Keybindings
-  (keymap-set visual-replace-mode-map "C-v" #'visual-replace-apply-one-repeat)
-  (keymap-set visual-replace-mode-map "M-v" #'visual-replace-enter)
-  (keymap-set visual-replace-mode-map "C-p" #'visual-replace-prev-match)
-  (keymap-set visual-replace-mode-map "C-n" #'visual-replace-next-match)
-  (keymap-set visual-replace-mode-map "M-TAB" #'visual-replace-tab)
-  (keymap-set visual-replace-mode-map "M-<tab>" #'visual-replace-tab))
-
-(use-package olivetti
-  :ensure t
-
-  :defer t
-
-  :init
-  (setopt olivetti-body-width 0.50
-          olivetti-minimum-body-width 70)
-  (setopt olivetti-style t))
+                               (yaml-ts-mode . conf-mode))))
 
 
 ;; Completion
@@ -822,16 +732,8 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-map "C-v" #'vertico-insert)
-  (keymap-set vertico-map "M-v" #'vertico-exit)
-  (keymap-set vertico-map "M-V" #'vertico-exit-input)
-  (keymap-set vertico-map "TAB" #'minibuffer-complete)
-  (keymap-set vertico-map "<tab>" #'minibuffer-complete)
+  (keymap-set vertico-map "<backtab>" #'minibuffer-complete)
   (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
-  (keymap-set vertico-map "<next>" #'vertico-scroll-up)
-  (keymap-set vertico-map "<prior>" #'vertico-scroll-down)
-  (keymap-set vertico-map "<home>" #'vertico-first)
-  (keymap-set vertico-map "<end>" #'vertico-last)
 
   ;; Activation
   (vertico-mode 1))
@@ -843,9 +745,8 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-map "M-d" #'vertico-directory-enter)
-  (keymap-set vertico-map "<backspace>" #'vertico-directory-delete-char)
-  (keymap-set vertico-map "M-<backspace>" #'vertico-directory-delete-word)
+  (keymap-set vertico-map "DEL" #'vertico-directory-delete-char)
+  (keymap-set vertico-map "M-DEL" #'vertico-directory-delete-word)
 
   ;; Hooks
   (add-hook 'rfn-eshadow-update-overlay #'vertico-directory-tidy))
@@ -855,12 +756,7 @@
 
   :after vertico
 
-  :hook vertico-mode
-
-  :config
-  ;; Keybindings
-  (keymap-set vertico-mouse-map "<mouse-1>" (vertico-mouse--click "M-v"))
-  (keymap-set vertico-mouse-map "<mouse-3>" (vertico-mouse--click "C-v")))
+  :hook vertico-mode)
 
 (use-package vertico-quick
   :ensure nil ; Provided by vertico
@@ -888,14 +784,8 @@
           corfu-right-margin-width 0.5
           corfu-bar-width 0.25)
   (setopt text-mode-ispell-word-completion nil)
-  :config
-  ;; Keybindings
-  ;; All modes
-  (keymap-set corfu-map "C-v" #'corfu-complete)
-  (keymap-set corfu-map "M-v" #'corfu-send)
-  (keymap-set corfu-map "<prior>" #'corfu-scroll-down)
-  (keymap-set corfu-map "<next>" #'corfu-scroll-up)
 
+  :config
   ;; Activation
   (global-corfu-mode 1))
 
@@ -949,13 +839,13 @@
 
   ;; Hooks
   (defun setup-a-cape-text-mode ()
-    (add-hook 'completion-at-point-functions #'cape-dabbrev 90 t)
-    (add-hook 'completion-at-point-functions #'cape-dict 90 t))
+    (add-hook 'completion-at-point-functions #'cape-dabbrev nil t)
+    (add-hook 'completion-at-point-functions #'cape-dict nil t))
   (defun setup-a-cape-code-mode ()
-    (add-hook 'completion-at-point-functions #'cape-keyword 90 t))
+    (add-hook 'completion-at-point-functions #'cape-keyword nil t))
   (defun setup-a-cape-minibuffer ()
-    (add-hook 'completion-at-point-functions #'cape-history 90 t)
-    (add-hook 'completion-at-point-functions #'cape-file 90 t))
+    (add-hook 'completion-at-point-functions #'cape-history nil t)
+    (add-hook 'completion-at-point-functions #'cape-file nil t))
 
   (add-hook 'completion-at-point-functions #'cape-abbrev)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
@@ -1001,7 +891,6 @@
   (keymap-unset tempel-map "<remap> <forward-paragraph>")
   (keymap-set tempel-map "M-<" #'tempel-beginning)
   (keymap-set tempel-map "M->" #'tempel-end)
-  (keymap-set tempel-map "M-v" #'tempel-done)
 
   ;; Custom functionality
   (defun a-tempel-include (elt)
@@ -1263,8 +1152,7 @@ that allows to include other templates by their name."
         ("C-p" . 'dired-filter-group-backward-drawer)
         ("C-n" . 'dired-filter-group-forward-drawer))
   (:map dired-filter-group-header-map
-        ("TAB" . 'dired-filter-group-toggle-header)
-        ("<tab>" . 'dired-filter-group-toggle-header))
+        ("TAB" . 'dired-filter-group-toggle-header))
 
   :init
   ;; Setup and settings (before load)
@@ -1280,7 +1168,6 @@ that allows to include other templates by their name."
 
   :config
   ;; Keybindings
-  (keymap-unset dired-filter-group-mode-map "TAB")
   (keymap-unset dired-filter-group-mode-map "<tab>"))
 
 (use-package dired-subtree
@@ -1294,9 +1181,7 @@ that allows to include other templates by their name."
   :bind
   (:map dired-mode-map
         ("TAB" . dired-subtree-toggle)
-        ("<tab>" . dired-subtree-toggle)
         ("M-TAB" . dired-subtree-cycle)
-        ("M-<tab>" . dired-subtree-cycle)
         ("M-t" . a-dired-subtree-map-prefix))
   (:map a-dired-subtree-map
         ("a" . dired-subtree-apply-filter)
@@ -1455,6 +1340,11 @@ that allows to include other templates by their name."
                ("l" . org-store-link))
 
   :init
+  ;; Setup and settings (before load)
+  ;; Modules
+  (setopt org-modules '(ol-doi ol-bbdb ol-bibtex ol-docview ol-gnus ol-info ol-eww
+                               org-crypt org-habit org-id))
+
   ;; Create and store org calendar file
   (defconst ORG_CALENDAR_FILE (file-name-concat ORG_DIR "calendar.org")
     "Default file for calendar events created with org.")
@@ -1523,7 +1413,7 @@ that allows to include other templates by their name."
             (:endgrouptag)
             ("area@admin" . ?d) ("event" . ?E) ("area@faf". ?f) ("area@home" . ?h)
             ("meeting" . ?M) ("noshow" . ?N) ("area@relation" . ?r) ("rftarget" . ?R)
-            ("area@tinker" . ?t) ("area@travel" . ?T) ("area@work" . ?w)))
+            ("area@leisure" . ?l) ("area@travel" . ?t) ("area@work" . ?w)))
 
   (setopt org-tags-exclude-from-inheritance '("rftarget" "noshow"))
 
@@ -1605,8 +1495,12 @@ that allows to include other templates by their name."
                     ("Home" ,(list (nerd-icons-faicon "nf-fa-home" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
                     ("Relationship" ,(list (nerd-icons-faicon "nf-fa-heart" :face 'nerd-icons-lred :v-adjust 0.05)) nil nil :ascent center)
                     ("Tinker" ,(list (nerd-icons-faicon "nf-fa-screwdriver_wrench" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
+                    ("Leisure" ,(list (nerd-icons-faicon "nf-fa-play" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
                     ("Travel" ,(list (nerd-icons-faicon "nf-fa-plane_departure" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
                     ("Work" ,(list (nerd-icons-faicon "nf-fa-user_tie" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center))))
+
+  (setopt org-habit-graph-column 60
+          org-habit-preceding-days 14)
 
   :config
   ;; Setup and settings (after load)
@@ -1614,13 +1508,7 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-files ORG_TODOS_FILE)
   (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
   (add-to-list 'org-agenda-files ORG_PROJECTS_FILE)
-  (add-to-list 'org-agenda-files ORG_AREAS_FILE)
-
-  ;; Keybindings
-  (keymap-unset org-read-date-minibuffer-local-map "C-v")
-  (keymap-unset org-read-date-minibuffer-local-map "M-v")
-  (keymap-set org-read-date-minibuffer-local-map "C-<" #'org-calendar-scroll-three-months-left)
-  (keymap-set org-read-date-minibuffer-local-map "C->" #'org-calendar-scroll-three-months-right))
+  (add-to-list 'org-agenda-files ORG_AREAS_FILE))
 
 (use-package org-super-agenda
   :ensure t
@@ -1807,12 +1695,8 @@ that allows to include other templates by their name."
   (add-to-list 'magit-no-confirm 'trash)
   (add-to-list 'magit-no-confirm 'safe-with-wip)
 
-  ;; Keybindings
-  (keymap-set magit-mode-map "M-v" #'magit-visit-thing)
-
-  (keymap-set magit-diff-section-map "M-v" #'magit-diff-visit-worktree-file)
-
-  (keymap-set magit-module-section-map "M-v" #'magit-submodule-visit)
+  ;; Keybindingss
+  (keymap-set magit-diff-section-map "M-RET" #'magit-diff-visit-worktree-file)
 
   ;; Activation
   (magit-wip-mode 1))
@@ -1874,7 +1758,6 @@ that allows to include other templates by their name."
   (keymap-unset cdlatex-mode-map "TAB")
   (keymap-set cdlatex-mode-map "<backtab>" #'cdlatex-tab)
   (keymap-set cdlatex-mode-map "C-c TAB" #'indent-for-tab-command)
-  (keymap-set cdlatex-mode-map "C-c <tab>" #'indent-for-tab-command)
 
   ;; Ensure Corfu is not in automatic mode, as to not interfere with templates
   (defun setup-a-cdlatex-corfu-mode ()
@@ -1943,7 +1826,6 @@ that allows to include other templates by their name."
 
   ;; Keybindings
   (keymap-set pdf-view-mode-map "q" #'kill-this-buffer)
-  (keymap-set pdf-view-mode-map "<backspace>" "DEL")
   (keymap-set pdf-view-mode-map "<end>" #'pdf-view-last-page)
   (keymap-set pdf-view-mode-map "<home>" #'pdf-view-first-page)
   (keymap-set pdf-view-mode-map "z" #'pdf-view-shrink)
@@ -2142,15 +2024,7 @@ that allows to include other templates by their name."
   :ensure t
   :pin melpa
 
-  :hook (tuareg-mode caml-mode)
-
-  :config
-  ;; Keybindings
-  (keymap-unset merlin-type-enclosing-map "C-<up>")
-  (keymap-unset merlin-type-enclosing-map "C-<down>")
-
-  (keymap-set merlin-type-enclosing-map "C-p" #'merlin-type-enclosing-go-up)
-  (keymap-set merlin-type-enclosing-map "C-n" #'merlin-type-enclosing-go-down))
+  :hook (tuareg-mode caml-mode))
 
 ;; Proof General (EasyCrypt)
 ;; Note, proof.el (which is provided by the proof-general package) is what is
@@ -2306,15 +2180,16 @@ that allows to include other templates by their name."
   :config
   ;; External integration
   (with-eval-after-load 'consult-imenu
-    (add-to-list 'consult-imenu-config '(easycrypt-mode :types
-                                                        ((?t "Types" font-lock-type-face)
-                                                         (?o "Operators" font-lock-function-name-face)
-                                                         (?c "Constants" font-lock-constant-face)
-                                                         (?m "Modules" font-lock-property-use-face)
-                                                         (?M "Module Types" font-lock-type-face)
-                                                         (?a "Axioms" font-lock-builtin-face)
-                                                         (?l "Lemmas" font-lock-keyword-face)
-                                                         (?T "Theories" font-lock-type-face)))))
+    (add-to-list 'consult-imenu-config
+                 '(easycrypt-mode :types
+                                  ((?t "Types" font-lock-type-face)
+                                   (?o "Operators" font-lock-function-name-face)
+                                   (?c "Constants" font-lock-constant-face)
+                                   (?m "Modules" font-lock-property-use-face)
+                                   (?M "Module Types" font-lock-type-face)
+                                   (?a "Axioms" font-lock-builtin-face)
+                                   (?l "Lemmas" font-lock-keyword-face)
+                                   (?T "Theories" font-lock-type-face)))))
 
   ;; Keybindings
   (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
@@ -2610,16 +2485,6 @@ that allows to include other templates by their name."
                                        (when (bound-and-true-p vertico--input)
                                          (keymap-set minibuffer-local-map "M-P" #'an-embark-select-vertico-previous)
                                          (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next))))))
-
-;; Corfu + Orderless
-;; (use-package corfu
-;;   :after orderless
-
-;;   :config
-;;   ;; Hooks
-;;   (add-hook 'corfu-mode-hook
-;;             (lambda ()
-;;               (setq-local completion-styles '(orderless-literal-only basic)))))
 
 ;; Corfu + Vertico
 (use-package corfu

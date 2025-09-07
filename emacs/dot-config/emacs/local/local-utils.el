@@ -133,12 +133,12 @@ then performs its action for that line. Leaves point as is."
       (when bnds
         (kill-ring-save (car bnds) (cdr bnds))
         (message "Copied %s%s"
-                 (if rep "entire line (content + whitespace)" "line (or field) content")
+                 (if rep "entire line (content + whitespace)" "line")
                  (if arg (format " at %s" arg) ""))))))
 
 
 ;;; Yanking
-(defun yank-whole-line (&optional arg)
+(defun yank-line (&optional arg)
   "Yanks (in place) line at point.
 With ARG, moves |ARG| lines forward (ARG > 0) or backward (ARG < 0),
 then copies that line. Does not move point."
@@ -201,6 +201,33 @@ directly to `kill-whole-line'"
   (kill-whole-line arg)
   (back-to-indentation))
 
+
+;;; Searching and replacing
+(defun query-replace-from-default-thing-at-point ()
+  "Fetches the thing at point, where thing is one of the things
+defined in `isearch-forward-thing-at-point', which see, tried in order.
+If this yields no thing at point, returns `nil'.
+
+Meant as value for `query-replace-read-from-default', which see."
+  (when-let* ((bnds (seq-some (lambda (thing)
+                               (bounds-of-thing-at-point thing))
+                             isearch-forward-thing-at-point)))
+    (buffer-substring-no-properties (car bnds) (cdr bnds))))
+
+(defun query-replace-thing-at-point ()
+  "Calls `query-replace' with `query-replace-read-from-default'
+bound to `query-replace-from-default-thing-at-point', which see."
+  (interactive)
+  (let ((query-replace-read-from-default #'query-replace-from-default-thing-at-point))
+    (call-interactively #'query-replace)))
+
+(defun query-replace-regexp-thing-at-point ()
+  "Calls `query-replace-regexp' with `query-replace-read-from-default'
+bound to `query-replace-from-default-thing-at-point', which see."
+  (interactive)
+  (let ((query-replace-read-from-default #'query-replace-from-default-thing-at-point))
+    (call-interactively #'query-replace-regexp)))
+    
 ;;; Files and directories
 (defun find-file-as-root (filename &optional arg)
   "Find FILENAME as root using `find-file', taking remote
