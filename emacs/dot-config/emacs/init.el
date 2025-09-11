@@ -449,9 +449,6 @@
 (keymap-global-set "C-S-d" #'dired-jump)
 (keymap-global-set "C-M-S-d" #'dired-default-directory-as-root)
 
-(keymap-global-set "C-S-r" #'isearch-backward-regexp)
-(keymap-global-set "C-S-s" #'isearch-forward-regexp)
-
 (keymap-set goto-map "b" #'switch-to-buffer)
 (keymap-set goto-map "B" #'switch-to-buffer-other-window)
 (keymap-set goto-map "C-b" #'switch-to-buffer-other-frame)
@@ -466,6 +463,8 @@
 (keymap-set goto-map "#" #'bookmark-jump)
 (keymap-set goto-map "C-#" #'bookmark-jump-other-window)
 (keymap-set goto-map "M-#" #'bookmark-jump-other-frame)
+
+(keymap-global-set "M-S" #'isearch-forward-thing-at-point)
 
 (keymap-set search-map "b" #'isearch-backward)
 (keymap-set search-map "B" #'isearch-backward-regexp)
@@ -487,6 +486,7 @@
   "M-." #'query-replace-regexp-thing-at-point)
 
 (keymap-global-set "M-r" 'a-replace-map-prefix)
+(keymap-global-set "M-R" 'query-replace-thing-at-point)
 
 
 ;;; Packages
@@ -522,12 +522,8 @@
           dired-maybe-use-globstar t
           dired-mouse-drag-files t
           dired-always-read-filesystem t
-          dired-mark-region 'file
-          dired-movement-style 'bounded
           dired-auto-revert-buffer #'dired-directory-changed-p
-          dired-recursive-deletes 'top
           dired-switches-in-mode-line 'as-is
-          dired-recursive-copies 'top
           dired-kill-when-opening-new-dired-buffer t)
 
   :config
@@ -1417,7 +1413,7 @@ that allows to include other templates by their name."
 
   (setopt org-tags-exclude-from-inheritance '("rftarget" "noshow"))
 
-  (setopt org-todo-keywords '((sequence "TODO" "DOING" "BLOCKED" "DONE")))
+  (setopt org-todo-keywords '((sequence "TODO(t)" "DOING(p)" "BLOCKED(b)" "DONE(d)")))
   (setopt org-todo-keyword-faces
           '(("TODO" . (:inherit org-todo :weight bold))
             ("DOING" . (:inherit org-cite :weight medium))
@@ -1508,7 +1504,11 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-files ORG_TODOS_FILE)
   (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
   (add-to-list 'org-agenda-files ORG_PROJECTS_FILE)
-  (add-to-list 'org-agenda-files ORG_AREAS_FILE))
+  (add-to-list 'org-agenda-files ORG_AREAS_FILE)
+
+  ;; Keybindings
+  (keymap-set org-mode-map "C-c M-t" #'org-todo-manipulate-time)
+  (keymap-set org-agenda-mode-map "C-c M-t" #'org-todo-manipulate-time))
 
 (use-package org-super-agenda
   :ensure t
@@ -1877,133 +1877,6 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
 
-;; Assistants (AI)
-(use-package aidermacs
-  :ensure t
-
-  :pin melpa
-
-  :bind
-  ("C-c a" . aidermacs-transient-menu)
-
-  :init
-  ;; Setup and settings (before load)
-  (setopt aidermacs-default-chat-mode 'ask)
-  (setopt aidermacs-default-model "openrouter/mistralai/devstral-small:free"
-          aidermacs-weak-model "ollama_chat/qwen2.5-coder:3b")
-
-  (setopt aidermacs-use-architect-mode nil
-          aidermacs-auto-accept-architect nil)
-
-  (setopt aidermacs-show-diff-after-change t
-          aidermacs-auto-commits nil)
-
-
-  :config
-  ;; Hooks
-  (add-hook 'aidermacs-before-run-backend-hook
-            #'(lambda ()
-                (setenv "OLLAMA_API_BASE" "http://127.0.0.1:11434"))))
-
-(use-package gptel
-  :ensure t
-
-  :bind
-  ("C-c G" . gptel-send)
-  (:prefix-map a-gptel-map :prefix "C-c g"
-               ("a" . gptel-add)
-               ("f" . gptel-add-file)
-               ("g" . gptel)
-               ("m" . gptel-menu)
-               ("o" . gptel-org-set-topic)
-               ("O" . gptel-org-set-properties)
-               ("q" . gptel-abort)
-               ("r" . gptel-rewrite)
-               ("s" . gptel-send)
-               ("<" . gptel-beginning-of-response)
-               (">" . gptel-end-of-response))
-
-  :init
-  ;; Setup and settings (before load)
-  (setopt gptel-include-reasoning nil)
-  (setopt gptel-default-mode 'org-mode)
-  (setopt gptel-rewrite-default-action 'dispatch)
-
-  (setopt gptel-prompt-prefix-alist '((org-mode . "*@me*\n")
-                                      (markdown-mode . "*@me*\n")
-                                      (text-mode . "*@me*\n"))
-          gptel-response-prefix-alist '((org-mode . "*@assistant*\n")
-                                        (markdown-mode . "*@assistant*\n")
-                                        (text-mode . "*@assistant*\n")))
-
-  (setopt gptel-org-branching-context t)
-
-  :config
-  ;; Setup and settings (after load)
-  ;; Define and add system directives
-  (defconst DIRECTIVE_SYSTEM_CODING
-    "You are an expert coding assistant across various programming\
- languages. Your goal is to assist developers by providing clean, efficient, and\
- well-explained code solutions tailored to their needs. Ensure your responses\
- include not only the final code but also detailed explanations of changes made\
- and best practices followed."
-    "A directive system message used with assistants aimed at coding.")
-
-  (defconst DIRECTIVE_SYSTEM_WRITING_ACADEMIC
-    "You are an expert academic researcher and writer specializing in\
- cryptography and formal methods. Your task is to help researchers and\
- students enhance their writing by making it more concise, improving flow and\
- tone, and providing innovative rewriting ideas. Your responses should be\
- tailored to the specific nuances of these fields, ensuring clarity and\
- precision throughout."
-    "A directive system message used with assistants aimed at academic writing.")
-
-  (add-to-list 'gptel-directives `(coding . ,DIRECTIVE_SYSTEM_CODING))
-  (add-to-list 'gptel-directives `(writing-academic . ,DIRECTIVE_SYSTEM_WRITING_ACADEMIC))
-
-  ;; Register Ollama (local) backend
-  (gptel-make-ollama "Ollama"
-    :host "localhost:11434"
-    :stream t
-    :models '(qwen2.5-coder:3b
-              qwen3:4b
-              deepseek-r1:1.5b))
-
-  ;; Register OpenRouter backend (remote/API) and set it default
-  (setopt gptel-backend (gptel-make-openai "OpenRouter"
-                          :host "openrouter.ai"
-                          :endpoint "/api/v1/chat/completions"
-                          :stream t
-                          :key (getenv "OPENROUTER_API_KEY")
-                          :models '(mistralai/mistral-small-3.2-24b-instruct:free
-                                    mistralai/devstral-small:free))
-          gptel-api-key (getenv "OPENROUTER_API_KEY")
-          gptel-model 'mistralai/mistral-small-3.2-24b-instruct:free)
-
-  ;; Presets
-  (gptel-make-preset 'coding-qwen25coder-low-ollama
-                     :description "A low-resource preset aimed at coding (uses QWEN-2.5-Coder via Ollama)."
-                     :backend "Ollama"
-                     :model 'qwen2.5-coder:3b
-                     :system DIRECTIVE_SYSTEM_CODING)
-  (gptel-make-preset 'academic-writing-qwen3-low-ollama
-                     :description "A low-resource preset aimed at academic writing (uses QWEN-3 via Ollama)."
-                     :backend "Ollama"
-                     :model 'qwen3:4b
-                     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
-  (gptel-make-preset 'coding-devstral-openrouter
-                     :description "A preset aimed at coding (uses Devstral via OpenRouter)."
-                     :backend "OpenRouter"
-                     :model 'mistralai/devstral-small:free
-                     :system DIRECTIVE_SYSTEM_CODING)
-  (gptel-make-preset 'academic-writing-mistralsmall32-openrouter
-                     :description "A preset aimed at academic writing (uses Mistrall Small 3.2 via OpenRouter)."
-                     :backend "OpenRouter"
-                     :model 'mistralai/mistral-small-3.2-24b-instruct:free
-                     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
-
-  ;; Hooks
-  (add-hook 'gptel-post-response-functions #'gptel-end-of-response))
 
 ;; Development
 ;; OCaml

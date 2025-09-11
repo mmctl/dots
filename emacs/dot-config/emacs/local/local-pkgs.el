@@ -295,6 +295,28 @@ moving to the next candidate after selecting."
   (embark-select)
   (vertico-next))
 
+
+;;; Org
+(defun org-todo-manipulate-time (datetime)
+  "As `org-todo', but with the current date/time set to DATETIME,
+which should be in a form that could be returned by `current-time',
+which see, or the symbol 'yesterday. In the latter case, this function
+reduces to `org-todo-yesterday'. Interactively, user is prompted for
+DATETIME using `org-read-date' unless the prefix argument is given,
+in which case the symbol 'yesterday is used."
+  (interactive (list (if current-prefix-arg
+                         'yesterday
+                       (org-read-date t t nil "Manipulate --")))
+               'org-mode 'org-agenda-mode)
+  (if (eq datetime 'yesterday)
+      (if (eq major-mode 'org-agenda-mode)
+          (org-agenda-todo-yesterday)
+        (org-todo-yesterday))
+    (cl-letf (((symbol-function 'current-time) #'(lambda () datetime)))
+      (if (eq major-mode 'org-agenda-mode)
+          (org-agenda-todo)
+        (org-todo)))))
+
 (provide 'local-pkgs)
 
 ;;; local-pkgs.el ends here

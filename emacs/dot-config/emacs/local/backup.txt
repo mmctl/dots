@@ -1,0 +1,128 @@
+;;; Init.el
+;; Assistants (AI)
+(use-package aidermacs
+  :ensure t
+
+  :pin melpa
+
+  :bind
+  ("C-c a" . aidermacs-transient-menu)
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt aidermacs-default-chat-mode 'ask)
+  (setopt aidermacs-default-model "openrouter/mistralai/devstral-small:free"
+          aidermacs-weak-model "ollama_chat/qwen2.5-coder:3b")
+
+  (setopt aidermacs-use-architect-mode nil
+          aidermacs-auto-accept-architect nil)
+
+  (setopt aidermacs-show-diff-after-change t
+          aidermacs-auto-commits nil)
+
+
+  :config
+  ;; Hooks
+  (add-hook 'aidermacs-before-run-backend-hook
+            #'(lambda ()
+                (setenv "OLLAMA_API_BASE" "http://127.0.0.1:11434"))))
+
+(use-package gptel
+  :ensure t
+
+  :bind
+  ("C-c G" . gptel-send)
+  (:prefix-map a-gptel-map :prefix "C-c g"
+               ("a" . gptel-add)
+               ("f" . gptel-add-file)
+               ("g" . gptel)
+               ("m" . gptel-menu)
+               ("o" . gptel-org-set-topic)
+               ("O" . gptel-org-set-properties)
+               ("q" . gptel-abort)
+               ("r" . gptel-rewrite)
+               ("s" . gptel-send)
+               ("<" . gptel-beginning-of-response)
+               (">" . gptel-end-of-response))
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt gptel-include-reasoning nil)
+  (setopt gptel-default-mode 'org-mode)
+  (setopt gptel-rewrite-default-action 'dispatch)
+
+  (setopt gptel-prompt-prefix-alist '((org-mode . "*@me*\n")
+                                      (markdown-mode . "*@me*\n")
+                                      (text-mode . "*@me*\n"))
+          gptel-response-prefix-alist '((org-mode . "*@assistant*\n")
+                                        (markdown-mode . "*@assistant*\n")
+                                        (text-mode . "*@assistant*\n")))
+
+  (setopt gptel-org-branching-context t)
+
+  :config
+  ;; Setup and settings (after load)
+  ;; Define and add system directives
+  (defconst DIRECTIVE_SYSTEM_CODING
+    "You are an expert coding assistant across various programming\
+ languages. Your goal is to assist developers by providing clean, efficient, and\
+ well-explained code solutions tailored to their needs. Ensure your responses\
+ include not only the final code but also detailed explanations of changes made\
+ and best practices followed."
+    "A directive system message used with assistants aimed at coding.")
+
+  (defconst DIRECTIVE_SYSTEM_WRITING_ACADEMIC
+    "You are an expert academic researcher and writer specializing in\
+ cryptography and formal methods. Your task is to help researchers and\
+ students enhance their writing by making it more concise, improving flow and\
+ tone, and providing innovative rewriting ideas. Your responses should be\
+ tailored to the specific nuances of these fields, ensuring clarity and\
+ precision throughout."
+    "A directive system message used with assistants aimed at academic writing.")
+
+  (add-to-list 'gptel-directives `(coding . ,DIRECTIVE_SYSTEM_CODING))
+  (add-to-list 'gptel-directives `(writing-academic . ,DIRECTIVE_SYSTEM_WRITING_ACADEMIC))
+
+  ;; Register Ollama (local) backend
+  (gptel-make-ollama "Ollama"
+    :host "localhost:11434"
+    :stream t
+    :models '(qwen2.5-coder:3b
+              qwen3:4b
+              deepseek-r1:1.5b))
+
+  ;; Register OpenRouter backend (remote/API) and set it default
+  (setopt gptel-backend (gptel-make-openai "OpenRouter"
+                          :host "openrouter.ai"
+                          :endpoint "/api/v1/chat/completions"
+                          :stream t
+                          :key (getenv "OPENROUTER_API_KEY")
+                          :models '(mistralai/mistral-small-3.2-24b-instruct:free
+                                    mistralai/devstral-small:free))
+          gptel-api-key (getenv "OPENROUTER_API_KEY")
+          gptel-model 'mistralai/mistral-small-3.2-24b-instruct:free)
+
+  ;; Presets
+  (gptel-make-preset 'coding-qwen25coder-low-ollama
+                     :description "A low-resource preset aimed at coding (uses QWEN-2.5-Coder via Ollama)."
+                     :backend "Ollama"
+                     :model 'qwen2.5-coder:3b
+                     :system DIRECTIVE_SYSTEM_CODING)
+  (gptel-make-preset 'academic-writing-qwen3-low-ollama
+                     :description "A low-resource preset aimed at academic writing (uses QWEN-3 via Ollama)."
+                     :backend "Ollama"
+                     :model 'qwen3:4b
+                     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
+  (gptel-make-preset 'coding-devstral-openrouter
+                     :description "A preset aimed at coding (uses Devstral via OpenRouter)."
+                     :backend "OpenRouter"
+                     :model 'mistralai/devstral-small:free
+                     :system DIRECTIVE_SYSTEM_CODING)
+  (gptel-make-preset 'academic-writing-mistralsmall32-openrouter
+                     :description "A preset aimed at academic writing (uses Mistrall Small 3.2 via OpenRouter)."
+                     :backend "OpenRouter"
+                     :model 'mistralai/mistral-small-3.2-24b-instruct:free
+                     :system DIRECTIVE_SYSTEM_WRITING_ACADEMIC)
+
+  ;; Hooks
+  (add-hook 'gptel-post-response-functions #'gptel-end-of-response))
