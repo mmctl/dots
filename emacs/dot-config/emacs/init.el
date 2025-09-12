@@ -1504,11 +1504,7 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-files ORG_TODOS_FILE)
   (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
   (add-to-list 'org-agenda-files ORG_PROJECTS_FILE)
-  (add-to-list 'org-agenda-files ORG_AREAS_FILE)
-
-  ;; Keybindings
-  (keymap-set org-mode-map "C-c M-t" #'org-todo-manipulate-time)
-  (keymap-set org-agenda-mode-map "C-c M-t" #'org-todo-manipulate-time))
+  (add-to-list 'org-agenda-files ORG_AREAS_FILE))
 
 (use-package org-super-agenda
   :ensure t
@@ -2357,7 +2353,11 @@ that allows to include other templates by their name."
     (add-hook 'minibuffer-setup-hook (lambda ()
                                        (when (bound-and-true-p vertico--input)
                                          (keymap-set minibuffer-local-map "M-P" #'an-embark-select-vertico-previous)
-                                         (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next))))))
+                                         (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next)))))
+  (with-eval-after-load 'org
+    (keymap-set org-mode-map "C-c M-t" #'an-org-todo-manipulate-time))
+  (with-eval-after-load 'org-agenda
+    (keymap-set org-agenda-mode-map "C-c M-t" #'an-org-todo-manipulate-time)))
 
 ;; Corfu + Vertico
 (use-package corfu
