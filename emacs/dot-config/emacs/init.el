@@ -1,4 +1,4 @@
-;; -*- lexical-binding: t -*-
+;; -*- lexical-binding: t; -*-
 ;; init.el
 ;;; Environment
 ;; Config
@@ -150,22 +150,18 @@
 (setopt frame-resize-pixelwise t)
 (setopt window-resize-pixelwise t)
 
-(setopt indicate-buffer-boundaries nil)
-(setopt indicate-empty-lines nil)
-
 (setopt switch-to-buffer-obey-display-actions t)
 (setopt uniquify-buffer-name-style 'forward)
 (setopt highlight-nonselected-windows nil)
 
 (line-number-mode 1)
 (column-number-mode 1)
+(setopt mode-line-percent-position nil)
 
 (setopt display-time-format "%a, %b %d | %H:%M")
 (setopt display-time-day-and-date t)
 (setopt display-time-24hr-format t)
 (setopt display-time-default-load-average nil)
-(setopt display-time-default-load-average nil)
-
 (display-time-mode 1)
 
 (if (daemonp)
@@ -305,6 +301,7 @@
 
 (keymap-global-set "C-S-y" #'yank-whole-line)
 
+(keymap-global-set "M-<delete>" #'kill-word)
 (keymap-global-set "M-D" #'kill-whole-symbol)
 
 (keymap-global-set "C-S-<backspace>" #'backward-kill-line) ; from: kill-whole-line
@@ -488,6 +485,8 @@
 (keymap-global-set "M-r" 'a-replace-map-prefix)
 (keymap-global-set "M-R" 'query-replace-thing-at-point)
 
+(keymap-set isearch-mode-map "M-r" #'isearch-query-replace)
+(keymap-set isearch-mode-map "M-R" #'isearch-query-replace-regexp)
 
 ;;; Packages
 ;; General
@@ -547,18 +546,12 @@
   :init
   ;; Setup and settings
   (setopt which-key-idle-delay 0.5
-          which-key-popup-type 'side-window
-          which-key-side-window-location 'bottom
-          which-key-side-window-max-height 0.25
           which-key-max-description-length 0.20
           which-key-add-column-padding 2
-          which-key-show-prefix 'left
           which-key-show-remaining-keys t
           which-key-preserve-window-configuration t
           which-key-sort-uppercase-first nil
-          which-key-sort-order 'which-key-key-order-alpha
-          which-key-use-C-h-commands nil
-          which-key-show-early-on-C-h nil)
+          which-key-sort-order 'which-key-key-order-alpha)
 
   :config
   ;; Keybindings
@@ -1378,6 +1371,13 @@ that allows to include other templates by their name."
   (unless (file-regular-p ORG_AREAS_FILE)
     (make-empty-file ORG_AREAS_FILE t))
 
+  ;; Auxiliary
+  ;; Create and store org (default) ID file
+  (defconst ORG_ID_FILE (file-name-concat ORG_DIR ".org-id-locations")
+    "Default file for storing identifiers (org).")
+  (unless (file-regular-p ORG_ID_FILE)
+    (make-empty-file ORG_ID_FILE t))
+
   (setopt org-default-notes-file ORG_NOTES_FILE)
 
   (setopt org-return-follows-link t)
@@ -1495,6 +1495,10 @@ that allows to include other templates by their name."
                     ("Travel" ,(list (nerd-icons-faicon "nf-fa-plane_departure" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
                     ("Work" ,(list (nerd-icons-faicon "nf-fa-user_tie" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center))))
 
+  (setopt org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
+          org-id-locations-file ORG_ID_FILE
+          org-id-locations-file-relative t)
+
   (setopt org-habit-graph-column 60
           org-habit-preceding-days 14)
 
@@ -1504,7 +1508,11 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-files ORG_TODOS_FILE)
   (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
   (add-to-list 'org-agenda-files ORG_PROJECTS_FILE)
-  (add-to-list 'org-agenda-files ORG_AREAS_FILE))
+  (add-to-list 'org-agenda-files ORG_AREAS_FILE)
+
+  ;; Keybindings
+  (keymap-unset org-mode-map "C-M-S-<left>") ; original: org-decrease-number-at-point
+  (keymap-unset org-mode-map "C-M-S-<right>")) ; original org-increase-number-at-point
 
 (use-package org-super-agenda
   :ensure t
@@ -2305,20 +2313,45 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  (setopt doom-modeline-height (+ (frame-char-height) 4)
-          doom-modeline-bar-width 4
-          doom-modeline-icon t
-          doom-modeline-major-mode-icon t
-          doom-modeline-minor-modes nil
-          doom-modeline-enable-word-count t
-          doom-modeline-buffer-encoding nil
+  (setopt doom-modeline-buffer-encoding nil
           doom-modeline-default-coding-system 'utf-8
-          doom-modeline-total-line-number t
-          doom-modeline-time t
           doom-modeline-time-icon nil
           doom-modeline-time-live-icon nil
           doom-modeline-time-analogue-clock nil
+          doom-modeline-percent-position nil
           doom-modeline-vcs-max-length 20))
+
+(use-package keycast
+  :ensure t
+
+  :init
+  (setopt keycast-mode-line-format "%10s%k%c%R%10s")
+
+  :config
+  ;; Setup and settings (after load)
+  ;; Replacements
+  (setopt keycast-substitute-alist
+          (append keycast-substitute-alist '((self-insert-command t Typing...)
+                                             ("<wheel-up>" t Scrolling...)
+                                             ("<double-wheel-up>" t Scrolling...)
+                                             ("<triple-wheel-up>" t Scrolling...)
+                                             ("<wheel-up>" t Scrolling...)
+                                             ("<double-wheel-up>" t Scrolling...)
+                                             ("<triple-wheel-up>" t Scrolling...)
+                                             ("<wheel-down>" t Scrolling...)
+                                             ("<double-wheel-down>" t Scrolling...)
+                                             ("<triple-wheel-down>" t Scrolling...))))
+
+  ;; Custom global minor mode for compatibility with `doom-modeline'
+  (define-minor-mode keycast-mode
+	  "Show current command and its key binding in the mode line, for use with
+`doom-modeline'."
+	  :global t
+	  (if keycast-mode
+		    (add-hook 'pre-command-hook 'keycast--update nil t)
+      (remove-hook 'pre-command-hook 'keycast--update t)))
+
+  (add-to-list 'global-mode-string '("" keycast-mode-line)))
 
 ;; Local/cross-package enhancements
 (use-package local-pkgs

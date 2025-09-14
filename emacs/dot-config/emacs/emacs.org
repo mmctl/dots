@@ -1,0 +1,105 @@
+#+TITLE: Matthias's Literate Emacs Configuration
+#+AUTHOR: Matthias Meijers
+#+EMAIL: kernel@mmeijers.com
+#+LANGUAGE: en
+#+STARTUP: show2levels
+
+See [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html][documentation on Emacs's startup]].
+
+* Early Initialization (early-init.el)
+:PROPERTIES:
+:header-args: :tangle "early-init-test.el"
+:END:
+** Preamble
+#+begin_src emacs-lisp
+  ;; -*- lexical-binding: t; -*-
+  ;; early-init.el
+#+end_src
+** Compilation and Loading
+#+begin_src emacs-lisp
+  ;; Byte/Native compilation and loading
+  (setopt native-comp-jit-compilation t)
+  (setopt native-comp-async-query-on-exit t)
+  (setopt package-native-compile t)
+  (setopt load-prefer-newer t)
+#+end_src
+** Garbage Collection
+#+begin_src emacs-lisp
+  ;; Garbage collection
+  (setopt gc-cons-threshold 33554432
+          gc-cons-percentage 0.15)
+#+end_src
+** Default/Initial Frame
+See [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html][documentation on frame parameters]].
+#+begin_src emacs-lisp
+;; Frame parameters
+(setopt default-frame-alist
+        '((fullscreen . maximize)
+          (fullscreen-restore . fullheight)
+          (border-width . 0)
+          (internal-border-width . 0)
+          (vertical-scroll-bars . nil)
+          (horizontal-scroll-bars . nil)
+          (menu-bar-lines . 0)
+          (tool-bar-lines . 0)
+          (tab-bar-lines . 0)
+          (minibuffer. t)
+          (top-visible . 5)
+          (bottom-visible . 5)
+          (visibility . t)
+          (auto-raise . t)
+          (auto-lower . nil)
+          (left-fringe . 8)
+          (right-fringe . 8)
+          (left-divider-width . 3)
+          (right-divider-width . 3)
+          (cursor-type . (hbar . 3))))
+          ;; Transparency background (not on Lucid builds): alpha-background
+          ;; Transparency general: alpha
+
+#+end_src
+** Package System and Management
+#+begin_src emacs-lisp
+  ;; Package system
+  (setopt package-install-upgrade-built-in t)
+#+end_src
+* Initialization (init.el)
+:PROPERTIES:
+:header-args: :tangle "init-test.el"
+:END:
+** Preamble
+#+begin_src emacs-lisp
+  ;; -*- lexical-binding: t; -*-
+  ;; init.el
+#+end_src
+** Bootstrap
+*** Basic Directories and Files
+*** Backup, Auto-save, and Lock Files
+*** Package System and Management
+*** Local Modules
+*** Launching
+** General Look and Feel
+*** Frames, Windows, and Minibuffer
+*** Movement and Navigation
+*** Editing
+** Directory and File Management (dired)
+** Completion
+*** Styles (orderless)
+*** Functions (cape)
+*** Minibuffer (vertico)
+*** In-Buffer (corfu)
+*** Templates (tempel)
+** Advanced Actions
+*** General (consult, embark)
+*** Spooky Action at a Distance (avy, ace-window)
+** Documents
+*** Markdown (markdown-mode)
+*** LaTeX (auctex, cdlatex, math-delimiters)
+*** View (pdf-tools)
+** Development
+*** Version Control (magit, diffhl)
+*** Formal Methods (proof-general, easycrypt, easycrypt-ext)
+*** OCaml (tuareg, merlin)
+** Org and Friends
+** Themes (doom-themes)
+** Miscellaneous
