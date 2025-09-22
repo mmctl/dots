@@ -1718,17 +1718,10 @@ that allows to include other templates by their name."
             (output-dvi "xdvi")
             (output-pdf "PDF Tools")
             (output-html "xdg-open")))
-  (setopt TeX-PDF-mode t)
   (setopt TeX-master nil)
-  (setopt TeX-parse-self t
-          TeX-auto-regexp-list 'TeX-auto-full-regexp-list)
-  (setopt TeX-file-line-error t
-          TeX-display-help t)
-  (setopt TeX-save-query t
-          TeX-auto-save t
+  (setopt TeX-parse-self t)
+  (setopt TeX-auto-save t
           TeX-auto-untabify t)
-  (setopt TeX-source-correlate-method '((dvi . source-specials)
-                                        (pdf . synctex)))
   (setopt TeX-electric-math '("$" . "$"))
 
   :config
@@ -1756,12 +1749,13 @@ that allows to include other templates by their name."
   ;; Setup and settings (before load)
   (setopt cdlatex-auto-help-delay 1)
   (setopt cdlatex-use-dollar-to-ensure-math t)
+  (setopt cdlatex-insert-auto-labels-in-env-templates nil)
+  (setopt cdlatex-sub-super-scripts-outside-math-mode nil)
 
   :config
   ;; Keybindings
   (keymap-unset cdlatex-mode-map "TAB")
   (keymap-set cdlatex-mode-map "<backtab>" #'cdlatex-tab)
-  (keymap-set cdlatex-mode-map "C-c TAB" #'indent-for-tab-command)
 
   ;; Ensure Corfu is not in automatic mode, as to not interfere with templates
   (defun setup-a-cdlatex-corfu-mode ()
@@ -1849,8 +1843,9 @@ that allows to include other templates by their name."
   (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
 
   ;; Hooks
-  (add-hook 'pdf-tools-enabled-hook #'(lambda ()
-                                        (keymap-unset pdf-sync-minor-mode-map "<double-mouse-1>"))))
+  (add-hook 'pdf-tools-enabled-hook
+            #'(lambda ()
+                (keymap-unset pdf-sync-minor-mode-map "<double-mouse-1>"))))
 
 (use-package markdown-mode
   :ensure t
@@ -1879,7 +1874,6 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<next>" #'scroll-down-command)
   (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
-
 
 
 ;; Development
