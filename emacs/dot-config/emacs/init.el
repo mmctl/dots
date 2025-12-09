@@ -1646,6 +1646,8 @@ that allows to include other templates by their name."
 
   (add-hook 'org-mode #'setup-an-org-modern-indent-mode 90))
 
+
+;; Development
 (use-package diff-hl
   :ensure t
   :pin melpa
@@ -1699,7 +1701,7 @@ that allows to include other templates by their name."
   (add-to-list 'magit-no-confirm 'trash)
   (add-to-list 'magit-no-confirm 'safe-with-wip)
 
-  ;; Keybindingss
+  ;; Keybindings
   (keymap-set magit-diff-section-map "M-RET" #'magit-diff-visit-worktree-file)
 
   ;; Activation
@@ -1850,7 +1852,6 @@ that allows to include other templates by their name."
 (use-package markdown-mode
   :ensure t
 
-
   :mode ("README\\.md\\'" . gfm-mode)
 
   :init
@@ -1875,8 +1876,59 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
+;; Tree-sitter
+(use-package treesit
+  :init
+  ;; Setup and settings (before load)
+  (setq treesit-language-source-alist
+        '((bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.23.3")
+          (c "https://github.com/tree-sitter/tree-sitter-c" "v0.23.6")
+          (go "https://github.com/tree-sitter/tree-sitter-go" "v0.23.4")
+          (gomod "https://github.com/camdencheek/tree-sitter-go-mod" "v1.0.2")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
+          (ocaml "https://github.com/tree-sitter/tree-sitter-ocaml" "v0.24.0" "grammars/ocaml/src")
+          (python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")
+          (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.23.3")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 
-;; Development
+  :config
+  ;; Setup and settings (before load)
+  (dolist (source treesit-language-source-alist)
+    (unless (treesit-language-available-p (car source))
+      (treesit-install-language-grammar (car source))))
+
+  (add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
+  (add-to-list 'auto-mode-alist '("/go\\.mod\\'" . go-mod-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))
+
+  (add-to-list 'major-mode-remap-alist '(bash-mode . bash-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(conf-toml-mode . toml-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode)))
+
+;; Rust
+(use-package rust-ts-mode
+  :defer t
+
+  :config
+  (setopt rust-ts-mode-indent-offset 4))
+
+;; Go
+(use-package go-ts-mode
+  :defer t
+
+  :config
+  (setopt go-ts-mode-indent-offset 4))
+
 ;; OCaml
 (use-package tuareg
   :ensure t

@@ -300,25 +300,18 @@ moving to the next candidate after selecting."
 
 ;;; Org
 ;;;###autoload
-(defun an-org-todo-manipulate-time (datetime)
-  "As `org-todo'/`org-agenda-todo', but with the current date/time set to
-DATETIME, which should be in a form that could be returned by `current-time',
-which see, or the symbol \\='yesterday. In the latter case, this function
-reduces to `org-todo-yesterday'. Interactively, user is prompted for DATETIME
-using `org-read-date' unless the prefix argument is given, in which case the
-symbol \\='yesterday is used."
-  (interactive (list (if current-prefix-arg
-                         'yesterday
-                       (org-read-date t t nil "Manipulate --"))))
-  (if (eq datetime 'yesterday)
-      (if (eq major-mode 'org-agenda-mode)
-          (org-agenda-todo-yesterday)
-        (org-todo-yesterday))
-    (cl-letf (((symbol-function 'current-time) #'(lambda () datetime))
-              ((symbol-function 'org-today) #'(lambda () (time-to-days datetime))))
-      (if (eq major-mode 'org-agenda-mode)
-          (org-agenda-todo)
-        (org-todo)))))
+(defun an-org-todo-manipulate-time (&optional arg)
+  "As `org-todo'/`org-agenda-todo', but with the
+date/time set to that entered by the user through `org-read-date'."
+  (interactive "P")
+  (cl-letf* ((org-read-date-prefer-future nil)
+             (datetime (org-read-date t t nil "Manipulate --"))
+             ((symbol-function 'current-time) #'(lambda () datetime))
+             ((symbol-function 'org-current-effective-time) #'(lambda () datetime))
+             ((symbol-function 'org-today) #'(lambda () (time-to-days datetime))))
+    (if (eq major-mode 'org-agenda-mode)
+        (org-agenda-todo arg)
+      (org-todo arg))))
 
 (provide 'local-pkgs)
 

@@ -203,50 +203,36 @@ directly to `kill-whole-line'"
 
 
 ;;; Searching and replacing
-(defun query-replace-from-default-thing-at-point (&optional default)
-  "Returns DEFAULT if it is non-nil. Else, fetches thing at point, where thing
-is one of the things defined in `isearch-forward-thing-at-point', which see,
-tried in order. If this yields no thing at point, returns `nil'.
-
-Meant to be used in combination with `apply-partially' as value for
-`query-replace-read-from-default', which see, where DEFAULT is the value
-extracted from the region if it is active and nil otherwise. This allows
-`query-replace' to be called with a deactivated region (so the scope is not
-limited) while still extracting the content of the region as default from
-value."
-  (if default
-      default
-    (when-let* ((bnds (seq-some (lambda (thing)
-                                  (bounds-of-thing-at-point thing))
-                                isearch-forward-thing-at-point)))
-      (buffer-substring-no-properties (car bnds) (cdr bnds)))))
+(defun query-replace-from-default-thing-at-point ()
+  "Returns text under active region or, if no region is active, thing at
+point, where thing is one of the things defined in
+`isearch-forward-thing-at-point', which see, tried in order. If this
+yields nothing, returns `nil'."
+  (let ((bnds (if (use-region-p)
+                   (prog1
+                       (cons (region-beginning) (region-end))
+                     (deactivate-mark))
+                 (seq-some (lambda (thing)
+                             (bounds-of-thing-at-point thing))
+                           isearch-forward-thing-at-point))))
+    (when bnds
+      (goto-char (car bnds)) (buffer-substring-no-properties (car bnds) (cdr bnds)))))
 
 (defun query-replace-thing-at-point ()
-  "Calls `query-replace' with `query-replace-read-from-default'
+"Calls `query-replace' with `query-replace-read-from-default'
 bound to `query-replace-from-default-thing-at-point', which see."
   (interactive)
-  (let ((query-replace-read-from-default (apply-partially
-                                          #'query-replace-from-default-thing-at-point
-                                          (when (use-region-p)
-                                            (prog1
-                                                (buffer-substring-no-properties (region-beginning) (region-end))
-                                              (goto-char (region-beginning))
-                                              (deactivate-mark))))))
+  (let* ((default (query-replace-from-default-thing-at-point))
+         (query-replace-read-from-default (lambda () default)))
     (call-interactively #'query-replace)))
 
 (defun query-replace-regexp-thing-at-point ()
   "Calls `query-replace-regexp' with `query-replace-read-from-default'
 bound to `query-replace-from-default-thing-at-point', which see."
   (interactive)
-  (let ((query-replace-read-from-default (apply-partially
-                                          #'query-replace-from-default-thing-at-point
-                                          (when (use-region-p)
-                                            (prog1
-                                                (buffer-substring-no-properties (region-beginning) (region-end))
-                                              (goto-char (region-beginning))
-                                              (deactivate-mark))))))
+  (let* ((default (query-replace-from-default-thing-at-point))
+         (query-replace-read-from-default (lambda () default)))
     (call-interactively #'query-replace-regexp)))
-
 
 ;;; Files and directories
 (defun find-file-as-root (filename &optional arg)
