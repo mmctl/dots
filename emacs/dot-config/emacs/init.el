@@ -1647,6 +1647,48 @@ that allows to include other templates by their name."
   (add-hook 'org-mode #'setup-an-org-modern-indent-mode 90))
 
 
+(use-package pdf-tools
+  :ensure t
+
+  :defer t
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt pdf-tools-handle-upgrades nil)
+  (setopt pdf-view-display-size 'fit-page)
+  (setopt pdf-view-use-unicode-ligther nil)
+
+  (pdf-loader-install)
+
+  :config
+  ;; Setup and settings (after load)
+  (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode)
+
+  ;; Keybindings
+  (keymap-set pdf-view-mode-map "q" #'kill-this-buffer)
+  (keymap-set pdf-view-mode-map "<end>" #'pdf-view-last-page)
+  (keymap-set pdf-view-mode-map "<home>" #'pdf-view-first-page)
+  (keymap-set pdf-view-mode-map "z" #'pdf-view-shrink)
+  (keymap-set pdf-view-mode-map "Z" #'pdf-view-enlarge)
+  (keymap-set pdf-view-mode-map "r" #'revert-buffer)
+  (keymap-set pdf-view-mode-map "v c" #'pdf-view-center-in-window)
+  (keymap-set pdf-view-mode-map "v l" #'pdf-view-align-left)
+  (keymap-set pdf-view-mode-map "v r" #'pdf-view-align-right)
+  (keymap-set pdf-view-mode-map "v w" #'pdf-view-fit-width-to-window)
+  (keymap-set pdf-view-mode-map "v h" #'pdf-view-fit-height-to-window)
+  (keymap-set pdf-view-mode-map "v p" #'pdf-view-fit-page-to-window)
+  (keymap-set pdf-view-mode-map "v d" #'pdf-view-dark-minor-mode)
+  (keymap-set pdf-view-mode-map "v m" #'pdf-view-midnight-minor-mode)
+  (keymap-set pdf-view-mode-map "v t" #'pdf-view-themed-minor-mode)
+  (keymap-set pdf-view-mode-map "v p" #'pdf-view-printer-minor-mode)
+  (keymap-set pdf-view-mode-map "m" #'pdf-view-position-to-register)
+  (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
+
+  ;; Hooks
+  (add-hook 'pdf-tools-enabled-hook
+            #'(lambda ()
+                (keymap-unset pdf-sync-minor-mode-map "<double-mouse-1>"))))
+
 ;; Development
 (use-package diff-hl
   :ensure t
@@ -1807,48 +1849,6 @@ that allows to include other templates by their name."
   (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-math-delimiters)
   (add-hook 'latex-mode-hook #'setup-a-latex-mode-math-delimiters))
 
-(use-package pdf-tools
-  :ensure t
-
-  :defer t
-
-  :init
-  ;; Setup and settings (before load)
-  (setopt pdf-tools-handle-upgrades nil)
-  (setopt pdf-view-display-size 'fit-page)
-  (setopt pdf-view-use-unicode-ligther nil)
-
-  (pdf-loader-install)
-
-  :config
-  ;; Setup and settings (after load)
-  (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode)
-
-  ;; Keybindings
-  (keymap-set pdf-view-mode-map "q" #'kill-this-buffer)
-  (keymap-set pdf-view-mode-map "<end>" #'pdf-view-last-page)
-  (keymap-set pdf-view-mode-map "<home>" #'pdf-view-first-page)
-  (keymap-set pdf-view-mode-map "z" #'pdf-view-shrink)
-  (keymap-set pdf-view-mode-map "Z" #'pdf-view-enlarge)
-  (keymap-set pdf-view-mode-map "r" #'revert-buffer)
-  (keymap-set pdf-view-mode-map "v c" #'pdf-view-center-in-window)
-  (keymap-set pdf-view-mode-map "v l" #'pdf-view-align-left)
-  (keymap-set pdf-view-mode-map "v r" #'pdf-view-align-right)
-  (keymap-set pdf-view-mode-map "v w" #'pdf-view-fit-width-to-window)
-  (keymap-set pdf-view-mode-map "v h" #'pdf-view-fit-height-to-window)
-  (keymap-set pdf-view-mode-map "v p" #'pdf-view-fit-page-to-window)
-  (keymap-set pdf-view-mode-map "v d" #'pdf-view-dark-minor-mode)
-  (keymap-set pdf-view-mode-map "v m" #'pdf-view-midnight-minor-mode)
-  (keymap-set pdf-view-mode-map "v t" #'pdf-view-themed-minor-mode)
-  (keymap-set pdf-view-mode-map "v p" #'pdf-view-printer-minor-mode)
-  (keymap-set pdf-view-mode-map "m" #'pdf-view-position-to-register)
-  (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
-
-  ;; Hooks
-  (add-hook 'pdf-tools-enabled-hook
-            #'(lambda ()
-                (keymap-unset pdf-sync-minor-mode-map "<double-mouse-1>"))))
-
 (use-package markdown-mode
   :ensure t
 
@@ -1876,60 +1876,145 @@ that allows to include other templates by their name."
   (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
-;; Tree-sitter
-(use-package treesit
+;; Shell/Bash
+(use-package sh-script
+  :defer t
+
   :init
   ;; Setup and settings (before load)
-  (setq treesit-language-source-alist
-        '((bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.23.3")
-          (c "https://github.com/tree-sitter/tree-sitter-c" "v0.23.6")
-          (go "https://github.com/tree-sitter/tree-sitter-go" "v0.23.4")
-          (gomod "https://github.com/camdencheek/tree-sitter-go-mod" "v1.0.2")
-          (json "https://github.com/tree-sitter/tree-sitter-json")
-          (ocaml "https://github.com/tree-sitter/tree-sitter-ocaml" "v0.24.0" "grammars/ocaml/src")
-          (python "https://github.com/tree-sitter/tree-sitter-python" "v0.23.6")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.23.3")
-          (toml "https://github.com/tree-sitter/tree-sitter-toml")
-          (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
-
-  :config
-  ;; Setup and settings (before load)
-  (dolist (source treesit-language-source-alist)
-    (unless (treesit-language-available-p (car source))
-      (treesit-install-language-grammar (car source))))
-
-  (add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
-  (add-to-list 'auto-mode-alist '("/go\\.mod\\'" . go-mod-ts-mode))
-  (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
-  (add-to-list 'auto-mode-alist '("\\.ya?ml\\'" . yaml-ts-mode))
-
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(bash "https://github.com/tree-sitter/tree-sitter-bash"
+                        "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
+    (unless (treesit-language-available-p 'bash)
+      (treesit-install-language-grammar 'bash)))
   (add-to-list 'major-mode-remap-alist '(bash-mode . bash-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode)))
+
+;; C
+(use-package c-ts-mode
+  :defer t
+
+  :init
+  ;; Setup and settings (before load)
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(c "https://github.com/tree-sitter/tree-sitter-c"
+                     "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
+    (unless (treesit-language-available-p 'c)
+      (treesit-install-language-grammar 'c)))
   (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(js-json-mode . json-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(conf-toml-mode . toml-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode)))
+
+  (setopt c-ts-mode-indent-offset 4))
+
+;; Python
+(use-package python
+  :defer t
+
+  :init
+  ;; Setup and settings (before load)
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(python "https://github.com/tree-sitter/tree-sitter-python"
+                          "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
+    (unless (treesit-language-available-p 'python)
+      (treesit-install-language-grammar 'python)))
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 ;; Rust
 (use-package rust-ts-mode
-  :defer t
+  :mode ("\\.rs\\'" . rust-ts-mode)
 
-  :config
+  :init
+  ;; Setup and settings (before load)
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(rust "https://github.com/tree-sitter/tree-sitter-rust"
+                        "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
+    (unless (treesit-language-available-p 'rust)
+      (treesit-install-language-grammar 'rust)))
+  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
+
   (setopt rust-ts-mode-indent-offset 4))
 
 ;; Go
 (use-package go-ts-mode
-  :defer t
+  :mode (("\\.go\\'" . go-ts-mode)
+         ("/go\\.mod\\'" . go-mod-ts-mode))
 
-  :config
+  :init
+  ;; Setup and settings (before load)
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(go "https://github.com/tree-sitter/tree-sitter-go"
+                      "v0.23.4")) ; Fixed tag to match ABI of Emacs's tree-sitter
+    (unless (treesit-language-available-p 'go)
+      (treesit-install-language-grammar 'go))
+
+    (add-to-list 'treesit-language-source-alist
+                 '(gomod "https://github.com/camdencheek/tree-sitter-go-mod"
+                         "v1.0.2")) ; Fixed tag to match ABI of Emacs's tree-sitter
+    (unless (treesit-language-available-p 'gomod)
+      (treesit-install-language-grammar 'gomod)))
+  (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(go-mod-mode . go-mod-ts-mode))
+
   (setopt go-ts-mode-indent-offset 4))
 
+;; Yaml
+(use-package yaml-ts-mode
+  :mode ("\\.ya?ml\\'" . yaml-ts-mode)
+
+  :init
+  ;; Setup and settings (before load)
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(yaml "https://github.com/ikatyang/tree-sitter-yaml"))
+    (unless (treesit-language-available-p 'yaml)
+      (treesit-install-language-grammar 'yaml)))
+  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode)))
+
+;; Toml
+(use-package toml-ts-mode
+  :mode ("\\.toml\\'" . toml-ts-mode)
+
+  :init
+  ;; Setup and settings (before load)
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(toml "https://github.com/tree-sitter/tree-sitter-toml"))
+    (unless (treesit-language-available-p 'toml)
+      (treesit-install-language-grammar 'toml)))
+  (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(conf-toml-mode . toml-ts-mode)))
+
+;; Json
+(use-package json-ts-mode
+  :mode ("\\.json\\'" . json-ts-mode)
+
+  :init
+  ;; Setup and settings (before load)
+  ;; Tree-sitter
+  (with-eval-after-load 'treesit
+    (add-to-list 'treesit-language-source-alist
+                 '(json "https://github.com/tree-sitter/tree-sitter-json"))
+    (unless (treesit-language-available-p 'json)
+      (treesit-install-language-grammar 'json)))
+  (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode)))
+
 ;; OCaml
+;; (use-package neocaml
+;; (ocaml "https://github.com/tree-sitter/tree-sitter-ocaml" "v0.24.0" "grammars/ocaml/src")
+;; )
+
+
 (use-package tuareg
   :ensure t
   :pin melpa
