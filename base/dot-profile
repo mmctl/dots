@@ -53,7 +53,10 @@ export LESSUTFCHARDEF='E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p'
 
 ## Paths
 ### Executables
-export PATH="$HOME/.local/bin:$XDG_DATA_HOME/texlive/2025/bin/x86_64-linux:$PATH"
+PATH="$PATH:/usr/local/go/bin"
+PATH="$XDG_DATA_HOME/texlive/2025/bin/x86_64-linux:$PATH"
+PATH="$HOME/.local/bin:$PATH"
+export PATH
 
 ### Manuals
 export MANPATH=":$XDG_DATA_HOME/texlive/2025/texmf-dist/doc/man"

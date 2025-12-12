@@ -1749,6 +1749,53 @@ that allows to include other templates by their name."
   ;; Activation
   (magit-wip-mode 1))
 
+(use-package xref
+  :defer t
+
+  :config
+  (keymap-set xref--xref-buffer-mode-map "C-p" #'xref-prev-group)
+  (keymap-set xref--xref-buffer-mode-map "C-n" #'xref-next-group))
+
+(use-package flymake
+  :defer t
+
+  :init
+  (setopt flymake-show-diagnostics-at-end-of-line 'short)
+
+  (keymap-set flymake-mode-map "M-P" #'flymake-goto-prev-error)
+  (keymap-set flymake-mode-map "M-N" #'flymake-goto-next-error))
+
+(use-package eglot
+  :bind
+  (:prefix-map an-eglot-map :prefix "C-c l" :prefix-docstring "Keymap for eglot (global)"
+               ("a" . eglot-code-actions)
+               ("d" . eglot-find-declaration)
+               ("e" . eglot-code-action-extract)
+               ("f" . eglot-format)
+               ("F" . eglot-format-buffer)
+               ("i" . eglot-find-implementation)
+               ("I" . eglot-code-action-inline)
+               ("o" . eglot-code-action-organize-imports)
+               ("q" . eglot-shutdown)
+               ("Q" . eglot-shutdown-all)
+               ("r" . eglot-rename)
+               ("R" . eglot-code-action-rewrite)
+               ("s" . eglot)
+               ("t" . eglot-find-typeDefinition)
+               ("x" . eglot-code-action-quickfix)
+               ("C-c" . eglot-clear-status)
+               ("C-e" . eglot-events-buffer)
+               ("C-S-e" . eglot-stderr-buffer)
+               ("C-f" . eglot-forget-pending-continuations)
+               ("C-l" . eglot-list-connections)
+               ("C-m" . eglot-manual)
+               ("C-r" . eglot-reconnect)
+               ("C-u" . eglot-upgrade-eglot)
+               ("C-w" . eglot-show-workspace-configuration))
+
+  :init
+  (setopt eglot-autoshutdown t))
+
 (use-package tex
   :ensure auctex
 
@@ -1882,15 +1929,18 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(bash-mode . bash-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(bash "https://github.com/tree-sitter/tree-sitter-bash"
                         "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'bash)
-      (treesit-install-language-grammar 'bash)))
-  (add-to-list 'major-mode-remap-alist '(bash-mode . bash-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode)))
+      (treesit-install-language-grammar 'bash))))
 
 ;; C
 (use-package c-ts-mode
@@ -1898,16 +1948,19 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
+
+  (setopt c-ts-mode-indent-offset 4)
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(c "https://github.com/tree-sitter/tree-sitter-c"
                      "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'c)
-      (treesit-install-language-grammar 'c)))
-  (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
-
-  (setopt c-ts-mode-indent-offset 4))
+      (treesit-install-language-grammar 'c))))
 
 ;; Python
 (use-package python
@@ -1915,14 +1968,17 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(python "https://github.com/tree-sitter/tree-sitter-python"
                           "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'python)
-      (treesit-install-language-grammar 'python)))
-  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
+      (treesit-install-language-grammar 'python))))
 
 ;; Rust
 (use-package rust-ts-mode
@@ -1930,16 +1986,19 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
+
+  (setopt rust-ts-mode-indent-offset 4)
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(rust "https://github.com/tree-sitter/tree-sitter-rust"
                         "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'rust)
-      (treesit-install-language-grammar 'rust)))
-  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
-
-  (setopt rust-ts-mode-indent-offset 4))
+      (treesit-install-language-grammar 'rust))))
 
 ;; Go
 (use-package go-ts-mode
@@ -1948,6 +2007,13 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(go-mod-mode . go-mod-ts-mode))
+
+  (setopt go-ts-mode-indent-offset 4)
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
@@ -1955,16 +2021,11 @@ that allows to include other templates by their name."
                       "v0.23.4")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'go)
       (treesit-install-language-grammar 'go))
-
     (add-to-list 'treesit-language-source-alist
                  '(gomod "https://github.com/camdencheek/tree-sitter-go-mod"
                          "v1.0.2")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'gomod)
-      (treesit-install-language-grammar 'gomod)))
-  (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(go-mod-mode . go-mod-ts-mode))
-
-  (setopt go-ts-mode-indent-offset 4))
+      (treesit-install-language-grammar 'gomod))))
 
 ;; Yaml
 (use-package yaml-ts-mode
@@ -1972,13 +2033,16 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode))
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(yaml "https://github.com/ikatyang/tree-sitter-yaml"))
     (unless (treesit-language-available-p 'yaml)
-      (treesit-install-language-grammar 'yaml)))
-  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode)))
+      (treesit-install-language-grammar 'yaml))))
 
 ;; Toml
 (use-package toml-ts-mode
@@ -1986,14 +2050,17 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(conf-toml-mode . toml-ts-mode))
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(toml "https://github.com/tree-sitter/tree-sitter-toml"))
     (unless (treesit-language-available-p 'toml)
-      (treesit-install-language-grammar 'toml)))
-  (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(conf-toml-mode . toml-ts-mode)))
+      (treesit-install-language-grammar 'toml))))
 
 ;; Json
 (use-package json-ts-mode
@@ -2001,13 +2068,16 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
+  (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode))
+
+  :config
+  ;; Setup and settings (after load)
   ;; Tree-sitter
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(json "https://github.com/tree-sitter/tree-sitter-json"))
     (unless (treesit-language-available-p 'json)
-      (treesit-install-language-grammar 'json)))
-  (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode)))
+      (treesit-install-language-grammar 'json))))
 
 ;; OCaml
 ;; (use-package neocaml
