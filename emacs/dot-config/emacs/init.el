@@ -2025,7 +2025,15 @@ that allows to include other templates by their name."
                  '(gomod "https://github.com/camdencheek/tree-sitter-go-mod"
                          "v1.0.2")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'gomod)
-      (treesit-install-language-grammar 'gomod))))
+      (treesit-install-language-grammar 'gomod)))
+
+  ;; Project (root finding)
+  (defun project-find-go-module (dir)
+    (when-let ((root (locate-dominating-file dir "go.mod")))
+      (cons 'go-module root)))
+  (cl-defmethod project-root ((project (head go-module)))
+    (cdr project))
+  (add-hook 'project-find-functions #'project-find-go-module))
 
 ;; Yaml
 (use-package yaml-ts-mode
