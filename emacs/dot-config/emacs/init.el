@@ -172,6 +172,7 @@
 
 ;; Modes
 (add-hook 'text-mode-hook #'local-setup-text-mode)
+(add-hook 'special-mode-hook #'local-setup-text-mode)
 (add-hook 'tex-mode-hook #'local-setup-code-mode)
 (add-hook 'TeX-mode-hook #'local-setup-code-mode)
 (add-hook 'markdown-mode-hook #'local-setup-code-mode)
@@ -417,6 +418,8 @@
   :prefix 'a-find-map-prefix
   "d" #'dired
   "D" #'dired-jump
+  "e" #'eldoc-print-current-symbol-info
+  "E" #'eldoc-doc-buffer
   "C-d" #'find-dired
   "M-d" #'dired-as-root
   "C-S-d" #'dired-default-directory-as-root
@@ -433,7 +436,11 @@
   "M-o" #'find-file-read-only-other-frame
   "r" #'recentf-open
   "x a" #'xref-find-apropos
+  "x b" #'xref-go-back
   "x d" #'xref-find-definitions
+  "x D" #'xref-find-definitions-other-window
+  "x C-d" #'xref-find-definitions-other-frame
+  "x f" #'xref-go-forward
   "x r" #'xref-find-references)
 
 (keymap-global-set "M-f" 'a-find-map-prefix)
@@ -1762,26 +1769,35 @@ that allows to include other templates by their name."
   :init
   (setopt flymake-show-diagnostics-at-end-of-line 'short)
 
+  :config
   (keymap-set flymake-mode-map "M-P" #'flymake-goto-prev-error)
   (keymap-set flymake-mode-map "M-N" #'flymake-goto-next-error))
 
 (use-package eglot
   :bind
   (:prefix-map an-eglot-map :prefix "C-c l" :prefix-docstring "Keymap for eglot (global)"
-               ("a" . eglot-code-actions)
-               ("d" . eglot-find-declaration)
-               ("e" . eglot-code-action-extract)
-               ("f" . eglot-format)
-               ("F" . eglot-format-buffer)
-               ("i" . eglot-find-implementation)
-               ("I" . eglot-code-action-inline)
-               ("o" . eglot-code-action-organize-imports)
+               ("a a" . eglot-code-actions)
+               ("a e" . eglot-code-action-extract)
+               ("a i" . eglot-code-action-inline)
+               ("a o" . eglot-code-action-organize-imports)
+               ("a r" . eglot-code-action-rewrite)
+               ("f d" . eglot-find-declaration)
+               ("f e" . eldoc-print-current-symbol-info)
+               ("f E" . eldoc-doc-buffer)
+               ("f i" . eglot-find-implementation)
+               ("f t" . eglot-find-typeDefinition)
+               ("f c" . eglot-find-declaration)
+               ("f d" . xref-find-definitions)
+               ("f D" . xref-find-definitions-other-window)
+               ("f C-d" . xref-find-definitions-other-frame)
+               ("f i" . eglot-find-implementation)
+               ("f t" . eglot-find-typeDefinition)
+               ("f r" . xref-find-references)
+               ("F" . eglot-format)
                ("q" . eglot-shutdown)
                ("Q" . eglot-shutdown-all)
                ("r" . eglot-rename)
-               ("R" . eglot-code-action-rewrite)
                ("s" . eglot)
-               ("t" . eglot-find-typeDefinition)
                ("x" . eglot-code-action-quickfix)
                ("C-c" . eglot-clear-status)
                ("C-e" . eglot-events-buffer)
@@ -1981,14 +1997,13 @@ that allows to include other templates by their name."
       (treesit-install-language-grammar 'python))))
 
 ;; Rust
-(use-package rust-ts-mode
-  :mode ("\\.rs\\'" . rust-ts-mode)
+(use-package rust-mode
+  :ensure t
+
+  :mode ("\\.rs\\'" . rust-mode)
 
   :init
-  ;; Setup and settings (before load)
-  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
-
-  (setopt rust-ts-mode-indent-offset 4)
+  (setopt rust-mode-treesitter-derive t)
 
   :config
   ;; Setup and settings (after load)
@@ -1998,7 +2013,15 @@ that allows to include other templates by their name."
                  '(rust "https://github.com/tree-sitter/tree-sitter-rust"
                         "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'rust)
-      (treesit-install-language-grammar 'rust))))
+      (treesit-install-language-grammar 'rust)))
+
+  ;; Project (root finding)
+  (defun project-find-cargo-toml (dir)
+    (when-let ((root (locate-dominating-file dir "Cargo.toml")))
+      (cons 'cargo-toml root)))
+  (cl-defmethod project-root ((project (head cargo-toml)))
+    (cdr project))
+  (add-hook 'project-find-functions #'project-find-cargo-toml))
 
 ;; Go
 (use-package go-ts-mode

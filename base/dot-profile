@@ -16,8 +16,6 @@ export XDG_STATE_HOME="$HOME/.local/state"
 ### ZSH (Oh-My-Zsh)
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 
-### Cargo
-export CARGO_HOME="$XDG_CACHE_HOME/cargo"
 
 ### BAT
 export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat/config"
@@ -36,6 +34,10 @@ export CLIPBOARD_THEME='ansi'
 
 ### OPAM
 export OPAMROOT="$XDG_DATA_HOME/opam"
+
+### Rust/Cargo
+export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
+export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 ### GO
 export GOPATH="$XDG_DATA_HOME/go"
@@ -57,7 +59,8 @@ export LESSUTFCHARDEF='E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p'
 
 ## Paths
 ### Executables
-PATH="$PATH:/usr/local/go/bin:$GOBIN"
+PATH="$XDG_DATA_HOME/cargo/bin:$PATH"
+PATH="$GOBIN:$PATH:/usr/local/go/bin"
 PATH="$XDG_DATA_HOME/texlive/2025/bin/x86_64-linux:$PATH"
 PATH="$HOME/.local/bin:$PATH"
 export PATH
