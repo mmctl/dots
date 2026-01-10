@@ -172,10 +172,8 @@
 
 ;; Modes
 (add-hook 'text-mode-hook #'local-setup-text-mode)
-(add-hook 'special-mode-hook #'local-setup-text-mode)
+(add-hook 'special-mode-hook #'local-setup-special-mode)
 (add-hook 'tex-mode-hook #'local-setup-code-mode)
-(add-hook 'TeX-mode-hook #'local-setup-code-mode)
-(add-hook 'markdown-mode-hook #'local-setup-code-mode)
 (add-hook 'conf-mode-hook #'local-setup-code-mode)
 (add-hook 'log-edit-mode-hook #'local-setup-code-mode)
 (add-hook 'prog-mode-hook #'local-setup-code-mode)
@@ -412,7 +410,7 @@
 
 (keymap-global-set "C-x b" 'a-buffer-map-prefix)
 
-;; Finding/going/searching/replacing
+;; Finding/go/searching/replacing
 (defvar-keymap a-find-map
   :doc "Keymap for finding (i.e., searching, but more meta)"
   :prefix 'a-find-map-prefix
@@ -450,6 +448,7 @@
 (keymap-global-set "C-x C-f" #'find-file-other-frame)
 (keymap-global-set "C-x M-f" #'find-file-as-root)
 (keymap-global-set "C-x C-r" #'recentf-open)
+(keymap-global-set "C-x C-d" #'find-dired) ; from: list-directory
 (keymap-global-set "C-S-d" #'dired-jump)
 (keymap-global-set "C-M-S-d" #'dired-default-directory-as-root)
 
@@ -676,8 +675,7 @@
 
   :config
   ;; Keybindings
-  (keymap-set minibuffer-mode-map "C-^" #'marginalia-cycle)
-  (keymap-set minibuffer-local-map "C-^" #'marginalia-cycle))
+  (keymap-set minibuffer-local-map "M-A" #'marginalia-cycle))
 
 (use-package jinx
   :ensure t
@@ -698,6 +696,77 @@
                                (yaml-mode . conf-mode)
                                (yaml-ts-mode . conf-mode))))
 
+(use-package popper
+  :ensure t
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt popper-reference-buffers
+          '(messages-buffer-mode
+            help-mode
+            info-mode
+            Man-mode
+            woman-mode
+            compilation-mode
+            backtrace-mode
+            debugger-mode
+            emacs-lisp-compilation-mode
+            flymake-diagnostics-buffer-mode
+            occur-mode
+            grep-mode
+            xref--xref-buffer-mode
+            eshell-mode
+            comint-mode
+            term-mode
+            vterm-mode))
+  (setopt popper-group-function #'popper-group-by-directory)
+  (setopt popper-mode-line nil)
+
+  :config
+  ;; Setup and settings (after load)
+  ;; Keybindings
+  (keymap-global-set "M-u" #'popper-toggle) ; from: upcase-word
+  (keymap-global-set "M-U" #'popper-cycle)
+  (defvar-keymap a-popper-map
+    :doc "Keymap for popper (global)"
+    :prefix 'a-popper-map-prefix
+    "k" #'popper-kill-latest-popup
+    "l" #'popper-lower-to-popup
+    "t" #'popper-toggle
+    "T" #'popper-toggle-type
+    "r" #'popper-raise-popup
+    "^" #'popper-raise-popup
+    "_" #'popper-lower-to-popup
+    "<left>" #'popper-cycle-backwards
+    "<right>" #'popper-cycle)
+  (keymap-global-set "C-c p" 'a-popper-map-prefix)
+
+  (defvar-keymap a-popper-cycle-repeat-map
+    :doc "Keymap (repeatable) for popper cycling"
+    :repeat t
+    "<left>" #'popper-cycle-backwards
+    "<right>" #'popper-cycle)
+
+  ;; Faces
+  (set-face-attribute 'popper-echo-area-buried nil :inherit 'custom-comment)
+  (set-face-attribute 'popper-echo-dispatch-hint nil :inherit 'custom-comment :weight 'bold)
+
+  ;; Activation
+  (popper-mode 1))
+
+(use-package popper-echo
+  :ensure nil ; Provided by popper
+
+  :after popper
+
+  :init
+  (setopt popper-echo-lines 1)
+  (setopt popper-echo-dispatch-actions t)
+  (setopt popper-echo-dispatch-keys
+          '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
+
+  :config
+  (popper-echo-mode 1))
 
 ;; Completion
 (use-package orderless
@@ -831,7 +900,7 @@
 
   :config
   ;; Keybindings
-  (keymap-global-set "C-c p" #'cape-prefix-map)
+  (keymap-global-set "C-c `" #'cape-prefix-map)
 
   ;; Hooks
   (defun setup-a-cape-text-mode ()
@@ -1065,6 +1134,20 @@ that allows to include other templates by their name."
   (advice-add #'register-preview :override #'consult-register-window)
   (setopt register-preview-delay 0.5))
 
+(use-package consult-dir
+  :ensure t
+
+  :bind
+  ("<remap> <find-dired>" . consult-dir)
+  (:map minibuffer-local-map
+   ("M-d" . consult-dir)
+   ("M-D" . consult-dir-jump-file))
+  (:map a-find-map
+   ("C-d" . consult-dir))
+
+  :init
+  (setopt consult-dir-jump-file-command #'consult-fd))
+
 (use-package embark
   :ensure t
   :pin melpa
@@ -1116,7 +1199,11 @@ that allows to include other templates by their name."
   (keymap-set embark-package-map "f" #'describe-package)
 
   (keymap-set embark-become-file+buffer-map "F" #'find-file-other-window)
-  (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window))
+  (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window)
+
+  ;; Popups (popper)
+  (with-eval-after-load 'popper
+    (add-to-list 'popper-reference-buffers 'embark-collect-mode)))
 
 (use-package avy-embark-collect
   :ensure t
@@ -1665,7 +1752,7 @@ that allows to include other templates by their name."
   (setopt pdf-view-display-size 'fit-page)
   (setopt pdf-view-use-unicode-ligther nil)
 
-  (pdf-loader-install)
+  (pdf-loader-install t)
 
   :config
   ;; Setup and settings (after load)
@@ -1753,6 +1840,10 @@ that allows to include other templates by their name."
   ;; Keybindings
   (keymap-set magit-diff-section-map "M-RET" #'magit-diff-visit-worktree-file)
 
+  ;; Popups (popper)
+  (with-eval-after-load 'popper
+    (add-to-list 'popper-reference-buffers 'magit-process-mode))
+
   ;; Activation
   (magit-wip-mode 1))
 
@@ -1775,7 +1866,7 @@ that allows to include other templates by their name."
 
 (use-package eglot
   :bind
-  (:prefix-map an-eglot-map :prefix "C-c l" :prefix-docstring "Keymap for eglot (global)"
+  (:prefix-map an-eglot-map :prefix "C-c s" :prefix-docstring "Keymap for eglot (global)"
                ("a a" . eglot-code-actions)
                ("a e" . eglot-code-action-extract)
                ("a i" . eglot-code-action-inline)
@@ -1832,7 +1923,10 @@ that allows to include other templates by their name."
   (setopt TeX-electric-math '("$" . "$"))
 
   :config
+  ;; Setup and settings (after load)
   ;; Hooks
+  (add-hook 'TeX-mode-hook #'local-setup-code-mode)
+
   (add-hook 'TeX-language-en-hook (lambda () (jinx-languages "en_US")))
   (add-hook 'TeX-language-nl-hook (lambda () (jinx-languages "nl")))
 
@@ -1843,6 +1937,12 @@ that allows to include other templates by their name."
     (setq-local TeX-electric-math '("\\(" . "\\)")))
 
   (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-electric-math)
+
+  ;; Popups (popper)
+  (with-eval-after-load 'popper
+    (add-to-list 'popper-reference-buffers 'TeX-special-mode)
+    (add-to-list 'popper-reference-buffers 'TeX-output-mode)
+    (add-to-list 'popper-reference-buffers 'TeX-error-overview-mode))
 
   ;; Activation
   (TeX-source-correlate-mode 1))
@@ -1933,6 +2033,9 @@ that allows to include other templates by their name."
   (setopt markdown-special-ctrl-a/e t)
 
   :config
+  ;; Hooks
+  (add-hook 'markdown-mode-hook #'local-setup-code-mode)
+
   ;; Keybindings
   (keymap-set markdown-view-mode-map "<prior>" #'scroll-up-command)
   (keymap-set markdown-view-mode-map "<next>" #'scroll-down-command)
@@ -2300,6 +2403,18 @@ that allows to include other templates by their name."
                                    (?l "Lemmas" font-lock-keyword-face)
                                    (?T "Theories" font-lock-type-face)))))
 
+  (defun ece-consult-ripgrep-standard-library ()
+    "Performs `consult-ripgrep' with EasyCrypt's standard library root as
+starting directory."
+    (interactive)
+    (consult-ripgrep (ece--standard-library-root-canonical)))
+
+  (defun ece-consult-fd-standard-library ()
+    "Performs `consult-fd' with EasyCrypt's standard library root as
+starting directory."
+    (interactive)
+    (consult-fd (ece--standard-library-root-canonical)))
+
   ;; Keybindings
   (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
   (keymap-set easycrypt-ext-general-map "C-c l p" #'ece-proofshell-print)
@@ -2310,9 +2425,14 @@ that allows to include other templates by their name."
   (keymap-set easycrypt-ext-general-map "C-c C-s" #'ece-proofshell-search)
   (keymap-set easycrypt-ext-general-map "C-c l s" #'ece-proofshell-search)
   (keymap-set easycrypt-ext-general-map "C-c l S" #'ece-proofshell-prompt-search)
+  (keymap-set easycrypt-ext-general-map "C-c l f" #'ece-find-file-standard-library)
   (keymap-set easycrypt-ext-general-map "C-c l t" 'ece-template-map-prefix)
   (keymap-set easycrypt-ext-general-map "C-c C-e" 'ece-exec-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix))
+  (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix)
+
+  (with-eval-after-load 'consult
+    (keymap-set easycrypt-ext-general-map "C-c l F" #'ece-consult-fd-standard-library)
+    (keymap-set easycrypt-ext-general-map "C-c l r" #'ece-consult-ripgrep-standard-library)))
 
 (use-package easycrypt-ext-cape
   :ensure nil ; Provided by `easycrypt-ext'
@@ -2336,6 +2456,18 @@ that allows to include other templates by their name."
   (easycrypt-ext-mode . easycrypt-ext-mode-avy-setup)
   (easycrypt-ext-goals-mode . easycrypt-ext-goals-mode-avy-setup)
   (easycrypt-ext-response-mode . easycrypt-ext-response-mode-avy-setup))
+
+;; Lean
+(use-package nael
+  :ensure t
+
+  :mode ("\\.lean\\'" . 'nael-mode)
+
+  :hook (nael-mode . abbrev-mode)
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt nael-prepare-lsp nil))
 
 ;; Themes
 ;; Doom-themes (general)
@@ -2617,8 +2749,8 @@ that allows to include other templates by their name."
   (with-eval-after-load 'vertico
     (add-hook 'minibuffer-setup-hook (lambda ()
                                        (when (bound-and-true-p vertico--input)
-                                         (keymap-set minibuffer-local-map "M-P" #'an-embark-select-vertico-previous)
-                                         (keymap-set minibuffer-local-map "M-N" #'an-embark-select-vertico-next)))))
+                                         (keymap-set vertico-map "M-P" #'an-embark-select-vertico-previous)
+                                         (keymap-set vertico-map "M-N" #'an-embark-select-vertico-next)))))
   (with-eval-after-load 'org
     (keymap-set org-mode-map "C-c M-t" #'an-org-todo-manipulate-time))
   (with-eval-after-load 'org-agenda

@@ -102,6 +102,13 @@ setup."
   (hl-line-mode 1)
   (visual-line-mode 0))
 
+;; Special
+(defun local-setup-special-mode ()
+  "Setup modes mainly dealing with special text/images."
+  (display-line-numbers-mode 0)
+  (hl-line-mode 0)
+  (visual-line-mode 1))
+
 (provide 'local-setup)
 
 ;;; local-setup.el ends here
