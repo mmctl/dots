@@ -151,6 +151,40 @@
 (setopt window-resize-pixelwise t)
 
 (setopt switch-to-buffer-obey-display-actions t)
+(setopt switch-to-buffer-in-dedicated-window 'pop)
+
+(setopt fit-window-to-buffer-horizontally t)
+(setopt window-sides-vertical t)
+(setopt window-sides-slots '(0 0 1 1))
+
+(setq display-buffer-alist
+      '(((or (derived-mode . Info-mode)
+             (derived-mode . help-mode)
+             (derived-mode . man-common)
+             (derived-mode . ibuffer-mode)
+             (derived-mode . tablulated-list-mode)
+             (derived-mode . occur-mode)
+             (derived-mode . grep-mode)
+             (derived-mode . xref--xref-buffer-mode))
+         (display-buffer-reuse-window display-buffer-in-side-window)
+         (reusable-frames . visible)
+         (side . right)
+         (slot . 0)
+         (window-width . fit-right-side-window-to-buffer)
+         (preserve-size . (t . nil)))
+      ((or (derived-mode . messages-buffer-mode)
+           (derived-mode . compilation-mode)
+           (derived-mode . emacs-lisp-compilation-mode)
+           (derived-mode . eshell-mode)
+           (derived-mode . backtrace-mode)
+           (derived-mode . comint-mode))
+       (display-buffer-reuse-window display-buffer-in-side-window)
+       (reusable-frames . visible)
+       (side . bottom)
+       (slot . 0)
+       (window-height . fit-bottom-side-window-to-buffer)
+       (preserve-size . (nil . t)))))
+
 (setopt uniquify-buffer-name-style 'forward)
 (setopt highlight-nonselected-windows nil)
 
@@ -579,6 +613,11 @@
   ;; Activation
   (global-completion-preview-mode 1))
 
+(use-package grep
+  :init
+  ;; Setup and settings (before load)
+  (setopt grep-use-headings t))
+
 ;; Helpers
 (use-package wgrep
   :ensure t
@@ -698,6 +737,7 @@
 
 (use-package popper
   :ensure t
+  :pin melpa
 
   :init
   ;; Setup and settings (before load)
@@ -712,13 +752,16 @@
             debugger-mode
             emacs-lisp-compilation-mode
             flymake-diagnostics-buffer-mode
+            ibuffer-mode
             occur-mode
             grep-mode
             xref--xref-buffer-mode
             eshell-mode
+            shell-mode
             comint-mode
             term-mode
             vterm-mode))
+  (setopt popper-display-control nil)
   (setopt popper-group-function #'popper-group-by-directory)
   (setopt popper-mode-line nil)
 
@@ -747,10 +790,6 @@
     "<left>" #'popper-cycle-backwards
     "<right>" #'popper-cycle)
 
-  ;; Faces
-  (set-face-attribute 'popper-echo-area-buried nil :inherit 'custom-comment)
-  (set-face-attribute 'popper-echo-dispatch-hint nil :inherit 'custom-comment :weight 'bold)
-
   ;; Activation
   (popper-mode 1))
 
@@ -760,12 +799,16 @@
   :after popper
 
   :init
-  (setopt popper-echo-lines 1)
+  ;; Setup and settings (before load)
+  (setopt popper-echo-lines 2)
   (setopt popper-echo-dispatch-actions t)
-  (setopt popper-echo-dispatch-keys
-          '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
+  (setopt popper-echo-dispatch-keys '("0" "1" "2" "3" "4" "5" "6" "7" "8" "9"))
 
   :config
+  ;; Setup and settings (after load)
+  ;; Faces
+  (set-face-attribute 'popper-echo-area-buried nil :inherit 'custom-comment)
+  (set-face-attribute 'popper-echo-dispatch-hint nil :inherit 'custom-comment :weight 'bold)
   (popper-echo-mode 1))
 
 ;; Completion
@@ -1201,12 +1244,22 @@ that allows to include other templates by their name."
   (keymap-set embark-become-file+buffer-map "F" #'find-file-other-window)
   (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window)
 
-  ;; Popups (popper)
+  ;; Display
+  (add-to-list 'display-buffer-alist
+               '((major-mode . embark-collect-mode)
+                 (display-buffer-reuse-window display-buffer-in-side-window)
+                 (reusable-frames . visible)
+                 (side . right)
+                 (slot . 0)
+                 (window-width . fit-right-side-window-to-buffer)
+                 (preserve-size . (t . nil))))
+
   (with-eval-after-load 'popper
     (add-to-list 'popper-reference-buffers 'embark-collect-mode)))
 
 (use-package avy-embark-collect
   :ensure t
+  :pin melpa
 
   :bind
   (:map an-avy-map
@@ -1215,9 +1268,9 @@ that allows to include other templates by their name."
 
 (use-package embark-consult
   :ensure t
+  :pin melpa
 
   :after (embark consult))
-
 
 ;;; Tools
 (use-package dired-filter
@@ -1242,7 +1295,7 @@ that allows to include other templates by their name."
   (setopt dired-filter-save-with-custom nil)
 
   (setopt dired-filter-prefix "/"
-          dired-filter-mark-prefix "?")
+          dired-filter-mark-prefix "@")
 
   (setopt dired-filter-group-saved-groups '(("default"
                                              ("Directories" (directory . nil))
@@ -1317,7 +1370,7 @@ that allows to include other templates by their name."
 
   :bind
   (:map dired-mode-map
-        ("M-_" . dired-collapse-mode)))
+        (")" . dired-collapse-mode)))
 
 (use-package diredfl
   :ensure t
@@ -1840,7 +1893,16 @@ that allows to include other templates by their name."
   ;; Keybindings
   (keymap-set magit-diff-section-map "M-RET" #'magit-diff-visit-worktree-file)
 
-  ;; Popups (popper)
+  ;; Display
+  (add-to-list 'display-buffer-alist
+               '((major-mode . magit-process-mode)
+                 (display-buffer-reuse-window display-buffer-in-side-window)
+                 (reusable-frames . visible)
+                 (side . bottom)
+                 (slot . 0)
+                 (window-height . fit-bottom-side-window-to-buffer)
+                 (preserve-size . (nil . t))))
+
   (with-eval-after-load 'popper
     (add-to-list 'popper-reference-buffers 'magit-process-mode))
 
@@ -1938,7 +2000,24 @@ that allows to include other templates by their name."
 
   (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-electric-math)
 
-  ;; Popups (popper)
+  ;; Display
+  (add-to-list 'display-buffer-alist
+               '((derived-mode . TeX-output-mode)
+                 (display-buffer-reuse-window display-buffer-in-side-window)
+                 (reusable-frames . visible)
+                 (side . bottom)
+                 (slot . 0)
+                 (window-height . fit-bottom-side-window-to-buffer)
+                 (preserve-size . (nil . t))))
+  (add-to-list 'display-buffer-alist
+               '((major-mode . TeX-special-mode)
+                 (display-buffer-reuse-window display-buffer-in-side-window)
+                 (reusable-frames . visible)
+                 (side . right)
+                 (slot . 0)
+                 (window-width . fit-right-side-window-to-buffer)
+                 (preserve-size . (t . nil))))
+
   (with-eval-after-load 'popper
     (add-to-list 'popper-reference-buffers 'TeX-special-mode)
     (add-to-list 'popper-reference-buffers 'TeX-output-mode)

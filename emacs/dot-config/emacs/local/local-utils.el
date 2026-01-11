@@ -1,6 +1,28 @@
 ;; -*- lexical-binding: t -*-
 ;; local-utils.el
 
+;;; Displaying
+(defconst MAX_WIDTH_DIV_WINDOW_RIGHT_SIDE 2.5)
+(defconst MIN_WIDTH_DIV_WINDOW_RIGHT_SIDE 7.5)
+(defconst MAX_HEIGHT_DIV_WINDOW_BOTTOM_SIDE 3)
+(defconst MIN_HEIGHT_DIV_WINDOW_BOTTOM_SIDE 5)
+
+(defun fit-right-side-window-to-buffer (&optional window)
+  "Fits right-side window to buffer with a maximum (resp. minimum) width
+determined by dividing the frame width by `MAX_WIDTH_DIV_WINDOW_RIGHT_SIDE'
+(resp. `MIN_WIDTH_DIV_WINDOW_RIGHT_SIDE'), which see."
+  (fit-window-to-buffer window nil nil
+                        (floor (frame-width) MAX_WIDTH_DIV_WINDOW_RIGHT_SIDE)
+                        (floor (frame-width) MIN_WIDTH_DIV_WINDOW_RIGHT_SIDE)))
+
+(defun fit-bottom-side-window-to-buffer (&optional window)
+  "Fits bottom-side window to buffer with a maximum (resp. minimum) height
+determined by dividing the frame height by `MAX_HEIGHT_DIV_WINDOW_BOTTOM_SIDE'
+(resp. `MIN_HEIGHT_DIV_WINDOW_BOTTOM_SIDE'), which see."
+  (fit-window-to-buffer window
+                        (floor (frame-height) MAX_HEIGHT_DIV_WINDOW_BOTTOM_SIDE)
+                        (floor (frame-height) MIN_HEIGHT_DIV_WINDOW_BOTTOM_SIDE)))
+
 ;;; Movement
 (defun move-beginning-of-line-or-indentation (&optional arg)
   "Moves point to indentation or, if point is already there, to beginning of line.
@@ -38,6 +60,7 @@ meaning that (with Transient Mark mode on) it defaults to deactivating the mark
 if it is active and not reactivating mark."
   (interactive "P")
   (exchange-point-and-mark (null arg)))
+
 
 ;;; Duplication
 (defun duplicate-line-or-lines-in-region (&optional arg)
