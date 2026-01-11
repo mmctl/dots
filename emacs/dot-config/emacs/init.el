@@ -1137,7 +1137,9 @@ that allows to include other templates by their name."
         ("M-s l" . consult-line)
         ("M-s L" . consult-line-multi))
   (:map minibuffer-local-map
-        ("M-h" . consult-history))
+        ("M-h" . consult-history)
+        ("S-<up>" . previous-line-or-history-element)
+        ("S-<down>" . next-line-or-history-element))
   (:map goto-map
         ("b" . consult-buffer) ; from: switch-to-buffer
         ("B" . consult-buffer-other-window) ; from: switch-to-buffer-other-window
@@ -1175,7 +1177,8 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  (setopt consult-narrow-key "<"
+  (setopt consult-preview-key '("S-<up>" "S-<down>" "M-V")
+          consult-narrow-key "<"
           consult-widen-key ">")
   (setopt consult-async-refresh-delay 0.1
           consult-async-input-thottle 0.3
