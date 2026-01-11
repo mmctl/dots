@@ -2,26 +2,35 @@
 ;; local-utils.el
 
 ;;; Displaying
-(defconst MAX_WIDTH_DIV_WINDOW_RIGHT_SIDE 2.5)
-(defconst MIN_WIDTH_DIV_WINDOW_RIGHT_SIDE 7.5)
-(defconst MAX_HEIGHT_DIV_WINDOW_BOTTOM_SIDE 3)
-(defconst MIN_HEIGHT_DIV_WINDOW_BOTTOM_SIDE 5)
+(defconst MAX_WIDTH_DIV_WINDOW_LR_SIDE 2.5)
+(defconst MIN_WIDTH_DIV_WINDOW_LR_SIDE 7.5)
+(defconst MAX_HEIGHT_DIV_WINDOW_BT_SIDE 3)
+(defconst MIN_HEIGHT_DIV_WINDOW_BT_SIDE 5)
 
-(defun fit-right-side-window-to-buffer (&optional window)
+(defun fit-lr-side-window-to-buffer (&optional window)
   "Fits right-side window to buffer with a maximum (resp. minimum) width
-determined by dividing the frame width by `MAX_WIDTH_DIV_WINDOW_RIGHT_SIDE'
-(resp. `MIN_WIDTH_DIV_WINDOW_RIGHT_SIDE'), which see."
+determined by dividing the frame width by `MAX_WIDTH_DIV_WINDOW_LR_SIDE'
+(resp. `MIN_WIDTH_DIV_WINDOW_LR_SIDE'), which see."
   (fit-window-to-buffer window nil nil
-                        (floor (frame-width) MAX_WIDTH_DIV_WINDOW_RIGHT_SIDE)
-                        (floor (frame-width) MIN_WIDTH_DIV_WINDOW_RIGHT_SIDE)))
+                        (floor (frame-width) MAX_WIDTH_DIV_WINDOW_LR_SIDE)
+                        (floor (frame-width) MIN_WIDTH_DIV_WINDOW_LR_SIDE)))
 
-(defun fit-bottom-side-window-to-buffer (&optional window)
+(defun fit-bt-side-window-to-buffer (&optional window)
   "Fits bottom-side window to buffer with a maximum (resp. minimum) height
-determined by dividing the frame height by `MAX_HEIGHT_DIV_WINDOW_BOTTOM_SIDE'
-(resp. `MIN_HEIGHT_DIV_WINDOW_BOTTOM_SIDE'), which see."
+determined by dividing the frame height by `MAX_HEIGHT_DIV_WINDOW_BT_SIDE'
+(resp. `MIN_HEIGHT_DIV_WINDOW_BT_SIDE'), which see."
   (fit-window-to-buffer window
-                        (floor (frame-height) MAX_HEIGHT_DIV_WINDOW_BOTTOM_SIDE)
-                        (floor (frame-height) MIN_HEIGHT_DIV_WINDOW_BOTTOM_SIDE)))
+                        (floor (frame-height) MAX_HEIGHT_DIV_WINDOW_BT_SIDE)
+                        (floor (frame-height) MIN_HEIGHT_DIV_WINDOW_BT_SIDE)))
+
+(defun exists-window-with-derived-mode (mode &optional frame)
+  "Checks whether there exists a window in FRAME showing a buffer
+in a mode derived from MODE (including MODE itself). If FRAME is nil,
+defaults to checking selected frame."
+  (seq-some #'(lambda (win)
+                (with-current-buffer (window-buffer win)
+                   (derived-mode-p mode)))
+            (window-list frame)))
 
 ;;; Movement
 (defun move-beginning-of-line-or-indentation (&optional arg)

@@ -155,7 +155,13 @@
 
 (setopt fit-window-to-buffer-horizontally t)
 (setopt window-sides-vertical t)
-(setopt window-sides-slots '(0 0 1 1))
+(setopt window-sides-slots '(1 0 1 1))
+
+(setopt display-buffer-base-action
+        '((display-buffer-reuse-window
+           display-buffer-in-previous-window
+           display-buffer-use-some-window)
+          (reusable-frames . visible)))
 
 (setq display-buffer-alist
       '(((or (derived-mode . Info-mode)
@@ -170,7 +176,7 @@
          (reusable-frames . visible)
          (side . right)
          (slot . 0)
-         (window-width . fit-right-side-window-to-buffer)
+         (window-width . fit-lr-side-window-to-buffer)
          (preserve-size . (t . nil)))
       ((or (derived-mode . messages-buffer-mode)
            (derived-mode . compilation-mode)
@@ -182,8 +188,19 @@
        (reusable-frames . visible)
        (side . bottom)
        (slot . 0)
-       (window-height . fit-bottom-side-window-to-buffer)
-       (preserve-size . (nil . t)))))
+       (window-height . fit-bt-side-window-to-buffer)
+       (preserve-size . (nil . t)))
+      ((derived-mode . dired-mode)
+       (display-buffer-reuse-window display-buffer-in-side-window)
+       (reusable-frames . nil)
+       (side . left)
+       (slot . 0)
+       (window-width . fit-lr-side-window-to-buffer))
+      ((derived-mode . image-mode)
+       (display-buffer-reuse-window display-buffer-use-some-frame display-buffer-pop-up-frame)
+       (reusable-frames . 0)
+       (frame-predicate . (lambda (frame)
+                            (exists-window-with-derived-mode 'image-mode frame))))))
 
 (setopt uniquify-buffer-name-style 'forward)
 (setopt highlight-nonselected-windows nil)
@@ -412,6 +429,8 @@
 (keymap-set a-window-map "M-k" #'delete-windows-on)
 (keymap-set a-window-map "s" #'split-window-horizontally)
 (keymap-set a-window-map "S" #'split-window-vertically)
+(keymap-set a-window-map "C-s" #'split-root-window-below)
+(keymap-set a-window-map "M-s" #'split-root-window-right)
 (keymap-set a-window-map "o" #'other-window)
 (keymap-set a-window-map "t" #'tear-off-window)
 (keymap-set a-window-map "u" #'fit-window-to-buffer)
@@ -742,7 +761,8 @@
   :init
   ;; Setup and settings (before load)
   (setopt popper-reference-buffers
-          '(messages-buffer-mode
+          '(dired-mode
+            messages-buffer-mode
             help-mode
             info-mode
             Man-mode
@@ -1251,7 +1271,7 @@ that allows to include other templates by their name."
                  (reusable-frames . visible)
                  (side . right)
                  (slot . 0)
-                 (window-width . fit-right-side-window-to-buffer)
+                 (window-width . fit-lr-side-window-to-buffer)
                  (preserve-size . (t . nil))))
 
   (with-eval-after-load 'popper
@@ -1831,6 +1851,14 @@ that allows to include other templates by their name."
   (keymap-set pdf-view-mode-map "m" #'pdf-view-position-to-register)
   (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
 
+  ;; Display
+  (add-to-list 'display-buffer-alist
+               '((derived-mode . pdf-view-mode)
+                 (display-buffer-reuse-window display-buffer-use-some-frame display-buffer-pop-up-frame)
+                 (reusable-frames . 0)
+                 (frame-predicate . (lambda (frame)
+                                      (exists-window-with-derived-mode 'pdf-view-mode frame)))))
+
   ;; Hooks
   (add-hook 'pdf-tools-enabled-hook
             #'(lambda ()
@@ -1900,7 +1928,7 @@ that allows to include other templates by their name."
                  (reusable-frames . visible)
                  (side . bottom)
                  (slot . 0)
-                 (window-height . fit-bottom-side-window-to-buffer)
+                 (window-height . fit-bt-side-window-to-buffer)
                  (preserve-size . (nil . t))))
 
   (with-eval-after-load 'popper
@@ -2007,7 +2035,7 @@ that allows to include other templates by their name."
                  (reusable-frames . visible)
                  (side . bottom)
                  (slot . 0)
-                 (window-height . fit-bottom-side-window-to-buffer)
+                 (window-height . fit-bt-side-window-to-buffer)
                  (preserve-size . (nil . t))))
   (add-to-list 'display-buffer-alist
                '((major-mode . TeX-special-mode)
@@ -2015,7 +2043,7 @@ that allows to include other templates by their name."
                  (reusable-frames . visible)
                  (side . right)
                  (slot . 0)
-                 (window-width . fit-right-side-window-to-buffer)
+                 (window-width . fit-lr-side-window-to-buffer)
                  (preserve-size . (t . nil))))
 
   (with-eval-after-load 'popper
