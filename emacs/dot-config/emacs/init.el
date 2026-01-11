@@ -160,6 +160,7 @@
 (setopt display-buffer-base-action
         '((display-buffer-reuse-window
            display-buffer-in-previous-window
+           display-buffer-pop-up-window
            display-buffer-use-some-window)
           (reusable-frames . visible)))
 
