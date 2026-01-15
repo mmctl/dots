@@ -1277,14 +1277,17 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
   (setopt register-preview-delay 0.5)
 
   ;; Patches
-  (defun around-advice-buffer-no-obey-display-actions (fun &rest args)
-    "Advice to display buffer in without obeying display actions (typically
-same window unless, e.g., dedicated)."
-    (let ((switch-to-buffer-obey-display-actions nil))
-      (apply fun args)))
+  (defun filter-return-advice-preview-buffer-no-obey-display-actions (ret)
+    "Filter return advice for consult's preview buffer function
+(`consult--buffer-preview') to execute it in environment where
+`switch-to-buffer' does not obey display actions and typically
+uses window unless, e.g., dedicated."
+    (lambda (action cand)
+      (let* ((switch-to-buffer-obey-display-actions nil))
+        (funcall ret action cand))))
 
   ;; Preview buffers without obeying display actions
-  (advice-add #'consult--buffer-preview :around #'around-advice-buffer-no-obey-display-actions))
+  (advice-add #'consult--buffer-preview :filter-return #'filter-return-advice-preview-buffer-no-obey-display-actions))
 
 (use-package consult-dir
   :ensure t
