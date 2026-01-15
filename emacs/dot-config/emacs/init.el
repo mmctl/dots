@@ -154,15 +154,17 @@
 (setopt switch-to-buffer-in-dedicated-window 'pop)
 
 (setopt fit-window-to-buffer-horizontally t)
-(setopt window-sides-vertical t)
+(setopt window-sides-vertical nil)
 (setopt window-sides-slots '(1 0 1 1))
 
 (setopt display-buffer-base-action
         '((display-buffer-reuse-window
            display-buffer-in-previous-window
            display-buffer-pop-up-window
-           display-buffer-use-some-window)
-          (reusable-frames . visible)))
+           display-buffer-use-some-window
+           display-buffer-same-window)
+          (reusable-frames . visible)
+          (lru-frames . nil)))
 
 (setq display-buffer-alist
       '(((or (derived-mode . Info-mode)
@@ -178,30 +180,46 @@
          (side . right)
          (slot . 0)
          (window-width . fit-lr-side-window-to-buffer)
-         (preserve-size . (t . nil)))
-      ((or (derived-mode . messages-buffer-mode)
-           (derived-mode . compilation-mode)
-           (derived-mode . emacs-lisp-compilation-mode)
-           (derived-mode . eshell-mode)
-           (derived-mode . backtrace-mode)
-           (derived-mode . comint-mode))
-       (display-buffer-reuse-window display-buffer-in-side-window)
-       (reusable-frames . visible)
-       (side . bottom)
-       (slot . 0)
-       (window-height . fit-bt-side-window-to-buffer)
-       (preserve-size . (nil . t)))
-      ((derived-mode . dired-mode)
-       (display-buffer-reuse-window display-buffer-in-side-window)
-       (reusable-frames . nil)
-       (side . left)
-       (slot . 0)
-       (window-width . fit-lr-side-window-to-buffer))
-      ((derived-mode . image-mode)
-       (display-buffer-reuse-window display-buffer-use-some-frame display-buffer-pop-up-frame)
-       (reusable-frames . 0)
-       (frame-predicate . (lambda (frame)
-                            (exists-window-with-derived-mode 'image-mode frame))))))
+         (preserve-size . (t . nil))
+         (post-command-select-window . t))
+        ((or (derived-mode . messages-buffer-mode)
+             (derived-mode . compilation-mode)
+             (derived-mode . emacs-lisp-compilation-mode)
+             (derived-mode . backtrace-mode))
+         (display-buffer-reuse-window display-buffer-in-side-window)
+         (reusable-frames . visible)
+         (side . bottom)
+         (slot . 0)
+         (window-height . fit-bt-side-window-to-buffer)
+         (preserve-size . (nil . t)))
+        ((or (derived-mode . eshell-mode)
+             (derived-mode . comint-mode))
+         (display-buffer-reuse-window display-buffer-in-side-window)
+         (reusable-frames . visible)
+         (side . bottom)
+         (slot . 0)
+         (window-height . fit-bt-side-window-to-buffer)
+         (preserve-size . (nil . t))
+         (post-command-select-window . t))
+        ((derived-mode . dired-mode)
+         (display-buffer-reuse-window display-buffer-in-side-window)
+         (reusable-frames . nil)
+         (side . left)
+         (slot . 0)
+         (window-width . fit-lr-side-window-to-buffer)
+         (post-command-select-window . t))
+        ((derived-mode . image-mode)
+         (display-buffer-reuse-window
+          display-buffer-in-previous-window
+          display-buffer-use-some-frame
+          display-buffer-pop-up-window
+          display-buffer-use-some-window
+          display-buffer-same-window)
+         (reusable-frames . 0)
+         (frame-predicate . (lambda (frame)
+                              (exists-window-with-derived-mode 'image-mode frame)))
+         (window-width . fit-to-buffer)
+         (lru-frames . nil))))
 
 (setopt uniquify-buffer-name-style 'forward)
 (setopt highlight-nonselected-windows nil)
@@ -761,6 +779,20 @@
 
   :init
   ;; Setup and settings (before load)
+  ;; Additional functionality
+  (defun a-popper-group-by-directory-home-default ()
+    "Returns an identifier to group popups, defaulting
+to the project root (according to `project.el') if found,
+with `default-directory' as fallback. In case
+`default-directory' is the home directory, return `nil'
+to assign to the default group."
+    (or (and (fboundp 'project-root)
+             (when-let* ((project (project-current)))
+               (project-root project)))
+        (unless (file-equal-p (expand-file-name "~/")
+                              (expand-file-name default-directory))
+          default-directory)))
+
   (setopt popper-reference-buffers
           '(dired-mode
             messages-buffer-mode
@@ -783,14 +815,33 @@
             term-mode
             vterm-mode))
   (setopt popper-display-control nil)
-  (setopt popper-group-function #'popper-group-by-directory)
+  ;; (setopt popper-group-function #'popper-group-by-directory)
+  (setopt popper-group-function #'a-popper-group-by-directory-home-default)
   (setopt popper-mode-line nil)
 
   :config
   ;; Setup and settings (after load)
+  ;; Additional functionality
+  (defun a-popper-toggle-next (&optional arg)
+    "Toggle next popup in group without burying current one through
+ providing `popper-toggle', which see, a single prefix argument (by
+default). With prefix argument ARG, calls `popper-toggle' with an
+additional prefix argument."
+    (interactive "p")
+    (popper-toggle (* 4 arg)))
+
+  (defun a-popper-cycle-default-group ()
+    "Cycle to next popup in default group by calling `popper-cycle',
+which see, with `0' as argument."
+    (interactive)
+    (popper-cycle 0))
+
   ;; Keybindings
-  (keymap-global-set "M-u" #'popper-toggle) ; from: upcase-word
-  (keymap-global-set "M-U" #'popper-cycle)
+  (keymap-global-set "M-o" #'popper-toggle)
+  (keymap-global-set "M-O" #'a-popper-toggle-next)
+  (keymap-global-set "C-M-o" #'popper-cycle) ; from: split-line
+  (keymap-global-set "C-S-o" #'a-popper-cycle-default-group)
+  (keymap-global-set "C-M-S-o" #'popper-toggle-type)
   (defvar-keymap a-popper-map
     :doc "Keymap for popper (global)"
     :prefix 'a-popper-map-prefix
@@ -861,7 +912,7 @@
 
   :config
   ;; Keybindings
-  (keymap-set vertico-map "<backtab>" #'minibuffer-complete)
+  (keymap-set vertico-map "C-M-<tab>" #'minibuffer-complete)
   (keymap-set vertico-map "C-?" #'minibuffer-completion-help)
 
   ;; Activation
@@ -1056,7 +1107,31 @@ that allows to include other templates by their name."
                   (?h aw-split-window-horz "Split window horizontally")
                   (?v aw-split-window-vert "Split window vertically")
                   (?t aw-transpose-frame "Transpose frames")
-                  (?? aw-show-dispatch-help))))
+                  (?? aw-show-dispatch-help)))
+
+  :init
+  ;; Setup and settings (after load)
+  ;; Additional functionality
+  (defun an-ace-window-prefix ()
+    "Sets `ace-window' as the function to choose window for displaying the
+buffer of the next command.
+
+The next buffer is the buffer displayed by the next command invoked
+immediately after this command, ignoring reading from the minibuffer.
+When `switch-to-buffer-obey-display-actions' is non-nil,
+`switch-to-buffer' commands are also supported."
+    (interactive)
+    (display-buffer-override-next-command
+     (lambda (buffer _)
+       (let ((window (aw-select (propertize " ACE" 'face 'mode-line-highlight)))
+             (type 'reuse))
+         (cons window type)))
+     nil "[ace-window]")
+    (message "Use `ace-window' to display next command buffer..."))
+
+  ;; Keybindings
+  (keymap-set a-window-map "o" #'an-ace-window-prefix))
+
 
 (use-package avy
   :ensure t
@@ -1199,7 +1274,17 @@ that allows to include other templates by their name."
 
   (setopt register-preview-function #'consult-register-format)
   (advice-add #'register-preview :override #'consult-register-window)
-  (setopt register-preview-delay 0.5))
+  (setopt register-preview-delay 0.5)
+
+  ;; Patches
+  (defun around-advice-buffer-no-obey-display-actions (fun &rest args)
+    "Advice to display buffer in without obeying display actions (typically
+same window unless, e.g., dedicated)."
+    (let ((switch-to-buffer-obey-display-actions nil))
+      (apply fun args)))
+
+  ;; Preview buffers without obeying display actions
+  (advice-add #'consult--buffer-preview :around #'around-advice-buffer-no-obey-display-actions))
 
 (use-package consult-dir
   :ensure t
@@ -1222,8 +1307,8 @@ that allows to include other templates by their name."
   :bind
   ("M-," . embark-act)
   ("M-." . embark-dwim)
-  ("M-o" . embark-select)
-  ("M-O" . embark-export)
+  ("M-u" . embark-select) ; from: upcase-word
+  ("M-U" . embark-export)
   ("C-h C-b" . embark-bindings)
   (:prefix-map an-embark-map :prefix "C-c e" :prefix-docstring "Keymap for embark (global)"
                ("a" . embark-act)
@@ -1240,18 +1325,25 @@ that allows to include other templates by their name."
   :init
   ;; Setup and settings (before load)
   (setopt embark-confirm-act-all t)
+  (setopt embark-verbose-indicator-display-action
+          '((display-buffer-reuse-window display-buffer-in-side-window)
+            (reusable-frames . nil)
+            (side . right)
+            (slot . 0)
+            (window-width . fit-lr-side-window-to-buffer)))
+
   (setq-default prefix-help-command #'embark-prefix-help-command)
 
   :config
   ;; Keybindings
-  (keymap-set embark-general-map "C-o" #'embark-select)
+  (keymap-set embark-general-map "C-u" #'embark-select)
 
   (keymap-set embark-file-map "F" #'find-file-other-window)
   (keymap-set embark-file-map "C-f" #'find-file-other-frame)
   (keymap-set embark-file-map "l" #'find-file-literally)
 
   (keymap-set embark-library-map "F" #'find-library-other-window)
-  (keymap-set embark-library-map "C-f" #'find-library-other-window)
+  (keymap-set embark-library-map "C-f" #'find-library-other-frame)
 
   (keymap-set embark-buffer-map "g" #'switch-to-buffer)
   (keymap-set embark-buffer-map "G" #'switch-to-buffer-other-window)
@@ -1276,10 +1368,13 @@ that allows to include other templates by their name."
                  (side . right)
                  (slot . 0)
                  (window-width . fit-lr-side-window-to-buffer)
-                 (preserve-size . (t . nil))))
+                 (preserve-size . (t . nil))
+                 (post-command-select-window . t)))
 
   (with-eval-after-load 'popper
-    (add-to-list 'popper-reference-buffers 'embark-collect-mode)))
+    (add-to-list 'popper-reference-buffers 'embark-collect-mode)
+    (when popper-mode
+      (popper-mode 1))))
 
 (use-package avy-embark-collect
   :ensure t
@@ -1858,10 +1953,18 @@ that allows to include other templates by their name."
   ;; Display
   (add-to-list 'display-buffer-alist
                '((derived-mode . pdf-view-mode)
-                 (display-buffer-reuse-window display-buffer-use-some-frame display-buffer-pop-up-frame)
+                 (display-buffer-reuse-window
+                  display-buffer-in-previous-window
+                  display-buffer-use-some-frame
+                  display-buffer-pop-up-window
+                  display-buffer-use-some-window
+                  display-buffer-same-window)
                  (reusable-frames . 0)
                  (frame-predicate . (lambda (frame)
-                                      (exists-window-with-derived-mode 'pdf-view-mode frame)))))
+                                      (exists-window-with-derived-mode 'pdf-view-mode frame)))
+                 (window-width . fit-to-buffer)
+                 (lru-frames . nil)
+                 (post-command-select-window . t)))
 
   ;; Hooks
   (add-hook 'pdf-tools-enabled-hook
@@ -1915,6 +2018,7 @@ that allows to include other templates by their name."
           auto-revert-verbose t
           auto-revert-buffer-list-filter 'magit-auto-revert-repository-buffer-p)
   (setopt magit-delete-by-moving-to-trash t)
+  (setopt magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
   (setopt git-commit-major-mode #'log-edit-mode)
 
   :config
@@ -1936,7 +2040,9 @@ that allows to include other templates by their name."
                  (preserve-size . (nil . t))))
 
   (with-eval-after-load 'popper
-    (add-to-list 'popper-reference-buffers 'magit-process-mode))
+    (add-to-list 'popper-reference-buffers 'magit-process-mode)
+    (when popper-mode
+      (popper-mode 1)))
 
   ;; Activation
   (magit-wip-mode 1))
@@ -2034,6 +2140,11 @@ that allows to include other templates by their name."
 
   ;; Display
   (add-to-list 'display-buffer-alist
+               '((derived-mode . TeX-mode)
+                 (display-buffer-reuse-window display-buffer-reuse-mode-window)
+                 (reusable-frames . visible)
+                 (post-command-select-window . t)))
+  (add-to-list 'display-buffer-alist
                '((derived-mode . TeX-output-mode)
                  (display-buffer-reuse-window display-buffer-in-side-window)
                  (reusable-frames . visible)
@@ -2053,7 +2164,9 @@ that allows to include other templates by their name."
   (with-eval-after-load 'popper
     (add-to-list 'popper-reference-buffers 'TeX-special-mode)
     (add-to-list 'popper-reference-buffers 'TeX-output-mode)
-    (add-to-list 'popper-reference-buffers 'TeX-error-overview-mode))
+    (add-to-list 'popper-reference-buffers 'TeX-error-overview-mode)
+    (when popper-mode
+      (popper-mode 1)))
 
   ;; Activation
   (TeX-source-correlate-mode 1))
@@ -2833,6 +2946,8 @@ starting directory."
   :ensure nil ; Provided locally
 
   :bind
+  (:map minibuffer-local-map
+        ("<backtab>" . an-embark-act-with-completing-read))
   (:map an-avy-map
         ("r" . an-avy-region-char-1)
         ("R" . an-avy-region-timer))
@@ -2857,11 +2972,23 @@ starting directory."
     (add-to-list 'avy-dispatch-alist '(?, . avy-action-an-embark-act) t)
     (add-to-list 'avy-dispatch-alist '(?. . avy-action-an-embark-dwim) t))
 
+  (with-eval-after-load 'embark
+    (defvar-keymap an-embark-completing-read-prompter-map
+      :doc "Keymap for Embark's completing read prompter"
+      "<backtab>" #'abort-recursive-edit)
+    (advice-add 'embark-completing-read-prompter :around
+                (an-around-advice-with-minibuffer-keymap an-embark-completing-read-prompter-map))
+    (keymap-set embark-file-map "o" #'an-embark-ace-window-find-file)
+    (keymap-set embark-buffer-map "o" #'an-embark-ace-window-pop-to-buffer)
+    (keymap-set embark-bookmark-map "o" #'an-embark-ace-window-bookmark-jump))
+
   (with-eval-after-load 'vertico
-    (add-hook 'minibuffer-setup-hook (lambda ()
-                                       (when (bound-and-true-p vertico--input)
-                                         (keymap-set vertico-map "M-P" #'an-embark-select-vertico-previous)
-                                         (keymap-set vertico-map "M-N" #'an-embark-select-vertico-next)))))
+    (add-hook 'minibuffer-setup-hook
+              (lambda ()
+                (when (bound-and-true-p vertico--input)
+                  (keymap-set vertico-map "M-P" #'an-embark-select-vertico-previous)
+                  (keymap-set vertico-map "M-N" #'an-embark-select-vertico-next)))))
+
   (with-eval-after-load 'org
     (keymap-set org-mode-map "C-c M-t" #'an-org-todo-manipulate-time))
   (with-eval-after-load 'org-agenda

@@ -1,11 +1,14 @@
 ;; -*- lexical-binding: t -*-
 ;; local-pkgs.el
 
-;;; Avy
 (require 'avy)
+(require 'ace-window)
+(require 'embark)
+(require 'vertico)
 (require 'org)
 (require 'org-agenda)
 
+;;; Avy
 ;; Actions (additional)
 ;;;###autoload
 (defun avy-action-a-push-mark-no-activate (pt)
@@ -297,6 +300,80 @@ moving to the next candidate after selecting."
   (embark-select)
   (vertico-next))
 
+;; Embark with Ace Window prefix
+(defun an-embark-ace-window-action (fun)
+  "Select and switch to window with `ace-window', always dispatching,
+before calling FUN interactively."
+  (interactive)
+  (with-demoted-errors "%s"
+    (let* ((aw-dispatch-always t))
+      (aw-switch-to-window (aw-select nil))
+      (call-interactively fun))))
+
+;;;###autoload
+(defun an-embark-ace-window-find-file ()
+  "Select and switch to window with `ace-window', always dispatching,
+then calling `find-file' interactively."
+  (interactive)
+  (an-embark-ace-window-action #'find-file))
+
+;;;###autoload
+(defun an-embark-ace-window-pop-to-buffer ()
+  "Select and switch to window with `ace-window', always dispatching,
+then calling `pop-to-buffer-same-window' interactively."
+  (interactive)
+  (an-embark-ace-window-action #'pop-to-buffer-same-window))
+
+;;;###autoload
+(defun an-embark-ace-window-bookmark-jump ()
+  "Select and switch to window with `ace-window', always dispatching,
+then calling `bookmark-jump' interactively."
+  (interactive)
+  (an-embark-ace-window-action #'bookmark-jump))
+
+;; (cl-defun an-embark--call-prefix-action (&rest rest &key run type &allow-other-keys)
+;;   "Looks up command in `a-window-prefix-map' corresponding to the
+;; key sequence this command was called with, and executes that (prefix)
+;; command before running the Embark's current default command.
+
+;; Meant as hook around dummy command, to be put in
+;; `embark-around-action-hooks', which see; this command should then be put
+;; in an Embark keymap to allow for executing default commands with a
+;; prefix."
+;;   (message "cmdkeysvector: %s; interpretation: %s" (this-command-keys-vector) (key-description (this-command-keys-vector)))
+;;   (when-let* ((cmd (keymap-lookup
+;;                     a-window-prefix-map
+;;                     (key-description ""))(this-command-keys-vector)))))
+;;     (funcall cmd))
+;;   (funcall run :action (embark--default-action type) :type type rest))
+; ;;;###autoload
+(defun an-embark-choose-window-default-action ()
+  "Choose window according to prefix before executing default action.
+
+Dummy command (no-op) for use with `an-embark--call-prefix-action',
+which see."
+  (interactive))
+
+;;;###autoload
+(defmacro an-around-advice-with-minibuffer-keymap (keymap)
+  "Expands to a lambda (taking a function and arguments) usable as around
+advice that applies the provided function to its arguments inside a
+minibuffer for which the local keymap is composed with KEYMAP."
+  `(lambda (fun &rest args)
+     (minibuffer-with-setup-hook
+         (lambda ()
+           (use-local-map
+            (make-composed-keymap ,keymap (current-local-map))))
+       (apply fun args))))
+
+;;;###autoload
+(defun an-embark-act-with-completing-read (&optional arg)
+  "Calls `embark-act' with its completing read prompter
+and minimal indicators."
+  (interactive "P")
+  (let* ((embark-prompter 'embark-completing-read-prompter)
+         (embark-indicators '(embark-minimal-indicator)))
+    (embark-act arg)))
 
 ;;; Org
 ;;;###autoload

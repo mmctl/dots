@@ -1,11 +1,31 @@
 ;; -*- lexical-binding: t -*-
 ;; local-utils.el
 
+;;; Predicates
+(defun exists-window-with-derived-mode (mode &optional frame)
+  "Checks whether there exists a window in FRAME showing a buffer
+in a mode derived from MODE (including MODE itself). If FRAME is nil,
+defaults to checking selected frame."
+  (seq-some #'(lambda (win)
+                (with-current-buffer (window-buffer win)
+                   (derived-mode-p mode)))
+            (window-list frame)))
+
+
 ;;; Displaying
-(defconst MAX_WIDTH_DIV_WINDOW_LR_SIDE 2.5)
-(defconst MIN_WIDTH_DIV_WINDOW_LR_SIDE 7.5)
-(defconst MAX_HEIGHT_DIV_WINDOW_BT_SIDE 3)
-(defconst MIN_HEIGHT_DIV_WINDOW_BT_SIDE 5)
+;; Fitting
+(defconst MAX_WIDTH_DIV_WINDOW_LR_SIDE 2.5
+  "Divisor used to compute maximum width of side window
+on the left or right.")
+(defconst MIN_WIDTH_DIV_WINDOW_LR_SIDE 7.5
+  "Divisor used to compute minimum width of side window
+on the left or right.")
+(defconst MAX_HEIGHT_DIV_WINDOW_BT_SIDE 3
+  "Divisor used to compute maximum height of side window
+on the bottom or top.")
+(defconst MIN_HEIGHT_DIV_WINDOW_BT_SIDE 5
+  "Divisor used to compute minimum height of side window
+on the bottom or top.")
 
 (defun fit-lr-side-window-to-buffer (&optional window)
   "Fits right-side window to buffer with a maximum (resp. minimum) width
@@ -23,14 +43,14 @@ determined by dividing the frame height by `MAX_HEIGHT_DIV_WINDOW_BT_SIDE'
                         (floor (frame-height) MAX_HEIGHT_DIV_WINDOW_BT_SIDE)
                         (floor (frame-height) MIN_HEIGHT_DIV_WINDOW_BT_SIDE)))
 
-(defun exists-window-with-derived-mode (mode &optional frame)
-  "Checks whether there exists a window in FRAME showing a buffer
-in a mode derived from MODE (including MODE itself). If FRAME is nil,
-defaults to checking selected frame."
-  (seq-some #'(lambda (win)
-                (with-current-buffer (window-buffer win)
-                   (derived-mode-p mode)))
-            (window-list frame)))
+;; Selection (Window/Buffer)
+(defun switch-to-buffer-display-override-same-window ()
+  "Calls `switch-to-buffer', but tries to first reuse same window when
+obeying display actions (see `switch-to-buffer-obey-display-actions')."
+  (interactive)
+  (let ((display-buffer-overriding-action '((display-buffer-same-window))))
+    (call-interactively #'switch-to-buffer)))
+
 
 ;;; Movement
 (defun move-beginning-of-line-or-indentation (&optional arg)
