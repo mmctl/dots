@@ -157,6 +157,8 @@
 (setopt window-sides-vertical nil)
 (setopt window-sides-slots '(1 0 1 1))
 
+(setopt help-window-select t)
+
 (setopt display-buffer-base-action
         '((display-buffer-reuse-window
            display-buffer-in-previous-window
@@ -169,6 +171,7 @@
 (setq display-buffer-alist
       '(((or (derived-mode . Info-mode)
              (derived-mode . help-mode)
+             (derived-mode . apropos-mode)
              (derived-mode . man-common)
              (derived-mode . ibuffer-mode)
              (derived-mode . tablulated-list-mode)
@@ -180,8 +183,7 @@
          (side . right)
          (slot . 0)
          (window-width . fit-lr-side-window-to-buffer)
-         (preserve-size . (t . nil))
-         (post-command-select-window . t))
+         (preserve-size . (t . nil)))
         ((or (derived-mode . messages-buffer-mode)
              (derived-mode . compilation-mode)
              (derived-mode . emacs-lisp-compilation-mode)
@@ -199,15 +201,13 @@
          (side . bottom)
          (slot . 0)
          (window-height . fit-bt-side-window-to-buffer)
-         (preserve-size . (nil . t))
-         (post-command-select-window . t))
+         (preserve-size . (nil . t)))
         ((derived-mode . dired-mode)
          (display-buffer-reuse-window display-buffer-in-side-window)
          (reusable-frames . nil)
          (side . left)
          (slot . 0)
-         (window-width . fit-lr-side-window-to-buffer)
-         (post-command-select-window . t))
+         (window-width . fit-lr-side-window-to-buffer))
         ((derived-mode . image-mode)
          (display-buffer-reuse-window
           display-buffer-in-previous-window
@@ -316,7 +316,7 @@
                                 restore))
 
 (setopt shift-select-mode nil)
-(repeat-mode 1)
+;; (repeat-mode 1)
 
 
 ;; Miscellaneous
@@ -627,6 +627,7 @@
           which-key-max-description-length 0.20
           which-key-add-column-padding 2
           which-key-show-remaining-keys t
+          which-key-use-C-h-commands nil
           which-key-preserve-window-configuration t
           which-key-sort-uppercase-first nil
           which-key-sort-order 'which-key-key-order-alpha)
@@ -634,6 +635,7 @@
   :config
   ;; Keybindings
   (keymap-set which-key-mode-map "C-x <f3>" #'which-key-C-h-dispatch)
+  (setq prefix-help-command #'a-which-key-repeated-prefix-help-command)
 
   ;; Activation
   (which-key-mode 1))
@@ -1015,7 +1017,7 @@ which see, with `0' as argument."
 
   :config
   ;; Keybindings
-  (keymap-global-set "C-c `" #'cape-prefix-map)
+  (keymap-global-set "C-c w" #'cape-prefix-map)
 
   ;; Hooks
   (defun setup-a-cape-text-mode ()
@@ -1276,6 +1278,8 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
   (advice-add #'register-preview :override #'consult-register-window)
   (setopt register-preview-delay 0.5)
 
+  (setopt consult-ripgrep-args (concat consult-ripgrep-args " --no-config"))
+
   ;; Patches
   (defun filter-return-advice-preview-buffer-no-obey-display-actions (ret)
     "Filter return advice for consult's preview buffer function
@@ -1335,7 +1339,7 @@ uses window unless, e.g., dedicated."
             (slot . 0)
             (window-width . fit-lr-side-window-to-buffer)))
 
-  (setq-default prefix-help-command #'embark-prefix-help-command)
+  ;; (setq-default prefix-help-command #'embark-prefix-help-command)
 
   :config
   ;; Keybindings
@@ -1371,8 +1375,7 @@ uses window unless, e.g., dedicated."
                  (side . right)
                  (slot . 0)
                  (window-width . fit-lr-side-window-to-buffer)
-                 (preserve-size . (t . nil))
-                 (post-command-select-window . t)))
+                 (preserve-size . (t . nil))))
 
   (with-eval-after-load 'popper
     (add-to-list 'popper-reference-buffers 'embark-collect-mode)
@@ -1966,8 +1969,7 @@ uses window unless, e.g., dedicated."
                  (frame-predicate . (lambda (frame)
                                       (exists-window-with-derived-mode 'pdf-view-mode frame)))
                  (window-width . fit-to-buffer)
-                 (lru-frames . nil)
-                 (post-command-select-window . t)))
+                 (lru-frames . nil)))
 
   ;; Hooks
   (add-hook 'pdf-tools-enabled-hook
@@ -2145,8 +2147,7 @@ uses window unless, e.g., dedicated."
   (add-to-list 'display-buffer-alist
                '((derived-mode . TeX-mode)
                  (display-buffer-reuse-window display-buffer-reuse-mode-window)
-                 (reusable-frames . visible)
-                 (post-command-select-window . t)))
+                 (reusable-frames . visible)))
   (add-to-list 'display-buffer-alist
                '((derived-mode . TeX-output-mode)
                  (display-buffer-reuse-window display-buffer-in-side-window)

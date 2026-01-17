@@ -52,6 +52,32 @@ obeying display actions (see `switch-to-buffer-obey-display-actions')."
     (call-interactively #'switch-to-buffer)))
 
 
+;;; Help
+(defun a-which-key-repeated-prefix-help-command ()
+  "Prefix help command that makes the current prefix map
+active (for repeated actions) until it is explicitly exited via
+`<keyboard-quit>'. Uses `which-key'.
+
+Sets `which-key-persistent-popup' (via `setq') temporarily to `t',
+but undoes this when the prefix map is exited, in order to
+have `which-key''s pop-up stick while the prefix map is active."
+  (interactive)
+  (when-let* ((keys (this-command-keys-vector))
+              (prefix (seq-take keys (1- (length keys))))
+              (orig-keymap (key-binding prefix t))
+              (keymap (copy-keymap orig-keymap)))
+    (let* ((orig-persistent which-key-persistent-popup)
+           (exit-func (set-transient-map
+                       keymap
+                       t
+                       (lambda ()
+                         (setq which-key-persistent-popup orig-persistent)
+                         (which-key-abort)))))
+      (keymap-set keymap "<remap> <keyboard-quit>"
+                  (lambda () (interactive) (funcall exit-func)))
+      (setq which-key-persistent-popup t)
+      (which-key--create-buffer-and-show nil keymap))))
+
 ;;; Movement
 (defun move-beginning-of-line-or-indentation (&optional arg)
   "Moves point to indentation or, if point is already there, to beginning of line.

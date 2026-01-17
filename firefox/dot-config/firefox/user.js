@@ -1345,15 +1345,6 @@ user_pref("general.smoothScroll.stopDecelerationWeighting", "1");
 user_pref("mousewheel.default.delta_multiplier_y", 300); // 250-400; adjust to liking
 
 
-// BINDINGS
-// Change default modifiers to prevent conflicts with Emacs bindings
-user_pref("ui.key.accelKey", 18); // Set default accelerator modifier to ALT
-user_pref("ui.key.generalAccessKey", -1); // Use dedicated modifier for chrome and content access bindings (see below)
-user_pref("ui.key.contentAccess", 5); // Set content access modifier to ALT + SHIFT
-user_pref("ui.key.chromeAccess", 6); // Set chrome access modifier to ALT + CTRL
-user_pref("ui.key.menuAccessKey", 0); // Disable menu shortcutsx
-
-
 // MISCELLANEOUS
 user_pref("widget.use-xdg-desktop-portal.file-picker", 1);
 
