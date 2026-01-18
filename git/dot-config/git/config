@@ -55,3 +55,8 @@
 [push]
 	default = upstream
 	followTags = true
+
+## Forges
+### GitHub
+[github]
+	user = MM45

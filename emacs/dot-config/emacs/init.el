@@ -33,6 +33,9 @@
 (defconst BACKUPS_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "backups/"))
   "Directory where (automatically generated) backup files are stored.")
 
+(defconst AUTHINFO_FILE (file-name-concat EMACS_DATA_DIR ".authinfo.gpg")
+  "File where (encrypted) authentication information is stored.")
+
 ;; Cache
 (defconst EMACS_CACHE_DIR (file-name-as-directory
                            (if (getenv "XDG_CACHE_HOME")
@@ -171,6 +174,8 @@
 (setq display-buffer-alist
       '(((or (derived-mode . Info-mode)
              (derived-mode . help-mode)
+             (derived-mode . shortdoc-mode)
+             (derived-mode . epa-info-mode)
              (derived-mode . apropos-mode)
              (derived-mode . man-common)
              (derived-mode . ibuffer-mode)
@@ -179,7 +184,7 @@
              (derived-mode . grep-mode)
              (derived-mode . xref--xref-buffer-mode))
          (display-buffer-reuse-window display-buffer-in-side-window)
-         (reusable-frames . visible)
+         (reusable-frames . nil)
          (side . right)
          (slot . 0)
          (window-width . fit-lr-side-window-to-buffer)
@@ -574,6 +579,15 @@
         use-package-always-demand nil)
 
 ;; Base/Built-in
+(use-package epg-config
+  :init
+  (setopt epg-pinentry-mode 'loopback))
+
+(use-package auth-source
+  :init
+  (setopt auth-sources (list AUTHINFO_FILE)))
+
+
 (use-package isearch
   :init
   ;; Setup and settings
@@ -766,7 +780,7 @@
   :hook (text-mode prog-mode conf-mode)
 
   :init
-  ;; Setup and settings
+  ;; Setup and settings (before load)
   (setopt jinx-languages "en_US")
   (setopt jinx-include-faces '((prog-mode font-lock-comment-face
                                           font-lock-doc-face)
@@ -810,12 +824,7 @@ to assign to the default group."
             ibuffer-mode
             occur-mode
             grep-mode
-            xref--xref-buffer-mode
-            eshell-mode
-            shell-mode
-            comint-mode
-            term-mode
-            vterm-mode))
+            xref--xref-buffer-mode))
   (setopt popper-display-control nil)
   ;; (setopt popper-group-function #'popper-group-by-directory)
   (setopt popper-group-function #'a-popper-group-by-directory-home-default)
@@ -1092,7 +1101,7 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  (setopt aw-keys '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+  (setopt aw-keys '(?f ?j ?s ?l ?a ?\;))
   (setopt aw-scope 'visible
           aw-dispatch-always t)
   (setq-default aw-dispatch-alist
@@ -1111,8 +1120,6 @@ that allows to include other templates by their name."
                   (?t aw-transpose-frame "Transpose frames")
                   (?? aw-show-dispatch-help)))
 
-  :init
-  ;; Setup and settings (after load)
   ;; Additional functionality
   (defun an-ace-window-prefix ()
     "Sets `ace-window' as the function to choose window for displaying the
@@ -1928,7 +1935,7 @@ uses window unless, e.g., dedicated."
   ;; Setup and settings (before load)
   (setopt pdf-tools-handle-upgrades nil)
   (setopt pdf-view-display-size 'fit-page)
-  (setopt pdf-view-use-unicode-ligther nil)
+  (setopt pdf-view-use-unicode-ligther t)
 
   (pdf-loader-install t)
 
@@ -1957,19 +1964,20 @@ uses window unless, e.g., dedicated."
   (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
 
   ;; Display
-  (add-to-list 'display-buffer-alist
-               '((derived-mode . pdf-view-mode)
-                 (display-buffer-reuse-window
-                  display-buffer-in-previous-window
-                  display-buffer-use-some-frame
-                  display-buffer-pop-up-window
-                  display-buffer-use-some-window
-                  display-buffer-same-window)
-                 (reusable-frames . 0)
-                 (frame-predicate . (lambda (frame)
-                                      (exists-window-with-derived-mode 'pdf-view-mode frame)))
-                 (window-width . fit-to-buffer)
-                 (lru-frames . nil)))
+  (defun an-around-advice-display-synctex (syncfun &rest args)
+    "Around advice that (locally) adds an entry to `display-buffer-alist'
+to reuse windows containing buffers with modes derived from
+TeX-mode (for opening other such buffers).
+
+Meant to be used with `synctex' functionality, so as to not pop up a new
+window when syncing to a location in a project TeX file that is not yet
+opened."
+    (let* ((display-buffer-alist (cons '((derived-mode . TeX-mode)
+                                         (display-buffer-reuse-window display-buffer-reuse-mode-window)
+                                         (reusable-frames . visible))
+                                       display-buffer-alist)))
+      (apply syncfun args)))
+  (advice-add #'pdf-sync-backward-search :around #'an-around-advice-display-synctex)
 
   ;; Hooks
   (add-hook 'pdf-tools-enabled-hook
@@ -2052,6 +2060,29 @@ uses window unless, e.g., dedicated."
   ;; Activation
   (magit-wip-mode 1))
 
+(use-package forge
+  :ensure t
+  :after magit
+
+  :init
+  ;; Setup and settings (before load)
+  (setopt forge-owned-accounts '(("MM45" . nil)
+                                 ("mmctl" . nil)))
+
+  (defconst FORGE_DATABASE_FILE (file-name-concat EMACS_DATA_DIR "forge-database.sqlite")
+    "File used to store the Forge database.")
+  (setopt forge-database-file FORGE_DATABASE_FILE)
+
+  (defconst FORGE_POST_FALLBACK_DIR (file-name-as-directory
+                                     (file-name-concat EMACS_DATA_DIR "forge-drafts/"))
+    "Directory used to store Forge post drafts for locally unavailable
+repositories.")
+  (unless (file-directory-p FORGE_POST_FALLBACK_DIR)
+    (make-directory FORGE_POST_FALLBACK_DIR t))
+  (setopt forge-post-fallback-directory FORGE_POST_FALLBACK_DIR))
+
+
+
 (use-package xref
   :defer t
 
@@ -2067,7 +2098,9 @@ uses window unless, e.g., dedicated."
 
   :config
   (keymap-set flymake-mode-map "M-P" #'flymake-goto-prev-error)
-  (keymap-set flymake-mode-map "M-N" #'flymake-goto-next-error))
+  (keymap-set flymake-mode-map "M-N" #'flymake-goto-next-error)
+  (keymap-set flymake-mode-map "C-c `" #'flymake-goto-next-error)
+  (keymap-set flymake-mode-map "C-c C-`" #'flymake-show-buffer-diagnostics))
 
 (use-package eglot
   :bind
@@ -2144,10 +2177,10 @@ uses window unless, e.g., dedicated."
   (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-electric-math)
 
   ;; Display
-  (add-to-list 'display-buffer-alist
-               '((derived-mode . TeX-mode)
-                 (display-buffer-reuse-window display-buffer-reuse-mode-window)
-                 (reusable-frames . visible)))
+  ;; (add-to-list 'display-buffer-alist
+  ;;              '((derived-mode . TeX-mode)
+  ;;                (display-buffer-reuse-window display-buffer-reuse-mode-window)
+  ;;                (reusable-frames . visible)))
   (add-to-list 'display-buffer-alist
                '((derived-mode . TeX-output-mode)
                  (display-buffer-reuse-window display-buffer-in-side-window)

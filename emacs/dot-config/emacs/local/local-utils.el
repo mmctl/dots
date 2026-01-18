@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t -*-
 ;; local-utils.el
+(require 'which-key)
 
 ;;; Predicates
 (defun exists-window-with-derived-mode (mode &optional frame)
@@ -51,7 +52,7 @@ obeying display actions (see `switch-to-buffer-obey-display-actions')."
   (let ((display-buffer-overriding-action '((display-buffer-same-window))))
     (call-interactively #'switch-to-buffer)))
 
-
+(kbd "ESC ESC ESC")
 ;;; Help
 (defun a-which-key-repeated-prefix-help-command ()
   "Prefix help command that makes the current prefix map
@@ -69,9 +70,10 @@ have `which-key''s pop-up stick while the prefix map is active."
     (let* ((orig-persistent which-key-persistent-popup)
            (exit-func (set-transient-map
                        keymap
-                       t
+                       (lambda () t)
                        (lambda ()
                          (setq which-key-persistent-popup orig-persistent)
+                         (setq which-key--saved-window-configuration nil)
                          (which-key-abort)))))
       (keymap-set keymap "<remap> <keyboard-quit>"
                   (lambda () (interactive) (funcall exit-func)))
