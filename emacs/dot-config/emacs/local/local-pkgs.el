@@ -331,28 +331,25 @@ then calling `bookmark-jump' interactively."
   (interactive)
   (an-embark-ace-window-action #'bookmark-jump))
 
-;; (cl-defun an-embark--call-prefix-action (&rest rest &key run type &allow-other-keys)
-;;   "Looks up command in `a-window-prefix-map' corresponding to the
-;; key sequence this command was called with, and executes that (prefix)
-;; command before running the Embark's current default command.
+(defun an-embark-ace-window-find-file ()
+  "Select and switch to window with `ace-window', always dispatching,
+then calling `find-file' interactively."
+  (interactive)
+  (an-embark-ace-window-action #'find-file))
 
-;; Meant as hook around dummy command, to be put in
-;; `embark-around-action-hooks', which see; this command should then be put
-;; in an Embark keymap to allow for executing default commands with a
-;; prefix."
-;;   (message "cmdkeysvector: %s; interpretation: %s" (this-command-keys-vector) (key-description (this-command-keys-vector)))
-;;   (when-let* ((cmd (keymap-lookup
-;;                     a-window-prefix-map
-;;                     (key-description ""))(this-command-keys-vector)))))
-;;     (funcall cmd))
-;;   (funcall run :action (embark--default-action type) :type type rest))
-; ;;;###autoload
-(defun an-embark-choose-window-default-action ()
-  "Choose window according to prefix before executing default action.
+(defun an-embark-ace-window-find-library ()
+  "Select and switch to window with `ace-window', always dispatching,
+then calling `find-library' interactively."
+  (interactive)
+  (an-embark-ace-window-action #'find-library))
 
-Dummy command (no-op) for use with `an-embark--call-prefix-action',
-which see."
-  (interactive))
+
+;;;###autoload
+(defun an-embark-ace-window-xref-find-definitions ()
+  "Select and switch to window with `ace-window', always dispatching,
+then calling `xref-find-definitions' interactively."
+  (interactive)
+  (an-embark-ace-window-action #'xref-find-definitions))
 
 ;;;###autoload
 (defmacro an-around-advice-with-minibuffer-keymap (keymap)

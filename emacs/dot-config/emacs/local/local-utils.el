@@ -29,7 +29,7 @@ on the bottom or top.")
 on the bottom or top.")
 
 (defun fit-lr-side-window-to-buffer (&optional window)
-  "Fits right-side window to buffer with a maximum (resp. minimum) width
+  "Fits right/left-side WINDOW to buffer with a maximum (resp. minimum) width
 determined by dividing the frame width by `MAX_WIDTH_DIV_WINDOW_LR_SIDE'
 (resp. `MIN_WIDTH_DIV_WINDOW_LR_SIDE'), which see."
   (fit-window-to-buffer window nil nil
@@ -37,22 +37,13 @@ determined by dividing the frame width by `MAX_WIDTH_DIV_WINDOW_LR_SIDE'
                         (floor (frame-width) MIN_WIDTH_DIV_WINDOW_LR_SIDE)))
 
 (defun fit-bt-side-window-to-buffer (&optional window)
-  "Fits bottom-side window to buffer with a maximum (resp. minimum) height
+  "Fits bottom/top-side WINDOW to buffer with a maximum (resp. minimum) height
 determined by dividing the frame height by `MAX_HEIGHT_DIV_WINDOW_BT_SIDE'
 (resp. `MIN_HEIGHT_DIV_WINDOW_BT_SIDE'), which see."
   (fit-window-to-buffer window
                         (floor (frame-height) MAX_HEIGHT_DIV_WINDOW_BT_SIDE)
                         (floor (frame-height) MIN_HEIGHT_DIV_WINDOW_BT_SIDE)))
 
-;; Selection (Window/Buffer)
-(defun switch-to-buffer-display-override-same-window ()
-  "Calls `switch-to-buffer', but tries to first reuse same window when
-obeying display actions (see `switch-to-buffer-obey-display-actions')."
-  (interactive)
-  (let ((display-buffer-overriding-action '((display-buffer-same-window))))
-    (call-interactively #'switch-to-buffer)))
-
-(kbd "ESC ESC ESC")
 ;;; Help
 (defun a-which-key-repeated-prefix-help-command ()
   "Prefix help command that makes the current prefix map

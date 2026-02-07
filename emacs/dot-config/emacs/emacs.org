@@ -2,35 +2,78 @@
 #+AUTHOR: Matthias Meijers
 #+EMAIL: kernel@mmeijers.com
 #+LANGUAGE: en
-#+STARTUP: show2levels
+#+STARTUP: content
+#+PROPERTY: header-args:emacs-lisp :results none :tangle init-test.el :mkdirp yes 
 
-See [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html][documentation on Emacs's startup]].
+Literate configuration for my Emacs. Beyond reasoning and explanations for the
+individual settings and configurations, also includes information on external
+dependencies and links to official (external) documentation where relevant.
 
-* Early Initialization (early-init.el)
+* Overview
+** Files
+- [[id:4c1ec44b-b1e3-4119-a293-e92b94145111][Early initialization: early-init.el]]
+- [[id:43b929ca-f602-4d36-9b4e-ed056e2fdb58][Initialization: init.el]]
+** Official documentation
+- [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html][Emacs's startup summary]]
+
+* Early initialization (early-init.el)
 :PROPERTIES:
-:header-args: :tangle "early-init-test.el"
+:ID:       4c1ec44b-b1e3-4119-a293-e92b94145111
+:header-args:emacs-lisp: :tangle early-init-test.el
 :END:
-** Preamble
+** File header
+To ensure the buffer is evaluated using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html][modern Lisp dialect with lexical binding
+(instead of dynamic)]], we set [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html#index-lexical_002dbinding][lexical-binding]] (to `t') as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file-local variable
+in the first line of the file header]].
 #+begin_src emacs-lisp
   ;; -*- lexical-binding: t; -*-
   ;; early-init.el
 #+end_src
-** Compilation and Loading
+** Native compilation
+[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native-Compilation.html][Native compilation]] compiles files/functions to native code (for the considered
+platform), increasing performance compared to byte code or, even worse,
+interpreted code. To promote and smoothen the compilation process, we allow
+asynchronous native compilation of loaded files when needed
+([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native_002dCompilation-Variables.html#index-native_002dcomp_002djit_002dcompilation][native-comp-jit-compilation]]), have Emacs double-check with us before shutting
+down when compilation is still running ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native_002dCompilation-Variables.html#index-native_002dcomp_002dasync_002dquery_002don_002dexit][native-comp-async-query-on-exit]]), and
+natively compile packages as part of their installation
+(package-native-compile).
 #+begin_src emacs-lisp
-  ;; Byte/Native compilation and loading
+  ;; Native compilation
   (setopt native-comp-jit-compilation t)
   (setopt native-comp-async-query-on-exit t)
   (setopt package-native-compile t)
+#+end_src
+** File loading
+When Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html][loads a file]], we want it to load the newest when there are multiple possible
+versions/variants ([[https://doc.endlessparentheses.com/Var/load-prefer-newer.html][load-prefer-newer]]).
+#+begin_src emacs-lisp
+  ;; File loading
   (setopt load-prefer-newer t)
 #+end_src
-** Garbage Collection
+** Garbage collection
+With the default settings, [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Garbage-Collection.html][Emacs's garbage collection]] can run quite frequently.
+To remedy this, we increase the thresholds at which Emacs decides to start
+garbage collection ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Garbage-Collection.html#index-gc_002dcons_002dthreshold][gc-cons-threshold]] and [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Garbage-Collection.html#index-gc_002dcons_002dpercentage][gc-cons-percentage]]); the actual
+values are loosely based on recommendations (e.g., from [[https://emacsconf.org/2023/talks/gc/][this talk around ~25:00]])
+and some own testing. Adjustments might be desirable for different setups.
 #+begin_src emacs-lisp
   ;; Garbage collection
   (setopt gc-cons-threshold 33554432
           gc-cons-percentage 0.15)
 #+end_src
+These changes might become obsolete with the [[https://www.reddit.com/r/emacs/comments/1j05761/anyone_tried_the_new_igcmps_garbage_collector/][IGC/MPS enhancements currently in development]].
+** Package system
+*** TODO Manage explicit list of packages (see [[https://www.reddit.com/r/emacs/comments/np6ey4/how_packageel_works_with_use_package/][this reddit post]])
 ** Default/Initial Frame
-See [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html][documentation on frame parameters]].
+By default, we prefer frames to be rather minimal and distraction-less.
+Concretely, we try to achieve this by removing as many bars/widgets as possible
+in the default/base frame setup ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Initial-Parameters.html#index-default_002dframe_002dalist][default-frame-alist]]) without losing essential
+functionality (but we do remove enough to effectively make operation
+keyboard-driven).
+
+For the specific settings, see the official [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html][documentation on frame parameters]],
+especially the part concerning [[www.gnu.org/software/emacs/manual/html_node/elisp/Window-Frame-Parameters.html][window frame parameters]].
 #+begin_src emacs-lisp
 ;; Frame parameters
 (setopt default-frame-alist
@@ -54,18 +97,10 @@ See [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters
           (left-divider-width . 3)
           (right-divider-width . 3)
           (cursor-type . (hbar . 3))))
-          ;; Transparency background (not on Lucid builds): alpha-background
-          ;; Transparency general: alpha
-
-#+end_src
-** Package System and Management
-#+begin_src emacs-lisp
-  ;; Package system
-  (setopt package-install-upgrade-built-in t)
 #+end_src
 * Initialization (init.el)
 :PROPERTIES:
-:header-args: :tangle "init-test.el"
+:ID:       43b929ca-f602-4d36-9b4e-ed056e2fdb58
 :END:
 ** Preamble
 #+begin_src emacs-lisp

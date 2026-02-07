@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;; early-init.el
 ;; (See https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html)
 
@@ -6,9 +7,6 @@
 (setopt native-comp-jit-compilation t)
 (setopt native-comp-async-query-on-exit t)
 (setopt package-native-compile t)
-
-;; Package system
-(setopt package-install-upgrade-built-in t)
 
 ;; Frame parameters
 ;; (See https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html)

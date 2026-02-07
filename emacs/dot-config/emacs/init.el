@@ -179,7 +179,6 @@
              (derived-mode . apropos-mode)
              (derived-mode . man-common)
              (derived-mode . ibuffer-mode)
-             (derived-mode . tablulated-list-mode)
              (derived-mode . occur-mode)
              (derived-mode . grep-mode)
              (derived-mode . xref--xref-buffer-mode))
@@ -200,7 +199,9 @@
          (window-height . fit-bt-side-window-to-buffer)
          (preserve-size . (nil . t)))
         ((or (derived-mode . eshell-mode)
-             (derived-mode . comint-mode))
+             (derived-mode . comint-mode)
+             (category . comint)
+             (category . tex-shell))
          (display-buffer-reuse-window display-buffer-in-side-window)
          (reusable-frames . visible)
          (side . bottom)
@@ -824,7 +825,8 @@ to assign to the default group."
             ibuffer-mode
             occur-mode
             grep-mode
-            xref--xref-buffer-mode))
+            xref--xref-buffer-mode
+            "\\`\\*Async.*\\*\\'"))
   (setopt popper-display-control nil)
   ;; (setopt popper-group-function #'popper-group-by-directory)
   (setopt popper-group-function #'a-popper-group-by-directory-home-default)
@@ -1115,7 +1117,7 @@ that allows to include other templates by their name."
                   (?r aw-flip-window)
                   (?x aw-execute-command-other-window "Execute command in other window")
                   (?f aw-split-window-fair "Split window fairly")
-                  (?h aw-split-window-horz "Split window horizontally")
+                  (?h aw-split-window-horz "Split window verically")
                   (?v aw-split-window-vert "Split window vertically")
                   (?t aw-transpose-frame "Transpose frames")
                   (?? aw-show-dispatch-help)))
@@ -1166,10 +1168,11 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
 
   :bind*
   ("M-j" . avy-goto-char-timer)
+  ("M-J" . avy-goto-char-2)
 
   :init
   ;; Setup and settings (before load)
-  (setopt avy-keys '(?a ?s ?d ?f ?j ?k ?l ?\;)
+  (setopt avy-keys '(?f ?j ?s ?l ?a ?\;)
           avy-style 'at-full
           avy-all-windows 'all-frames
           avy-case-fold-search t
@@ -1177,9 +1180,9 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
   (setopt avy-timeout-seconds 0.2)
 
   (setq-default avy-dispatch-alist '((?x . avy-action-kill-move)
-                                     (?q . avy-action-kill-stay)
                                      (?m . avy-action-mark)
                                      (?w . avy-action-copy)
+                                     (?k . avy-action-kill-stay)
                                      (?y . avy-action-yank)
                                      (?Y . avy-action-yank-line)
                                      (?t . avy-action-teleport)
@@ -1229,7 +1232,7 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
         ("B" . consult-buffer-other-window) ; from: switch-to-buffer-other-window
         ("C-b" . consult-buffer-other-frame)
         ("e" . consult-compile-error) ; from: prefix (error)
-        ("d" . consult-flymake)
+        ("`" . consult-flymake)
         ("l" . consult-goto-line) ; from: goto-line
         ("o" . consult-outline)
         ("p" . consult-project-buffer) ; from: previous-error
@@ -2079,7 +2082,12 @@ opened."
 repositories.")
   (unless (file-directory-p FORGE_POST_FALLBACK_DIR)
     (make-directory FORGE_POST_FALLBACK_DIR t))
-  (setopt forge-post-fallback-directory FORGE_POST_FALLBACK_DIR))
+  (setopt forge-post-fallback-directory FORGE_POST_FALLBACK_DIR)
+
+  :config
+  ;; Setup and settings (after load)
+  ;; Keybindings
+  (keymap-set forge-common-map "M-<return>" #'forge--list-menu))
 
 
 
@@ -2105,12 +2113,12 @@ repositories.")
 (use-package eglot
   :bind
   (:prefix-map an-eglot-map :prefix "C-c s" :prefix-docstring "Keymap for eglot (global)"
+               ("`" . flymake-goto-next-error)
                ("a a" . eglot-code-actions)
                ("a e" . eglot-code-action-extract)
                ("a i" . eglot-code-action-inline)
                ("a o" . eglot-code-action-organize-imports)
                ("a r" . eglot-code-action-rewrite)
-               ("f d" . eglot-find-declaration)
                ("f e" . eldoc-print-current-symbol-info)
                ("f E" . eldoc-doc-buffer)
                ("f i" . eglot-find-implementation)
@@ -2128,6 +2136,7 @@ repositories.")
                ("r" . eglot-rename)
                ("s" . eglot)
                ("x" . eglot-code-action-quickfix)
+               ("C-`" . flymake-show-buffer-diagnostics)
                ("C-c" . eglot-clear-status)
                ("C-e" . eglot-events-buffer)
                ("C-S-e" . eglot-stderr-buffer)
@@ -2139,7 +2148,20 @@ repositories.")
                ("C-w" . eglot-show-workspace-configuration))
 
   :init
-  (setopt eglot-autoshutdown t))
+  ;; Setup and settings (before load)
+  (setopt eglot-autoshutdown t)
+
+  :config
+  ;; Setup and settings (after load)
+  ;; Display
+  (add-to-list 'display-buffer-alist
+               '("\\*eldoc.*\\*"
+                 (display-buffer-reuse-window display-buffer-in-direction)
+                 (reusable-frames . nil)
+                 (direction . right)
+                 (window . main)
+                 (window-width . (lambda (window)
+                                   (balance-windows (window-parent window)))))))
 
 (use-package tex
   :ensure auctex
@@ -2177,10 +2199,6 @@ repositories.")
   (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-electric-math)
 
   ;; Display
-  ;; (add-to-list 'display-buffer-alist
-  ;;              '((derived-mode . TeX-mode)
-  ;;                (display-buffer-reuse-window display-buffer-reuse-mode-window)
-  ;;                (reusable-frames . visible)))
   (add-to-list 'display-buffer-alist
                '((derived-mode . TeX-output-mode)
                  (display-buffer-reuse-window display-buffer-in-side-window)
@@ -2988,8 +3006,8 @@ starting directory."
   (:map an-avy-map
         ("r" . an-avy-region-char-1)
         ("R" . an-avy-region-timer))
-  :bind*
-  ("M-J" . an-avy-region-timer)
+  ;; :bind*
+  ;; ("M-J" . an-avy-region-timer)
 
   :init
   ;; Setup and settings (before load)
@@ -2998,8 +3016,8 @@ starting directory."
     (add-to-list 'avy-dispatch-alist '(?P . avy-action-a-push-mark-activate) t)
     (add-to-list 'avy-dispatch-alist '(?X . avy-action-a-kill-line-move) t)
     (add-to-list 'avy-dispatch-alist '(?\C-x . avy-action-a-kill-whole-line-move) t)
-    (add-to-list 'avy-dispatch-alist '(?Q . avy-action-a-kill-line-stay) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-q . avy-action-a-kill-whole-line-stay) t)
+    (add-to-list 'avy-dispatch-alist '(?K . avy-action-a-kill-line-stay) t)
+    (add-to-list 'avy-dispatch-alist '(?\C-k . avy-action-a-kill-whole-line-stay) t)
     (add-to-list 'avy-dispatch-alist '(?W . avy-action-a-copy-line) t)
     (add-to-list 'avy-dispatch-alist '(?\C-w . avy-action-a-copy-whole-line) t)
     (add-to-list 'avy-dispatch-alist '(?\C-y . avy-action-a-yank-whole-line) t)
@@ -3016,8 +3034,13 @@ starting directory."
     (advice-add 'embark-completing-read-prompter :around
                 (an-around-advice-with-minibuffer-keymap an-embark-completing-read-prompter-map))
     (keymap-set embark-file-map "o" #'an-embark-ace-window-find-file)
+    (keymap-set embark-library-map "o" #'an-embark-ace-window-find-library)
     (keymap-set embark-buffer-map "o" #'an-embark-ace-window-pop-to-buffer)
-    (keymap-set embark-bookmark-map "o" #'an-embark-ace-window-bookmark-jump))
+    (keymap-set embark-bookmark-map "o" #'an-embark-ace-window-bookmark-jump)
+    (keymap-set embark-command-map "o" #'an-embark-ace-window-xref-find-definitions)
+    (keymap-set embark-function-map "o" #'an-embark-ace-window-xref-find-definitions)
+    (keymap-set embark-symbol-map "o" #'an-embark-ace-window-xref-find-definitions)
+    (keymap-set embark-identifier-map "o" #'an-embark-ace-window-xref-find-definitions))
 
   (with-eval-after-load 'vertico
     (add-hook 'minibuffer-setup-hook
