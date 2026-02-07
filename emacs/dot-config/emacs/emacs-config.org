@@ -10,19 +10,40 @@ individual settings and configurations, also includes information on external
 dependencies and links to official (external) documentation where relevant.
 
 * Overview
-** Files
-- [[id:4c1ec44b-b1e3-4119-a293-e92b94145111][Early initialization: early-init.el]]
-- [[id:43b929ca-f602-4d36-9b4e-ed056e2fdb58][Initialization: init.el]]
+** Produced files
+Tangling this file (with [[https://orgmode.org/manual/Extracting-Source-Code.html#index-org_002dbabel_002dtangle][org-babel-tangle]]) produces both an [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Early-Init-File.html][early
+initialization file (early-init.el)]] and a [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Init-File.html][regular initialization file
+(init.el)]] in the same directory as this file resides in.
+- [[id:4c1ec44b-b1e3-4119-a293-e92b94145111][Early initialization customization]]
+- [[id:43b929ca-f602-4d36-9b4e-ed056e2fdb58][Regular initialization customization]] 
+** Naming conventions
+For clarity, and in an attempt to minimize name clashes, we try to adhere to the
+following naming conventions:
+- Constant (self-defined) identifiers are typeset in all capitals, with
+  (sub)words separated by an underscore.
+- Variables and functions (self-defined) identifiers start with either =a-= or
+  =an-= (as in, the English articles), and otherwise try to follow standard
+  Emacs conventions.
+** Recommended workflow
+- Edit this file
+- Execute =org-babel-tangle= (with this file as target)
+- Restart Emacs
 ** Official documentation
 - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html][Emacs's startup summary]]
+- [[https://orgmode.org/manual/Extracting-Source-Code.html][Extracting source code with Org]]
 
 * Early initialization (early-init.el)
 :PROPERTIES:
 :ID:       4c1ec44b-b1e3-4119-a293-e92b94145111
 :header-args:emacs-lisp: :tangle early-init-test.el
 :END:
-** File header
-To ensure the buffer is evaluated using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html][modern Lisp dialect with lexical binding
+[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Early-Init-File.html][The early initialization file]] contains customization and configuration that is
+executed before Emacs has (1) fully initialized the GUI and (2)
+enabled/activated packages. While configuration that must be executed this early
+during startup is definitely put here, we may also put (some) configuration here
+that we feel fits better here, whether that be conceptually or practically.
+** Header
+To ensure the buffer/file is evaluated using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html][modern Lisp dialect with lexical binding
 (instead of dynamic)]], we set [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html#index-lexical_002dbinding][lexical-binding]] (to `t') as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file-local variable
 in the first line of the file header]].
 #+begin_src emacs-lisp
@@ -63,14 +84,13 @@ and some own testing. Adjustments might be desirable for different setups.
           gc-cons-percentage 0.15)
 #+end_src
 These changes might become obsolete with the [[https://www.reddit.com/r/emacs/comments/1j05761/anyone_tried_the_new_igcmps_garbage_collector/][IGC/MPS enhancements currently in development]].
-** Package system
+** Package system and management
 *** TODO Manage explicit list of packages (see [[https://www.reddit.com/r/emacs/comments/np6ey4/how_packageel_works_with_use_package/][this reddit post]])
 ** Default/Initial Frame
 By default, we prefer frames to be rather minimal and distraction-less.
-Concretely, we try to achieve this by removing as many bars/widgets as possible
-in the default/base frame setup ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Initial-Parameters.html#index-default_002dframe_002dalist][default-frame-alist]]) without losing essential
-functionality (but we do remove enough to effectively make operation
-keyboard-driven).
+Concretely, we try to achieve this by removing most bars/widgets in the
+default/base frame setup ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Initial-Parameters.html#index-default_002dframe_002dalist][default-frame-alist]]), effectively forcing operation to
+be keyboard-driven.
 
 For the specific settings, see the official [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html][documentation on frame parameters]],
 especially the part concerning [[www.gnu.org/software/emacs/manual/html_node/elisp/Window-Frame-Parameters.html][window frame parameters]].
@@ -102,15 +122,51 @@ especially the part concerning [[www.gnu.org/software/emacs/manual/html_node/eli
 :PROPERTIES:
 :ID:       43b929ca-f602-4d36-9b4e-ed056e2fdb58
 :END:
-** Preamble
+[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Init-File.html][The initialization file]] contains all customization and configuration that does
+not go in the [[id:4c1ec44b-b1e3-4119-a293-e92b94145111][early initialization file]]; in particular, it is executed after
+initialization of the GUI and enabling/activation of packages.
+** Header
+To ensure the buffer/file is evaluated using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html][modern Lisp dialect with lexical binding
+(instead of dynamic)]], we set [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html#index-lexical_002dbinding][lexical-binding]] (to `t') as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file-local variable
+in the first line of the file header]].
 #+begin_src emacs-lisp
   ;; -*- lexical-binding: t; -*-
   ;; init.el
 #+end_src
 ** Bootstrap
-*** Basic Directories and Files
-*** Backup, Auto-save, and Lock Files
-*** Package System and Management
+We start by setting up fundamental parts of the relevant environment and the
+package system, as well as configure Emacs's launching behavior.
+*** Basic directories and files
+#+begin_src emacs-lisp
+  ;;; Environment
+#+end_src
+**** Configuration
+#+begin_src emacs-lisp
+  ;; Config
+  (defconst EMACS_CONFIG_DIR (file-name-as-directory
+                              (if (getenv "XDG_CONFIG_HOME")
+                                  (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
+                                user-emacs-directory))
+    "Directory where Emacs configuration is stored.")
+
+  (defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
+    "Directory where (custom) themes are stored.")
+
+  (defconst LOCAL_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "local/"))
+    "Directory where (custom) local functionalities/packages are defined.")
+
+  (defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
+    "Directory where (custom) templates are defined.")
+
+  (defconst MISC_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "misc/"))
+    "Directory where (custom) miscellaneous configuration/settings are stored.")
+
+  (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
+    "File where (automatically generated) customization settings are stored.")
+#+end_src
+**** Data
+**** Cache
+*** Package system and management
 *** Local Modules
 *** Launching
 ** General Look and Feel
