@@ -2,80 +2,81 @@
 ;; init.el
 ;;; Environment
 ;; Config
-(defconst EMACS_CONFIG_DIR (file-name-as-directory
-                            (if (getenv "XDG_CONFIG_HOME")
-                                (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
-                              user-emacs-directory))
-  "Directory where Emacs configuration is stored.")
+;; (defconst EMACS_CONFIG_DIR (file-name-as-directory
+;;                             (if (getenv "XDG_CONFIG_HOME")
+;;                                 (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
+;;                               user-emacs-directory))
+;;   "Directory where Emacs configuration is stored.")
 
-(defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
-  "Directory where (custom) themes are stored.")
+;; (defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
+;;   "Directory where (custom) themes are stored.")
 
-(defconst LOCAL_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "local/"))
-  "Directory where (custom) local functionalities/packages are defined.")
+;; (defconst LOCAL_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "local/"))
+;;   "Directory where (custom) local functionalities/packages are defined.")
 
-(defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
-  "Directory where (custom) templates are defined.")
+;; (defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
+;;   "Directory where (custom) templates are defined.")
 
-(defconst MISC_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "misc/"))
-  "Directory where (custom) miscellaneous configuration/settings are stored.")
+;; (defconst MISC_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "misc/"))
+;;   "Directory where (custom) miscellaneous configuration/settings are stored.")
 
-(defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
-  "File where (automatically generated) customization settings are stored.")
+;; (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
+;;   "File where (automatically generated) customization settings are stored.")
 
-;; Data
-(defconst EMACS_DATA_DIR (file-name-as-directory
-                          (if (getenv "XDG_DATA_HOME")
-                              (file-name-concat (getenv "XDG_DATA_HOME") "emacs/")
-                            user-emacs-directory))
-  "Directory where (additional) Emacs data is stored.")
+;; ;; Data
+;; (defconst EMACS_DATA_DIR (file-name-as-directory
+;;                           (if (getenv "XDG_DATA_HOME")
+;;                               (file-name-concat (getenv "XDG_DATA_HOME") "emacs/")
+;;                             user-emacs-directory))
+;;   "Directory where (additional) Emacs data is stored.")
 
-(defconst BACKUPS_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "backups/"))
-  "Directory where (automatically generated) backup files are stored.")
+;; (defconst BACKUPS_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "backups/"))
+;;   "Directory where (automatically generated) backup files are stored.")
 
-(defconst AUTHINFO_FILE (file-name-concat EMACS_DATA_DIR ".authinfo.gpg")
-  "File where (encrypted) authentication information is stored.")
+;; (defconst AUTHINFO_FILE (file-name-concat EMACS_DATA_DIR ".authinfo.gpg")
+;;   "File where (encrypted) authentication information is stored.")
 
-;; Cache
-(defconst EMACS_CACHE_DIR (file-name-as-directory
-                           (if (getenv "XDG_CACHE_HOME")
-                               (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
-                             user-emacs-directory))
-  "Directory where Emacs cache is stored.")
+;; ;; Cache
+;; (defconst EMACS_CACHE_DIR (file-name-as-directory
+;;                            (if (getenv "XDG_CACHE_HOME")
+;;                                (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
+;;                              user-emacs-directory))
+;;   "Directory where Emacs cache is stored.")
 
-(defconst AUTOSAVES_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "autosaves/"))
-  "Directory where auto-save files are stored.")
+;; (defconst AUTOSAVES_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "autosaves/"))
+;;   "Directory where auto-save files are stored.")
 
-(defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
-  "Directory where lock files are stored.")
+;; (defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
+;;   "Directory where lock files are stored.")
 
 ;;; Bootstrap
 ;; Directories
-(unless (file-directory-p THEMES_DIR)
-  (make-directory THEMES_DIR t))
+;; (unless (file-directory-p THEMES_DIR)
+;;   (make-directory THEMES_DIR t))
 
-(unless (file-directory-p LOCAL_DIR)
-  (make-directory LOCAL_DIR t))
+;; (unless (file-directory-p LOCAL_DIR)
+;;   (make-directory LOCAL_DIR t))
 
-(unless (file-directory-p TEMPLATES_DIR)
-  (make-directory TEMPLATES_DIR t))
+;; (unless (file-directory-p TEMPLATES_DIR)
+;;   (make-directory TEMPLATES_DIR t))
 
-(unless (file-directory-p MISC_DIR)
-  (make-directory MISC_DIR t))
+;; (unless (file-directory-p MISC_DIR)
+;;   (make-directory MISC_DIR t))
 
-(unless (file-directory-p BACKUPS_DIR)
-  (make-directory BACKUPS_DIR t))
+;; (unless (file-directory-p BACKUPS_DIR)
+;;   (make-directory BACKUPS_DIR t))
 
-(unless (file-directory-p AUTOSAVES_DIR)
-  (make-directory AUTOSAVES_DIR t))
+;; (unless (file-directory-p AUTOSAVES_DIR)
+;;   (make-directory AUTOSAVES_DIR t))
 
-(unless (file-directory-p LOCKS_DIR)
-  (make-directory LOCKS_DIR t))
+;; (unless (file-directory-p LOCKS_DIR)
+;;   (make-directory LOCKS_DIR t))
 
-;; Custom file
-(unless (file-exists-p CUSTOM_FILE)
-  (make-empty-file CUSTOM_FILE))
-(setopt custom-file CUSTOM_FILE)
+;; ;; Custom file
+;; (unless (file-exists-p CUSTOM_FILE)
+;;   (make-empty-file CUSTOM_FILE))
+;; (setopt custom-file CUSTOM_FILE)
+
 (load CUSTOM_FILE)
 
 ;; Load path/pointers
@@ -111,7 +112,7 @@
         backup-by-copying-when-mismatch t)
 
 ;; Auto-saves
-(setopt auto-save-file-name-transforms `((".*" ,(file-name-concat AUTOSAVES_DIR "\\1") t))
+(setopt auto-save-file-name-transforms `((".*" ,(expand-file-name "\\1" AUTOSAVES_DIR) t))
         auto-save-visited-file-name nil
         auto-save-interval 50
         auto-save-timeout 20
@@ -120,7 +121,7 @@
         auto-save-list-file-prefix nil)
 
 ;; Locks
-(setopt lock-file-name-transforms `((".*" ,(file-name-concat LOCKS_DIR "\\1") t))
+(setopt lock-file-name-transforms `((".*" ,(expand-file-name "\\1" LOCKS_DIR) t))
         create-lockfiles t)
 
 ;; Custom local functionalities
@@ -332,6 +333,14 @@
 (setopt sentence-end-double-space nil)
 (setopt x-underline-at-descent-line nil)
 
+(setopt url-configuration-directory (file-name-as-directory (expand-file-name "url/" EMACS_DATA_DIR)))
+(setopt tramp-histfile-override (expand-file-name "tramp_shell_history" TRAMP_DIR))
+(setopt tramp-persistency-file-name (expand-file-name "tramp_connection_history" TRAMP_DIR))
+
+(setopt bookmark-file (expand-file-name "bookmarks" EMACS_DATA_DIR))
+(setopt savehist-file (expand-file-name "history" EMACS_DATA_DIR))
+(setopt recentf-save-file (expand-file-name "recentf" EMACS_DATA_DIR))
+
 (savehist-mode 1)
 (recentf-mode 1)
 
@@ -488,7 +497,7 @@
 
 (keymap-global-set "C-x b" 'a-buffer-map-prefix)
 
-;; Finding/go/searching/replacing
+;; Finding/going/searching/replacing
 (defvar-keymap a-find-map
   :doc "Keymap for finding (i.e., searching, but more meta)"
   :prefix 'a-find-map-prefix
@@ -588,6 +597,10 @@
   :init
   (setopt auth-sources (list AUTHINFO_FILE)))
 
+(use-package esh-mode
+  :init
+  (setopt eshell-directory-name (file-name-as-directory
+                                 (expand-file-name "eshell/" EMACS_DATA_DIR))))
 
 (use-package isearch
   :init
@@ -742,7 +755,7 @@
   :init
   ;; Setup and settings
   ;; Create and store undo history directory
-  (defconst UNDO_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "undos/"))
+  (defconst UNDO_DIR (file-name-as-directory (expand-file-name "undos/" EMACS_DATA_DIR))
     "Directory where (automatically generated) undo (history) files are stored.")
   (unless (file-directory-p UNDO_DIR)
     (make-directory UNDO_DIR t))
@@ -1058,7 +1071,7 @@ which see, with `0' as argument."
   :pin melpa
 
   :bind
-  ("M-c" . tempel-complete) ; original: capitalize-word
+  ("M-c" . tempel-complete) ; from: capitalize-word
   ("M-C" . tempel-expand)
   (:prefix-map a-tempel-map :prefix "C-c t" :prefix-docstring "Keymap for tempel (global)"
                ("c" . tempel-complete)
@@ -1068,11 +1081,11 @@ which see, with `0' as argument."
   :init
   ;; Setup and settings (before load)
   ;; Create and store templates directory
-  (defconst TEMPEL_DIR (file-name-as-directory (file-name-concat TEMPLATES_DIR "tempel/"))
+  (defconst TEMPEL_DIR (file-name-as-directory (expand-file-name "tempel/" TEMPLATES_DIR))
     "Directory where tempel templates are stored.")
   (unless (file-directory-p TEMPEL_DIR)
     (make-directory TEMPEL_DIR t))
-  (setopt tempel-path (file-name-concat TEMPEL_DIR "*.eld"))
+  (setopt tempel-path (expand-file-name "*.eld" TEMPEL_DIR))
 
   (setopt tempel-mark #(" " 0 1 (display (space :width (3)) face tempel-field)))
 
@@ -1575,10 +1588,7 @@ uses window unless, e.g., dedicated."
 (use-package project
   :init
   ;; Setup and settings (before load)
-  ;; Create and store file for known projects
-  (defconst PROJECT_LIST_FILE (file-name-concat EMACS_DATA_DIR "projects.eld")
-    "File where known project's are stored.")
-  (setopt project-list-file PROJECT_LIST_FILE)
+  (setopt project-list-file (expand-file-name "projects.eld" EMACS_DATA_DIR))
   (setopt project-mode-line t))
 
 (use-package org
@@ -1589,7 +1599,7 @@ uses window unless, e.g., dedicated."
   ;; Create and store org root directory
   (defconst ORG_DIR (file-name-as-directory
                      (if (getenv "XDG_DATA_HOME")
-                         (file-name-concat (getenv "XDG_DATA_HOME") "org/")
+                         (expand-file-name "org/" (getenv "XDG_DATA_HOME"))
                        "~/org/"))
     "Directory used as default location for org files.")
   (unless (file-directory-p ORG_DIR)
@@ -1617,45 +1627,45 @@ uses window unless, e.g., dedicated."
                                org-crypt org-habit org-id))
 
   ;; Create and store org calendar file
-  (defconst ORG_CALENDAR_FILE (file-name-concat ORG_DIR "calendar.org")
+  (defconst ORG_CALENDAR_FILE (expand-file-name "calendar.org" ORG_DIR)
     "Default file for calendar events created with org.")
   (unless (file-regular-p ORG_CALENDAR_FILE)
     (make-empty-file ORG_CALENDAR_FILE t))
 
   ;; Create and store org (default) notes file
-  (defconst ORG_NOTES_FILE (file-name-concat ORG_DIR "notes.org")
+  (defconst ORG_NOTES_FILE (expand-file-name "notes.org" ORG_DIR)
     "Default file for notes (org).")
   (unless (file-regular-p ORG_NOTES_FILE)
     (make-empty-file ORG_NOTES_FILE t))
 
   ;; Create and store org (default) todos file
-  (defconst ORG_TODOS_FILE (file-name-concat ORG_DIR "todos.org")
+  (defconst ORG_TODOS_FILE (expand-file-name "todos.org" ORG_DIR)
     "Default file for storing todos (org).")
   (unless (file-regular-p ORG_TODOS_FILE)
     (make-empty-file ORG_TODOS_FILE t))
 
   ;; Create and store org (default) meetings file
-  (defconst ORG_MEETINGS_FILE (file-name-concat ORG_DIR "meetings.org")
+  (defconst ORG_MEETINGS_FILE (expand-file-name "meetings.org" ORG_DIR)
     "Default file for meetings (org).")
   (unless (file-regular-p ORG_MEETINGS_FILE)
     (make-empty-file ORG_MEETINGS_FILE t))
 
   ;; PARA
   ;; Create and store org (default) projects file
-  (defconst ORG_PROJECTS_FILE (file-name-concat ORG_DIR "projects.org")
+  (defconst ORG_PROJECTS_FILE (expand-file-name "projects.org" ORG_DIR)
     "Default file for projects (org).")
   (unless (file-regular-p ORG_PROJECTS_FILE)
     (make-empty-file ORG_PROJECTS_FILE t))
 
   ;; Create and store org (default) projects file
-  (defconst ORG_AREAS_FILE (file-name-concat ORG_DIR "areas.org")
+  (defconst ORG_AREAS_FILE (expand-file-name "areas.org" ORG_DIR)
     "Default file for areas (org).")
   (unless (file-regular-p ORG_AREAS_FILE)
     (make-empty-file ORG_AREAS_FILE t))
 
   ;; Auxiliary
   ;; Create and store org (default) ID file
-  (defconst ORG_ID_FILE (file-name-concat ORG_DIR ".org-id-locations")
+  (defconst ORG_ID_FILE (expand-file-name ".org-id-locations" ORG_DIR)
     "Default file for storing identifiers (org).")
   (unless (file-regular-p ORG_ID_FILE)
     (make-empty-file ORG_ID_FILE t))
@@ -1793,8 +1803,8 @@ uses window unless, e.g., dedicated."
   (add-to-list 'org-agenda-files ORG_AREAS_FILE)
 
   ;; Keybindings
-  (keymap-unset org-mode-map "C-M-S-<left>") ; original: org-decrease-number-at-point
-  (keymap-unset org-mode-map "C-M-S-<right>")) ; original org-increase-number-at-point
+  (keymap-unset org-mode-map "C-M-S-<left>") ; from: org-decrease-number-at-point
+  (keymap-unset org-mode-map "C-M-S-<right>")) ; from: org-increase-number-at-point
 
 (use-package org-super-agenda
   :ensure t
@@ -2014,6 +2024,18 @@ opened."
   ;; Activation
   (global-diff-hl-mode 1))
 
+(use-package transient
+  :init
+  (defconst TRANSIENT_DIR (file-name-as-directory
+                           (expand-file-name "transient/" EMACS_DATA_DIR))
+    "Directory used to store transient control files (e.g., history, values).")
+  (unless (file-directory-p TRANSIENT_DIR)
+    (make-directory TRANSIENT_DIR t))
+
+  (setopt transient-history-file (expand-file-name "history.el" TRANSIENT_DIR)
+          transient-levels-file (expand-file-name "levels.el" TRANSIENT_DIR)
+          transient-values-file (expand-file-name "values.el" TRANSIENT_DIR)))
+
 (use-package magit
   :ensure t
 
@@ -2072,17 +2094,16 @@ opened."
   (setopt forge-owned-accounts '(("MM45" . nil)
                                  ("mmctl" . nil)))
 
-  (defconst FORGE_DATABASE_FILE (file-name-concat EMACS_DATA_DIR "forge-database.sqlite")
-    "File used to store the Forge database.")
-  (setopt forge-database-file FORGE_DATABASE_FILE)
+  (defconst FORGE_DIR (file-name-as-directory
+                       (expand-file-name "forge/" EMACS_DATA_DIR))
+    "Directory used to store Forge data (e.g., database and drafts).")
+  (unless (file-directory-p FORGE_DIR)
+    (make-directory FORGE_DIR t))
 
-  (defconst FORGE_POST_FALLBACK_DIR (file-name-as-directory
-                                     (file-name-concat EMACS_DATA_DIR "forge-drafts/"))
-    "Directory used to store Forge post drafts for locally unavailable
-repositories.")
-  (unless (file-directory-p FORGE_POST_FALLBACK_DIR)
-    (make-directory FORGE_POST_FALLBACK_DIR t))
-  (setopt forge-post-fallback-directory FORGE_POST_FALLBACK_DIR)
+  (setopt forge-database-file (expand-file-name "forge-database.sqlite" FORGE_DIR))
+  (setopt forge-post-fallback-directory
+          (file-name-as-directory
+           (expand-file-name "drafts/" FORGE_DIR)))
 
   :config
   ;; Setup and settings (after load)
@@ -2321,6 +2342,14 @@ repositories.")
   (keymap-set markdown-view-mode-map "<home>" #'beginning-of-buffer)
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
+;;; Programming
+(defconst TREESIT_DIR (file-name-as-directory
+                       (expand-file-name "tree-sitter/" (or (getenv "XDG_DATA_HOME") EMACS_DATA_DIR)))
+  "Directory used to store tree-sitter grammars")
+(unless (file-directory-p TREESIT_DIR)
+  (make-directory TREESIT_DIR t))
+(add-to-list 'treesit-extra-load-path TREESIT_DIR)
+
 ;; Shell/Bash
 (use-package sh-script
   :defer t
@@ -2338,7 +2367,7 @@ repositories.")
                  '(bash "https://github.com/tree-sitter/tree-sitter-bash"
                         "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'bash)
-      (treesit-install-language-grammar 'bash))))
+      (treesit-install-language-grammar 'bash TREESIT_DIR))))
 
 ;; C
 (use-package c-ts-mode
@@ -2358,7 +2387,7 @@ repositories.")
                  '(c "https://github.com/tree-sitter/tree-sitter-c"
                      "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'c)
-      (treesit-install-language-grammar 'c))))
+      (treesit-install-language-grammar 'c TREESIT_DIR))))
 
 ;; Python
 (use-package python
@@ -2376,7 +2405,7 @@ repositories.")
                  '(python "https://github.com/tree-sitter/tree-sitter-python"
                           "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'python)
-      (treesit-install-language-grammar 'python))))
+      (treesit-install-language-grammar 'python TREESIT_DIR))))
 
 ;; Rust
 (use-package rust-mode
@@ -2395,7 +2424,7 @@ repositories.")
                  '(rust "https://github.com/tree-sitter/tree-sitter-rust"
                         "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'rust)
-      (treesit-install-language-grammar 'rust)))
+      (treesit-install-language-grammar 'rust TREESIT_DIR)))
 
   ;; Project (root finding)
   (defun project-find-cargo-toml (dir)
@@ -2425,12 +2454,12 @@ repositories.")
                  '(go "https://github.com/tree-sitter/tree-sitter-go"
                       "v0.23.4")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'go)
-      (treesit-install-language-grammar 'go))
+      (treesit-install-language-grammar 'go TREESIT_DIR))
     (add-to-list 'treesit-language-source-alist
                  '(gomod "https://github.com/camdencheek/tree-sitter-go-mod"
                          "v1.0.2")) ; Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'gomod)
-      (treesit-install-language-grammar 'gomod)))
+      (treesit-install-language-grammar 'gomod TREESIT_DIR)))
 
   ;; Project (root finding)
   (defun project-find-go-module (dir)
@@ -2455,7 +2484,7 @@ repositories.")
     (add-to-list 'treesit-language-source-alist
                  '(yaml "https://github.com/ikatyang/tree-sitter-yaml"))
     (unless (treesit-language-available-p 'yaml)
-      (treesit-install-language-grammar 'yaml))))
+      (treesit-install-language-grammar 'yaml TREESIT_DIR))))
 
 ;; Toml
 (use-package toml-ts-mode
@@ -2473,7 +2502,7 @@ repositories.")
     (add-to-list 'treesit-language-source-alist
                  '(toml "https://github.com/tree-sitter/tree-sitter-toml"))
     (unless (treesit-language-available-p 'toml)
-      (treesit-install-language-grammar 'toml))))
+      (treesit-install-language-grammar 'toml TREESIT_DIR))))
 
 ;; Json
 (use-package json-ts-mode
@@ -2490,7 +2519,7 @@ repositories.")
     (add-to-list 'treesit-language-source-alist
                  '(json "https://github.com/tree-sitter/tree-sitter-json"))
     (unless (treesit-language-available-p 'json)
-      (treesit-install-language-grammar 'json))))
+      (treesit-install-language-grammar 'json TREESIT_DIR))))
 
 ;; OCaml
 ;; (use-package neocaml

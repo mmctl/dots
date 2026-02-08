@@ -4,6 +4,7 @@
 #+LANGUAGE: en
 #+STARTUP: content
 #+PROPERTY: header-args:emacs-lisp :results none :tangle init-test.el :mkdirp yes 
+#+TAGS: exdep
 
 Literate configuration for my Emacs. Beyond reasoning and explanations for the
 individual settings and configurations, also includes information on external
@@ -22,11 +23,11 @@ following naming conventions:
 - Constant (self-defined) identifiers are typeset in all capitals, with
   (sub)words separated by an underscore.
 - Variables and functions (self-defined) identifiers start with either =a-= or
-  =an-= (as in, the English articles), and otherwise try to follow standard
-  Emacs conventions.
+  =an-= (the English articles), and otherwise try to follow standard Emacs
+  conventions.
 ** Recommended workflow
 - Edit this file
-- Execute =org-babel-tangle= (with this file as target)
+- Execute [[https://orgmode.org/manual/Extracting-Source-Code.html#index-org_002dbabel_002dtangle][=org-babel-tangle=]] (with this file as target)
 - Restart Emacs
 ** Official documentation
 - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html][Emacs's startup summary]]
@@ -44,58 +45,221 @@ during startup is definitely put here, we may also put (some) configuration here
 that we feel fits better here, whether that be conceptually or practically.
 ** Header
 To ensure the buffer/file is evaluated using [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html][modern Lisp dialect with lexical binding
-(instead of dynamic)]], we set [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html#index-lexical_002dbinding][lexical-binding]] (to `t') as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file-local variable
+(instead of dynamic)]], we set [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Selecting-Lisp-Dialect.html#index-lexical_002dbinding][=lexical-binding=]] (to =t=) as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file-local variable
 in the first line of the file header]].
 #+begin_src emacs-lisp
   ;; -*- lexical-binding: t; -*-
   ;; early-init.el
 #+end_src
+** Base directories and files
+#+begin_src emacs-lisp
+  ;;; Base directories and files
+#+end_src
+
+For the directories and files that form the foundation of our environment, we
+try to adhere to the [[https://specifications.freedesktop.org/basedir/latest/][XDG Base Directory Specification]]. Particularly relevant are
+the configuration ($XDG_CONFIG_HOME), data ($XDG_DATA_HOME), and cache
+($XDG_CACHE_HOME) directories of this specification. If the relevant environment
+variables are not set, we mostly fall back to Emacs's =user-emacs-directory=.
+
+Special attention is to be paid when Emacs is not launched from a point that has
+access to our typical environment (presumably containing the XDG-related
+environment variables), e.g., [[https://www.city17.xyz/quirks-about-emacs-as-a-systemd-service][from a =systemd= service]]. In such a case, we need
+to make sure at least the above XDG-related environment variables are
+also available to Emacs in order for the following to adhere to the XDG
+specification.
+*** Configuration
+We define and store the configuration-related directory/file paths using appropriate constants... 
+#+begin_src emacs-lisp
+  ;; Configuration
+  (defconst EMACS_CONFIG_DIR (file-name-as-directory
+                              (if (getenv "XDG_CONFIG_HOME")
+                                  (expand-file-name "emacs/" (getenv "XDG_CONFIG_HOME"))
+                                user-emacs-directory))
+    "Directory where Emacs configuration is stored.")
+
+  (defconst MISC_DIR (file-name-as-directory (expand-file-name "misc/" EMACS_CONFIG_DIR))
+    "Directory where (custom) miscellaneous configuration/settings are stored.")
+
+  (defconst CUSTOM_FILE (expand-file-name "custom-set.el" MISC_DIR)
+    "File where (automatically generated) customization settings are stored.")
+#+end_src
+
+....and create the actual directories/files if they do not already exist.
+#+begin_src emacs-lisp
+  (unless (file-directory-p MISC_DIR)
+    (make-directory MISC_DIR t))
+
+  (unless (file-exists-p CUSTOM_FILE)
+    (make-empty-file CUSTOM_FILE))
+#+end_src
+*** Data
+:PROPERTIES:
+:ID:       eb3aa5c7-1a6f-45c6-831a-29315f28e1c6
+:END:
+We define and store the data-related directory/file paths using appropriate constants... 
+#+begin_src emacs-lisp
+  ;; Data
+  (defconst EMACS_DATA_DIR (file-name-as-directory
+                            (if (getenv "XDG_DATA_HOME")
+                                (expand-file-name "emacs/" (getenv "XDG_DATA_HOME"))
+                              user-emacs-directory))
+    "Directory where (additional) Emacs data is stored.")
+
+  (defconst PACKAGE_DIR (file-name-as-directory (expand-file-name "elpa/" EMACS_DATA_DIR))
+    "Directory where packages are stored.")
+
+  (defconst NATIVE_COMP_DIR (file-name-as-directory (expand-file-name "eln-cache/" EMACS_DATA_DIR))
+    "Directory where natively compiled files are stored.")
+
+  (defconst BACKUPS_DIR (file-name-as-directory (expand-file-name "backups/" EMACS_DATA_DIR))
+    "Directory where (automatically generated) backup files are stored.")
+
+  (defconst AUTOSAVES_DIR (file-name-as-directory (expand-file-name "autosaves/" EMACS_DATA_DIR))
+    "Directory where auto-save files are stored.")
+
+  (defconst THEMES_DIR (file-name-as-directory (expand-file-name "themes/" EMACS_DATA_DIR))
+    "Directory where (custom) themes are stored.")
+
+  (defconst LOCAL_DIR (file-name-as-directory (expand-file-name "local/" EMACS_DATA_DIR))
+    "Directory where (custom) local functionalities/packages are defined.")
+
+  (defconst TEMPLATES_DIR (file-name-as-directory (expand-file-name "templates/" EMACS_DATA_DIR))
+    "Directory where (custom) templates are defined.")
+
+  (defconst TRAMP_DIR (file-name-as-directory (expand-file-name "tramp/" EMACS_DATA_DIR))
+    "Directory where tramp-related data is stored.")
+
+  (defconst AUTHINFO_FILE (expand-file-name ".authinfo.gpg" EMACS_DATA_DIR)
+    "File where (encrypted) authentication information is stored.")
+#+end_src
+
+....and create the actual directories/files if they do not already exist.
+#+begin_src emacs-lisp
+  (unless (file-directory-p PACKAGE_DIR)
+    (make-directory PACKAGE_DIR t))
+
+  (unless (file-directory-p NATIVE_COMP_DIR)
+    (make-directory NATIVE_COMP_DIR t))
+
+  (unless (file-directory-p BACKUPS_DIR)
+    (make-directory BACKUPS_DIR t))
+
+  (unless (file-directory-p AUTOSAVES_DIR)
+    (make-directory AUTOSAVES_DIR t))
+
+  (unless (file-directory-p THEMES_DIR)
+    (make-directory THEMES_DIR t))
+
+  (unless (file-directory-p LOCAL_DIR)
+    (make-directory LOCAL_DIR t))
+
+  (unless (file-directory-p TEMPLATES_DIR)
+    (make-directory TEMPLATES_DIR t))
+
+  (unless (file-directory-p TRAMP_DIR)
+    (make-directory TRAMP_DIR t))
+#+end_src
+
+Unlike the other directories and files, we do not create =AUTHINFO_FILE=
+automatically here, as the creation and management of this file should be a
+thoughtful process. Remark that, while =AUTHINFO_FILE= can be used more
+generally (outside of Emacs), we use it specifically for Emacs, hence the
+default location of this file being inside the Emacs-specific =EMACS_DATA_DIR=.
+Once we converge on a system-wide equivalent, we might transition and unify.
+**** External dependencies                                         :exdep:
+ - [[https://www.gnupg.org/][GPG]]: Store relevant authentication information in =AUTHINFO_FILE=, encrypted. 
+*** Cache
+We define and store the cache-related directory/file paths using appropriate constants...
+#+begin_src emacs-lisp
+  ;; Cache
+  (defconst EMACS_CACHE_DIR (file-name-as-directory
+                             (if (getenv "XDG_CACHE_HOME")
+                                 (expand-file-name "emacs/" (getenv "XDG_CACHE_HOME"))
+                               user-emacs-directory))
+    "Directory where Emacs cache is stored.")
+
+  (defconst LOCKS_DIR (file-name-as-directory (expand-file-name "locks/" EMACS_CACHE_DIR))
+    "Directory where lock files are stored.")
+#+end_src
+
+....and create the actual directories/files if they do not already exist.
+#+begin_src emacs-lisp    
+  (unless (file-directory-p LOCKS_DIR)
+    (make-directory LOCKS_DIR t))
+#+end_src
 ** Native compilation
+:PROPERTIES:
+:ID:       c9b44a41-2740-4bb8-b8ae-055d39645ca6
+:END:
+#+begin_src emacs-lisp
+  ;;; Native compilation
+#+end_src
+
 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native-Compilation.html][Native compilation]] compiles files/functions to native code (for the considered
 platform), increasing performance compared to byte code or, even worse,
-interpreted code. To promote and smoothen the compilation process, we allow
+interpreted code. To smoothen the compilation process, we allow
 asynchronous native compilation of loaded files when needed
-([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native_002dCompilation-Variables.html#index-native_002dcomp_002djit_002dcompilation][native-comp-jit-compilation]]), have Emacs double-check with us before shutting
-down when compilation is still running ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native_002dCompilation-Variables.html#index-native_002dcomp_002dasync_002dquery_002don_002dexit][native-comp-async-query-on-exit]]), and
+([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native_002dCompilation-Variables.html#index-native_002dcomp_002djit_002dcompilation][=native-comp-jit-compilation=]]), have Emacs double-check with us before shutting
+down when compilation is still running ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Native_002dCompilation-Variables.html#index-native_002dcomp_002dasync_002dquery_002don_002dexit][=native-comp-async-query-on-exit=]]), and
 natively compile packages as part of their installation
-(package-native-compile).
+(=package-native-compile=).
 #+begin_src emacs-lisp
-  ;; Native compilation
-  (setopt native-comp-jit-compilation t)
-  (setopt native-comp-async-query-on-exit t)
+  (setopt native-comp-jit-compilation t
+          native-comp-async-query-on-exit t)
   (setopt package-native-compile t)
 #+end_src
-** File loading
-When Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html][loads a file]], we want it to load the newest when there are multiple possible
-versions/variants ([[https://doc.endlessparentheses.com/Var/load-prefer-newer.html][load-prefer-newer]]).
+
+Further, we redirect the storage location of natively compiled files to
+=NATIVE_COMP_DIR=, which is a directory [[id:eb3aa5c7-1a6f-45c6-831a-29315f28e1c6][we created earlier in =EMACS_DATA_DIR=]].
+Conceptually, the data directory seems like a more fitting place than the
+(default) configuration directory. Remark that, even though the (default)
+directory name is =eln-cache=, the files therein do not seem to entirely fall in
+the usual category of /cache/, as we would generally like to retain them.
 #+begin_src emacs-lisp
-  ;; File loading
-  (setopt load-prefer-newer t)
+  (startup-redirect-eln-cache NATIVE_COMP_DIR)
 #+end_src
 ** Garbage collection
+#+begin_src emacs-lisp
+  ;;; Garbage collection
+#+end_src
+
 With the default settings, [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Garbage-Collection.html][Emacs's garbage collection]] can run quite frequently.
 To remedy this, we increase the thresholds at which Emacs decides to start
 garbage collection ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Garbage-Collection.html#index-gc_002dcons_002dthreshold][gc-cons-threshold]] and [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Garbage-Collection.html#index-gc_002dcons_002dpercentage][gc-cons-percentage]]); the actual
 values are loosely based on recommendations (e.g., from [[https://emacsconf.org/2023/talks/gc/][this talk around ~25:00]])
-and some own testing. Adjustments might be desirable for different setups.
+and some personal testing. Adjustments might be needed/desirable for different setups.
 #+begin_src emacs-lisp
-  ;; Garbage collection
   (setopt gc-cons-threshold 33554432
           gc-cons-percentage 0.15)
 #+end_src
+
 These changes might become obsolete with the [[https://www.reddit.com/r/emacs/comments/1j05761/anyone_tried_the_new_igcmps_garbage_collector/][IGC/MPS enhancements currently in development]].
 ** Package system and management
+#+begin_src emacs-lisp
+  ;;; Package system and management
+#+end_src
+
+As for [[id:c9b44a41-2740-4bb8-b8ae-055d39645ca6][natively compiled files]], packages seem to conceptually fit the bill of
+data better than that of configuration. As such, we set the storage location of
+packages to =PACKAGE_DIR=, a directory inside =EMACS_DATA_DIR= [[id:c2b3a5b3-f37c-4d06-91b5-811f58689cc3][we created
+earlier]].
+#+begin_src emacs-lisp
+  (setopt package-user-dir PACKAGE_DIR)
+#+end_src
 *** TODO Manage explicit list of packages (see [[https://www.reddit.com/r/emacs/comments/np6ey4/how_packageel_works_with_use_package/][this reddit post]])
-** Default/Initial Frame
-By default, we prefer frames to be rather minimal and distraction-less.
-Concretely, we try to achieve this by removing most bars/widgets in the
-default/base frame setup ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Initial-Parameters.html#index-default_002dframe_002dalist][default-frame-alist]]), effectively forcing operation to
-be keyboard-driven.
+** Default/Base Frame
+#+begin_src emacs-lisp
+  ;;; Default/Base frame 
+#+end_src
+
+We prefer frames to be rather minimal and distraction-less. Concretely, we try
+to achieve this by removing most bars/widgets in the default/base frame setup
+([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Initial-Parameters.html#index-default_002dframe_002dalist][=default-frame-alist=]]), effectively forcing operation to be keyboard-driven.
 
 For the specific settings, see the official [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html][documentation on frame parameters]],
 especially the part concerning [[www.gnu.org/software/emacs/manual/html_node/elisp/Window-Frame-Parameters.html][window frame parameters]].
 #+begin_src emacs-lisp
-;; Frame parameters
 (setopt default-frame-alist
         '((fullscreen . maximize)
           (fullscreen-restore . fullheight)
@@ -118,6 +282,17 @@ especially the part concerning [[www.gnu.org/software/emacs/manual/html_node/eli
           (right-divider-width . 3)
           (cursor-type . (hbar . 3))))
 #+end_src
+** Miscellaneous
+#+begin_src emacs-lisp
+  ;;; Miscellaneous
+#+end_src
+
+When Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html][loads a file]] and there are multiple possible versions/variants, we
+want it to load the newest ([[https://doc.endlessparentheses.com/Var/load-prefer-newer.html][=load-prefer-newer=]]).
+#+begin_src emacs-lisp
+  ;; File loading
+  (setopt load-prefer-newer t)
+#+end_src
 * Initialization (init.el)
 :PROPERTIES:
 :ID:       43b929ca-f602-4d36-9b4e-ed056e2fdb58
@@ -134,38 +309,11 @@ in the first line of the file header]].
   ;; init.el
 #+end_src
 ** Bootstrap
-We start by setting up fundamental parts of the relevant environment and the
-package system, as well as configure Emacs's launching behavior.
-*** Basic directories and files
-#+begin_src emacs-lisp
-  ;;; Environment
-#+end_src
-**** Configuration
-#+begin_src emacs-lisp
-  ;; Config
-  (defconst EMACS_CONFIG_DIR (file-name-as-directory
-                              (if (getenv "XDG_CONFIG_HOME")
-                                  (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
-                                user-emacs-directory))
-    "Directory where Emacs configuration is stored.")
-
-  (defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
-    "Directory where (custom) themes are stored.")
-
-  (defconst LOCAL_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "local/"))
-    "Directory where (custom) local functionalities/packages are defined.")
-
-  (defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
-    "Directory where (custom) templates are defined.")
-
-  (defconst MISC_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "misc/"))
-    "Directory where (custom) miscellaneous configuration/settings are stored.")
-
-  (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
-    "File where (automatically generated) customization settings are stored.")
-#+end_src
-**** Data
-**** Cache
+We start regular initialization by setting up fundamental parts of the relevant
+environment and the package system, as well as configure Emacs's launching
+behavior.
+*** TODO Load environment from appropriate shell in case Emacs is launched through non-shell environment (e.g., systemd), see [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]]. 
+*
 *** Package system and management
 *** Local Modules
 *** Launching
