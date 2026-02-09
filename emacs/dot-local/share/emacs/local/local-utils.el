@@ -111,33 +111,46 @@ if it is active and not reactivating mark."
 
 
 ;;; Duplication
-(defun duplicate-line-or-lines-in-region (&optional arg)
-  "Duplicates current line or, when region is active, lines in current region.
-With ARG, duplicates |ARG| times forward (ARG > 0) or backward (ARG < 0),
-putting point at same relative position in final duplication."
-  (interactive "p")
+(defun duplicate-line-or-lines-in-region (&optional arg comment)
+  "Duplicates current line or, when region is active, lines in current region;
+if COMMENT is non-nil, comments line(s) before duplication. With ARG,
+duplicates |ARG| times forward (ARG > 0) or backward (ARG < 0), putting
+point at same relative position in final duplication."
+  (interactive (list (prefix-numeric-value current-prefix-arg) nil))
   (pcase-let* ((neg (< arg 0))
-               (`(,beg . ,end) (if (use-region-p)
-                                   (cons (save-excursion
-                                           (goto-char (region-beginning))
-                                           (line-beginning-position))
-                                         (save-excursion
-                                           (goto-char (region-end))
-                                           (line-end-position)))
-                                 (cons (line-beginning-position)
-                                       (line-end-position))))
-               (relpnt (- (point) (if neg beg end)))
-               (content (buffer-substring beg end)))
-    (goto-char (if neg beg end))
-    (dotimes (_ (abs arg))
-      (if neg
-          (save-excursion
-            (insert content)
-            (newline))
-        (newline)
-        (insert content)))
-    (forward-char relpnt)))
+               (`(,begp . ,endp) (if (use-region-p)
+                                     (cons (save-excursion
+                                             (goto-char (region-beginning))
+                                             (line-beginning-position))
+                                           (save-excursion
+                                             (goto-char (region-end))
+                                             (line-end-position)))
+                                   (cons (line-beginning-position)
+                                         (line-end-position))))
+               (relpnt (- (point) (if neg begp endp)))
+               (content (buffer-substring-no-properties begp endp))
+               (begm (copy-marker begp nil))
+               (endm (copy-marker endp t)))
+    (unwind-protect
+        (progn
+          (when comment
+            (comment-region begm endm))
+          (goto-char (if neg begm endm))
+          (dotimes (_ (abs arg))
+            (if neg
+                (save-excursion (insert content "\n"))
+              (insert "\n" content)))
+          (forward-char relpnt))
+      (set-marker begm nil)
+      (set-marker endm nil))))
 
+(defun comment-and-duplicate-line-or-lines-in-region (&optional arg)
+  "Comments and duplicates current line or, when region is active,
+lines in current region. With ARG, duplicates |ARG| times forward (ARG >
+0) or backward (ARG < 0), putting point at same relative position in
+final duplication. Based on `duplicate-line-or-lines-in-region', which see."
+  (interactive "p")
+  (duplicate-line-or-lines-in-region arg t))
 
 ;;; Transposing/Exchanging
 (defun exchange-word (arg)

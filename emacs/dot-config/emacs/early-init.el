@@ -222,6 +222,7 @@
 ;;; Package system and management
 
 (setopt package-user-dir PACKAGE_DIR)
+(setopt package-gnupghome-dir (file-name-as-directory (expand-file-name "gnupg/" PACKAGE_DIR)))
 
 ;;; Default/Base frame
 

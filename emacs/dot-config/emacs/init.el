@@ -75,9 +75,18 @@
 ;; ;; Custom file
 ;; (unless (file-exists-p CUSTOM_FILE)
 ;;   (make-empty-file CUSTOM_FILE))
-;; (setopt custom-file CUSTOM_FILE)
+(setopt custom-file CUSTOM_FILE)
 
-(load CUSTOM_FILE)
+;;; Metadata
+
+;; Name and email
+(setopt user-full-name "Matthias Meijers")
+(setopt user-mail-address "research@mmeijers.com")
+
+;; Location (approximate)
+(setopt calendar-latitude 51.441643)
+(setopt calendar-longitude 5.469722)
+
 
 ;; Load path/pointers
 ;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones,
@@ -371,6 +380,7 @@
 (keymap-global-set "C-a" #'move-beginning-of-line-or-indentation)
 (keymap-global-set "C-e" #'move-end-of-line-or-whitespace)
 (keymap-global-set "M-b" #'duplicate-line-or-lines-in-region) ; from: backward-word
+(keymap-global-set "M-B" #'comment-and-duplicate-line-or-lines-in-region)
 
 (keymap-global-set "C-`" #'push-mark-no-activate)
 (keymap-global-set "M-`" #'pop-to-mark-command)
@@ -2850,8 +2860,7 @@ starting directory."
 ;; Doom-themes specific
 ;; Nord <3
 (use-package doom-nord-theme
-  :disabled t ; Don't use this theme
-  ;; :demand t ; Use this theme
+  :defer t ; May use this theme, but later
 
   :ensure nil ; Provided by doom-themes
 
@@ -2861,33 +2870,10 @@ starting directory."
           doom-nord-brighter-comments nil
           doom-nord-comment-bg nil
           doom-nord-padded-modeline t
-          doom-nord-region-highlight 'snowstorm)
-
-  :config
-  ;; Setup and settings (after load)
-  (load-theme 'doom-nord t)
-  (doom-themes-set-faces 'doom-nord
-    '(cursor :background success)
-    '(trailing-whitespace :background magenta)
-    '(proof-queue-face :background magenta)
-    '(proof-locked-face :background base3)
-    '(proof-highlight-dependent-name-face :foreground magenta)
-    '(proof-highlight-dependency-name-face :foreground orange)
-    '(proof-declaration-name-face :foreground type)
-    '(proof-tacticals-name-face :foreground numbers)
-    '(proof-tactics-name-face :foreground functions)
-    '(proof-script-sticky-error-face :background error :underline warning)
-    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
-                                        :weight 'semi-bold :slant 'italic)
-    '(proof-debug-message-face :foreground orange)
-    '(proof-boring-face :foreground doc-comments))
-
-  ;; Hooks
-  (add-hook 'after-init-hook #'(lambda () (unless (daemonp) (enable-theme 'doom-nord)))))
+          doom-nord-region-highlight 'snowstorm))
 
 (use-package doom-solarized-dark-theme
-  :disabled t ; Don't use this theme
-  ;; :demand t ; Use this theme
+  :defer t ; May use this theme, but later
 
   :ensure nil ; Provided by doom-themes
 
@@ -2896,37 +2882,10 @@ starting directory."
   (setopt doom-solarized-dark-brighter-modeline t
           doom-solarized-dark-brighter-comments nil
           doom-solarized-dark-brighter-text t
-          doom-solarized-dark-padded-modeline t)
-
-  :config
-  ;; Setup and settings (after load)
-  (load-theme 'doom-solarized-dark t)
-  (doom-themes-set-faces 'doom-solarized-dark
-    '(cursor :background highlight)
-    '(trailing-whitespace :background magenta)
-    '(proof-queue-face :background teal)
-    '(proof-locked-face :background base4)
-    '(proof-highlight-dependent-name-face :foreground violet)
-    '(proof-highlight-dependency-name-face :foreground orange)
-    '(proof-declaration-name-face :foreground type)
-    '(proof-tacticals-name-face :foreground numbers)
-    '(proof-tactics-name-face :foreground functions)
-    '(proof-script-sticky-error-face :background error :underline warning)
-    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
-                                        :weight 'semi-bold :slant 'italic)
-    '(proof-debug-message-face :foreground orange)
-    '(proof-boring-face :foreground doc-comments)
-    '(font-lock-type-face :foreground type :slant 'normal))
-
-
-  ;; Hooks
-  (add-hook 'after-init-hook
-            #'(lambda ()
-                (unless (daemonp) (enable-theme 'doom-solarized-dark)))))
+          doom-solarized-dark-padded-modeline t))
 
 (use-package doom-solarized-light-theme
-  ;; :disabled t ; Don't use this theme
-  :demand t ; Use this theme
+  :defer t ; May use this theme, but later
 
   :ensure nil ; Provided by doom-themes
 
@@ -2934,32 +2893,72 @@ starting directory."
   ;; Setup and settings (before load)
   (setopt doom-solarized-light-brighter-modeline t
           doom-solarized-light-brighter-comments nil
-          doom-solarized-light-padded-modeline t)
+          doom-solarized-light-padded-modeline t))
+
+(use-package circadian
+  :ensure t
 
   :config
-  ;; Setup and settings (after load)
-  (load-theme 'doom-solarized-light t)
-  (doom-themes-set-faces 'doom-solarized-light
-    '(cursor :background highlight)
-    '(trailing-whitespace :background magenta)
-    '(proof-queue-face :background teal)
-    '(proof-locked-face :background base4)
-    '(proof-highlight-dependent-name-face :foreground violet)
-    '(proof-highlight-dependency-name-face :foreground orange)
-    '(proof-declaration-name-face :foreground type)
-    '(proof-tacticals-name-face :foreground numbers)
-    '(proof-tactics-name-face :foreground functions)
-    '(proof-script-sticky-error-face :background error :underline warning)
-    '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
-                                        :weight 'semi-bold :slant 'italic)
-    '(proof-debug-message-face :foreground orange)
-    '(proof-boring-face :foreground doc-comments)
-    '(font-lock-type-face :foreground type :slant 'normal))
+  (setopt circadian-verbose t)
+  (setopt circadian-themes '((:sunrise . doom-solarized-light)
+                             (:sunset . doom-solarized-dark)))
 
-  ;; Hooks
-  (add-hook 'after-init-hook
-            #'(lambda ()
-                (unless (daemonp) (enable-theme 'doom-solarized-light)))))
+  (defun an-enable-customized-doom-theme (theme)
+    (cond
+     ((eq theme 'doom-solarized-light)
+      (doom-themes-set-faces 'doom-solarized-light
+        '(cursor :background highlight)
+        '(trailing-whitespace :background magenta)
+        '(proof-queue-face :background teal)
+        '(proof-locked-face :background base4)
+        '(proof-highlight-dependent-name-face :foreground violet)
+        '(proof-highlight-dependency-name-face :foreground orange)
+        '(proof-declaration-name-face :foreground type)
+        '(proof-tacticals-name-face :foreground numbers)
+        '(proof-tactics-name-face :foreground functions)
+        '(proof-script-sticky-error-face :background error :underline warning)
+        '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                            :weight 'semi-bold :slant 'italic)
+        '(proof-debug-message-face :foreground orange)
+        '(proof-boring-face :foreground doc-comments)
+        '(font-lock-type-face :foreground type :slant 'normal)))
+     ((eq theme 'doom-solarized-dark)
+      (doom-themes-set-faces 'doom-solarized-dark
+        '(cursor :background highlight)
+        '(trailing-whitespace :background magenta)
+        '(proof-queue-face :background teal)
+        '(proof-locked-face :background base4)
+        '(proof-highlight-dependent-name-face :foreground violet)
+        '(proof-highlight-dependency-name-face :foreground orange)
+        '(proof-declaration-name-face :foreground type)
+        '(proof-tacticals-name-face :foreground numbers)
+        '(proof-tactics-name-face :foreground functions)
+        '(proof-script-sticky-error-face :background error :underline warning)
+        '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                            :weight 'semi-bold :slant 'italic)
+        '(proof-debug-message-face :foreground orange)
+        '(proof-boring-face :foreground doc-comments)
+        '(font-lock-type-face :foreground type :slant 'normal)))
+     ((eq theme 'doom-nord)
+      (doom-themes-set-faces 'doom-nord
+        '(cursor :background success)
+        '(trailing-whitespace :background magenta)
+        '(proof-queue-face :background magenta)
+        '(proof-locked-face :background base3)
+        '(proof-highlight-dependent-name-face :foreground magenta)
+        '(proof-highlight-dependency-name-face :foreground orange)
+        '(proof-declaration-name-face :foreground type)
+        '(proof-tacticals-name-face :foreground numbers)
+        '(proof-tactics-name-face :foreground functions)
+        '(proof-script-sticky-error-face :background error :underline warning)
+        '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
+                                            :weight 'semi-bold :slant 'italic)
+        '(proof-debug-message-face :foreground orange)
+        '(proof-boring-face :foreground doc-comments))))
+    (enable-theme theme))
+
+  (add-hook 'circadian-after-load-theme-hook #'an-enable-customized-doom-theme)
+  (add-hook 'emacs-startup-hook #'circadian-setup))
 
 (use-package solaire-mode
   :ensure t
@@ -3093,3 +3092,6 @@ starting directory."
           (lambda ()
             (not (or (bound-and-true-p vertico--input)
                      (eq (current-local-map) read-passwd-map))))))
+
+;; Load custom file
+(load custom-file)

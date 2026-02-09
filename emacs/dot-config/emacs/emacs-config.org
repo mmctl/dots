@@ -243,10 +243,17 @@ These changes might become obsolete with the [[https://www.reddit.com/r/emacs/co
 As for [[id:c9b44a41-2740-4bb8-b8ae-055d39645ca6][natively compiled files]], packages seem to conceptually fit the bill of
 data better than that of configuration. As such, we set the storage location of
 packages to =PACKAGE_DIR=, a directory inside =EMACS_DATA_DIR= [[id:c2b3a5b3-f37c-4d06-91b5-811f58689cc3][we created
-earlier]].
+earlier]]. We additionally set =package-gnupghome-dir= explicitly to effectively
+be the default =gnupg= directory within =PACKAGE_DIR=, as otherwise this seems
+to get set back to within =user-emacs-directory= (I don't know why).
 #+begin_src emacs-lisp
   (setopt package-user-dir PACKAGE_DIR)
+  (setopt package-gnupghome-dir (file-name-as-directory (expand-file-name "gnupg/" PACKAGE_DIR)))
 #+end_src
+
+#+RESULTS:
+: /home/mm/.local/share/emacs/elpa/gnupg/
+
 *** TODO Manage explicit list of packages (see [[https://www.reddit.com/r/emacs/comments/np6ey4/how_packageel_works_with_use_package/][this reddit post]])
 ** Default/Base Frame
 #+begin_src emacs-lisp
