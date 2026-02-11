@@ -4,7 +4,7 @@
 #+LANGUAGE: en
 #+STARTUP: content
 #+PROPERTY: header-args:emacs-lisp :results none :tangle init-test.el :mkdirp yes 
-#+TAGS: exdep
+#+TAGS: sysvar exdeps
 
 Literate configuration for my Emacs. Beyond reasoning and explanations for the
 individual settings and configurations, also includes information on external
@@ -69,6 +69,9 @@ to make sure at least the above XDG-related environment variables are
 also available to Emacs in order for the following to adhere to the XDG
 specification.
 *** Configuration
+:PROPERTIES:
+:ID:       7cc82ce8-234e-4f34-bb76-599e697c4259
+:END:
 We define and store the configuration-related directory/file paths using appropriate constants... 
 #+begin_src emacs-lisp
   ;; Configuration
@@ -166,10 +169,13 @@ automatically here, as the creation and management of this file should be a
 thoughtful process. Remark that, while =AUTHINFO_FILE= can be used more
 generally (outside of Emacs), we use it specifically for Emacs, hence the
 default location of this file being inside the Emacs-specific =EMACS_DATA_DIR=.
-Once we converge on a system-wide equivalent, we might transition and unify.
+Once we converge on a system-wide equivalent, we might transition and unify.    
 **** External dependencies                                         :exdep:
  - [[https://www.gnupg.org/][GPG]]: Store relevant authentication information in =AUTHINFO_FILE=, encrypted. 
 *** Cache
+:PROPERTIES:
+:ID:       538a9518-3c0f-458c-a581-fd365f9d3474
+:END:
 We define and store the cache-related directory/file paths using appropriate constants...
 #+begin_src emacs-lisp
   ;; Cache
@@ -243,21 +249,18 @@ These changes might become obsolete with the [[https://www.reddit.com/r/emacs/co
 As for [[id:c9b44a41-2740-4bb8-b8ae-055d39645ca6][natively compiled files]], packages seem to conceptually fit the bill of
 data better than that of configuration. As such, we set the storage location of
 packages to =PACKAGE_DIR=, a directory inside =EMACS_DATA_DIR= [[id:c2b3a5b3-f37c-4d06-91b5-811f58689cc3][we created
-earlier]]. We additionally set =package-gnupghome-dir= explicitly to effectively
-be the default =gnupg= directory within =PACKAGE_DIR=, as otherwise this seems
-to get set back to within =user-emacs-directory= (I don't know why).
+earlier]]. We additionally set =package-gnupghome-dir= explicitly (to its
+default), as otherwise it ends up pointing to =user-emacs-directory= (not too
+sure why, perhaps because =package.el= is autoloaded when setting
+=package-user-dir=).
 #+begin_src emacs-lisp
   (setopt package-user-dir PACKAGE_DIR)
-  (setopt package-gnupghome-dir (file-name-as-directory (expand-file-name "gnupg/" PACKAGE_DIR)))
+  (setopt package-gnupghome-dir (file-name-as-directory (expand-file-name "gnupg/" package-user-dir)))
 #+end_src
-
-#+RESULTS:
-: /home/mm/.local/share/emacs/elpa/gnupg/
-
 *** TODO Manage explicit list of packages (see [[https://www.reddit.com/r/emacs/comments/np6ey4/how_packageel_works_with_use_package/][this reddit post]])
 ** Default/Base Frame
 #+begin_src emacs-lisp
-  ;;; Default/Base frame 
+  ;;; Default/Base frame  
 #+end_src
 
 We prefer frames to be rather minimal and distraction-less. Concretely, we try
@@ -315,20 +318,92 @@ in the first line of the file header]].
   ;; -*- lexical-binding: t; -*-
   ;; init.el
 #+end_src
+** Metadata                                                         :sysvar:
+#+begin_src emacs-lisp
+  ;;; Metadata 
+#+end_src
+Metadata (like user and system information) enables or improves some
+functionalities (e.g., those based on sunset/sunrise times).
+#+begin_src emacs-lisp
+  ;; Name and email
+  (setopt user-full-name "Matthias Meijers")
+  (setopt user-mail-address "research@mmeijers.com")
+
+  ;; Location (approximate)
+  (setopt calendar-latitude 51.441643)
+  (setopt calendar-longitude 5.469722)
+#+end_src
 ** Bootstrap
-We start regular initialization by setting up fundamental parts of the relevant
-environment and the package system, as well as configure Emacs's launching
-behavior.
-*** TODO Load environment from appropriate shell in case Emacs is launched through non-shell environment (e.g., systemd), see [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]]. 
-*
-*** Package system and management
+#+begin_src emacs-lisp
+  ;;; Bootstrap 
+#+end_src
+Before proceeding to the actual configuration, we finish setting up the
+environment and package system (beyond the rudimentary setup done in
+[[id:4c1ec44b-b1e3-4119-a293-e92b94145111][=early-init.el=]]). This includes byte/native compiling our local (custom) modules
+and setting up the appropriate autoloads (so they can be loaded only when
+needed). We also configure Emacs's launching behavior.
+*** TODO Load environment properly in case Emacs is launched through non-shell environment (e.g., systemd). 
+*** Customization, backup, auto-save, and lock files/locations
+:PROPERTIES:
+:ID:       674e8824-c253-4b10-869e-362c2b6f2817
+:END:
+To be able to load files from [[id:7cc82ce8-234e-4f34-bb76-599e697c4259][=MISC_DIR=]], the directory used to store
+any miscellaneous configuration/settings, we add it to the load path.
+#+begin_src emacs_lisp
+  (add-to-list 'load-path MISC_DIR)
+#+end_src
+
+Then, to make sure Emacs stores ad-hoc customizations in [[id:eb3aa5c7-1a6f-45c6-831a-29315f28e1c6][=CUSTOM_FILE=]] instead
+of polluting our =init.el=, we set the [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Saving-Customizations.html][=custom=file=]] accordingly; further, we
+set [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Custom-Themes.html][=custom-theme-directory=]] to [[id:eb3aa5c7-1a6f-45c6-831a-29315f28e1c6][=THEMES_DIR=]], so we can store and load
+custom themes from there without littering our configuration directory.
+#+begin_src emacs-lisp
+  ;; Custom file and custom theme directory
+  (setopt custom-file CUSTOM_FILE)  
+  (setopt custom-theme-directory THEMES_DIR)
+#+end_src
+
+The default settings of backup, auto-save, and lock files can be quite annoying,
+particularly because of their default storage location: inside the directory of
+the file being edited. As such, we change their default storage locations to
+[[id:eb3aa5c7-1a6f-45c6-831a-29315f28e1c6][=BACKUPS_DIR=]], [[id:eb3aa5c7-1a6f-45c6-831a-29315f28e1c6][=AUTOSAVES_DIR=]], and [[id:538a9518-3c0f-458c-a581-fd365f9d3474][=LOCKS_DIR=]], respectively. While we are at
+it, we also customize several related settings to slightly adjust the behavior
+to our preferences. See the documentation on [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Backup.html][backups]], [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save.html][auto-saves]], and [[https://www.gnu.org/software/emacs/manual/html_node/elisp/File-Locks.html][locks]] for
+more information on these settings.
+#+begin_src emacs-lisp
+  ;; Backups
+  (setopt backup-directory-alist `((".*" . ,BACKUPS_DIR))
+          make-backup-files t
+          vc-make-backup-files nil
+          version-control t
+          kept-old-versions 2
+          kept-new-versions 3
+          delete-old-versions t
+          backup-by-copying nil
+          backup-by-copying-when-linked t
+          backup-by-copying-when-mismatch t)
+
+  ;; Auto-saves
+  (setopt auto-save-file-name-transforms `((".*" ,(expand-file-name "\\1" AUTOSAVES_DIR) t))
+          auto-save-visited-file-name nil
+          auto-save-interval 50
+          auto-save-timeout 20
+          auto-save-default t
+          delete-auto-save-files t
+          auto-save-list-file-prefix nil)
+
+  ;; Locks
+  (setopt lock-file-name-transforms `((".*" ,(expand-file-name "\\1" LOCKS_DIR) t))
+          create-lockfiles t)
+#+end_src
 *** Local Modules
+*** Package system and management
 *** Launching
 ** General Look and Feel
 *** Frames, Windows, and Minibuffer
 *** Movement and Navigation
 *** Editing
-** Directory and File Management (dired)
+** Directory and File Management
 ** Completion
 *** Styles (orderless)
 *** Functions (cape)

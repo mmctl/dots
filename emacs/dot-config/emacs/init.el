@@ -210,6 +210,7 @@
          (preserve-size . (nil . t)))
         ((or (derived-mode . eshell-mode)
              (derived-mode . comint-mode)
+             (derived-mode . term-mode)
              (category . comint)
              (category . tex-shell))
          (display-buffer-reuse-window display-buffer-in-side-window)
@@ -697,6 +698,15 @@
   (setopt grep-use-headings t))
 
 ;; Helpers
+(use-package gnu-elpa-keyring-update
+  :ensure t)
+
+(use-package scratch
+  :ensure t
+
+  :bind
+  ("C-c s" . scratch))
+
 (use-package wgrep
   :ensure t
 
@@ -2120,8 +2130,6 @@ opened."
   ;; Keybindings
   (keymap-set forge-common-map "M-<return>" #'forge--list-menu))
 
-
-
 (use-package xref
   :defer t
 
@@ -2143,7 +2151,7 @@ opened."
 
 (use-package eglot
   :bind
-  (:prefix-map an-eglot-map :prefix "C-c s" :prefix-docstring "Keymap for eglot (global)"
+  (:prefix-map an-eglot-map :prefix "C-c l" :prefix-docstring "Keymap for eglot (global)"
                ("`" . flymake-goto-next-error)
                ("a a" . eglot-code-actions)
                ("a e" . eglot-code-action-extract)
@@ -2193,6 +2201,14 @@ opened."
                  (window . main)
                  (window-width . (lambda (window)
                                    (balance-windows (window-parent window)))))))
+
+(use-package dockerfile-mode
+  :ensure t
+
+  :init
+  (setopt dockerfile-build-progress "plain")
+  (setopt dockerfile-use-buildkit t)
+  (setopt dockerfile-indent-offset 2))
 
 (use-package tex
   :ensure auctex
@@ -2735,22 +2751,22 @@ starting directory."
 
   ;; Keybindings
   (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
-  (keymap-set easycrypt-ext-general-map "C-c l p" #'ece-proofshell-print)
-  (keymap-set easycrypt-ext-general-map "C-c l P" #'ece-proofshell-prompt-print)
-  (keymap-set easycrypt-ext-general-map "C-c l l" #'ece-proofshell-locate)
-  (keymap-set easycrypt-ext-general-map "C-c l L" #'ece-proofshell-prompt-locate)
-  (keymap-set easycrypt-ext-general-map "C-c l m" #'ece-proofshell-prompt-pragma)
+  (keymap-set easycrypt-ext-general-map "C-c z p" #'ece-proofshell-print)
+  (keymap-set easycrypt-ext-general-map "C-c z P" #'ece-proofshell-prompt-print)
+  (keymap-set easycrypt-ext-general-map "C-c z l" #'ece-proofshell-locate)
+  (keymap-set easycrypt-ext-general-map "C-c z L" #'ece-proofshell-prompt-locate)
+  (keymap-set easycrypt-ext-general-map "C-c z m" #'ece-proofshell-prompt-pragma)
   (keymap-set easycrypt-ext-general-map "C-c C-s" #'ece-proofshell-search)
-  (keymap-set easycrypt-ext-general-map "C-c l s" #'ece-proofshell-search)
-  (keymap-set easycrypt-ext-general-map "C-c l S" #'ece-proofshell-prompt-search)
-  (keymap-set easycrypt-ext-general-map "C-c l f" #'ece-find-file-standard-library)
-  (keymap-set easycrypt-ext-general-map "C-c l t" 'ece-template-map-prefix)
+  (keymap-set easycrypt-ext-general-map "C-c z s" #'ece-proofshell-search)
+  (keymap-set easycrypt-ext-general-map "C-c z S" #'ece-proofshell-prompt-search)
+  (keymap-set easycrypt-ext-general-map "C-c z f" #'ece-find-file-standard-library)
+  (keymap-set easycrypt-ext-general-map "C-c z t" 'ece-template-map-prefix)
   (keymap-set easycrypt-ext-general-map "C-c C-e" 'ece-exec-map-prefix)
-  (keymap-set easycrypt-ext-general-map "C-c l e" 'ece-exec-map-prefix)
+  (keymap-set easycrypt-ext-general-map "C-c z e" 'ece-exec-map-prefix)
 
   (with-eval-after-load 'consult
-    (keymap-set easycrypt-ext-general-map "C-c l F" #'ece-consult-fd-standard-library)
-    (keymap-set easycrypt-ext-general-map "C-c l r" #'ece-consult-ripgrep-standard-library)))
+    (keymap-set easycrypt-ext-general-map "C-c z F" #'ece-consult-fd-standard-library)
+    (keymap-set easycrypt-ext-general-map "C-c z r" #'ece-consult-ripgrep-standard-library)))
 
 (use-package easycrypt-ext-cape
   :ensure nil ; Provided by `easycrypt-ext'
@@ -2765,7 +2781,7 @@ starting directory."
   (easycrypt-ext-mode . easycrypt-ext-mode-tempel-setup)
 
   :init
-  (setopt ece-tempel-template-map-prefix "C-c l t"))
+  (setopt ece-tempel-template-map-prefix "C-c z t"))
 
 (use-package easycrypt-ext-avy
   :ensure nil ; Provided by `easycrypt-ext'
@@ -2895,6 +2911,10 @@ starting directory."
           doom-solarized-light-brighter-comments nil
           doom-solarized-light-padded-modeline t))
 
+(load-theme 'doom-solarized-dark t)
+(enable-theme 'doom-solarized-dark)
+(disable-theme 'doom-solarized-dark)
+
 (use-package circadian
   :ensure t
 
@@ -2926,8 +2946,10 @@ starting directory."
       (doom-themes-set-faces 'doom-solarized-dark
         '(cursor :background highlight)
         '(trailing-whitespace :background magenta)
-        '(proof-queue-face :background teal)
-        '(proof-locked-face :background base4)
+        '(org-block :background base2)
+        '(org-block-begin-line :foreground comments :background base2)
+        '(proof-queue-face :background base4)
+        '(proof-locked-face :background dark-cyan)
         '(proof-highlight-dependent-name-face :foreground violet)
         '(proof-highlight-dependency-name-face :foreground orange)
         '(proof-declaration-name-face :foreground type)
