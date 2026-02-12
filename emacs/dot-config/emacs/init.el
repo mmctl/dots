@@ -99,7 +99,8 @@
       (loaddefs-generate file fileal)
       (load fileal))))
 
-;; Byte (and, if possible, natively) compile all local Elisp files (in LOCAL_DIR and subdirectories)
+;; Byte (and, if possible, natively) compile all local Elisp files (in LOCAL_DIR
+;; and subdirectories)
 (byte-recompile-directory LOCAL_DIR 0 nil t)
 (when (native-comp-available-p)
   (native-compile-async (list LOCAL_DIR) t))
@@ -2919,7 +2920,6 @@ starting directory."
   :ensure t
 
   :config
-  (setopt circadian-verbose t)
   (setopt circadian-themes '((:sunrise . doom-solarized-light)
                              (:sunset . doom-solarized-dark)))
 

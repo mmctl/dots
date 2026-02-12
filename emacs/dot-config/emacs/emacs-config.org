@@ -397,8 +397,87 @@ more information on these settings.
           create-lockfiles t)
 #+end_src
 *** Local Modules
+A local module is a file containing (locally defined) custom functionality,
+typically related in some way; we store these modules in [[id:eb3aa5c7-1a6f-45c6-831a-29315f28e1c6][=LOCAL_DIR=]]. To be able
+to load these modules, we add =LOCAL_DIR= (and any potential subdirectories,
+which we may use to further structure the modules). Simultaneously, we generate
+(and load) [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Autoload.html][autoloads]] for any modules that define these, to put off loading
+certain files until its functionality is requested.
+#+begin_src emacs-lisp
+  ;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones,
+  ;; and generate autoloads if possible
+  (dolist (file (cons LOCAL_DIR (directory-files-recursively LOCAL_DIR "^[^.].*" t t)))
+    (when (file-directory-p file)
+      (add-to-list 'load-path file)
+      (let ((fileal (expand-file-name (concat (file-name-nondirectory (directory-file-name file)) "-autoloads.el")
+                                      file)))
+        (loaddefs-generate file fileal)
+        (load fileal))))
+#+end_src
+
+While packages (built-in and externally installed) are byte/natively compiled by
+default, locally defined functionality is not; so, to further increase
+performance, we compile all our local modules.
+#+begin_src emacs-lisp
+  ;; Byte (and, if possible, natively) compile all files in LOCAL_DIR and its
+  ;; subdirectories.
+  (byte-recompile-directory LOCAL_DIR 0 nil t)
+  (when (native-comp-available-p)
+    (native-compile-async (list LOCAL_DIR) t))    
+#+end_src
+
+Certain local modules contain functionality that is used in (almost) every
+session; these include, for example, modules defining basic utilities and setup.
+For such modules, immediate loading makes sense, so it is handled during startup
+rather than during regular operation.
+#+begin_src emacs-lisp
+  ;; Load universal/ubiquitous local functionality
+  (require 'local-setup)
+  (require 'local-utils)
+#+end_src
 *** Package system and management
+While =package= should already be loaded, we =require= it once more for good
+measure (and tradition), since this does not really harm efficiency regardless.
+#+begin_src emacs-lisp
+  ;; Package system
+  (require 'package)
+#+end_src
+
+Overall, our setup relies on quite some packages from [[https://melpa.org/packages/][Melpa]], one of Emacs's
+largest (unofficial) package repositories; as such, we add it to our list of
+considered package archives (stored in [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Package-Installation.html#index-package_002darchives][=package-archives=]]), alongside GNU's
+official ones (GNU Elpa and NonGNU Elpa). Nevertheless, by default, we
+prioritize (through [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Package-Installation.html][=package-archive-priorities=]]) the official repositories, as
+these are governed more carefully.
+#+begin_src emacs-lisp
+  (setopt package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                             ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                             ("melpa" . "https://melpa.org/packages/"))
+          package-archive-priorities '(("gnu" . 10)
+                                       ("nongnu" . 5)
+                                       ("melpa" . 1)))
+#+end_src
+
+We finish setup of the package system by calling =package-initialize= /without/
+activating packages first (achieved by the non-nil argument), as this is already
+done by Emacs in between loading =early-init.el= and =init.el=. If the package
+cache (=package-archive-contents=) is not yet populated (usually the first time
+we launch Emacs), we do so by executing =package-refresh-contents=. Because this
+means we hardly ever refresh this cache automatically, occasional manual
+updating may be necessary.
+#+begin_src
+  (package-initialize t)
+
+  (unless package-archive-contents
+    (package-refresh-contents))
+#+end_src
 *** Launching
+#+begin_src emacs-lisp
+  ;; Launching
+  (setopt inhibit-splash-screen t)
+  (setopt initial-major-mode 'emacs-lisp-mode)
+  (setopt initial-scratch-message "")
+#+end_src
 ** General Look and Feel
 *** Frames, Windows, and Minibuffer
 *** Movement and Navigation
