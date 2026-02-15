@@ -1,0 +1,32 @@
+# Global
+BufferLimit 100m
+
+# Stores/Channels
+## dump@mmeijers.com
+IMAPAccount dump-mmeijers
+Host mail.your-server.de
+User dump@mmeijers.com
+PassCmd "rbw get fc89b662-1053-41da-9d3b-b021009210e2"
+#TLSType IMAPS
+SSLType IMAPS
+SSLVersions TLSv1.2 TLSv1.3
+
+IMAPStore dump-mmeijers-remote
+Account dump-mmeijers
+
+MaildirStore dump-mmeijers-local
+Path  ~/.local/share/mail/dump-mmeijers/
+Inbox ~/.local/share/mail/dump-mmeijers/INBOX/
+MaxSize 50m
+SubFolders Verbatim
+
+Channel dump-mmeijers
+Far :dump-mmeijers-remote:
+Near :dump-mmeijers-local:
+#Sync New Gone Flags
+Sync New Delete Flags
+Patterns *
+Create Both
+#Expunge Both
+CopyArrivalDate yes
+SyncState *

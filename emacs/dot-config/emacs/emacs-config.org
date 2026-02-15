@@ -10,7 +10,7 @@ Literate configuration for my Emacs. Beyond reasoning and explanations for the
 individual settings and configurations, also includes information on external
 dependencies and links to official (external) documentation where relevant.
 
-* Overview
+* Preliminaries
 ** Produced files
 Tangling this file (with [[https://orgmode.org/manual/Extracting-Source-Code.html#index-org_002dbabel_002dtangle][org-babel-tangle]]) produces both an [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Early-Init-File.html][early
 initialization file (early-init.el)]] and a [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Init-File.html][regular initialization file
@@ -32,7 +32,7 @@ following naming conventions:
 ** Official documentation
 - [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html][Emacs's startup summary]]
 - [[https://orgmode.org/manual/Extracting-Source-Code.html][Extracting source code with Org]]
-
+** Tags and their meaning
 * Early initialization (early-init.el)
 :PROPERTIES:
 :ID:       4c1ec44b-b1e3-4119-a293-e92b94145111
@@ -459,12 +459,12 @@ these are governed more carefully.
 #+end_src
 
 We finish setup of the package system by calling =package-initialize= /without/
-activating packages first (achieved by the non-nil argument), as this is already
+activating packages first (achieved with a non-nil argument), as this is already
 done by Emacs in between loading =early-init.el= and =init.el=. If the package
 cache (=package-archive-contents=) is not yet populated (usually the first time
-we launch Emacs), we do so by executing =package-refresh-contents=. Because this
-means we hardly ever refresh this cache automatically, occasional manual
-updating may be necessary.
+we launch Emacs), we do so by executing =package-refresh-contents=. This does
+mean we hardly ever refresh this cache automatically, and, hence, occasional
+manual refreshing may be necessary.
 #+begin_src
   (package-initialize t)
 

@@ -930,6 +930,28 @@ which see, with `0' as argument."
   (set-face-attribute 'popper-echo-dispatch-hint nil :inherit 'custom-comment :weight 'bold)
   (popper-echo-mode 1))
 
+;; Email
+;; Requires external installation and setup
+;; Dependencies: mbsync, mu, mu4e
+;; see: https://www.djcbsoftware.nl/code/mu/mu4e/
+(use-package mu4e
+  :init
+  ;; These are global ones (?), outside of those per account, so we use them as
+  ;; fallback only
+  (setopt mu4e-sent-folder "/sent-fallback"
+          mu4e-drafts-folder "/drafts-fallback"
+          mu4e-trash-folder "/trash-fallback"
+          mu4e-refile-folder "/archive-fallback")
+
+  (setopt mu4e-get-mail-command "mbsync")
+  (setopt mu4e-update-interval 300)
+
+  (setopt mu4e-main-hide-personal-address t) ; Hide personal addresses because we use many
+  ;; Consider the following if indexing is slow
+  ;; (setopt mu4e-index-cleanup nil)
+  ;; (setopt mu4e-index-lazy-check nil)
+  )
+
 ;; Completion
 (use-package orderless
   :ensure t
@@ -1150,8 +1172,8 @@ that allows to include other templates by their name."
                   (?G aw-switch-buffer-other-window "Select buffer in other window")
                   (?r aw-flip-window)
                   (?x aw-execute-command-other-window "Execute command in other window")
-                  (?f aw-split-window-fair "Split window fairly")
-                  (?h aw-split-window-horz "Split window verically")
+                  (?d aw-split-window-fair "Split window fairly")
+                  (?h aw-split-window-horz "Split window horizontally")
                   (?v aw-split-window-vert "Split window vertically")
                   (?t aw-transpose-frame "Transpose frames")
                   (?? aw-show-dispatch-help)))
@@ -1361,7 +1383,7 @@ uses window unless, e.g., dedicated."
   ("M-u" . embark-select) ; from: upcase-word
   ("M-U" . embark-export)
   ("C-h C-b" . embark-bindings)
-  (:prefix-map an-embark-map :prefix "C-c e" :prefix-docstring "Keymap for embark (global)"
+  (:prefix-map an-embark-map :prefix "C-c a" :prefix-docstring "Keymap for embark (global)"
                ("a" . embark-act)
                ("A" . embark-act-all)
                ("b" . embark-bindings)
@@ -1391,7 +1413,9 @@ uses window unless, e.g., dedicated."
 
   (keymap-set embark-file-map "F" #'find-file-other-window)
   (keymap-set embark-file-map "C-f" #'find-file-other-frame)
+  (keymap-set embark-file-map "M-f" #'find-file-as-root)
   (keymap-set embark-file-map "l" #'find-file-literally)
+  (keymap-set embark-file-map "C" #'copy-directory)
 
   (keymap-set embark-library-map "F" #'find-library-other-window)
   (keymap-set embark-library-map "C-f" #'find-library-other-frame)
