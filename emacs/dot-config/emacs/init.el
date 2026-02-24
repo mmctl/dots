@@ -1,87 +1,11 @@
 ;; -*- lexical-binding: t; -*-
 ;; init.el
-;;; Environment
-;; Config
-;; (defconst EMACS_CONFIG_DIR (file-name-as-directory
-;;                             (if (getenv "XDG_CONFIG_HOME")
-;;                                 (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
-;;                               user-emacs-directory))
-;;   "Directory where Emacs configuration is stored.")
-
-;; (defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
-;;   "Directory where (custom) themes are stored.")
-
-;; (defconst LOCAL_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "local/"))
-;;   "Directory where (custom) local functionalities/packages are defined.")
-
-;; (defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
-;;   "Directory where (custom) templates are defined.")
-
-;; (defconst MISC_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "misc/"))
-;;   "Directory where (custom) miscellaneous configuration/settings are stored.")
-
-;; (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
-;;   "File where (automatically generated) customization settings are stored.")
-
-;; ;; Data
-;; (defconst EMACS_DATA_DIR (file-name-as-directory
-;;                           (if (getenv "XDG_DATA_HOME")
-;;                               (file-name-concat (getenv "XDG_DATA_HOME") "emacs/")
-;;                             user-emacs-directory))
-;;   "Directory where (additional) Emacs data is stored.")
-
-;; (defconst BACKUPS_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "backups/"))
-;;   "Directory where (automatically generated) backup files are stored.")
-
-;; (defconst AUTHINFO_FILE (file-name-concat EMACS_DATA_DIR ".authinfo.gpg")
-;;   "File where (encrypted) authentication information is stored.")
-
-;; ;; Cache
-;; (defconst EMACS_CACHE_DIR (file-name-as-directory
-;;                            (if (getenv "XDG_CACHE_HOME")
-;;                                (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
-;;                              user-emacs-directory))
-;;   "Directory where Emacs cache is stored.")
-
-;; (defconst AUTOSAVES_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "autosaves/"))
-;;   "Directory where auto-save files are stored.")
-
-;; (defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
-;;   "Directory where lock files are stored.")
-
-;;; Bootstrap
-;; Directories
-;; (unless (file-directory-p THEMES_DIR)
-;;   (make-directory THEMES_DIR t))
-
-;; (unless (file-directory-p LOCAL_DIR)
-;;   (make-directory LOCAL_DIR t))
-
-;; (unless (file-directory-p TEMPLATES_DIR)
-;;   (make-directory TEMPLATES_DIR t))
-
-;; (unless (file-directory-p MISC_DIR)
-;;   (make-directory MISC_DIR t))
-
-;; (unless (file-directory-p BACKUPS_DIR)
-;;   (make-directory BACKUPS_DIR t))
-
-;; (unless (file-directory-p AUTOSAVES_DIR)
-;;   (make-directory AUTOSAVES_DIR t))
-
-;; (unless (file-directory-p LOCKS_DIR)
-;;   (make-directory LOCKS_DIR t))
-
-;; ;; Custom file
-;; (unless (file-exists-p CUSTOM_FILE)
-;;   (make-empty-file CUSTOM_FILE))
 (setopt custom-file CUSTOM_FILE)
 
 ;;; Metadata
 
-;; Name and email
+;; Name
 (setopt user-full-name "Matthias Meijers")
-(setopt user-mail-address "research@mmeijers.com")
 
 ;; Location (approximate)
 (setopt calendar-latitude 51.441643)
@@ -225,19 +149,7 @@
          (reusable-frames . nil)
          (side . left)
          (slot . 0)
-         (window-width . fit-lr-side-window-to-buffer))
-        ((derived-mode . image-mode)
-         (display-buffer-reuse-window
-          display-buffer-in-previous-window
-          display-buffer-use-some-frame
-          display-buffer-pop-up-window
-          display-buffer-use-some-window
-          display-buffer-same-window)
-         (reusable-frames . 0)
-         (frame-predicate . (lambda (frame)
-                              (exists-window-with-derived-mode 'image-mode frame)))
-         (window-width . fit-to-buffer)
-         (lru-frames . nil))))
+         (window-width . fit-lr-side-window-to-buffer))))
 
 (setopt uniquify-buffer-name-style 'forward)
 (setopt highlight-nonselected-windows nil)
@@ -299,6 +211,8 @@
 (setopt mouse-wheel-scroll-amount '(2 ((shift) . hscroll)))
 (setopt mouse-wheel-scroll-amount-horizontal 2)
 
+(setq mouse-drag-and-drop-region-cross-program t)
+
 (setopt pixel-scroll-precision-interpolate-page t)
 (pixel-scroll-precision-mode 1)
 
@@ -355,6 +269,7 @@
 (savehist-mode 1)
 (recentf-mode 1)
 
+(setopt delete-by-moving-to-trash t)
 
 ;;; Keybindings (general)
 ;; Translations
@@ -635,7 +550,7 @@
 (use-package dired
   :init
   ;; Setup and settings
-  (setopt dired-listing-switches (purecopy "-lahF")
+  (setopt dired-listing-switches (purecopy "-l --almost-all --human-readable --group-directories-first --no-group")
           dired-maybe-use-globstar t
           dired-mouse-drag-files t
           dired-always-read-filesystem t
@@ -1223,8 +1138,8 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
         ("C-M-j" . avy-isearch))
 
   :bind*
-  ("M-j" . avy-goto-char-timer)
-  ("M-J" . avy-goto-char-2)
+  ("M-j" . avy-goto-char-2)
+  ("M-J" . avy-goto-char-timer)
 
   :init
   ;; Setup and settings (before load)
@@ -1365,10 +1280,10 @@ uses window unless, e.g., dedicated."
   :bind
   ("<remap> <find-dired>" . consult-dir)
   (:map minibuffer-local-map
-   ("M-d" . consult-dir)
-   ("M-D" . consult-dir-jump-file))
+        ("M-d" . consult-dir)
+        ("M-D" . consult-dir-jump-file))
   (:map a-find-map
-   ("C-d" . consult-dir))
+        ("C-d" . consult-dir))
 
   :init
   (setopt consult-dir-jump-file-command #'consult-fd))
@@ -1466,110 +1381,87 @@ uses window unless, e.g., dedicated."
   :after (embark consult))
 
 ;;; Tools
-(use-package dired-filter
+;; Enhanced dired-like manager
+;; Depends on (mandatory): (GNU) ls, fd,
+;; Depends on (optional): poppler-utils ffmpegthumbnailer mediainfo libvips-tools 7zip imagemagick
+(use-package dirvish
   :ensure t
-
-  :hook
-  (dired-mode . dired-filter-mode)
-  (dired-mode . dired-filter-group-mode)
-
-  :bind
-  (:map dired-mode-map
-        ("M-/" . dired-filter-mode)
-        ("M-@" . dired-filter-group-mode))
-  (:map dired-filter-group-mode-map
-        ("C-p" . 'dired-filter-group-backward-drawer)
-        ("C-n" . 'dired-filter-group-forward-drawer))
-  (:map dired-filter-group-header-map
-        ("TAB" . 'dired-filter-group-toggle-header))
 
   :init
-  ;; Setup and settings (before load)
-  (setopt dired-filter-save-with-custom nil)
+  ;; Add and load extensions (due to bug, may be fixed in later versions)
+  (add-to-list 'load-path (file-name-as-directory
+                           (expand-file-name
+                            "extensions/"
+                            (file-name-parent-directory (locate-library "dirvish")))))
+  (require 'dirvish)
+  (require 'dirvish-collapse)
+  (require 'dirvish-emerge)
+  (require 'dirvish-history)
+  (require 'dirvish-ls)
+  (require 'dirvish-narrow)
+  (require 'dirvish-quick-access)
+  (require 'dirvish-rsync)
+  (require 'dirvish-subtree)
+  (require 'dirvish-yank)
 
-  (setopt dired-filter-prefix "/"
-          dired-filter-mark-prefix "@")
+  (setopt dirvish-cache-dir (file-name-as-directory (expand-file-name "dirvesh/" EMACS_CACHE_DIR)))
+  (setopt dirvish-fd-switches "--full-path --color=never")
+  (setopt dirvish-attributes '(vc-state subtree-state nerd-icons collapse file-size file-modes file-time))
 
-  (setopt dired-filter-group-saved-groups '(("default"
-                                             ("Directories" (directory . nil))
-                                             ("Files" (file . nil))
-                                             ("Symlinks" (symlink . nil)))))
+  (setopt dirvish-header-line-format '(:left (path) :right (free-space))
+          dirvish-mode-line-format '(:left (sort symlink) :right (omit yank vc-info index)))
+  (setopt dirvish-use-header-line 'global
+          dirvish-use-mode-line t)
+  (setopt dirvish-default-layout '(1 0.10 0.40))
+
+  (setopt dirvish-quick-access-entries
+          `(("h" ,(file-name-as-directory (expand-file-name "~/")) "Home")
+            ("p" ,(file-name-as-directory (expand-file-name "projects/" "~/")) "Projects")
+            ("a" ,(file-name-as-directory (expand-file-name "areas/" "~/")) "Areas")
+            ("r" ,(file-name-as-directory (expand-file-name "resources/" "~/")) "Resources")
+            ("A" ,(file-name-as-directory (expand-file-name "archive/" "~/")) "Archive")
+            ("c" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_CONFIG_HOME")
+                                                                "~/.config/")))
+             "User config")
+            ("C" "/etc/" "System config")
+            ("d" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_DATA_HOME")
+                                                                "~/.local/share/")))
+             "User data")
+            ("D" "/usr/share/" "System data")))
+
+  :bind
+  ("C-c d" . dirvish)
+  ("C-c D" . dirvish-quick-access)
+  (:map dirvish-mode-map
+   ("?"   . dirvish-dispatch)
+   ("a"   . dirvish-setup-menu)
+   ("f"   . dirvish-file-info-menu)
+   ("F"   . dirvish-fd)
+   ("j"   . dirvish-quick-access)
+   ("s"   . dirvish-quicksort)
+   ("r"   . dirvish-history-jump)
+   ("l"   . dirvish-ls-switches-menu)
+   ("v"   . dirvish-vc-menu)
+   ("*"   . dirvish-mark-menu)
+   ("y"   . dirvish-yank-menu)
+   ("Y"   . dirvish-yank)
+   ("N"   . dirvish-narrow)
+   ("TAB" . dirvish-subtree-toggle)
+   ("{"   . dirvish-history-last)
+   ("<" . dirvish-history-go-backward)
+   (">" . dirvish-history-go-forward)
+   ("M-e" . dirvish-emerge-menu))
 
   :config
-  ;; Keybindings
-  (keymap-unset dired-filter-group-mode-map "<tab>"))
-
-(use-package dired-subtree
-  :ensure t
-
-  :preface
-  (defvar-keymap a-dired-subtree-map
-    :doc "Keymap for dired-subtree (to be bound in `dired-mode-map')"
-    :prefix 'a-dired-subtree-map-prefix)
-
-  :bind
-  (:map dired-mode-map
-        ("TAB" . dired-subtree-toggle)
-        ("M-TAB" . dired-subtree-cycle)
-        ("M-t" . a-dired-subtree-map-prefix))
-  (:map a-dired-subtree-map
-        ("a" . dired-subtree-apply-filter)
-        ("c" . dired-subtree-cycle)
-        ("d" . dired-subtree-only-this-directory)
-        ("e" . dired-subtree-end)
-        ("f" . dired-subtree-only-this-file)
-        ("i" . dired-subtree-insert)
-        ("j" . dired-subtree-down)
-        ("k" . dired-subtree-up)
-        ("m" . dired-subtree-mark-subtree)
-        ("n" . dired-subtree-next-sibling)
-        ("N" . dired-subtree-narrow)
-        ("p" . dired-subtree-previous-sibling)
-        ("r" . dired-subtree-revert)
-        ("R" . dired-subtree-remove)
-        ("t" . dired-subtree-toggle)
-        ("u" . dired-subtree-unmark-subtree)
-        ("<down>" . dired-subtree-down)
-        ("<up>" . dired-subtree-up))
-
-  :config
-  ;; Custom functionality
-  ;; Prevent dired-insert-subtree from executing on empty directories,
-  ;; fixes some unexpected behavior
-  (defun dired-subtree-insert-check-empty-directory (dsi &rest args)
-    (when-let* ((dfn (dired-get-filename nil t)))
-      (if (directory-empty-p dfn)
-          (user-error "Directory at point is empty, cannot insert subtree.")
-        (apply dsi args))))
-
-  (advice-add #'dired-subtree-insert :around #'dired-subtree-insert-check-empty-directory))
-
-(use-package dired-narrow
-  :ensure t
-
-  :bind
-  (:map dired-mode-map
-        ("M-n" . dired-narrow-fuzzy)
-        ("M-N" . dired-narrow))
-
-  :init
-  ;; Setup and settings (before load)
-  (setopt dired-narrow-blink-time 0.3))
-
-(use-package dired-collapse
-  :ensure t
-
-  :hook dired-mode
-
-  :bind
-  (:map dired-mode-map
-        (")" . dired-collapse-mode)))
+  (dirvish-override-dired-mode 1))
 
 (use-package diredfl
   :ensure t
   :pin melpa
 
-  :hook dired-mode
+  :hook
+  (dired-mode . diredfl-mode)
+  (dirvish-directory-view-mode . diredfl-mode)
 
   :init
   ;; Setup and settings (before load)
@@ -1577,7 +1469,7 @@ uses window unless, e.g., dedicated."
 
 (use-package ediff
   :bind
-  (:prefix-map an-ediff-map :prefix "C-c d" :prefix-docstring "Keymap for ediff entry points (global)"
+  (:prefix-map an-ediff-map :prefix "C-c M-d" :prefix-docstring "Keymap for ediff entry points (global)"
                ("b" . ediff-buffers)
                ("B" . ediff-buffers3)
                ("d" . ediff-directories)
@@ -2085,8 +1977,8 @@ opened."
   :ensure t
 
   :bind
-  ("C-x m" . magit-status)
-  ("C-c m" . magit-dispatch)
+  ("C-x g" . magit-status)
+  ("C-c g" . magit-dispatch)
   ("C-c f" . magit-file-dispatch)
 
   :init
@@ -2219,7 +2111,7 @@ opened."
   ;; Setup and settings (after load)
   ;; Display
   (add-to-list 'display-buffer-alist
-               '("\\*eldoc.*\\*"
+               '("^\\*eldoc.*\\*\\'"
                  (display-buffer-reuse-window display-buffer-in-direction)
                  (reusable-frames . nil)
                  (direction . right)
@@ -2840,13 +2732,13 @@ starting directory."
           modus-themes-bold-constructs nil)
   (setopt modus-themes-prompts '(italic))
 
+  :config
+  (modus-themes-include-derivatives-mode 1)
+
   (setopt modus-operandi-tinted-palette-overrides
           modus-themes-preset-overrides-warmer)
   (setopt modus-vivendi-tinted-palette-overrides
-          modus-themes-preset-overrides-cooler)
-
-  :config
-  (modus-themes-include-derivatives-mode 1))
+          modus-themes-preset-overrides-cooler))
 
 (use-package circadian
   :ensure t
@@ -2854,7 +2746,8 @@ starting directory."
   :config
 
   (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
-                             (:sunset . modus-vivendi-tinted))))
+                             (:sunset . modus-vivendi-tinted)))
+  (circadian-setup))
 
 (use-package nerd-icons
   :ensure t
@@ -2862,11 +2755,6 @@ starting directory."
   :init
   ;; Setup and settings (before load)
   (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
-
-(use-package nerd-icons-dired
-  :ensure t
-
-  :hook dired-mode)
 
 (use-package doom-modeline
   :ensure t
