@@ -143,13 +143,14 @@
          (side . bottom)
          (slot . 0)
          (window-height . fit-bt-side-window-to-buffer)
-         (preserve-size . (nil . t)))
-        ((derived-mode . dired-mode)
-         (display-buffer-reuse-window display-buffer-in-side-window)
-         (reusable-frames . nil)
-         (side . left)
-         (slot . 0)
-         (window-width . fit-lr-side-window-to-buffer))))
+         (preserve-size . (nil . t)))))
+;; Not with dirvish
+;; ((derived-mode . dired-mode)
+;;  (display-buffer-reuse-window display-buffer-in-side-window)
+;;  (reusable-frames . nil)
+;;  (side . left)
+;;  (slot . 0)
+;;  (window-width . fit-lr-side-window-to-buffer))
 
 (setopt uniquify-buffer-name-style 'forward)
 (setopt highlight-nonselected-windows nil)
@@ -760,8 +761,8 @@ to assign to the default group."
           default-directory)))
 
   (setopt popper-reference-buffers
-          '(dired-mode
-            messages-buffer-mode
+          '(messages-buffer-mode
+            ;; dired-mode (not with dirvish)
             help-mode
             info-mode
             Man-mode
@@ -1388,23 +1389,24 @@ uses window unless, e.g., dedicated."
   :ensure t
 
   :init
-  ;; Add and load extensions (due to bug, may be fixed in later versions)
+  ;; Add and load extensions (seems due to bug (?))
   (add-to-list 'load-path (file-name-as-directory
                            (expand-file-name
                             "extensions/"
                             (file-name-parent-directory (locate-library "dirvish")))))
-  (require 'dirvish)
-  (require 'dirvish-collapse)
-  (require 'dirvish-emerge)
-  (require 'dirvish-history)
-  (require 'dirvish-ls)
-  (require 'dirvish-narrow)
-  (require 'dirvish-quick-access)
-  (require 'dirvish-rsync)
-  (require 'dirvish-subtree)
-  (require 'dirvish-yank)
+  (mapc #'require '(dirvish-extras
+                    dirvish-collapse
+                    dirvish-emerge
+                    dirvish-history
+                    dirvish-ls
+                    dirvish-narrow
+                    dirvish-quick-access
+                    dirvish-rsync
+                    dirvish-side
+                    dirvish-subtree
+                    dirvish-yank))
 
-  (setopt dirvish-cache-dir (file-name-as-directory (expand-file-name "dirvesh/" EMACS_CACHE_DIR)))
+  (setopt dirvish-cache-dir (file-name-as-directory (expand-file-name "dirvish/" EMACS_CACHE_DIR)))
   (setopt dirvish-fd-switches "--full-path --color=never")
   (setopt dirvish-attributes '(vc-state subtree-state nerd-icons collapse file-size file-modes file-time))
 
@@ -1429,31 +1431,64 @@ uses window unless, e.g., dedicated."
              "User data")
             ("D" "/usr/share/" "System data")))
 
+  (setopt dirvish-side-mode-line-format '(:left (sort vc-info)))
+  (setopt dirvish-side-attributes '(vc-state subtree-state nerd-icons))
+
   :bind
   ("C-c d" . dirvish)
   ("C-c D" . dirvish-quick-access)
-  (:map dirvish-mode-map
-   ("?"   . dirvish-dispatch)
-   ("a"   . dirvish-setup-menu)
-   ("f"   . dirvish-file-info-menu)
-   ("F"   . dirvish-fd)
-   ("j"   . dirvish-quick-access)
-   ("s"   . dirvish-quicksort)
-   ("r"   . dirvish-history-jump)
-   ("l"   . dirvish-ls-switches-menu)
-   ("v"   . dirvish-vc-menu)
-   ("*"   . dirvish-mark-menu)
-   ("y"   . dirvish-yank-menu)
-   ("Y"   . dirvish-yank)
-   ("N"   . dirvish-narrow)
-   ("TAB" . dirvish-subtree-toggle)
-   ("{"   . dirvish-history-last)
-   ("<" . dirvish-history-go-backward)
-   (">" . dirvish-history-go-forward)
-   ("M-e" . dirvish-emerge-menu))
+  ("C-x p t" . dirvish-side)
 
   :config
-  (dirvish-override-dired-mode 1))
+  ;; Remove obsolete command (bug)
+  (transient-remove-suffix 'dirvish-dispatch #'dirvish-fd-jump)
+
+  (defun dirvish-fd-default-directory (pattern)
+    "Simple wrapper around `dirvish-fd', with target directory fixed to
+`default-directory'"
+    (interactive (list (completing-read-multiple "Pattern: " nil)))
+    (dirvish-fd default-directory pattern))
+
+  (defun dirvish-fd-full ()
+    "Simple wrapper around `dirvish-fd', with `current-prefix-arg'
+set to '(16) (so it asks to provide both arguments)."
+    (interactive)
+    (let ((current-prefix-arg '(16)))
+      (call-interactively #'dirvish-fd)))
+
+  ;; Keybindings
+  (keymap-set dirvish-mode-map "?" #'dirvish-dispatch)
+  (keymap-set dirvish-mode-map "a" #'dirvish-chxxx-menu)
+  (keymap-set dirvish-mode-map "e" #'dirvish-renaming-menu)
+  (keymap-set dirvish-mode-map "h" #'dirvish-history-menu)
+  (keymap-set dirvish-mode-map "f" #'dirvish-file-info-menu)
+  (keymap-set dirvish-mode-map "j" #'dirvish-quick-access)
+  (keymap-set dirvish-mode-map "s" #'dirvish-quicksort)
+  (keymap-set dirvish-mode-map "r" #'dirvish-history-jump)
+  (keymap-set dirvish-mode-map "l" #'dirvish-ls-switches-menu)
+  (keymap-set dirvish-mode-map "v" #'dirvish-vc-menu)
+  (keymap-set dirvish-mode-map "*" #'dirvish-mark-menu)
+  (keymap-set dirvish-mode-map ":" #'dirvish-epa-dired-menu)
+  (keymap-set dirvish-mode-map "y" #'dirvish-yank-menu)
+  (keymap-set dirvish-mode-map "Y" #'dirvish-yank)
+  (keymap-set dirvish-mode-map "N" #'dirvish-narrow)
+  (keymap-set dirvish-mode-map "TAB" #'dirvish-subtree-toggle)
+  (keymap-set dirvish-mode-map "/" #'dirvish-fd-default-directory)
+  (keymap-set dirvish-mode-map "M-/" #'dirvish-fd-full)
+  (keymap-set dirvish-mode-map "{" #'dirvish-history-go-backward)
+  (keymap-set dirvish-mode-map "}" #'dirvish-history-go-forward)
+  (keymap-set dirvish-mode-map "M-}" #'dirvish-history-last)
+  (keymap-set dirvish-mode-map "M-a" #'dirvish-setup-menu)
+  (keymap-set dirvish-mode-map "M-e" #'dirvish-emerge-menu)
+  (keymap-set dirvish-mode-map "<left>" #'dired-up-directory)
+  (keymap-set dirvish-mode-map "<right>" #'dired-find-file)
+  (keymap-set dirvish-mode-map "<mouse-1>" #'dirvish-subtree-toggle-or-open)
+  (keymap-set dirvish-mode-map "<mouse-2>" #'dired-mouse-find-file-other-window)
+  (keymap-set dirvish-mode-map "<mouse-3>" #'dired-mouse-find-file)
+
+  ;; Activation
+  (dirvish-override-dired-mode 1)
+  (dirvish-side-follow-mode 1))
 
 (use-package diredfl
   :ensure t
@@ -1469,7 +1504,7 @@ uses window unless, e.g., dedicated."
 
 (use-package ediff
   :bind
-  (:prefix-map an-ediff-map :prefix "C-c M-d" :prefix-docstring "Keymap for ediff entry points (global)"
+  (:prefix-map an-ediff-map :prefix "C-c e" :prefix-docstring "Keymap for ediff entry points (global)"
                ("b" . ediff-buffers)
                ("B" . ediff-buffers3)
                ("d" . ediff-directories)
