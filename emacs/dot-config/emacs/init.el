@@ -2829,187 +2829,32 @@ starting directory."
   (setopt nael-prepare-lsp nil))
 
 ;; Themes
-;; Doom-themes (general)
-(use-package doom-themes
+;; EF themes
+(use-package ef-themes
   :ensure t
 
   :defer t
 
   :init
-  ;; Setup and settings (before load)
-  (setopt doom-themes-enable-bold t
-          doom-themes-enable-italic t)
+  (setopt modus-themes-italic-constructs t
+          modus-themes-bold-constructs nil)
+  (setopt modus-themes-prompts '(italic))
+
+  (setopt modus-operandi-tinted-palette-overrides
+          modus-themes-preset-overrides-warmer)
+  (setopt modus-vivendi-tinted-palette-overrides
+          modus-themes-preset-overrides-cooler)
 
   :config
-  ;; Setup and settings (after load)
-  (doom-themes-visual-bell-config)
-
-  (doom-themes-set-faces nil
-    '(visual-replace-delete-match :inherit 'anzu-replace-highlight)
-    '(visual-replace-replacement :inherit 'anzu-replace-to)
-    '(aw-background-face :inherit 'avy-background-face)
-    '(aw-leading-char-face :inherit 'avy-lead-face)
-    '(vertico-current :foreground 'unspecified :background 'unspecified
-                      :inherit 'highlight)
-    '(vertico-mouse :foreground 'unspecified :background 'unspecified
-                    :inherit 'lazy-highlight)
-    '(vertico-quick1 :foreground 'unspecified :background 'unspecified
-                     :inherit 'avy-lead-face)
-    '(vertico-quick2 :foreground 'unspecified :background 'unspecified
-                     :inherit 'avy-lead-face-1)
-    '(corfu-border :foreground 'unspecified :background 'unspecified
-                   :inherit 'vertical-border)
-    '(corfu-bar :foreground 'unspecified :background 'unspecified
-                :inherit 'scroll-bar)
-    '(corfu-quick1 :foreground 'unspecified :background 'unspecified
-                   :inherit 'avy-lead-face)
-    '(corfu-quick2 :foreground 'unspecified :background 'unspecified
-                   :inherit 'avy-lead-face-1)
-    '(tempel-default :foreground 'unspecified :background 'unspecified
-                     :inherit 'secondary-selection :slant 'italic)
-    '(tempel-field :foreground 'unspecified :background 'unspecified
-                   :inherit 'lazy-highlight)
-    '(tempel-form :foreground 'unspecified :background 'unspecified
-                  :inherit 'match)
-    '(org-super-agenda-header :inherit 'org-agenda-date :height 1.1)
-    '(proof-mouse-highlight-face :inherit 'lazy-highlight)
-    '(proof-region-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
-    '(proof-command-mouse-highlight-face :inherit 'proof-mouse-highlight-face)
-    '(proof-active-area-face :inherit 'secondary-selection)
-    '(proof-error-face :inherit 'error :weight 'semi-bold)
-    '(proof-warning-face :inherit 'warning :weight 'semi-bold)
-    '(proof-eager-annotation-face :inherit 'proof-warning-face :weight 'normal)
-    '(easycrypt-tactics-tacticals-face :inherit 'proof-tacticals-name-face)
-    '(easycrypt-tactics-closing-face :inherit 'warning)
-    '(easycrypt-tactics-dangerous-face :inherit 'error))
-
-  ;; Dummy face definitions
-  ;; (applying theme settings that inherit from these faces
-  ;; without explicitly loading the packages that
-  ;; initially define them)
-  (defface anzu-replace-highlight '((t . (:inherit default)))
-    "Dummy definition for `anzu-replace-highlight'")
-  (defface anzu-replace-to '((t . (:inherit default)))
-    "Dummy definition for `anzu-replace-to'")
-  (defface avy-background-face '((t . (:inherit default)))
-    "Dummy definition for `avy-background-face'")
-  (defface avy-lead-face '((t . (:inherit default)))
-    "Dummy definition for `avy-lead-face'")
-  (defface avy-lead-face-1 '((t . (:inherit default)))
-    "Dummy definition for `avy-lead-face-1'"))
-
-;; Doom-themes specific
-;; Nord <3
-(use-package doom-nord-theme
-  :defer t ; May use this theme, but later
-
-  :ensure nil ; Provided by doom-themes
-
-  :init
-  ;; Setup and settings (before load)
-  (setopt doom-nord-brighter-modeline t
-          doom-nord-brighter-comments nil
-          doom-nord-comment-bg nil
-          doom-nord-padded-modeline t
-          doom-nord-region-highlight 'snowstorm))
-
-(use-package doom-solarized-dark-theme
-  :defer t ; May use this theme, but later
-
-  :ensure nil ; Provided by doom-themes
-
-  :init
-  ;; Setup and settings (before load)
-  (setopt doom-solarized-dark-brighter-modeline t
-          doom-solarized-dark-brighter-comments nil
-          doom-solarized-dark-brighter-text t
-          doom-solarized-dark-padded-modeline t))
-
-(use-package doom-solarized-light-theme
-  :defer t ; May use this theme, but later
-
-  :ensure nil ; Provided by doom-themes
-
-  :init
-  ;; Setup and settings (before load)
-  (setopt doom-solarized-light-brighter-modeline t
-          doom-solarized-light-brighter-comments nil
-          doom-solarized-light-padded-modeline t))
-
-(load-theme 'doom-solarized-dark t)
-(enable-theme 'doom-solarized-dark)
-(disable-theme 'doom-solarized-dark)
+  (modus-themes-include-derivatives-mode 1))
 
 (use-package circadian
   :ensure t
 
   :config
-  (setopt circadian-themes '((:sunrise . doom-solarized-light)
-                             (:sunset . doom-solarized-dark)))
 
-  (defun an-enable-customized-doom-theme (theme)
-    (cond
-     ((eq theme 'doom-solarized-light)
-      (doom-themes-set-faces 'doom-solarized-light
-        '(cursor :background highlight)
-        '(trailing-whitespace :background magenta)
-        '(proof-queue-face :background teal)
-        '(proof-locked-face :background base4)
-        '(proof-highlight-dependent-name-face :foreground violet)
-        '(proof-highlight-dependency-name-face :foreground orange)
-        '(proof-declaration-name-face :foreground type)
-        '(proof-tacticals-name-face :foreground numbers)
-        '(proof-tactics-name-face :foreground functions)
-        '(proof-script-sticky-error-face :background error :underline warning)
-        '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
-                                            :weight 'semi-bold :slant 'italic)
-        '(proof-debug-message-face :foreground orange)
-        '(proof-boring-face :foreground doc-comments)
-        '(font-lock-type-face :foreground type :slant 'normal)))
-     ((eq theme 'doom-solarized-dark)
-      (doom-themes-set-faces 'doom-solarized-dark
-        '(cursor :background highlight)
-        '(trailing-whitespace :background magenta)
-        '(org-block :background base2)
-        '(org-block-begin-line :foreground comments :background base2)
-        '(proof-queue-face :background base4)
-        '(proof-locked-face :background dark-cyan)
-        '(proof-highlight-dependent-name-face :foreground violet)
-        '(proof-highlight-dependency-name-face :foreground orange)
-        '(proof-declaration-name-face :foreground type)
-        '(proof-tacticals-name-face :foreground numbers)
-        '(proof-tactics-name-face :foreground functions)
-        '(proof-script-sticky-error-face :background error :underline warning)
-        '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
-                                            :weight 'semi-bold :slant 'italic)
-        '(proof-debug-message-face :foreground orange)
-        '(proof-boring-face :foreground doc-comments)
-        '(font-lock-type-face :foreground type :slant 'normal)))
-     ((eq theme 'doom-nord)
-      (doom-themes-set-faces 'doom-nord
-        '(cursor :background success)
-        '(trailing-whitespace :background magenta)
-        '(proof-queue-face :background magenta)
-        '(proof-locked-face :background base3)
-        '(proof-highlight-dependent-name-face :foreground magenta)
-        '(proof-highlight-dependency-name-face :foreground orange)
-        '(proof-declaration-name-face :foreground type)
-        '(proof-tacticals-name-face :foreground numbers)
-        '(proof-tactics-name-face :foreground functions)
-        '(proof-script-sticky-error-face :background error :underline warning)
-        '(proof-script-highlight-error-face :inherit 'proof-script-sticky-error-face
-                                            :weight 'semi-bold :slant 'italic)
-        '(proof-debug-message-face :foreground orange)
-        '(proof-boring-face :foreground doc-comments))))
-    (enable-theme theme))
-
-  (add-hook 'circadian-after-load-theme-hook #'an-enable-customized-doom-theme)
-  (add-hook 'emacs-startup-hook #'circadian-setup))
-
-(use-package solaire-mode
-  :ensure t
-
-  :hook (after-init . solaire-global-mode))
+  (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
+                             (:sunset . modus-vivendi-tinted))))
 
 (use-package nerd-icons
   :ensure t

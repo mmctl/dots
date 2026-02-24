@@ -12,6 +12,14 @@ defaults to checking selected frame."
                    (derived-mode-p mode)))
             (window-list frame)))
 
+(defun exists-window-with-name (regexp &optional frame)
+  "Checks whether there exists a window in FRAME showing a buffer
+with a name matching REGEXP. If FRAME is nil, defaults to checking
+selected frame."
+  (seq-some #'(lambda (win)
+                (string-match-p regexp (buffer-name (window-buffer win))))
+            (window-list frame)))
+
 
 ;;; Displaying
 ;; Fitting
