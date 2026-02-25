@@ -144,13 +144,6 @@
          (slot . 0)
          (window-height . fit-bt-side-window-to-buffer)
          (preserve-size . (nil . t)))))
-;; Not with dirvish
-;; ((derived-mode . dired-mode)
-;;  (display-buffer-reuse-window display-buffer-in-side-window)
-;;  (reusable-frames . nil)
-;;  (side . left)
-;;  (slot . 0)
-;;  (window-width . fit-lr-side-window-to-buffer))
 
 (setopt uniquify-buffer-name-style 'forward)
 (setopt highlight-nonselected-windows nil)
@@ -516,6 +509,8 @@
         use-package-always-pin nil
         use-package-always-demand nil)
 
+(setopt use-package-enable-imenu-support t)
+
 ;; Base/Built-in
 (use-package epg-config
   :init
@@ -762,7 +757,6 @@ to assign to the default group."
 
   (setopt popper-reference-buffers
           '(messages-buffer-mode
-            ;; dired-mode (not with dirvish)
             help-mode
             info-mode
             Man-mode
@@ -805,6 +799,7 @@ which see, with `0' as argument."
   (keymap-global-set "C-M-o" #'popper-cycle) ; from: split-line
   (keymap-global-set "C-S-o" #'a-popper-cycle-default-group)
   (keymap-global-set "C-M-S-o" #'popper-toggle-type)
+
   (defvar-keymap a-popper-map
     :doc "Keymap for popper (global)"
     :prefix 'a-popper-map-prefix
@@ -847,26 +842,112 @@ which see, with `0' as argument."
   (popper-echo-mode 1))
 
 ;; Email
+(use-package smtpmail
+  :init
+  (setopt send-mail-function #'smtpmail-send-it)
+  (setopt message-send-mail-function #'smtpmail-send-it))
+
 ;; Requires external installation and setup
 ;; Dependencies: mbsync, mu, mu4e
 ;; see: https://www.djcbsoftware.nl/code/mu/mu4e/
 (use-package mu4e
   :init
-  ;; These are global ones (?), outside of those per account, so we use them as
-  ;; fallback only
-  (setopt mu4e-sent-folder "/sent-fallback"
-          mu4e-drafts-folder "/drafts-fallback"
-          mu4e-trash-folder "/trash-fallback"
-          mu4e-refile-folder "/archive-fallback")
 
-  (setopt mu4e-get-mail-command "mbsync")
+  ;; Sysvar: with recent versions of mbsync, the config file explicitly given
+  ;; here is the first default checked (so not needed to provide explicitly)
+  (setopt mu4e-get-mail-command (concat "mbsync -a"
+                                        (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                                          (concat " -c " (shell-quote-argument
+                                                          (expand-file-name "isyncrc" xdgcnf))))))
   (setopt mu4e-update-interval 300)
+  (setopt mu4e-change-filenames-when-moving t)
 
-  (setopt mu4e-main-hide-personal-address t) ; Hide personal addresses because we use many
-  ;; Consider the following if indexing is slow
+  (setopt mu4e-main-hide-personal-addresses t) ; Hide personal addresses because we use many
+  (setopt mu4e-use-fancy-chars t)
+
+  (setopt mu4e-compose-format-flowed t)
+
+  (with-eval-after-load 'vertico
+    (setopt mu4e-completing-read-function #'completing-read)
+    (setopt mu4e-read-option-use-builtin nil))
+
+  ;; Consider following if indexing is slow
   ;; (setopt mu4e-index-cleanup nil)
   ;; (setopt mu4e-index-lazy-check nil)
-  )
+
+  (setopt gnus-inhibit-images t)
+
+  (setopt gnus-unbuttonized-mime-types nil)
+  (setopt gnus-buttonized-mime-types '("multipart/signed" "multipart/alternative"))
+
+  (setq-default mu4e-headers-attach-mark '("a" . "∀"))
+
+  :config
+  (require 'local-mu4e)
+
+  (setopt mail-user-agent (mu4e-user-agent))
+  (setopt mu4e-sent-folder #'a-determine-mu4e-sent-folder
+          mu4e-drafts-folder #'a-determine-mu4e-drafts-folder
+          mu4e-trash-folder #'a-determine-mu4e-trash-folder
+          mu4e-refile-folder #'a-determine-mu4e-refile-folder)
+
+  (setopt mu4e-contexts
+          `(,(make-mu4e-context
+              :name "Personal"
+              :enter-func (lambda () (mu4e-message "Entering context: Personal"))
+              :leave-func (lambda () (mu4e-message "Leaving context: Personal"))
+              :match-func (lambda (msg)
+                            (when msg
+                              (member (a-mailroot-from-mu4e-message msg)
+                                      PERSONAL_MAILROOTS)))
+              :vars
+              `((mu4e-maildir-shortcuts . ((:maildir "/personal-mmeijers/INBOX" :key ?p)
+                                           (:maildir "/kernel-mmeijers/INBOX" :key ?k)
+                                           (:maildir "/kem-mmeijers/INBOX" :key ?r)))
+                (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query PERSONAL_MAILROOTS))
+                                   (:name "All unread" :key ?u :query ,(concat "("
+                                                                               (a-mu4e-inbox-roots-query PERSONAL_MAILROOTS)
+                                                                               ") AND flag:unread"))
+                                   (:name "Personal unread" :key ?p :query "maildir:/personal-mmeijers/INBOX AND flag:unread")
+                                   (:name "Kernel unread" :key ?k :query "maildir:/kernel-mmeijers/INBOX AND flag:unread")
+                                   (:name "KeM unread" :key ?r :query "maildir:/kem-mmeijers/INBOX AND flag:unread")))
+                (mu4e-get-mail-command . ,(concat "mbsync"
+                                                  (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                                                    (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
+                                                  " personal"))))
+            ,(make-mu4e-context
+              :name "Work"
+              :enter-func (lambda () (mu4e-message "Entering context: Work"))
+              :leave-func (lambda () (mu4e-message "Leaving context: Work"))
+              :match-func (lambda (msg)
+                            (when msg
+                              (member (a-mailroot-from-mu4e-message msg)
+                                      PERSONAL_MAILROOTS)))
+              :vars
+              `((mu4e-maildir-shortcuts . ((:maildir "/research-mmeijers/INBOX" :key ?r)
+                                           (:maildir "/teaching-mmeijers/INBOX" :key ?t)))
+                (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query WORK_MAILROOTS))
+                                   (:name "All unread" :key ?u :query ,(concat "("
+                                                                               (a-mu4e-inbox-roots-query WORK_MAILROOTS)
+                                                                               ") AND flag:unread"))
+                                   (:name "Research unread" :key ?r :query "maildir:/research-mmeijers/INBOX AND flag:unread")
+                                   (:name "Teaching unread" :key ?t :query "maildir:/reaching-mmeijers/INBOX AND flag:unread")))
+                (mu4e-get-mail-command . ,(concat "mbsync"
+                                                  (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                                                    (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
+                                                  " work"))))))
+
+  (setopt mu4e-context-policy 'ask-if-none)
+  (setopt mu4e-compose-context-policy nil)
+  (setopt message-send-mail-function #'an-smtpmail-configure-and-send-it)
+
+  (with-eval-after-load 'mm-decode
+    ;; Discourage rendering of rich-text formats
+    (add-to-list 'mm-discouraged-alternatives "text/html")
+    (add-to-list 'mm-discouraged-alternatives "text/richtext"))
+
+  (advice-add #'mu4e--draft :around #'an-around-advice-draft-configure))
+
 
 ;; Completion
 (use-package orderless
@@ -1387,24 +1468,40 @@ uses window unless, e.g., dedicated."
 ;; Depends on (optional): poppler-utils ffmpegthumbnailer mediainfo libvips-tools 7zip imagemagick
 (use-package dirvish
   :ensure t
+  :demand t
+
+  :preface
+  (defun a-dirvish-fd-default-directory (pattern)
+    "Simple wrapper around `dirvish-fd', with target directory fixed to
+`default-directory'"
+    (interactive (list (completing-read-multiple "Pattern: " nil)))
+    (dirvish-fd default-directory pattern))
+
+  (defun a-dirvish-fd-full ()
+    "Simple wrapper around `dirvish-fd', with `current-prefix-arg'
+set to '(16) (so it asks to provide both arguments)."
+    (interactive)
+    (let ((current-prefix-arg '(16)))
+      (call-interactively #'dirvish-fd)))
+
+  (defun a-dirvish-side-quit ()
+    "Quits/kills `dirvish-side' session/window if it is visible (else does
+nothing)."
+    (interactive)
+    (when-let* ((viswin (dirvish-side--session-visible-p)))
+      (with-selected-window viswin
+        (dirvish-quit))))
 
   :init
-  ;; Add and load extensions (seems due to bug (?))
-  (add-to-list 'load-path (file-name-as-directory
-                           (expand-file-name
-                            "extensions/"
-                            (file-name-parent-directory (locate-library "dirvish")))))
-  (mapc #'require '(dirvish-extras
-                    dirvish-collapse
-                    dirvish-emerge
-                    dirvish-history
-                    dirvish-ls
-                    dirvish-narrow
-                    dirvish-quick-access
-                    dirvish-rsync
-                    dirvish-side
-                    dirvish-subtree
-                    dirvish-yank))
+  ;; Add, load, and compile extensions (seems due to bug (?))
+  (when-let* ((libdir (locate-library "dirvish"))
+              (extdir (expand-file-name "extensions/" (file-name-parent-directory libdir)))
+              ((file-directory-p extdir))
+              (alfile (expand-file-name "dirvish-extensions-autoloads.el" extdir)))
+    (add-to-list 'load-path extdir)
+    (unless (file-exists-p alfile)
+      (loaddefs-generate extdir alfile))
+    (load alfile))
 
   (setopt dirvish-cache-dir (file-name-as-directory (expand-file-name "dirvish/" EMACS_CACHE_DIR)))
   (setopt dirvish-fd-switches "--full-path --color=never")
@@ -1435,28 +1532,17 @@ uses window unless, e.g., dedicated."
   (setopt dirvish-side-attributes '(vc-state subtree-state nerd-icons))
 
   :bind
-  ("C-c d" . dirvish)
-  ("C-c D" . dirvish-quick-access)
-  ("C-x p t" . dirvish-side)
+  (:prefix-map a-dirvish-map :prefix "C-c d" :prefix-docstring "Keymap for dirvish (global)"
+               ("d" . dirvish-dwim)
+        ("D" . dirvish)
+        ("j" . dirvish-quick-access)
+        ("s" . dirvish-side)
+        ("S" . dirvish-side-quit)
+        ("f" . dirvish-fd-default-directory)
+        ("F" . dirvish-fd-full)
+        ("C-f" . dirvish-fd))
 
   :config
-  ;; Remove obsolete command (bug)
-  (transient-remove-suffix 'dirvish-dispatch #'dirvish-fd-jump)
-
-  (defun dirvish-fd-default-directory (pattern)
-    "Simple wrapper around `dirvish-fd', with target directory fixed to
-`default-directory'"
-    (interactive (list (completing-read-multiple "Pattern: " nil)))
-    (dirvish-fd default-directory pattern))
-
-  (defun dirvish-fd-full ()
-    "Simple wrapper around `dirvish-fd', with `current-prefix-arg'
-set to '(16) (so it asks to provide both arguments)."
-    (interactive)
-    (let ((current-prefix-arg '(16)))
-      (call-interactively #'dirvish-fd)))
-
-  ;; Keybindings
   (keymap-set dirvish-mode-map "?" #'dirvish-dispatch)
   (keymap-set dirvish-mode-map "a" #'dirvish-chxxx-menu)
   (keymap-set dirvish-mode-map "e" #'dirvish-renaming-menu)
@@ -1473,13 +1559,14 @@ set to '(16) (so it asks to provide both arguments)."
   (keymap-set dirvish-mode-map "Y" #'dirvish-yank)
   (keymap-set dirvish-mode-map "N" #'dirvish-narrow)
   (keymap-set dirvish-mode-map "TAB" #'dirvish-subtree-toggle)
-  (keymap-set dirvish-mode-map "/" #'dirvish-fd-default-directory)
-  (keymap-set dirvish-mode-map "M-/" #'dirvish-fd-full)
+  (keymap-set dirvish-mode-map "/" #'a-dirvish-fd-default-directory)
+  (keymap-set dirvish-mode-map "M-/" #'a-dirvish-fd-full)
   (keymap-set dirvish-mode-map "{" #'dirvish-history-go-backward)
   (keymap-set dirvish-mode-map "}" #'dirvish-history-go-forward)
   (keymap-set dirvish-mode-map "M-}" #'dirvish-history-last)
   (keymap-set dirvish-mode-map "M-a" #'dirvish-setup-menu)
   (keymap-set dirvish-mode-map "M-e" #'dirvish-emerge-menu)
+  (keymap-set dirvish-mode-map "M-t" #'dirvish-layout-toggle)
   (keymap-set dirvish-mode-map "<left>" #'dired-up-directory)
   (keymap-set dirvish-mode-map "<right>" #'dired-find-file)
   (keymap-set dirvish-mode-map "<mouse-1>" #'dirvish-subtree-toggle-or-open)
@@ -1489,6 +1576,13 @@ set to '(16) (so it asks to provide both arguments)."
   ;; Activation
   (dirvish-override-dired-mode 1)
   (dirvish-side-follow-mode 1))
+
+(use-package dirvish-extras
+  :ensure nil ; Provided by `dirvish'
+  :after dirvish
+  :config
+  ;; Remove non-existent suffix (bug)
+  (transient-remove-suffix 'dirvish-dispatch #'dirvish-fd-jump))
 
 (use-package diredfl
   :ensure t
