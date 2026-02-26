@@ -841,11 +841,29 @@ which see, with `0' as argument."
   (set-face-attribute 'popper-echo-dispatch-hint nil :inherit 'custom-comment :weight 'bold)
   (popper-echo-mode 1))
 
-;; Email
-(use-package smtpmail
+;; Messages/Email
+(use-package message
   :init
-  (setopt send-mail-function #'smtpmail-send-it)
-  (setopt message-send-mail-function #'smtpmail-send-it))
+  ;; Sysvar
+  (setopt message-directory (or (getenv "MAILDIR")
+                                (file-name-as-directory
+                                 (expand-file-name "mail/" (or (getenv "XDG_DATA_HOME") "~/")))))
+
+  (setopt message-kill-buffer-on-exit t)
+  (setopt message-confirm-send t)
+  (setopt send-mail-function #'smtpmail-send-it
+          message-send-mail-function #'smtpmail-send-it)
+
+  (setopt gnus-inhibit-images t)
+  (setopt gnus-unbuttonized-mime-types nil)
+  (setopt gnus-buttonized-mime-types '("multipart/signed" "multipart/alternative"))
+
+  (with-eval-after-load 'mm-decode
+    ;; Discourage rendering of rich-text formats
+    (add-to-list 'mm-discouraged-alternatives "text/html")
+    (add-to-list 'mm-discouraged-alternatives "text/richtext")
+    (setopt mm-enable-external 'ask)))
+
 
 ;; Requires external installation and setup
 ;; Dependencies: mbsync, mu, mu4e
@@ -874,11 +892,6 @@ which see, with `0' as argument."
   ;; Consider following if indexing is slow
   ;; (setopt mu4e-index-cleanup nil)
   ;; (setopt mu4e-index-lazy-check nil)
-
-  (setopt gnus-inhibit-images t)
-
-  (setopt gnus-unbuttonized-mime-types nil)
-  (setopt gnus-buttonized-mime-types '("multipart/signed" "multipart/alternative"))
 
   (setq-default mu4e-headers-attach-mark '("a" . "∀"))
 
@@ -940,11 +953,6 @@ which see, with `0' as argument."
   (setopt mu4e-context-policy 'ask-if-none)
   (setopt mu4e-compose-context-policy nil)
   (setopt message-send-mail-function #'an-smtpmail-configure-and-send-it)
-
-  (with-eval-after-load 'mm-decode
-    ;; Discourage rendering of rich-text formats
-    (add-to-list 'mm-discouraged-alternatives "text/html")
-    (add-to-list 'mm-discouraged-alternatives "text/richtext"))
 
   (advice-add #'mu4e--draft :around #'an-around-advice-draft-configure))
 
@@ -1537,9 +1545,9 @@ nothing)."
         ("D" . dirvish)
         ("j" . dirvish-quick-access)
         ("s" . dirvish-side)
-        ("S" . dirvish-side-quit)
-        ("f" . dirvish-fd-default-directory)
-        ("F" . dirvish-fd-full)
+        ("S" . a-dirvish-side-quit)
+        ("f" . a-dirvish-fd-default-directory)
+        ("F" . a-dirvish-fd-full)
         ("C-f" . dirvish-fd))
 
   :config
