@@ -117,7 +117,7 @@ corresponding configuration.")
   "Extract Maildir root from MSG."
   (a-mailroot-from-maildir (mu4e-message-field msg :maildir)))
 
-(defun a-mailroot-from-mu4e-or-buffer-message-or-user-mail (msg)
+(defun a-mailroot-from-mu4e-or-buffer-message-or-user-mail (&optional msg)
   "Attempts to extract Maildir root from (in order):
 - MSG
 - Message in buffer (based on From address)
@@ -166,11 +166,10 @@ back to all addresses if no context is current."
 
 
 ;;; Special folders
-(defun a-determine-mu4e-special-folder (msg type)
+(defun a-determine-mu4e-special-folder (type &optional msg)
   "Determines special folder of TYPE (sent, drafts, trash, and refile)
 for MSG, relative to the root Maildir. TYPE is one of `:sent',
 `:drafts' `:trash', or `:refile'."
-  ;; (message "Determine special folder - msg %s - type %s" msg type)
   (let* ((mailroot (a-mailroot-from-mu4e-or-buffer-message-or-user-mail msg)))
     (if (null mailroot)
         (mu4e-ask-maildir-check-exists (format "Failed to detect Maildir root. Choose Maildir (for %s):" type))
@@ -188,24 +187,24 @@ for MSG, relative to the root Maildir. TYPE is one of `:sent',
   "Determines sent folder for MSG, relative to the root Maildir.
 
 Meant for `mu4e-sent-folder', which see."
-  (a-determine-mu4e-special-folder msg :sent))
+  (a-determine-mu4e-special-folder :sent msg))
 
 (defun a-determine-mu4e-drafts-folder (msg)
   "Determines drafts folder for MSG, relative to the root Maildir.
 
 Meant for `mu4e-drafts-folder', which see."
-  (a-determine-mu4e-special-folder msg :drafts))
+  (a-determine-mu4e-special-folder :drafts msg))
 (defun a-determine-mu4e-trash-folder (msg)
   "Determines trash folder for MSG, relative to the root Maildir.
 
 Meant for `mu4e-trash-folder', which see."
-  (a-determine-mu4e-special-folder msg :trash))
+  (a-determine-mu4e-special-folder :trash msg))
 
 (defun a-determine-mu4e-refile-folder (msg)
   "Determines refile folder for MSG, relative to the root Maildir.
 
 Meant for `mu4e-refile-folder', which see."
-  (a-determine-mu4e-special-folder msg :refile))
+  (a-determine-mu4e-special-folder :refile msg))
 
 
 ;;; Composing/sending

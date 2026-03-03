@@ -854,15 +854,19 @@ which see, with `0' as argument."
   (setopt send-mail-function #'smtpmail-send-it
           message-send-mail-function #'smtpmail-send-it)
 
+  (setopt message-required-mail-headers
+          '(From Subject Date (optional . In-Reply-To) Message-ID))
+
   (setopt gnus-inhibit-images t)
-  (setopt gnus-unbuttonized-mime-types nil)
-  (setopt gnus-buttonized-mime-types '("multipart/signed" "multipart/alternative"))
+  (setopt gnus-buttonized-mime-types '("multipart/signed"))
 
   (with-eval-after-load 'mm-decode
     ;; Discourage rendering of rich-text formats
     (add-to-list 'mm-discouraged-alternatives "text/html")
     (add-to-list 'mm-discouraged-alternatives "text/richtext")
-    (setopt mm-enable-external 'ask)))
+    (add-to-list 'mm-discouraged-alternatives "image/.*")
+    (setopt mm-enable-external 'ask)
+    (setopt gnus-mime-display-multipart-related-as-mixed t)))
 
 
 ;; Requires external installation and setup
@@ -898,7 +902,9 @@ which see, with `0' as argument."
   :config
   (require 'local-mu4e)
 
-  (setopt mail-user-agent (mu4e-user-agent))
+  (setopt mail-user-agent (mu4e-user-agent)
+          message-mail-user-agent t)
+
   (setopt mu4e-sent-folder #'a-determine-mu4e-sent-folder
           mu4e-drafts-folder #'a-determine-mu4e-drafts-folder
           mu4e-trash-folder #'a-determine-mu4e-trash-folder
@@ -1538,6 +1544,8 @@ nothing)."
 
   (setopt dirvish-side-mode-line-format '(:left (sort vc-info)))
   (setopt dirvish-side-attributes '(vc-state subtree-state nerd-icons))
+
+  (setopt dirvish-collapse-separator "/")
 
   :bind
   (:prefix-map a-dirvish-map :prefix "C-c d" :prefix-docstring "Keymap for dirvish (global)"
@@ -2202,6 +2210,12 @@ opened."
   (keymap-set flymake-mode-map "M-N" #'flymake-goto-next-error)
   (keymap-set flymake-mode-map "C-c `" #'flymake-goto-next-error)
   (keymap-set flymake-mode-map "C-c C-`" #'flymake-show-buffer-diagnostics))
+
+(use-package eldoc
+  :init
+  (setopt eldoc-echo-area-display-truncation-message nil)
+  (setopt eldoc-echo-area-use-multiline-p nil)
+  (setopt eldoc-echo-area-prefer-doc-buffer 'maybe))
 
 (use-package eglot
   :bind

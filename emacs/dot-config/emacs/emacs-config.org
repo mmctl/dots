@@ -327,7 +327,6 @@ functionalities (e.g., those based on sunset/sunrise times).
 #+begin_src emacs-lisp
   ;; Name and email
   (setopt user-full-name "Matthias Meijers")
-  (setopt user-mail-address "research@mmeijers.com")
 
   ;; Location (approximate)
   (setopt calendar-latitude 51.441643)
