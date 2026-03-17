@@ -4,17 +4,20 @@ Host website
     HostName 188.40.3.216
     User mmeije
     IdentityFile "%d/.ssh/mm_ed25519_personal"
+    IdentitiesOnly yes
 
 ## Git
 Host github.com gitlab.com
     HostName %h
     User mmctl
     IdentityFile "%d/.ssh/mm_ed25519_personal"
+    IdentitiesOnly yes
 
-Host github-personal
+Host github-work
     HostName github.com
     User MM45
     IdentityFile "%d/.ssh/mm_ed25519_work"
+    IdentitiesOnly yes
 
 
 ## General
