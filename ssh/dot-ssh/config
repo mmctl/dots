@@ -8,13 +8,13 @@ Host website
 ## Git
 Host github.com gitlab.com
     HostName %h
-    User MM45
-    IdentityFile "%d/.ssh/mm_ed25519_work"
+    User mmctl
+    IdentityFile "%d/.ssh/mm_ed25519_personal"
 
 Host github-personal
     HostName github.com
-    User mmctl
-    IdentityFile "%d/.ssh/mm_ed25519_personal"
+    User MM45
+    IdentityFile "%d/.ssh/mm_ed25519_work"
 
 
 ## General
