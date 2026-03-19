@@ -1,0 +1,58 @@
+# System
+## Update
+# sudo dnf upgrade --refresh
+# reboot
+
+## Filesystem (BTRFS)
+# sudo dnf install btrfs-progs snapper btrfs-assistant
+
+## Booting
+### Always show GRUB menu
+# sudo grub2-editenv - unset menu_auto_hide
+
+### Install and setup BTRFS
+# grub btrfs
+
+## Directories
+### PARA
+# mkdir -p ~/projects ~/areas ~/resources ~/archives
+
+## SSH + GPG
+# mkdir -p ~/.ssh ~/.gnupg
+
+## Dotfiles
+# sudo dnf install stow
+
+# Desktop suite/environment
+## Stow base, source profile
+
+# sudo dnf install matugen
+
+
+# Development
+## Terminal + Shell
+# sudo dnf install kitty bash-completion fzf fd-find ripgrep zoxide
+# curl -sS https://starship.rs/install.sh | sh
+
+### Setup FZF and FD integration with bash
+
+
+## Git
+
+## Emacs
+
+## LaTeX
+
+## Programming
+
+# Socials
+## Email
+
+## Signal
+
+
+# Browser
+
+# Documents
+
+

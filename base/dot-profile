@@ -28,12 +28,6 @@ export FZF_DEFAULT_OPTS_FILE="$XDG_CONFIG_HOME/fzf/fzf.conf"
 ### Ripgrep
 export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/rg.conf"
 
-### Clipboard
-export CLIPBOARD_HISTORY='100000'
-export CLIPBOARD_TMPDIR="$XDG_CACHE_HOME/clipboard"
-export CLIPBOARD_PERSISTDIR="$XDG_STATE_HOME/clipboard"
-export CLIPBOARD_THEME='ansi'
-
 ### OPAM
 export OPAMROOT="$XDG_DATA_HOME/opam"
 
@@ -73,12 +67,3 @@ export PATH
 
 ### Manuals
 export MANPATH=":$XDG_DATA_HOME/texlive/2025/texmf-dist/doc/man"
-
-
-## Secret(ish)
-source "$HOME/.env"
-
-
-## Miscellaneous
-### OPAM initialization (directories and auto-completions)
-test -r "$OPAMROOT/opam-init/init.sh" && . "$OPAMROOT/opam-init/init.sh" > /dev/null 2> /dev/null || true
