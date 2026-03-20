@@ -19,6 +19,7 @@
 
 ## SSH + GPG
 # mkdir -p ~/.ssh ~/.gnupg
+# systemctl --user enable --now ssh-agent
 
 ## Dotfiles
 # sudo dnf install stow
@@ -56,3 +57,4 @@
 # Documents
 
 
+# reboot (or at least log out)

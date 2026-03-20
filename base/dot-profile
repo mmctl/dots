@@ -14,7 +14,7 @@ export XDG_STATE_HOME="$HOME/.local/state"
 export MAILDIR="$XDG_DATA_HOME/mail"
 
 ### SSH
-#export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
 ### ZSH (Oh-My-Zsh)
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
