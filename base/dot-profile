@@ -10,14 +10,13 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
 
+export XDG_BIN_HOME="$HOME/.local/bin"
+
 ### Maildir
 export MAILDIR="$XDG_DATA_HOME/mail"
 
 ### SSH
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
-
-### ZSH (Oh-My-Zsh)
-export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 
 ### BAT
 export BAT_CONFIG_PATH="$XDG_CONFIG_HOME/bat/config"
@@ -46,7 +45,7 @@ export ELAN_HOME="$XDG_DATA_HOME/elan"
 ## Default programs (non-GUI)
 export PAGER='less'
 export MANPAGER='less'
-export SUDO_EDITOR='vi'
+export SUDO_EDITOR='nano'
 export EDITOR='emacsclient -t --alternate-editor='
 export ALTERNATE_EDITOR='' # This will spawn an emacs daemon upon running emacsclient (if no daemon is running yet)
 
@@ -62,8 +61,8 @@ PATH="$CARGO_HOME/bin:$PATH"
 PATH="$GOBIN:$PATH:/usr/local/go/bin"
 PATH="$ELAN_HOME/bin:$PATH"
 PATH="$XDG_DATA_HOME/texlive/2025/bin/x86_64-linux:$PATH"
-PATH="$HOME/.local/bin:$PATH"
+PATH="$XDG_BIN_HOME:$PATH"
 export PATH
 
 ### Manuals
-export MANPATH=":$XDG_DATA_HOME/texlive/2025/texmf-dist/doc/man"
+export MANPATH="$MANPATH:$XDG_DATA_HOME/texlive/2025/texmf-dist/doc/man"

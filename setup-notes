@@ -24,23 +24,36 @@
 ## Dotfiles
 # sudo dnf install stow
 
+# Password manager
+# sudo dnf install rbw
+
 # Desktop suite/environment
 ## Stow base, source profile
 
-# sudo dnf install matugen
+# sudo dnf install gtk3 gtk4 qt5ct qt6ct matugen
 
+# DMS
+# Set environment.d
+# RBW plugin
+
+# Install fonts 
 
 # Development
 ## Terminal + Shell
 # sudo dnf install kitty bash-completion fzf fd-find ripgrep zoxide
+# Ble.sh
 # curl -sS https://starship.rs/install.sh | sh
 
 ### Setup FZF and FD integration with bash
-
+# mkdir -p $XDG_DATA_HOME/bash 
 
 ## Git
 
 ## Emacs
+# Dependencies: enchant, ripgrep, fd
+# sudo dnf install enchant2-devel pkgconf-pkg-config
+# sudo dnf install ripgrep fd-find
+# sudo dnf install emacs-pgtk
 
 ## LaTeX
 
