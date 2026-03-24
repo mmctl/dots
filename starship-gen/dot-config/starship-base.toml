@@ -1,0 +1,181 @@
+# Prompt
+format = """
+[](accent_strong)\
+$os\
+$username\
+$hostname\
+[](bg:accent fg:accent_strong)\
+$directory\
+[](bg:info fg:accent)\
+$git_branch\
+$git_status\
+[](bg:lang fg:info)\
+$c\
+$python\
+$haskell\
+$java\
+$rust\
+[](bg:status_bg fg:lang)\
+$status\
+[](fg:status_bg)
+$character
+"""
+scan_timeout = 50
+command_timeout = 500
+add_newline = true
+palette = 'gen'
+
+# OS, username, and hostname
+[os]
+format = '[$symbol ]($style)'
+style = 'bg:accent_strong fg:fg'
+disabled = false
+
+[username]
+format = '[$user ]($style)'
+style_root = 'bg:bg fg:error'
+style_user = 'bg:accent_strong fg:fg'
+show_always = true
+disabled = false
+
+[hostname]
+format = '[$hostname $ssh_symbol ]($style)'
+style = 'bg:accent_strong fg:fg'
+ssh_symbol = ' '
+ssh_only = true
+trim_at = '.'
+disabled = false
+
+
+# Directory
+[directory]
+format = '[ $path ]($style)[$read_only]($read_only_style)'
+style = 'bg:accent fg:fg'
+read_only_style = 'bg:accent fg:readonly'
+read_only = '󰌱 '
+truncation_length = 2
+truncation_symbol = '.../'
+truncate_to_repo = true
+use_os_path_sep = true
+disabled = false
+
+
+# Git
+[git_branch]
+format = '[ $symbol $branch ]($style)'
+style = 'bg:info fg:fg'
+symbol = ' '
+truncation_length = 50
+truncation_symbol = '...'
+
+[git_status]
+format = '[(| $ahead_behind )(| $conflicted )(| $staged$modified$deleted$renamed$typechanged )(| $stashed )]($style)'
+style = 'bg:info fg:fg'
+ahead = '⇡ ${count}'
+diverged = '⇕ ⇡ ${ahead_count}⇣ ${behind_count}'
+behind = '⇣ ${count}'
+up_to_date = ' '
+conflicted = '[󱚞 ](bg:info fg:warning)'
+staged = '󰴥 '
+modified = ' '
+deleted = ' '
+renamed = ' '
+typechanged = ' '
+stashed = ''
+
+
+# Programming
+[c]
+symbol = ' '
+style = 'bg:lang fg:fg'
+format = '[ $symbol ($version) ]($style)'
+
+[python]
+symbol = ' '
+style = 'bg:lang fg:fg'
+format = '[ $symbol ($version) (\($virtualenv\)) ]($style)'
+
+[gradle]
+style = 'bg:lang fg:fg'
+format = '[ $symbol ($version) ]($style)'
+
+[haskell]
+symbol = ' '
+style = 'bg:lang fg:fg'
+format = '[ $symbol ($version) ]($style)'
+
+[java]
+symbol = ' '
+style = 'bg:lang fg:fg'
+format = '[ $symbol ($version) ]($style)'
+
+[rust]
+symbol = ''
+style = 'bg:lang fg:fg'
+format = '[ $symbol ($version) ]($style)'
+
+
+# Status
+[status]
+format = '[ $symbol$status( \(ERR: $common_meaning\))( \(SIG: $signal_name\)) ]($style)'
+style = 'bg:status_bg fg:fg'
+success_symbol = ''
+symbol = '[󰯆 ](bg:status_bg fg:error)'
+not_executable_symbol = '[ ](bg:status_bg fg:error)'
+not_found_symbol = '[ ](bg:status_bg fg:error)'
+sigint_symbol = '[󱐋](bg:status_bg fg:warning)'
+signal_symbol = '[󱐋](bg:status_bg fg:error)'
+recognize_signal_code = true
+map_symbol = true
+disabled = false
+
+
+# Character (pre-input)
+[character]
+format = ' $symbol '
+success_symbol = '[󱞩](fg:success)'
+error_symbol = '[󱞩](fg:error)'
+disabled = false
+
+
+# Miscellaneous
+[os.symbols]
+Alpaquita = ' '
+Alpine = ' '
+Amazon = ' '
+Android = ' '
+Arch = ' '
+Artix = ' '
+CentOS = ' '
+Debian = ' '
+DragonFly = ' '
+Emscripten = ' '
+EndeavourOS = ' '
+Fedora = ' '
+FreeBSD = ' '
+Garuda = '󰛓 '
+Gentoo = ' '
+HardenedBSD = '󰞌 '
+Illumos = '󰈸 '
+Linux = ' '
+Mabox = ' '
+Macos = ' '
+Manjaro = ' '
+Mariner = ' '
+MidnightBSD = ' '
+Mint = ' '
+NetBSD = ' '
+NixOS = ' '
+OpenBSD = '󰈺 '
+openSUSE = ' '
+OracleLinux = '󰌷 '
+Pop = ' '
+Raspbian = ' '
+Redhat = ' '
+RedHatEnterprise = ' '
+Redox = '󰀘 '
+Solus = '󰠳 '
+SUSE = ' '
+Ubuntu = ' '
+Unknown = ' '
+Windows = '󰍲 '

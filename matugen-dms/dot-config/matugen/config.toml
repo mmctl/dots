@@ -1,0 +1,10 @@
+[config]
+[templates.starship]
+input_path = "/home/mm/.config/matugen/templates/starship-palette.toml"
+output_path = "/home/mm/.cache/matugen/starship-palette.toml"
+post_hook = "cat /home/mm/.config/starship-base.toml /home/mm/.cache/matugen/starship-palette.toml > /home/mm/.config/starship.toml"
+
+[templates.fzf]
+input_path = "/home/mm/.config/matugen/templates/fzf-colors.conf"
+output_path = "/home/mm/.cache/matugen/fzf-colors.conf"
+post_hook = "cat /home/mm/.config/fzf/fzf-base.conf /home/mm/.cache/matugen/fzf-colors.conf > /home/mm/.config/fzf/fzf.conf"
