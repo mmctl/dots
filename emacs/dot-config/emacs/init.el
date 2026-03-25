@@ -1263,8 +1263,8 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
   ("M-l" . consult-line) ; from: downcase-word
   ("M-m" . consult-mark) ; from: back-to-indentation
   ("M-M" . consult-global-mark)
-  ("M-+" . consult-store-register)
-  ("M-*" . consult-load-register)
+  ("M-+" . consult-register-store)
+  ("M-*" . consult-register-load)
   ("C-M-*" . consult-register)
   ("M-#" . consult-bookmark)
   ("<remap> <goto-line>" . consult-goto-line)
@@ -2218,41 +2218,22 @@ opened."
   (setopt eldoc-echo-area-prefer-doc-buffer 'maybe))
 
 (use-package eglot
+  :demand t
+
   :bind
   (:prefix-map an-eglot-map :prefix "C-c l" :prefix-docstring "Keymap for eglot (global)"
-               ("`" . flymake-goto-next-error)
-               ("a a" . eglot-code-actions)
-               ("a e" . eglot-code-action-extract)
-               ("a i" . eglot-code-action-inline)
-               ("a o" . eglot-code-action-organize-imports)
-               ("a r" . eglot-code-action-rewrite)
-               ("f e" . eldoc-print-current-symbol-info)
-               ("f E" . eldoc-doc-buffer)
-               ("f i" . eglot-find-implementation)
-               ("f t" . eglot-find-typeDefinition)
-               ("f c" . eglot-find-declaration)
-               ("f d" . xref-find-definitions)
-               ("f D" . xref-find-definitions-other-window)
-               ("f C-d" . xref-find-definitions-other-frame)
-               ("f i" . eglot-find-implementation)
-               ("f t" . eglot-find-typeDefinition)
-               ("f r" . xref-find-references)
-               ("F" . eglot-format)
                ("q" . eglot-shutdown)
                ("Q" . eglot-shutdown-all)
-               ("r" . eglot-rename)
                ("s" . eglot)
-               ("x" . eglot-code-action-quickfix)
-               ("C-`" . flymake-show-buffer-diagnostics)
-               ("C-c" . eglot-clear-status)
-               ("C-e" . eglot-events-buffer)
-               ("C-S-e" . eglot-stderr-buffer)
-               ("C-f" . eglot-forget-pending-continuations)
-               ("C-l" . eglot-list-connections)
-               ("C-m" . eglot-manual)
-               ("C-r" . eglot-reconnect)
-               ("C-u" . eglot-upgrade-eglot)
-               ("C-w" . eglot-show-workspace-configuration))
+               ("c" . eglot-clear-status)
+               ("e" . eglot-events-buffer)
+               ("E" . eglot-stderr-buffer)
+               ("f" . eglot-forget-pending-continuations)
+               ("l" . eglot-list-connections)
+               ("m" . eglot-manual)
+               ("r" . eglot-reconnect)
+               ("u" . eglot-upgrade-eglot)
+               ("w" . eglot-show-workspace-configuration))
 
   :init
   ;; Setup and settings (before load)
@@ -2260,6 +2241,50 @@ opened."
 
   :config
   ;; Setup and settings (after load)
+  ;; Keybindings
+  (defvar-keymap an-eglot-prog-map
+    :doc "Keymap for eglot programming bindings"
+    :prefix 'an-eglot-prog-map-prefix
+    "C-`" #'flymake-goto-next-error
+    "M-`" #'flymake-show-buffer-diagnostics
+    "C-a a" #'eglot-code-actions
+    "C-a x" #'eglot-code-action-extract
+    "C-a i" #'eglot-code-action-inline
+    "C-a o" #'eglot-code-action-organize-imports
+    "C-a r" #'eglot-code-action-rewrite
+    "C-a f" #'eglot-code-action-quickfix
+    "C-f ." #'eldoc-print-current-symbol-info
+    "C-b" #'eldoc-doc-buffer
+    "C-f i" #'eglot-find-implementation
+    "C-f t" #'eglot-find-typeDefinition
+    "C-f c" #'eglot-find-declaration
+    "C-f d" #'xref-find-definitions
+    "C-f D" #'xref-find-definitions-other-window
+    "C-f C-d" #'xref-find-definitions-other-frame
+    "C-f r" #'xref-find-references
+    "C-r" #'eglot-rename)
+
+  (defun a-setup-eglot-prog-map-local ()
+    "Binds `an-eglot-prog-map' to `C-c' in the local keymap if
+current buffer is managed by eglot, or unsets the local `C-c` binding otherwise.
+
+Meant as (buffer-local) hook for `eglot-managed-mode-hook' in
+programming major-mode with sparse keymaps (so the Eglot functionality
+makes up for the lack of direct major-mode functionality)."
+    (if (eglot-managed-p)
+        (keymap-local-set "C-c" 'an-eglot-prog-map-prefix)
+      (keymap-local-unset "C-c")))
+
+  (defun a-setup-eglot-prog-map-local-hook ()
+    "Adds `a-setup-eglot-prog-map-local' (buffer-local)
+hook to `eglot-managed-mode-hook' (after `eglot' is loaded).
+
+Meant as hook in programming major-modes with sparse keymaps (so the
+Eglot functionality makes up for the lack of direct major-mode
+functionality)"
+    (with-eval-after-load 'eglot
+      (add-hook 'eglot-managed-mode-hook #'a-setup-eglot-prog-map-local nil t)))
+
   ;; Display
   (add-to-list 'display-buffer-alist
                '("^\\*eldoc.*\\*\\'"
@@ -2459,7 +2484,7 @@ opened."
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(bash "https://github.com/tree-sitter/tree-sitter-bash"
-                        "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
+                        "v0.23.3")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'bash)
       (treesit-install-language-grammar 'bash TREESIT_DIR))))
 
@@ -2470,6 +2495,8 @@ opened."
   :init
   ;; Setup and settings (before load)
   (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(c-or-c++-mode . c-or-c++-ts-mode))
 
   (setopt c-ts-mode-indent-offset 4)
 
@@ -2479,9 +2506,23 @@ opened."
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(c "https://github.com/tree-sitter/tree-sitter-c"
-                     "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
+                     "v0.23.6")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
+    (add-to-list 'treesit-language-source-alist
+                 '(cpp "https://github.com/tree-sitter/tree-sitter-cpp"
+                       "v0.23.4")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'c)
-      (treesit-install-language-grammar 'c TREESIT_DIR))))
+      (treesit-install-language-grammar 'c TREESIT_DIR))
+    (unless (treesit-language-available-p 'cpp)
+      (treesit-install-language-grammar 'cpp TREESIT_DIR)))
+
+  ;; Eglot (LSP)
+  ;; Exdep: clangd
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd")))
+
+
+  (add-hook 'c-ts-mode-hook #'a-setup-eglot-prog-map-local-hook)
+  (add-hook 'c++-ts-mode-hook #'a-setup-eglot-prog-map-local-hook))
 
 ;; Python
 (use-package python
@@ -2497,7 +2538,7 @@ opened."
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(python "https://github.com/tree-sitter/tree-sitter-python"
-                          "v0.23.6")) ; Fixed tag to match ABI of Emacs's tree-sitter
+                          "v0.23.6")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'python)
       (treesit-install-language-grammar 'python TREESIT_DIR))))
 
@@ -2516,7 +2557,7 @@ opened."
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(rust "https://github.com/tree-sitter/tree-sitter-rust"
-                        "v0.23.3")) ; Fixed tag to match ABI of Emacs's tree-sitter
+                        "v0.23.3")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'rust)
       (treesit-install-language-grammar 'rust TREESIT_DIR)))
 
@@ -2526,7 +2567,9 @@ opened."
       (cons 'cargo-toml root)))
   (cl-defmethod project-root ((project (head cargo-toml)))
     (cdr project))
-  (add-hook 'project-find-functions #'project-find-cargo-toml))
+  (add-hook 'project-find-functions #'project-find-cargo-toml)
+
+  (add-hook 'rust-mode-hook #'a-setup-eglot-prog-map-local-hook))
 
 ;; Go
 (use-package go-ts-mode
@@ -2546,12 +2589,12 @@ opened."
   (with-eval-after-load 'treesit
     (add-to-list 'treesit-language-source-alist
                  '(go "https://github.com/tree-sitter/tree-sitter-go"
-                      "v0.23.4")) ; Fixed tag to match ABI of Emacs's tree-sitter
+                      "v0.23.4")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'go)
       (treesit-install-language-grammar 'go TREESIT_DIR))
     (add-to-list 'treesit-language-source-alist
                  '(gomod "https://github.com/camdencheek/tree-sitter-go-mod"
-                         "v1.0.2")) ; Fixed tag to match ABI of Emacs's tree-sitter
+                         "v1.0.2")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
     (unless (treesit-language-available-p 'gomod)
       (treesit-install-language-grammar 'gomod TREESIT_DIR)))
 
@@ -2561,7 +2604,9 @@ opened."
       (cons 'go-module root)))
   (cl-defmethod project-root ((project (head go-module)))
     (cdr project))
-  (add-hook 'project-find-functions #'project-find-go-module))
+  (add-hook 'project-find-functions #'project-find-go-module)
+
+  (add-hook 'go-ts-mode-hook #'a-setup-eglot-prog-map-local-hook))
 
 ;; Yaml
 (use-package yaml-ts-mode
