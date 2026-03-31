@@ -1,0 +1,7 @@
+# .bash_profile
+
+# User-specific environment
+[[ -f ~/.profile ]] && . ~/.profile
+
+# User-specific runcommands
+[[ -f ~/.bashrc ]] && . ~/.bashrc

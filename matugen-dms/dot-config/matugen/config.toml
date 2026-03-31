@@ -1,4 +1,16 @@
 [config]
+[templates.blesh-colors]
+input_path = "/home/mm/.config/matugen/templates/blesh-colors.sh"
+output_path = "/home/mm/.config/blesh/colors.sh"
+
+[templates.kitty-tabs]
+input_path = "/home/mm/.config/matugen/templates/kitty-tabs.conf"
+output_path = "/home/mm/.config/kitty/tabs.conf"
+
+[templates.kitty-colors]
+input_path = "/home/mm/.config/matugen/templates/kitty-colors.conf"
+output_path = "/home/mm/.config/kitty/colors.conf"
+
 [templates.starship]
 input_path = "/home/mm/.config/matugen/templates/starship-palette.toml"
 output_path = "/home/mm/.cache/matugen/starship-palette.toml"

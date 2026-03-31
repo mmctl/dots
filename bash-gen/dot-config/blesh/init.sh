@@ -28,19 +28,16 @@ bleopt edit_marker_error=
 
 # Color scheme and faces
 ble-import contrib/colorglass
-#bleopt colorglass_base16_palette=ModusOperandiTinted
-#bleopt colorglass_base16_palette=ModusVivendiTinted
+[[ -f "$XDG_CONFIG_HOME/blesh/colors.sh" ]] && . "$XDG_CONFIG_HOME/blesh/colors.sh"
 
-ble-face syntax_command='fg=blue,bold'
-ble-face command_file='fg=blue'
-ble-face argument_option='fg=cyan'
-ble-face syntax_default='fg=default'
-ble-face syntax_error='fg=red,bold'
-ble-face syntax_var='fg=magenta'
-ble-face syntax_quoted='fg=green'
-ble-face syntax_delimiter='fg=yellow'
-ble-face filename_directory='fg=cyan'
-ble-face auto_complete='fg=244'
+
+# Bindings
+ble-bind -m emacs -f 'C-/' 'emacs/undo'
+ble-bind -m emacs -f 'M-/' 'emacs/redo'
+ble-bind -m emacs -f 'C-x u' 'emacs/undo'
+ble-bind -m emacs -f 'C-x C-u' 'emacs/undo'
+ble-bind -m emacs -f 'C-x r' 'emacs/redo'
+ble-bind -m emacs -f 'C-x C-r' 'emacs/redo'
 
 # Custom
 # User-specific runcommands (extensions)
