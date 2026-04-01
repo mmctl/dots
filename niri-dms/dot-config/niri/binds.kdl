@@ -102,6 +102,7 @@ binds {
     //Mod+ repeat=false hotkey-overlay-title="Open Secret Vault" { spawn ""; }
 
     //// Meta
+    Mod+Q repeat=false { close-window; }
     Mod+Shift+Escape allow-inhibiting=false repeat=false { toggle-keyboard-shortcuts-inhibit; }
     Mod+Shift+E { quit; }
 
