@@ -20,3 +20,8 @@ post_hook = "cat /home/mm/.config/starship-base.toml /home/mm/.cache/matugen/sta
 input_path = "/home/mm/.config/matugen/templates/fzf-colors.conf"
 output_path = "/home/mm/.cache/matugen/fzf-colors.conf"
 post_hook = "cat /home/mm/.config/fzf/fzf-base.conf /home/mm/.cache/matugen/fzf-colors.conf > /home/mm/.config/fzf/fzf.conf"
+
+[templates.niri-colors]
+input_path = "/home/mm/.config/matugen/templates/niri-colors.kdl"
+output_path = "/home/mm/.config/niri/colors.kdl"
+
