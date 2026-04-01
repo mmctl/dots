@@ -1,26 +1,26 @@
 # .bashrc
 
-# Source global definitions
-[[ -f /etc/bashrc ]] && . /etc/bashrc
+# Exit when non-interactive 
+[[ $- != *i* ]] && return
 
-
-# BLE (preload)
-if [[ $- == *i* && -f "$XDG_DATA_HOME/bash/blesh/ble.sh" ]]; then
-    . "$XDG_DATA_HOME/bash/blesh/ble.sh" --attach=none
-fi
-
-
-# User-specific runcommands (base)
+# User-specific base setup
 config_base_dir="$XDG_CONFIG_HOME/bash/base"
 if [[ -d "$config_base_dir" ]]; then
     shopt -s nullglob
     for rc in "$config_base_dir"/*; do
-        [[ -f "$rc" ]] && . "$rc"
+	[[ -f "$rc" ]] && . "$rc"
     done
     shopt -u nullglob
 fi
 unset rc
 
+# Exit when terminal capabilities too limited
+[[ ${TERM:-dumb} == dumb || ${TERM:-dumb} == linux ]] && return
+
+# BLE (preload)
+if [[ $- == *i* && -f "$XDG_DATA_HOME/bash/blesh/ble.sh" ]]; then
+    . "$XDG_DATA_HOME/bash/blesh/ble.sh" --attach=none
+fi
 
 # Extensions and integrations
 if [[ -z ${BLE_VERSION-} ]]; then

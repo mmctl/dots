@@ -32,12 +32,13 @@ ble-import contrib/colorglass
 
 
 # Bindings
+ble-bind -m emacs -f 'C-h' 'delete-backward-cword'
+ble-bind -m emacs -f 'C-DEL' 'delete-backward-cword'
+ble-bind -m emacs -f 'C-BS' 'delete-backward-cword'
+
 ble-bind -m emacs -f 'C-/' 'emacs/undo'
 ble-bind -m emacs -f 'M-/' 'emacs/redo'
-ble-bind -m emacs -f 'C-x u' 'emacs/undo'
-ble-bind -m emacs -f 'C-x C-u' 'emacs/undo'
-ble-bind -m emacs -f 'C-x r' 'emacs/redo'
-ble-bind -m emacs -f 'C-x C-r' 'emacs/redo'
+
 
 # Custom
 # User-specific runcommands (extensions)

@@ -56,6 +56,9 @@
 ### Setup FZF and FD integration with bash
 # mkdir -p $XDG_DATA_HOME/bash 
 
+# stow bash-gen
+# stow readline
+
 ## Git
 
 ## Emacs

@@ -11,11 +11,12 @@ $git_status\
 [](bg:lang_bg fg:git_bg)\
 $c\
 $python\
+$haskell\
+$java\
 $rust\
-$golang\
-[](fg:lang_bg)\
-$fill\
-$status
+[](bg:status_bg fg:lang_bg)\
+$status\
+[](fg:status_bg)
 $character
 """
 scan_timeout = 50
@@ -79,12 +80,16 @@ stashed = ''
 [c]
 symbol = ' '
 style = 'bg:lang_bg fg:on_lang'
-format = '[ $symbol ($version(-$name)) ]($style)'
+format = '[ $symbol ($version) ]($style)'
 
 [python]
 symbol = ' '
 style = 'bg:lang_bg fg:on_lang'
 format = '[ $symbol ($version) (\($virtualenv\)) ]($style)'
+
+[gradle]
+style = 'bg:lang_bg fg:on_lang'
+format = '[ $symbol ($version) ]($style)'
 
 [haskell]
 symbol = ' '
@@ -98,11 +103,6 @@ format = '[ $symbol ($version) ]($style)'
 
 [rust]
 symbol = ''
-style = 'bg:lang_bg fg:on_lang'
-format = '[ $symbol ($version) ]($style)'
-
-[golang]
-symbol = '󰟓'
 style = 'bg:lang_bg fg:on_lang'
 format = '[ $symbol ($version) ]($style)'
 
@@ -124,11 +124,6 @@ format = ' $symbol '
 success_symbol = '[󱞩](fg:success)'
 error_symbol = '[󱞩](fg:error)'
 disabled = false
-
-[fill]
-symbol = ' '
-disabled = false
-
 
 [os.symbols]
 Alpaquita = ' '

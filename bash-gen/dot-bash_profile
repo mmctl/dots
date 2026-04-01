@@ -3,5 +3,8 @@
 # User-specific environment
 [[ -f ~/.profile ]] && . ~/.profile
 
+# System-wide runcommands
+[[ -f /etc/bashrc ]] && . /etc/bashrc
+
 # User-specific runcommands
 [[ -f ~/.bashrc ]] && . ~/.bashrc

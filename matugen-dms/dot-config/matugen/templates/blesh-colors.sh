@@ -18,9 +18,9 @@ ble-face -s syntax_quotation          "fg={{dank16.color2.default.hex}},bold"
 ble-face -s syntax_escape             "fg={{dank16.color6.default.hex}}"
 ble-face -s syntax_expr               "fg={{dank16.color5.default.hex}}"
 ble-face -s syntax_error              "bg={{dank16.color1.default.hex}},fg={{dank16.color0.default.hex}},bold"
-ble-face -s syntax_varname            "fg={{dank16.color5.default.hex}}"
+ble-face -s syntax_varname            "fg={{dank16.color4.default.hex}},bold"
+ble-face -s syntax_param_expansion    "fg={{dank16.color6.default.hex}},bold"
 ble-face -s syntax_delimiter          "fg={{dank16.color8.default.hex}},bold"
-ble-face -s syntax_param_expansion    "fg={{dank16.color5.default.hex}}"
 ble-face -s syntax_history_expansion  "bg={{dank16.color3.default.hex}},fg={{dank16.color0.default.hex}}"
 ble-face -s syntax_function_name      "fg={{dank16.color4.default.hex}},bold"
 ble-face -s syntax_comment            "fg={{dank16.color8.default.hex}}"
@@ -60,19 +60,19 @@ ble-face -s filename_url              "underline,fg={{dank16.color4.default.hex}
 ble-face -s filename_ls_colors        "underline"
 
 # variable classes
-ble-face -s varname_array             "fg={{dank16.color5.default.hex}},bold"
-ble-face -s varname_empty             "fg={{dank16.color8.default.hex}}"
-ble-face -s varname_export            "fg={{dank16.color5.default.hex}},bold"
+ble-face -s varname_export            "fg={{dank16.color4.default.hex}},bold"
 ble-face -s varname_expr              "fg={{dank16.color5.default.hex}},bold"
+ble-face -s varname_array             "fg={{dank16.color5.default.hex}},bold"
 ble-face -s varname_hash              "fg={{dank16.color6.default.hex}},bold"
-ble-face -s varname_new               "fg={{dank16.color2.default.hex}}"
-ble-face -s varname_number            "fg={{dank16.color3.default.hex}}"
-ble-face -s varname_readonly          "fg={{dank16.color3.default.hex}},bold"
 ble-face -s varname_transform         "fg={{dank16.color6.default.hex}},bold"
+ble-face -s varname_readonly          "fg={{dank16.color3.default.hex}},bold"
+ble-face -s varname_new               "fg={{dank16.color2.default.hex}}"
 ble-face -s varname_unset             "fg={{dank16.color8.default.hex}}"
+ble-face -s varname_empty             "fg={{dank16.color8.default.hex}}"
+ble-face -s varname_number            "fg={{dank16.color3.default.hex}}"
 
 # arguments
-ble-face -s argument_option           "fg={{dank16.color6.default.hex}},bold"
+ble-face -s argument_option           "fg={{dank16.color12.default.hex}},bold"
 ble-face -s argument_error            "bg={{dank16.color1.default.hex}},fg={{dank16.color0.default.hex}},bold"
 
 # completions / suggestions UI
