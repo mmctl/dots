@@ -44,7 +44,7 @@ gestures {
 
 // Layout
 layout {
-    center-focused-column "on-overflow"
+    center-focused-column "never"
     always-center-single-column
     default-column-display "normal"
 
@@ -66,7 +66,7 @@ prefer-no-csd
 
 // Overview
 overview {
-    zoom 0.33
+    zoom 0.5
 
     workspace-shadow {
         off
@@ -192,12 +192,11 @@ debug {
     honor-xdg-activation-with-invalid-serial
 }
 
-
 // Include dms files
 include "dms/colors.kdl"
 include "dms/layout.kdl"
 include "dms/alttab.kdl"
-include "dms/binds.kdl"
+// include "dms/binds.kdl"
 include "dms/outputs.kdl"
 include "dms/cursor.kdl"
 

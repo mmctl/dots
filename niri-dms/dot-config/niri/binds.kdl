@@ -86,7 +86,6 @@ binds {
 
     //// Overview
     Mod+O repeat=false { toggle-overview; }
-    Mod+Tab repeat=false { toggle-overview; }
 
     //// Screenshots
     Print { screenshot; }
