@@ -2,12 +2,23 @@
 binds {
     // General
     //// Focussing/controlling
-    Mod+Left { focus-column-left; }
-    Mod+Down { focus-window-down; }
-    Mod+Up { focus-window-up; }
-    Mod+Right { focus-column-right; }
+    Mod+Left { focus-column-or-monitor-left; }
+    Mod+Down { focus-window-or-monitor-down; }
+    Mod+Up { focus-window-or-monitor-up; }
+    Mod+Right { focus-column-or-monitor-right; }
+    Mod+Ctrl+Left { focus-column-first; }
     Mod+Home { focus-column-first; }
+    Mod+Ctrl+Right { focus-column-last; }
     Mod+End { focus-column-last; }
+
+    Mod+Ctrl+Down { focus-workspace-down; }
+    Mod+Ctrl+Up { focus-workspace-up; }
+    Mod+Page_Down { focus-workspace-down; }
+    Mod+Page_Up { focus-workspace-up; }
+    Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp   cooldown-ms=150 { focus-workspace-up; }
+    Mod+TouchpadScrollDown cooldown-ms=150 { focus-workspace-down; }
+    Mod+TouchpadScrollUp   cooldown-ms=150 { focus-workspace-up; }
 
     Mod+1 { focus-workspace 1; }
     Mod+2 { focus-workspace 2; }
@@ -18,28 +29,27 @@ binds {
     Mod+7 { focus-workspace 7; }
     Mod+8 { focus-workspace 8; }
     Mod+9 { focus-workspace 9; }
-    Mod+U { focus-workspace-down; }
-    Mod+I { focus-workspace-up; }
-    Mod+Page_Down { focus-workspace-down; }
-    Mod+Page_Up { focus-workspace-up; }
 
-    Mod+Ctrl+Left { focus-monitor-left; }
-    Mod+Ctrl+Down { focus-monitor-down; }
-    Mod+Ctrl+Up { focus-monitor-up; }
-    Mod+Ctrl+Right { focus-monitor-right; }
+    Mod+Ctrl+BracketLeft { focus-monitor-previous; }
+    Mod+Ctrl+BracketRight { focus-monitor-next; }
 
     Mod+Ctrl+V { switch-focus-between-floating-and-tiling; }
 
     //// Moving
-    Mod+Shift+Left { move-column-left; }
-    Mod+Shift+Down { move-window-down; }
-    Mod+Shift+Up { move-window-up; }
-    Mod+Shift+Right { move-column-right; }
+    Mod+Shift+Left { move-column-left-or-to-monitor-left; }
+    Mod+Shift+Down { move-window-down-or-to-workspace-down; }
+    Mod+Shift+Up { move-window-up-or-to-workspace-up; }
+    Mod+Shift+Right { move-column-right-or-to-monitor-right; }
     Mod+Shift+Home { move-column-to-first; }
     Mod+Shift+End { move-column-to-last; }
 
-    Mod+Shift+U { move-column-to-workspace-down; }
-    Mod+Shift+I { move-column-to-workspace-up; }
+    Mod+Ctrl+Shift+Down { move-column-to-workspace-down; }
+    Mod+Ctrl+Shift+Up { move-column-to-workspace-up; }
+    Mod+Shift+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Shift+WheelScrollUp cooldown-ms=150 { move-column-to-workspace-up; }
+    Mod+Shift+TouchpadScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Shift+TouchpadScrollUp cooldown-ms=150 { move-column-to-workspace-up; }
+
     Mod+Shift+1 { move-column-to-workspace 1; }
     Mod+Shift+2 { move-column-to-workspace 2; }
     Mod+Shift+3 { move-column-to-workspace 3; }
@@ -50,21 +60,17 @@ binds {
     Mod+Shift+8 { move-column-to-workspace 8; }
     Mod+Shift+9 { move-column-to-workspace 9; }
 
-    Mod+Ctrl+Shift+U { move-workspace-down; }
-    Mod+Ctrl+Shift+I { move-workspace-up; }
+    Mod+Shift+Page_Down { move-workspace-down; }
+    Mod+Shift+Page_Up { move-workspace-up; }
 
-    Mod+Ctrl+Shift+Down { move-column-to-monitor-down; }
-    Mod+Ctrl+Shift+Left { move-column-to-monitor-left; }
-    Mod+Ctrl+Shift+Up { move-column-to-monitor-up; }
-    Mod+Ctrl+Shift+Right { move-column-to-monitor-right; }
-    Mod+Ctrl+Shift+H { move-column-to-monitor-left; }
-    Mod+Ctrl+Shift+J { move-column-to-monitor-down; }
-    Mod+Ctrl+Shift+K { move-column-to-monitor-up; }
-    Mod+Ctrl+Shift+L { move-column-to-monitor-right; }
+    Mod+Shift+BracketLeft { move-workspace-to-monitor-previous; }
+    Mod+Shift+BracketRight { move-workspace-to-monitor-next; }
     
-    Mod+BracketLeft { consume-or-expel-window-left; }
-    Mod+BracketRight { consume-or-expel-window-right; }
-    Mod+Period { expel-window-from-column; }
+    Mod+Shift+Backslash { move-column-to-monitor-previous; }
+    Mod+Shift+Slash { move-column-to-monitor-next; }
+    
+    Mod+Shift+Comma { consume-or-expel-window-left; }
+    Mod+Shift+Period { consume-or-expel-window-right; }
     
     Mod+C { center-column; }
     Mod+Ctrl+C { center-visible-columns; }
@@ -90,16 +96,19 @@ binds {
     //// Screenshots
     Print { screenshot; }
     XF86Launch1 { screenshot; }
-    Ctrl+Print { screenshot-screen; }
-    Ctrl+XF86Launch1 { screenshot-screen; }
-    Shift+Print { screenshot-window; }
-    Shift+XF86Launch1 { screenshot-window; }
-    
+    Mod+S { screenshot; }
+    Ctrl+Print { screenshot-window; }
+    Ctrl+XF86Launch1 { screenshot-window; }
+    Mod+Ctrl+S { screenshot-window; }
+    Shift+Print { screenshot-screen; }
+    Shift+XF86Launch1 { screenshot-screen; }
+    Mod+Shift+S { screenshot-screen; }
+
     //// Programs
-    Mod+T repeat=false hotkey-overlay-title="Open Terminal" { spawn "kitty"; }
-    Mod+B repeat=false hotkey-overlay-title="Open Browser" { spawn "zen-browser"; }
-    //Mod+E repeat=false hotkey-overlay-title="Open Emacs" { spawn "emacsclient -c"; }
-    //Mod+ repeat=false hotkey-overlay-title="Open Secret Vault" { spawn ""; }
+    Mod+T repeat=false hotkey-overlay-title="Open Terminal (Kitty)" { spawn "kitty"; }
+    Mod+B repeat=false hotkey-overlay-title="Open Browser (Zen)" { spawn "zen-browser"; }
+    Mod+E repeat=false hotkey-overlay-title="Open Editor (Emacs)" { spawn "emacsclient" "-c" "-n" "--alternate-editor="; }
+    Mod+D repeat=false hotkey-overlay-title="Open File Manager (Nautilus)" { spawn "nautilus"; }
 
     //// Meta
     Mod+Q repeat=false { close-window; }
@@ -107,10 +116,10 @@ binds {
     Mod+Shift+E { quit; }
 
     //// Help
-    Mod+Shift+Slash repeat=false { show-hotkey-overlay; }
+    Mod+Shift+Semicolon repeat=false { show-hotkey-overlay; }
 
     // DMS
-    //// Launching/Managing
+    //// Managing
     Mod+Space repeat=false hotkey-overlay-title="Application Launcher" { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
     Mod+V repeat=false hotkey-overlay-title="Clipboard Manager" { spawn "dms" "ipc" "call" "clipboard" "toggle"; }
     Mod+N repeat=false hotkey-overlay-title="Notification Center" { spawn "dms" "ipc" "call" "notifications" "toggle"; }
@@ -119,7 +128,6 @@ binds {
     
     /// Settings
     Mod+Comma repeat=false hotkey-overlay-title="Settings" { spawn "dms" "ipc" "call" "settings" "focusOrToggle"; }
-    Mod+Y repeat=false hotkey-overlay-title="Browse Wallpapers" { spawn "dms" "ipc" "call" "dankdash" "wallpaper"; }
 
     //// System
     Super+Alt+L allow-inhibiting=false repeat=false hotkey-overlay-title="Lock Screen" { spawn "dms" "ipc" "call" "lock" "lock"; }

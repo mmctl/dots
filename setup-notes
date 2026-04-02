@@ -1,4 +1,8 @@
 # System
+## Connect Wifi
+## Store guest wifi password system-wide, everyone can connect
+## Store private wifi password in keyring, only mm can connect
+
 ## Update
 # sudo dnf upgrade --refresh
 # reboot
@@ -47,6 +51,19 @@
 
 # Install fonts 
 
+
+# Mail
+# sudo dnf install isync
+# mkdir -p \
+# "$MAILDIR/personal-mmeijers" \
+# "$MAILDIR/kernel-mmeijers" \
+# "$MAILDIR/kem-mmeijers" \
+# "$MAILDIR/research-mmeijers" \
+# "$MAILDIR/teaching-mmeijers" \
+# "$MAILDIR/host-mmeijers" \
+# "$MAILDIR/dump-mmeijers" 
+# stow isync
+
 # Development
 ## Terminal + Shell
 # sudo dnf install kitty bash-completion fzf fd-find ripgrep zoxide
@@ -83,6 +100,15 @@
 # EOF
 # systemctl --user enable emacs.service
 
+### Mu and mu4e (mail in Emacs)
+# sudo dnf install git meson gmime30-devel xapian-core-devel gcc-c++
+# mkdir -p "$XDG_DATA_HOME/mu" && cd "$XDG_DATA_HOME/mu"
+# git clone --branch v1.14.0 --depth 1 https://github.com/djcb/mu.git && cd mu
+# meson setup build
+# meson compile -C build
+# meson install -C build
+
+
 ## LaTeX
 # curl -L -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
 # zcat < install-tl-unx.tar.gz | tar xf -
@@ -102,8 +128,6 @@
 ## Programming
 
 # Socials
-## Email
-
 ## Signal
 
 
