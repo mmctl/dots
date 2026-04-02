@@ -1,6 +1,9 @@
 [config]
-[templates.blesh-colors]
-input_path = "/home/mm/.config/matugen/templates/blesh-colors.sh"
+# [templates.blesh-colors]
+# input_path = "/home/mm/.config/matugen/templates/blesh-colors.sh"
+# output_path = "/home/mm/.config/blesh/colors.sh"
+[templates.blesh]
+input_path = "/home/mm/.config/matugen/templates/blesh-modus-tinted.sh"
 output_path = "/home/mm/.config/blesh/colors.sh"
 
 [templates.kitty-tabs]
@@ -21,7 +24,11 @@ input_path = "/home/mm/.config/matugen/templates/fzf-colors.conf"
 output_path = "/home/mm/.cache/matugen/fzf-colors.conf"
 post_hook = "cat /home/mm/.config/fzf/fzf-base.conf /home/mm/.cache/matugen/fzf-colors.conf > /home/mm/.config/fzf/fzf.conf"
 
-[templates.niri-colors]
+[templates.niri]
 input_path = "/home/mm/.config/matugen/templates/niri-colors.kdl"
 output_path = "/home/mm/.config/niri/colors.kdl"
+
+[templates.zen]
+input_path = "/home/mm/.config/matugen/templates/zen-userchrome.css"
+output_path = "/home/mm/.config/zen/mm/chrome/userChrome.css"
 

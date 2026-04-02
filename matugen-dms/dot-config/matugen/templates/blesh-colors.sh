@@ -84,3 +84,7 @@ ble-face -s menu_desc_type            "ref:syntax_delimiter"
 ble-face -s menu_desc_quote           "ref:syntax_quoted"
 ble-face -s menu_filter_fixed         "bold"
 ble-face -s menu_filter_input         "bg={{colors.tertiary_container.default.hex}},fg={{colors.on_tertiary_container.default.hex}}"
+
+
+# colorglass integration
+ble-import contrib/colorglass

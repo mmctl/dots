@@ -3,6 +3,8 @@
 ## Store guest wifi password system-wide, everyone can connect
 ## Store private wifi password in keyring, only mm can connect
 
+## Setup fingerprint (if available)
+
 ## Update
 # sudo dnf upgrade --refresh
 # reboot
@@ -20,11 +22,14 @@
 ## Directories
 ### PARA
 # mkdir -p ~/projects ~/areas ~/resources ~/archives
+# remove default user-dirs
+# stow xdg (user-dirs)
 
 ## SSH + GPG
 # mkdir -p ~/.ssh ~/.gnupg
 # Generate keys: SSH personal and work, GPG local encryption
 # systemctl --user enable --now ssh-agent
+# Put ssh public keys on relevant accounts/servers (e.g., GitHub)
 
 ## Dotfiles
 # sudo dnf install stow
@@ -38,7 +43,7 @@
 # sudo dnf install gtk3 gtk4 qt5ct qt6ct matugen
 
 # DMS
-# Set environment.d (QT...)
+# stow dms
 # Enable greeter (dms greeter enable)
 # RBW plugin
 # If still buggy fingerprint + pass auth in lockscreen/greeter:
@@ -77,13 +82,15 @@
 # stow readline
 
 ## Git
+# stow git
+# Check default accounts in config (personal vs work, also for Forge)
 
 ## Emacs
 # Dependencies: enchant, ripgrep, fd
 # sudo dnf install enchant2-devel pkgconf-pkg-config
 # sudo dnf install ripgrep fd-find
 # sudo dnf install emacs-pgtk
-# Create environment file
+# Create environment file:
 # mkdir -p "$XDG_CONFIG_HOME/systemd/user/emacs.service.d"
 # cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/env.conf" <<EOF
 # [Service]
@@ -98,7 +105,6 @@
 # Environment="MAILDIR=$MAILDIR"
 # Environment="SSH_AUTH_SOCK=%t/ssh-agent.socket"
 # EOF
-# systemctl --user enable emacs.service
 
 ### Mu and mu4e (mail in Emacs)
 # sudo dnf install git meson gmime30-devel xapian-core-devel gcc-c++
@@ -107,6 +113,10 @@
 # meson setup build
 # meson compile -C build
 # meson install -C build
+
+# run emacs to install packages
+# fill .authinfo.gpg with passwords (Forge + mail)
+# systemctl --user enable emacs.service
 
 
 ## LaTeX
@@ -126,6 +136,18 @@
 # EOF
 
 ## Programming
+# Treesitter grammer and/or LSP server and/or binaries/source:
+# rust
+# go
+# c/c++
+# python
+# bash
+# yaml
+# json
+# toml
+# lean
+# easycrypt
+# docker
 
 # Socials
 ## Signal
@@ -135,6 +157,15 @@
 # sudo dnf copr enable sneexy/zen-browser
 # sudo dnf install zen-browser
 # stow zen
+# cat > "$XDG_CONFIG_HOME/zen/profiles.ini" <<'EOF'
+#[Profile0]
+#Name=mm
+#IsRelative=1
+#Path=mm
+#Default=1
+#EOF
+# Open zen: install bitwarden extension
+
 
 # Documents
 

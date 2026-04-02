@@ -27,14 +27,13 @@ bleopt edit_marker_error=
 
 
 # Color scheme and faces
-ble-import contrib/colorglass
 [[ -f "$XDG_CONFIG_HOME/blesh/colors.sh" ]] && . "$XDG_CONFIG_HOME/blesh/colors.sh"
 
 
 # Bindings
-ble-bind -m emacs -f 'C-h' 'delete-backward-cword'
-ble-bind -m emacs -f 'C-DEL' 'delete-backward-cword'
-ble-bind -m emacs -f 'C-BS' 'delete-backward-cword'
+ble-bind -m emacs -f 'C-h' 'delete-backward-sword'
+ble-bind -m emacs -f 'C-DEL' 'delete-backward-sword'
+ble-bind -m emacs -f 'C-BS' 'delete-backward-sword'
 
 ble-bind -m emacs -f 'C-/' 'emacs/undo'
 ble-bind -m emacs -f 'M-/' 'emacs/redo'
