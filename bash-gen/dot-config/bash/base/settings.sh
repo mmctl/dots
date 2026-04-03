@@ -1,7 +1,7 @@
 [[ $- != *i* ]] && return
 
-HISTSIZE=20000
-HISTFILESIZE=50000
+HISTSIZE=2000
+HISTFILESIZE=5000
 HISTCONTROL=ignoreboth:erasedups
 HISTIGNORE='ls:bg:fg:history:clear:exit'
 HISTTIMEFORMAT='%F %T '

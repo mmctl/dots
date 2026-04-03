@@ -41,6 +41,7 @@
 ## Stow base, source profile
 
 # sudo dnf install gtk3 gtk4 qt5ct qt6ct matugen
+# sudo dnf install adw-gtk3-theme 
 
 # DMS
 # stow dms
@@ -54,8 +55,11 @@
 # > Add (before auth rule including system-auth): 
 #   auth       sufficient   pam_fprintd.so
 
-# Install fonts 
 
+# Install fonts 
+#Iosevka-Nerd      PkgTTC-IosevkaAile-34.2.1    PkgTTC-SGr-Iosevka-34.2.1      PkgTTC-SGr-IosevkaTerm-34.2.1      PkgWebFont-Iosevka-34.2.1
+#IosevkaTerm-Nerd  PkgTTC-IosevkaEtoile-34.2.1  PkgTTC-SGr-IosevkaSlab-34.2.1  PkgTTC-SGr-IosevkaTermSlab-34.2.1  PkgWebFont-IosevkaAile-34.2.1
+# Stow dms
 
 # Mail
 # sudo dnf install isync

@@ -35,6 +35,12 @@ input {
 
 // Output device
 
+// Cursor
+cursor {
+    xcursor-theme "Adwaita"
+    xcursor-size 24
+}                                                                           
+
 // Gestures
 gestures {
     hot-corners {
@@ -113,7 +119,19 @@ layer-rule {
     place-within-backdrop true
 }
 
+layer-rule {
+    match namespace="dms:blurwallpaper"
+    place-within-backdrop true
+}
+
 // Window rules
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+    tiled-state true
+    draw-border-with-background false
+}
+
 window-rule {
     match app-id=r#"^org\.gnome\."#
     draw-border-with-background false
@@ -169,6 +187,10 @@ recent-windows {
         Mod+grave       { next-window filter="app-id"; }
         Mod+Shift+grave { previous-window filter="app-id"; }
     }
+
+    highlight {
+        corner-radius 12
+    }
 }
 
 // Environment
@@ -193,12 +215,12 @@ debug {
 }
 
 // Include dms files
-include "dms/colors.kdl"
+// include "dms/colors.kdl"
 include "dms/layout.kdl"
 include "dms/alttab.kdl"
 // include "dms/binds.kdl"
 include "dms/outputs.kdl"
-include "dms/cursor.kdl"
+// include "dms/cursor.kdl"
 
 // Include own files (overriding and merging with the above)
 include "colors.kdl"
