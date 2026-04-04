@@ -173,5 +173,11 @@
 
 # Documents
 
+# Keyboards
+# curl -fsSL https://install.qmk.fm | sh
+# qmk setup -H "$XDG_DATA_HOME/qmk_firmware"
+# git clone git@github-personal:mmctl/keyboards.git "$XDG_DATA_HOME/keyboards"
+# ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
+# ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
 
 # reboot (or at least log out)
