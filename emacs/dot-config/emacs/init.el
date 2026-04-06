@@ -1251,7 +1251,6 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
                                      (?w . avy-action-copy)
                                      (?k . avy-action-kill-stay)
                                      (?y . avy-action-yank)
-                                     (?Y . avy-action-yank-line)
                                      (?t . avy-action-teleport)
                                      (?z . avy-action-zap-to-char)
                                      (?i . avy-action-ispell))))
@@ -2569,6 +2568,23 @@ functionality)"
     (cdr project))
   (add-hook 'project-find-functions #'project-find-cargo-toml)
 
+  ;; Additional functionality
+  (defun rust-test-nocapture ()
+    (interactive)
+    (let ((rust-cargo-default-arguments "-- --nocapture"))
+      (rust-test)))
+
+  ;; Keybindings
+  (keymap-set rust-mode-map "C-c C-c c" #'rust-check)
+  (keymap-set rust-mode-map "C-c C-c C" #'rust-run-clippy)
+  (keymap-set rust-mode-map "C-c C-c C-c" #'rust-compile)
+  (keymap-set rust-mode-map "C-c C-c r" #'rust-run)
+  (keymap-set rust-mode-map "C-c C-c R" #'rust-run-release)
+  (keymap-set rust-mode-map "C-c C-c t" #'rust-test)
+  (keymap-set rust-mode-map "C-c C-c T" #'rust-test-nocapture)
+  (keymap-set rust-mode-map "C-c C-p b" #'rust-playpen-buffer)
+  (keymap-set rust-mode-map "C-c C-p r" #'rust-playpen-region)
+
   (add-hook 'rust-mode-hook #'a-setup-eglot-prog-map-local-hook))
 
 ;; Go
@@ -3023,6 +3039,7 @@ starting directory."
     (add-to-list 'avy-dispatch-alist '(?\C-k . avy-action-a-kill-whole-line-stay) t)
     (add-to-list 'avy-dispatch-alist '(?W . avy-action-a-copy-line) t)
     (add-to-list 'avy-dispatch-alist '(?\C-w . avy-action-a-copy-whole-line) t)
+    (add-to-list 'avy-dispatch-alist '(?Y . avy-action-a-yank-line) t)
     (add-to-list 'avy-dispatch-alist '(?\C-y . avy-action-a-yank-whole-line) t)
     (add-to-list 'avy-dispatch-alist '(?T . avy-action-a-teleport-line) t)
     (add-to-list 'avy-dispatch-alist '(?\C-t . avy-action-a-teleport-whole-line) t)

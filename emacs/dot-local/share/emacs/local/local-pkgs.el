@@ -83,6 +83,11 @@ point."
   t)
 
 ;;;###autoload
+(defun avy-action-a-yank-line (pt)
+  "Executes `avy-action-yank' with PT, but copies to line end instead."
+  (let ((avy-command 'avy-goto-line))
+    (avy-action-yank pt)))
+
 (defun avy-action-a-yank-whole-line (pt)
   "Yanks line at PT (selected with Avy) to current point."
   (avy-action-a-copy-whole-line pt)
