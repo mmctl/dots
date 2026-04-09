@@ -59,6 +59,9 @@
 # Install fonts 
 #Iosevka-Nerd      PkgTTC-IosevkaAile-34.2.1    PkgTTC-SGr-Iosevka-34.2.1      PkgTTC-SGr-IosevkaTerm-34.2.1      PkgWebFont-Iosevka-34.2.1
 #IosevkaTerm-Nerd  PkgTTC-IosevkaEtoile-34.2.1  PkgTTC-SGr-IosevkaSlab-34.2.1  PkgTTC-SGr-IosevkaTermSlab-34.2.1  PkgWebFont-IosevkaAile-34.2.1
+#Symbols Nerd Font Mono (https://raw.githubusercontent.com/rainstormstudio/nerd-icons.el/main/fonts/NFM.ttf)
+# "fc-cache -f -v"
+
 # Stow dms
 
 # Mail
@@ -120,6 +123,7 @@
 
 # run emacs to install packages
 # fill .authinfo.gpg with passwords (Forge + mail)
+
 # systemctl --user enable emacs.service
 
 
@@ -142,6 +146,9 @@
 ## Programming
 # Treesitter grammer and/or LSP server and/or binaries/source:
 # rust
+# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path
+# rustup component add rust-analyzer rust-src
+
 # go
 # c/c++
 # python
@@ -152,6 +159,9 @@
 # lean
 # easycrypt
 # docker
+
+# Treesitter Emacs, check ABI version
+# emacs --script "$XDG_DATA_HOME/emacs/install/install-treesitter.el"
 
 # Socials
 ## Signal
@@ -172,6 +182,8 @@
 
 
 # Documents
+#
+# Zotero
 
 # Keyboards
 # curl -fsSL https://install.qmk.fm | sh

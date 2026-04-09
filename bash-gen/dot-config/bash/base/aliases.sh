@@ -12,3 +12,6 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 
+if command -v emacsclient >/dev/null; then
+  alias ecc='emacsclient -c -n --alternate-editor='
+fi

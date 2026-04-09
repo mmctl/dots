@@ -3,7 +3,6 @@
 (setopt custom-file CUSTOM_FILE)
 
 ;;; Metadata
-
 ;; Name
 (setopt user-full-name "Matthias Meijers")
 
@@ -12,7 +11,7 @@
 (setopt calendar-longitude 5.469722)
 
 
-;; Load path/pointers
+;;; Environment
 ;; Add LOCAL_DIR and its sub-directories to load path, excluding hidden ones,
 ;; and generate autoloads if possible
 (dolist (file (cons LOCAL_DIR (directory-files-recursively LOCAL_DIR "^[^.].*" t t)))
@@ -58,11 +57,34 @@
 (setopt lock-file-name-transforms `((".*" ,(expand-file-name "\\1" LOCKS_DIR) t))
         create-lockfiles t)
 
-;; Custom local functionalities
+;; Authentication
+(setopt auth-sources (list AUTHINFO_FILE))
+
+;; Shell
+(setopt eshell-directory-name (file-name-as-directory
+                                 (expand-file-name "eshell/" EMACS_DATA_DIR)))
+
+;; Miscellaneous
+(setopt url-configuration-directory (file-name-as-directory (expand-file-name "url/" EMACS_DATA_DIR)))
+(setopt tramp-histfile-override (expand-file-name "tramp_shell_history" TRAMP_DIR))
+(setopt tramp-persistency-file-name (expand-file-name "tramp_connection_history" TRAMP_DIR))
+
+(setopt bookmark-file (expand-file-name "bookmarks" EMACS_DATA_DIR))
+(setopt savehist-file (expand-file-name "history" EMACS_DATA_DIR))
+(setopt recentf-save-file (expand-file-name "recentf" EMACS_DATA_DIR))
+
+(savehist-mode 1)
+(recentf-mode 1)
+
+(setopt delete-by-moving-to-trash t)
+
+
+;;; Local functionalities (setup and utilities)
 (require 'local-setup)
 (require 'local-utils)
 
-;; Package system
+
+;;; Package system
 (require 'package)
 
 (setopt package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
@@ -235,15 +257,62 @@
 (setopt hl-line-sticky-flag nil)
 (setopt global-hl-line-sticky-flag nil)
 
-(setopt cycle-spacing-actions '(delete-all-space
-                                (just-one-space -)
-                                (delete-space-before 0)
-                                (delete-space-after 0)
-                                restore))
+(setopt cycle-spacing-actions
+        '(delete-all-space
+          (just-one-space -)
+          (delete-space-before 0)
+          (delete-space-after 0)
+          restore))
 
 (setopt shift-select-mode nil)
-;; (repeat-mode 1)
 
+;; Search/Navigation
+(setopt search-exit-option t)
+(setopt isearch-repeat-on-direction-change t
+        isearch-lazy-count t
+        isearch-lax-whitespace t
+        isearch-allow-scroll 'unlimited
+        isearch-allow-motion t)
+(setopt lazy-count-prefix-format nil
+        lazy-count-suffix-format " [%s of %s]")
+
+(setopt imenu-max-item-length 100)
+(setopt imenu-max-items 30)
+
+(setopt grep-use-headings t)
+
+;; File management (dired)
+(setopt dired-listing-switches (purecopy "-l --almost-all --human-readable --group-directories-first --no-group")
+        dired-maybe-use-globstar t
+        dired-mouse-drag-files t
+        dired-always-read-filesystem t
+        dired-auto-revert-buffer #'dired-directory-changed-p
+        dired-switches-in-mode-line 'as-is
+        dired-kill-when-opening-new-dired-buffer t)
+
+;; Completion
+(setopt completion-preview-minimum-symbol-length 2)
+(global-completion-preview-mode 1)
+
+(setopt dabbrev-upcase-means-case-search t
+        dabbrev-case-distinction nil
+        dabbrev-case-replace nil)
+
+;; Helpers
+(setopt which-key-idle-delay 0.5
+        which-key-max-description-length 0.20
+        which-key-add-column-padding 2
+        which-key-show-remaining-keys t
+        which-key-use-C-h-commands nil
+        which-key-preserve-window-configuration t
+        which-key-sort-uppercase-first nil
+        which-key-sort-order 'which-key-key-order-alpha)
+
+(setq prefix-help-command #'a-which-key-repeated-prefix-help-command)
+(which-key-mode 1)
+
+;; Encryption
+(setopt epg-pinentry-mode 'loopback)
 
 ;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)
@@ -252,18 +321,6 @@
 (setopt sentence-end-double-space nil)
 (setopt x-underline-at-descent-line nil)
 
-(setopt url-configuration-directory (file-name-as-directory (expand-file-name "url/" EMACS_DATA_DIR)))
-(setopt tramp-histfile-override (expand-file-name "tramp_shell_history" TRAMP_DIR))
-(setopt tramp-persistency-file-name (expand-file-name "tramp_connection_history" TRAMP_DIR))
-
-(setopt bookmark-file (expand-file-name "bookmarks" EMACS_DATA_DIR))
-(setopt savehist-file (expand-file-name "history" EMACS_DATA_DIR))
-(setopt recentf-save-file (expand-file-name "recentf" EMACS_DATA_DIR))
-
-(savehist-mode 1)
-(recentf-mode 1)
-
-(setopt delete-by-moving-to-trash t)
 
 ;;; Keybindings (general)
 ;; Translations
@@ -320,12 +377,6 @@
 
 ;; Deleting
 (keymap-global-set "M-S-SPC" #'delete-all-space)
-
-;; Miscellaneous
-(keymap-global-set "M-t" #'exchange-word) ; from: transpose-words
-(keymap-global-set "M-T" #'exchange-word-backward)
-
-(keymap-global-set "C-;" #'comment-line)
 
 ;; Management
 ;; Quitting
@@ -502,6 +553,27 @@
 (keymap-set isearch-mode-map "M-r" #'isearch-query-replace)
 (keymap-set isearch-mode-map "M-R" #'isearch-query-replace-regexp)
 
+;; File management (dired)
+(keymap-set dired-mode-map "RET" #'dired-find-file)
+(keymap-set dired-mode-map "M-RET" #'dired-find-file-other-window)
+(keymap-set dired-mode-map "TAB" #'dired-display-file)
+(keymap-set dired-mode-map "C-<up>" #'dired-prev-marked-file)
+(keymap-set dired-mode-map "C-<down>" #'dired-next-marked-file)
+
+;; Completion
+(keymap-set completion-preview-active-mode-map "M-p" #'completion-preview-prev-candidate)
+(keymap-set completion-preview-active-mode-map "M-n" #'completion-preview-next-candidate)
+
+;; Helpers
+(keymap-set which-key-mode-map "C-x <f3>" #'which-key-C-h-dispatch)
+
+;; Miscellaneous
+(keymap-global-set "M-t" #'exchange-word) ; from: transpose-words
+(keymap-global-set "M-T" #'exchange-word-backward)
+
+(keymap-global-set "C-;" #'comment-line)
+
+
 ;;; Packages
 ;; General
 (setopt use-package-always-ensure nil
@@ -511,181 +583,87 @@
 
 (setopt use-package-enable-imenu-support t)
 
-;; Base/Built-in
-(use-package epg-config
-  :init
-  (setopt epg-pinentry-mode 'loopback))
-
-(use-package auth-source
-  :init
-  (setopt auth-sources (list AUTHINFO_FILE)))
-
-(use-package esh-mode
-  :init
-  (setopt eshell-directory-name (file-name-as-directory
-                                 (expand-file-name "eshell/" EMACS_DATA_DIR))))
-
-(use-package isearch
-  :init
-  ;; Setup and settings
-  (setopt search-exit-option t)
-  (setopt isearch-repeat-on-direction-change t
-          isearch-lazy-count t
-          isearch-lax-whitespace t
-          isearch-allow-scroll 'unlimited
-          isearch-allow-motion t)
-  (setopt lazy-count-prefix-format nil
-          lazy-count-suffix-format " [%s of %s]"))
-
-(use-package imenu
-  :init
-  ;; Setup and settings
-  (setopt imenu-max-item-length 100)
-  (setopt imenu-max-items 30))
-
-(use-package dired
-  :init
-  ;; Setup and settings
-  (setopt dired-listing-switches (purecopy "-l --almost-all --human-readable --group-directories-first --no-group")
-          dired-maybe-use-globstar t
-          dired-mouse-drag-files t
-          dired-always-read-filesystem t
-          dired-auto-revert-buffer #'dired-directory-changed-p
-          dired-switches-in-mode-line 'as-is
-          dired-kill-when-opening-new-dired-buffer t)
-
-  :config
-  ;; Keybindings
-  (keymap-set dired-mode-map "RET" #'dired-find-file)
-  (keymap-set dired-mode-map "M-RET" #'dired-find-file-other-window)
-  (keymap-set dired-mode-map "TAB" #'dired-display-file)
-  (keymap-set dired-mode-map "C-<up>" #'dired-prev-marked-file)
-  (keymap-set dired-mode-map "C-<down>" #'dired-next-marked-file))
-
-(use-package dabbrev
-  :init
-  ;; Setup and settings
-  (setopt dabbrev-upcase-means-case-search t
-          dabbrev-case-distinction nil
-          dabbrev-case-replace nil))
-
-(use-package which-key
-  :ensure t
-
-  :init
-  ;; Setup and settings
-  (setopt which-key-idle-delay 0.5
-          which-key-max-description-length 0.20
-          which-key-add-column-padding 2
-          which-key-show-remaining-keys t
-          which-key-use-C-h-commands nil
-          which-key-preserve-window-configuration t
-          which-key-sort-uppercase-first nil
-          which-key-sort-order 'which-key-key-order-alpha)
-
-  :config
-  ;; Keybindings
-  (keymap-set which-key-mode-map "C-x <f3>" #'which-key-C-h-dispatch)
-  (setq prefix-help-command #'a-which-key-repeated-prefix-help-command)
-
-  ;; Activation
-  (which-key-mode 1))
-
-(use-package completion-preview
-  :init
-  ;; Setup and settings (before load)
-  (setopt completion-preview-minimum-symbol-length 2)
-
-  :config
-  ;; Keybindings
-  (keymap-set completion-preview-active-mode-map "M-p" #'completion-preview-prev-candidate)
-  (keymap-set completion-preview-active-mode-map "M-n" #'completion-preview-next-candidate)
-
-  ;; Activation
-  (global-completion-preview-mode 1))
-
-(use-package grep
-  :init
-  ;; Setup and settings (before load)
-  (setopt grep-use-headings t))
 
 ;; Helpers
 (use-package gnu-elpa-keyring-update
-  :ensure t)
+  :ensure t
+  :demand t)
 
 (use-package scratch
   :ensure t
+  :demand t
 
   :bind
   ("C-c s" . scratch))
 
 (use-package wgrep
   :ensure t
+  :demand t
 
   :init
-  ;; Setup and settings (before load)
   (setopt wgrep-too-many-file-length 15))
 
 (use-package ultra-scroll
   :ensure t
+  :demand t
 
   :init
-  ;; Setup and settings (before load)
   (setopt scroll-margin 0)
 
   :config
   ;; Activation
   (ultra-scroll-mode 1))
 
-
 (use-package move-it
   :ensure t
   :vc (:url "https://github.com/mmctl/move-it"
             :branch "main"
             :rev :newest)
+  :demand t
 
-  :bind
-  ("M-<left>" . move-it-left)
-  ("M-<down>" . move-it-down)
-  ("M-<up>" . move-it-up)
-  ("M-<right>" . move-it-right))
+  :config
+  (keymap-global-set "M-<left>" #'move-it-left)
+  (keymap-global-set "M-<down>" #'move-it-down)
+  (keymap-global-set "M-<up>" #'move-it-up)
+  (keymap-global-set "M-<right>" #'move-it-right))
 
 (use-package goggles
   :ensure t
+  :demand t
 
   :hook (prog-mode text-mode)
 
   :init
-  ;; Setup and settings (before load)
   (setopt goggles-pulse t))
 
 (use-package easy-kill
   :ensure t
-
-  :bind
-  ("<remap> <kill-ring-save>" . #'easy-kill)
-  ("<remap> <mark-word>" . #'easy-mark)
+  :demand t
 
   :init
-  ;; Setup and settings (before load)
-  (setopt easy-kill-alist '((?w word           " ")
-                            (?s symbol         " ")
-                            (?S sexp           "\n")
-                            (?h list           "\n")
-                            (?f filename       "\n")
-                            (?d defun          "\n\n")
-                            (?D defun-name     " ")
-                            (?l line           "\n")
-                            (?b buffer-file-name "\n")))
+  (setopt easy-kill-alist
+          '((?w word           " ")
+            (?s symbol         " ")
+            (?S sexp           "\n")
+            (?h list           "\n")
+            (?f filename       "\n")
+            (?d defun          "\n\n")
+            (?D defun-name     " ")
+            (?l line           "\n")
+            (?b buffer-file-name "\n")))
   (setopt easy-kill-cycle-ignored '(list filename defun defun-name buffer-file-name)
           easy-kill-try-things '(url symbol word line)
-          easy-mark-try-things '(url symbol word sexp)))
+          easy-mark-try-things '(url symbol word sexp))
+
+  :config
+  (keymap-global-set "<remap> <kill-ring-save>" #'easy-kill)
+  (keymap-global-set "<remap> <mark-word>" #'easy-mark))
 
 (use-package undo-tree
   :ensure t
+  :demand t
 
   :init
-  ;; Setup and settings
   ;; Create and store undo history directory
   (defconst UNDO_DIR (file-name-as-directory (expand-file-name "undos/" EMACS_DATA_DIR))
     "Directory where (automatically generated) undo (history) files are stored.")
@@ -705,11 +683,11 @@
 
 (use-package marginalia
   :ensure t
+  :demand t
 
   :hook minibuffer-setup
 
   :init
-  ;; Setup and settings
   (setopt marginalia-field-width 100)
 
   :config
@@ -718,43 +696,29 @@
 
 (use-package jinx
   :ensure t
-
-  :bind
-  ("M-$" . jinx-correct)
-  ("C-M-$" . jinx-languages)
+  :demand t
 
   :hook (text-mode prog-mode conf-mode)
 
   :init
-  ;; Setup and settings (before load)
   (setopt jinx-languages "en_US")
   (setopt jinx-include-faces '((prog-mode font-lock-comment-face
                                           font-lock-doc-face)
                                (conf-mode font-lock-comment-face
                                           font-lock-doc-face)
                                (yaml-mode . conf-mode)
-                               (yaml-ts-mode . conf-mode))))
+                               (yaml-ts-mode . conf-mode)))
+
+  :config
+  (keymap-global-set "M-$" #'jinx-correct)
+  (keymap-global-set "C-M-$" #'jinx-languages))
 
 (use-package popper
   :ensure t
   :pin melpa
+  :demand t
 
   :init
-  ;; Setup and settings (before load)
-  ;; Additional functionality
-  (defun a-popper-group-by-directory-home-default ()
-    "Returns an identifier to group popups, defaulting
-to the project root (according to `project.el') if found,
-with `default-directory' as fallback. In case
-`default-directory' is the home directory, return `nil'
-to assign to the default group."
-    (or (and (fboundp 'project-root)
-             (when-let* ((project (project-current)))
-               (project-root project)))
-        (unless (file-equal-p (expand-file-name "~/")
-                              (expand-file-name default-directory))
-          default-directory)))
-
   (setopt popper-reference-buffers
           '(messages-buffer-mode
             help-mode
@@ -772,26 +736,12 @@ to assign to the default group."
             xref--xref-buffer-mode
             "\\`\\*Async.*\\*\\'"))
   (setopt popper-display-control nil)
-  ;; (setopt popper-group-function #'popper-group-by-directory)
-  (setopt popper-group-function #'a-popper-group-by-directory-home-default)
   (setopt popper-mode-line nil)
 
   :config
-  ;; Setup and settings (after load)
-  ;; Additional functionality
-  (defun a-popper-toggle-next (&optional arg)
-    "Toggle next popup in group without burying current one through
- providing `popper-toggle', which see, a single prefix argument (by
-default). With prefix argument ARG, calls `popper-toggle' with an
-additional prefix argument."
-    (interactive "p")
-    (popper-toggle (* 4 arg)))
+  (require 'local-popper)
 
-  (defun a-popper-cycle-default-group ()
-    "Cycle to next popup in default group by calling `popper-cycle',
-which see, with `0' as argument."
-    (interactive)
-    (popper-cycle 0))
+  (setopt popper-group-function #'a-popper-group-by-directory-home-default)
 
   ;; Keybindings
   (keymap-global-set "M-o" #'popper-toggle)
@@ -845,9 +795,10 @@ which see, with `0' as argument."
 (use-package message
   :init
   ;; Sysvar
-  (setopt message-directory (or (getenv "MAILDIR")
-                                (file-name-as-directory
-                                 (expand-file-name "mail/" (or (getenv "XDG_DATA_HOME") "~/")))))
+  (setopt message-directory
+          (or (getenv "MAILDIR")
+              (file-name-as-directory
+               (expand-file-name "mail/" (or (getenv "XDG_DATA_HOME") "~/")))))
 
   (setopt message-kill-buffer-on-exit t)
   (setopt message-confirm-send t)
@@ -877,10 +828,11 @@ which see, with `0' as argument."
 
   ;; Sysvar: with recent versions of mbsync, the config file explicitly given
   ;; here is the first default checked (so not needed to provide explicitly)
-  (setopt mu4e-get-mail-command (concat "mbsync -a"
-                                        (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
-                                          (concat " -c " (shell-quote-argument
-                                                          (expand-file-name "isyncrc" xdgcnf))))))
+  (setopt mu4e-get-mail-command
+          (concat "mbsync -a"
+                  (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                    (concat " -c " (shell-quote-argument
+                                    (expand-file-name "isyncrc" xdgcnf))))))
   (setopt mu4e-update-interval 300)
   (setopt mu4e-change-filenames-when-moving t)
 
@@ -966,6 +918,7 @@ which see, with `0' as argument."
 ;; Completion
 (use-package orderless
   :ensure t
+  :demand t
 
   :config
   ;; Setup and settings (after load)
@@ -984,6 +937,7 @@ which see, with `0' as argument."
 
 (use-package vertico
   :ensure t
+  :demand t
 
   :init
   ;; Setup and settings (before load)
@@ -1035,6 +989,7 @@ which see, with `0' as argument."
 
 (use-package corfu
   :ensure t
+  :demand t
 
   :init
   ;; Setup and settings (before load)
@@ -1088,9 +1043,9 @@ which see, with `0' as argument."
 
 (use-package cape
   :ensure t
+  :demand t
 
   :init
-  ;; Setup and settings (before load)
   (setopt cape-file-prefix '("file:" "f:"))
 
   :config
@@ -1121,8 +1076,8 @@ which see, with `0' as argument."
 
 (use-package tempel
   :ensure t
-
   :pin melpa
+  :demand t
 
   :bind
   ("M-c" . tempel-complete) ; from: capitalize-word
@@ -1133,7 +1088,6 @@ which see, with `0' as argument."
                ("i" . tempel-insert))
 
   :init
-  ;; Setup and settings (before load)
   ;; Create and store templates directory
   (defconst TEMPEL_DIR (file-name-as-directory (expand-file-name "tempel/" TEMPLATES_DIR))
     "Directory where tempel templates are stored.")
@@ -1161,7 +1115,7 @@ that allows to include other templates by their name."
         (cons 'l template))))
   (add-to-list 'tempel-user-elements #'a-tempel-include))
 
-;;; Actions
+;; Actions
 (use-package ace-window
   :ensure t
 

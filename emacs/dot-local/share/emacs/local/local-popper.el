@@ -1,0 +1,32 @@
+;; -*- lexical-binding: t; -*-
+;; local-popper.el
+(require 'popper)
+
+(defun a-popper-group-by-directory-home-default ()
+  "Returns an identifier to group popups, defaulting to the project root
+(according to `project.el') if found, with `default-directory' as fallback. In
+case `default-directory' is the home directory, return `nil' to assign to the
+default group."
+  (or (and (fboundp 'project-root)
+           (when-let* ((project (project-current)))
+             (project-root project)))
+      (unless (file-equal-p (expand-file-name "~/")
+                            (expand-file-name default-directory))
+        default-directory)))
+
+(defun a-popper-toggle-next (&optional arg)
+  "Toggle next popup in group without burying current one through
+ providing `popper-toggle', which see, a single prefix argument (by
+default). With prefix argument ARG, calls `popper-toggle' with an
+additional prefix argument."
+  (interactive "p")
+  (popper-toggle (* 4 arg)))
+
+(defun a-popper-cycle-default-group ()
+  "Cycle to next popup in default group by calling `popper-cycle',
+which see, with `0' as argument."
+  (interactive)
+  (popper-cycle 0))
+
+(provide 'local-popper)
+;;; local-popper.el ends here

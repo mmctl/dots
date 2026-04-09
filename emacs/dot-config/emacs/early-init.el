@@ -2,118 +2,6 @@
 ;; early-init.el
 ;; (See https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html)
 
-;; ;;
-;; (defconst EMACS_CONFIG_DIR (file-name-as-directory
-;;                             (if (getenv "XDG_CONFIG_HOME")
-;;                                 (file-name-concat (getenv "XDG_CONFIG_HOME") "emacs/")
-;;                               user-emacs-directory))
-;;   "Directory where Emacs configuration is stored.")
-
-;; (defconst THEMES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "themes/"))
-;;   "Directory where (custom) themes are stored.")
-
-;; (defconst LOCAL_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "local/"))
-;;   "Directory where (custom) local functionalities/packages are defined.")
-
-;; (defconst TEMPLATES_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "templates/"))
-;;   "Directory where (custom) templates are defined.")
-
-;; (defconst MISC_DIR (file-name-as-directory (file-name-concat EMACS_CONFIG_DIR "misc/"))
-;;   "Directory where (custom) miscellaneous configuration/settings are stored.")
-
-;; (defconst CUSTOM_FILE (file-name-concat MISC_DIR "custom-set.el")
-;;   "File where (automatically generated) customization settings are stored.")
-
-;; ;; Data
-;; (defconst EMACS_DATA_DIR (file-name-as-directory
-;;                           (if (getenv "XDG_DATA_HOME")
-;;                               (file-name-concat (getenv "XDG_DATA_HOME") "emacs/")
-;;                             user-emacs-directory))
-;;   "Directory where (additional) Emacs data is stored.")
-
-;; (defconst BACKUPS_DIR (file-name-as-directory (file-name-concat EMACS_DATA_DIR "backups/"))
-;;   "Directory where (automatically generated) backup files are stored.")
-
-;; (defconst AUTHINFO_FILE (file-name-concat EMACS_DATA_DIR ".authinfo.gpg")
-;;   "File where (encrypted) authentication information is stored.")
-
-;; ;; Cache
-;; (defconst EMACS_CACHE_DIR (file-name-as-directory
-;;                            (if (getenv "XDG_CACHE_HOME")
-;;                                (file-name-concat (getenv "XDG_CACHE_HOME") "emacs/")
-;;                              user-emacs-directory))
-;;   "Directory where Emacs cache is stored.")
-
-;; (defconst AUTOSAVES_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "autosaves/"))
-;;   "Directory where auto-save files are stored.")
-
-;; (defconst LOCKS_DIR (file-name-as-directory (file-name-concat EMACS_CACHE_DIR "locks/"))
-;;   "Directory where lock files are stored.")
-
-;; (unless (file-directory-p THEMES_DIR)
-;;   (make-directory THEMES_DIR t))
-
-;; (unless (file-directory-p LOCAL_DIR)
-;;   (make-directory LOCAL_DIR t))
-
-;; (unless (file-directory-p TEMPLATES_DIR)
-;;   (make-directory TEMPLATES_DIR t))
-
-;; (unless (file-directory-p MISC_DIR)
-;;   (make-directory MISC_DIR t))
-
-;; (unless (file-directory-p BACKUPS_DIR)
-;;   (make-directory BACKUPS_DIR t))
-
-;; (unless (file-directory-p AUTOSAVES_DIR)
-;;   (make-directory AUTOSAVES_DIR t))
-
-;; (unless (file-directory-p LOCKS_DIR)
-;;   (make-directory LOCKS_DIR t))
-
-;; ;; Custom file
-;; (unless (file-exists-p CUSTOM_FILE)
-;;   (make-empty-file CUSTOM_FILE))
-;; (setopt custom-file CUSTOM_FILE)
-
-
-
-;; ;; Byte/Native compilation and loading
-;; (setopt load-prefer-newer t)
-;; (setopt native-comp-jit-compilation t)
-;; (setopt native-comp-async-query-on-exit t)
-;; (setopt package-native-compile t)
-
-;; ;; Frame parameters
-;; ;; (See https://www.gnu.org/software/emacs/manual/html_node/elisp/Frame-Parameters.html)
-;; (setopt default-frame-alist
-;;         '((fullscreen . maximize)
-;;           (fullscreen-restore . fullheight)
-;;           (border-width . 0)
-;;           (internal-border-width . 0)
-;;           (vertical-scroll-bars . nil)
-;;           (horizontal-scroll-bars . nil)
-;;           (menu-bar-lines . 0)
-;;           (tool-bar-lines . 0)
-;;           (tab-bar-lines . 0)
-;;           (minibuffer. t)
-;;           (top-visible . 5)
-;;           (bottom-visible . 5)
-;;           (visibility . t)
-;;           (auto-raise . t)
-;;           (auto-lower . nil)
-;;           (left-fringe . 8)
-;;           (right-fringe . 8)
-;;           (left-divider-width . 3)
-;;           (right-divider-width . 3)
-;;           (cursor-type . (hbar . 3))))
-;;           ;; Transparency non-Lucid builds: (alpha-background . 0.9)))
-;;           ;; Transparency Lucid builds: (alpha . 0.9)
-
-;; ;; Garbage collection
-;; (setopt gc-cons-threshold 33554432
-;;         gc-cons-percentage 0.15)
-
 ;;; Base directories and files
 
 ;; Configuration
@@ -206,6 +94,15 @@
 (unless (file-directory-p LOCKS_DIR)
   (make-directory LOCKS_DIR t))
 
+
+;; Load path (system-wide, non-distro)
+(let ((sysldir (file-name-as-directory "/usr/local/share/emacs/site-lisp/")))
+  (when (file-directory-p sysldir)
+    (add-to-list 'load-path sysldir)
+    (let ((default-directory sysldir))
+      (normal-top-level-add-subdirs-to-load-path))))
+
+
 ;;; Native compilation
 
 (setopt native-comp-jit-compilation t
@@ -214,17 +111,18 @@
 
 (startup-redirect-eln-cache NATIVE_COMP_DIR)
 
+
 ;;; Garbage collection
 
 (setopt gc-cons-threshold 33554432
         gc-cons-percentage 0.15)
 
+
 ;;; Package system and management
 
 (setopt package-user-dir PACKAGE_DIR)
 (setopt package-gnupghome-dir (file-name-as-directory (expand-file-name "gnupg/" package-user-dir)))
-;; (debug-on-variable-change 'package-gnupghome-dir)
-;; (file-name-as-directory (expand-file-name "gnupg/" PACKAGE_DIR)))
+
 
 ;;; Default/Base frame
 
@@ -249,6 +147,7 @@
           (left-divider-width . 3)
           (right-divider-width . 3)
           (cursor-type . (hbar . 3))))
+
 
 ;;; Miscellaneous
 
