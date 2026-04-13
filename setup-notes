@@ -128,6 +128,13 @@
 
 
 ## LaTeX
+### Perl modules needed for latexmk
+# sudo dnf install perl-Time-HiRes perl-Unicode-Normalize perl-sigtrap
+
+### Compatibility library for legacy libcrypt (needed for TeX Live)
+# sudo dnf install libxcrypt-compat
+
+### TeX Live
 # curl -L -o install-tl-unx.tar.gz https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
 # zcat < install-tl-unx.tar.gz | tar xf -
 # cd install-tl-2*
