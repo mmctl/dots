@@ -621,11 +621,11 @@
             :rev :newest)
   :demand t
 
-  :config
-  (keymap-global-set "M-<left>" #'move-it-left)
-  (keymap-global-set "M-<down>" #'move-it-down)
-  (keymap-global-set "M-<up>" #'move-it-up)
-  (keymap-global-set "M-<right>" #'move-it-right))
+  :bind
+  ("M-<left>" . move-it-left)
+  ("M-<down>" . move-it-down)
+  ("M-<up>" . move-it-up)
+  ("M-<right>" . move-it-right))
 
 (use-package goggles
   :ensure t
@@ -750,25 +750,7 @@
   (keymap-global-set "C-S-o" #'a-popper-cycle-default-group)
   (keymap-global-set "C-M-S-o" #'popper-toggle-type)
 
-  (defvar-keymap a-popper-map
-    :doc "Keymap for popper (global)"
-    :prefix 'a-popper-map-prefix
-    "k" #'popper-kill-latest-popup
-    "l" #'popper-lower-to-popup
-    "t" #'popper-toggle
-    "T" #'popper-toggle-type
-    "r" #'popper-raise-popup
-    "^" #'popper-raise-popup
-    "_" #'popper-lower-to-popup
-    "<left>" #'popper-cycle-backwards
-    "<right>" #'popper-cycle)
   (keymap-global-set "C-c p" 'a-popper-map-prefix)
-
-  (defvar-keymap a-popper-cycle-repeat-map
-    :doc "Keymap (repeatable) for popper cycling"
-    :repeat t
-    "<left>" #'popper-cycle-backwards
-    "<right>" #'popper-cycle)
 
   ;; Activation
   (popper-mode 1))
@@ -863,50 +845,7 @@
           mu4e-refile-folder #'a-determine-mu4e-refile-folder)
 
   (setopt mu4e-contexts
-          `(,(make-mu4e-context
-              :name "Personal"
-              :enter-func (lambda () (mu4e-message "Entering context: Personal"))
-              :leave-func (lambda () (mu4e-message "Leaving context: Personal"))
-              :match-func (lambda (msg)
-                            (when msg
-                              (member (a-mailroot-from-mu4e-message msg)
-                                      PERSONAL_MAILROOTS)))
-              :vars
-              `((mu4e-maildir-shortcuts . ((:maildir "/personal-mmeijers/INBOX" :key ?p)
-                                           (:maildir "/kernel-mmeijers/INBOX" :key ?k)
-                                           (:maildir "/kem-mmeijers/INBOX" :key ?r)))
-                (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query PERSONAL_MAILROOTS))
-                                   (:name "All unread" :key ?u :query ,(concat "("
-                                                                               (a-mu4e-inbox-roots-query PERSONAL_MAILROOTS)
-                                                                               ") AND flag:unread"))
-                                   (:name "Personal unread" :key ?p :query "maildir:/personal-mmeijers/INBOX AND flag:unread")
-                                   (:name "Kernel unread" :key ?k :query "maildir:/kernel-mmeijers/INBOX AND flag:unread")
-                                   (:name "KeM unread" :key ?r :query "maildir:/kem-mmeijers/INBOX AND flag:unread")))
-                (mu4e-get-mail-command . ,(concat "mbsync"
-                                                  (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
-                                                    (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
-                                                  " personal"))))
-            ,(make-mu4e-context
-              :name "Work"
-              :enter-func (lambda () (mu4e-message "Entering context: Work"))
-              :leave-func (lambda () (mu4e-message "Leaving context: Work"))
-              :match-func (lambda (msg)
-                            (when msg
-                              (member (a-mailroot-from-mu4e-message msg)
-                                      PERSONAL_MAILROOTS)))
-              :vars
-              `((mu4e-maildir-shortcuts . ((:maildir "/research-mmeijers/INBOX" :key ?r)
-                                           (:maildir "/teaching-mmeijers/INBOX" :key ?t)))
-                (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query WORK_MAILROOTS))
-                                   (:name "All unread" :key ?u :query ,(concat "("
-                                                                               (a-mu4e-inbox-roots-query WORK_MAILROOTS)
-                                                                               ") AND flag:unread"))
-                                   (:name "Research unread" :key ?r :query "maildir:/research-mmeijers/INBOX AND flag:unread")
-                                   (:name "Teaching unread" :key ?t :query "maildir:/reaching-mmeijers/INBOX AND flag:unread")))
-                (mu4e-get-mail-command . ,(concat "mbsync"
-                                                  (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
-                                                    (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
-                                                  " work"))))))
+          (list PERSONAL_MU4E_CONTEXT WORK_MU4E_CONTEXT))
 
   (setopt mu4e-context-policy 'ask-if-none)
   (setopt mu4e-compose-context-policy nil)
@@ -1049,30 +988,23 @@
   (setopt cape-file-prefix '("file:" "f:"))
 
   :config
+  (require 'local-cape)
+  
   ;; Keybindings
   (keymap-global-set "C-c w" #'cape-prefix-map)
 
   ;; Hooks
-  (defun setup-a-cape-text-mode ()
-    (add-hook 'completion-at-point-functions #'cape-dabbrev nil t)
-    (add-hook 'completion-at-point-functions #'cape-dict nil t))
-  (defun setup-a-cape-code-mode ()
-    (add-hook 'completion-at-point-functions #'cape-keyword nil t))
-  (defun setup-a-cape-minibuffer ()
-    (add-hook 'completion-at-point-functions #'cape-history nil t)
-    (add-hook 'completion-at-point-functions #'cape-file nil t))
-
   (add-hook 'completion-at-point-functions #'cape-abbrev)
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
 
-  (add-hook 'text-mode-hook #'setup-a-cape-text-mode)
+  (add-hook 'text-mode-hook #'a-setup-cape-text-mode)
 
-  (add-hook 'tex-mode-hook #'setup-a-cape-code-mode)
-  (add-hook 'TeX-mode-hook #'setup-a-cape-code-mode)
-  (add-hook 'conf-mode-hook #'setup-a-cape-code-mode)
-  (add-hook 'prog-mode-hook #'setup-a-cape-code-mode)
+  (add-hook 'tex-mode-hook #'a-setup-cape-code-mode)
+  (add-hook 'TeX-mode-hook #'a-setup-cape-code-mode)
+  (add-hook 'conf-mode-hook #'a-setup-cape-code-mode)
+  (add-hook 'prog-mode-hook #'a-setup-cape-code-mode)
 
-  (add-hook 'minibuffer-setup-hook #'setup-a-cape-minibuffer))
+  (add-hook 'minibuffer-setup-hook #'a-setup-cape-minibuffer))
 
 (use-package tempel
   :ensure t
@@ -1123,7 +1055,8 @@ that allows to include other templates by their name."
   ("<remap> <other-window>" . ace-window)
 
   :init
-  ;; Setup and settings (before load)
+  (require 'local-ace-window)
+
   (setopt aw-keys '(?f ?j ?s ?l ?a ?\;))
   (setopt aw-scope 'visible
           aw-dispatch-always t)
@@ -1143,27 +1076,8 @@ that allows to include other templates by their name."
                   (?t aw-transpose-frame "Transpose frames")
                   (?? aw-show-dispatch-help)))
 
-  ;; Additional functionality
-  (defun an-ace-window-prefix ()
-    "Sets `ace-window' as the function to choose window for displaying the
-buffer of the next command.
-
-The next buffer is the buffer displayed by the next command invoked
-immediately after this command, ignoring reading from the minibuffer.
-When `switch-to-buffer-obey-display-actions' is non-nil,
-`switch-to-buffer' commands are also supported."
-    (interactive)
-    (display-buffer-override-next-command
-     (lambda (buffer _)
-       (let ((window (aw-select (propertize " ACE" 'face 'mode-line-highlight)))
-             (type 'reuse))
-         (cons window type)))
-     nil "[ace-window]")
-    (message "Use `ace-window' to display next command buffer..."))
-
   ;; Keybindings
   (keymap-set a-window-map "o" #'an-ace-window-prefix))
-
 
 (use-package avy
   :ensure t
@@ -1284,7 +1198,6 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
         ("M-c" . consult-locate))
 
   :init
-  ;; Setup and settings (before load)
   (setopt consult-preview-key '("S-<up>" "S-<down>" "M-V")
           consult-narrow-key "<"
           consult-widen-key ">")
@@ -1301,7 +1214,8 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
     (keymap-set org-agenda-mode-map "C-c H" #'consult-org-agenda))
 
   :config
-  ;; Setup and settings (after load)
+  (require 'local-consult)
+
   (setopt xref-show-xrefs-function #'consult-xref
           xref-show-definitions-function #'consult-xref)
 
@@ -1311,21 +1225,12 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
 
   (setopt consult-ripgrep-args (concat consult-ripgrep-args " --no-config"))
 
-  ;; Patches
-  (defun filter-return-advice-preview-buffer-no-obey-display-actions (ret)
-    "Filter return advice for consult's preview buffer function
-(`consult--buffer-preview') to execute it in environment where
-`switch-to-buffer' does not obey display actions and typically
-uses window unless, e.g., dedicated."
-    (lambda (action cand)
-      (let* ((switch-to-buffer-obey-display-actions nil))
-        (funcall ret action cand))))
-
   ;; Preview buffers without obeying display actions
   (advice-add #'consult--buffer-preview :filter-return #'filter-return-advice-preview-buffer-no-obey-display-actions))
 
 (use-package consult-dir
   :ensure t
+  :demand t
 
   :bind
   ("<remap> <find-dired>" . consult-dir)
@@ -1341,6 +1246,7 @@ uses window unless, e.g., dedicated."
 (use-package embark
   :ensure t
   :pin melpa
+  :demand t
 
   :bind
   ("M-," . embark-act)
@@ -1438,28 +1344,6 @@ uses window unless, e.g., dedicated."
   :ensure t
   :demand t
 
-  :preface
-  (defun a-dirvish-fd-default-directory (pattern)
-    "Simple wrapper around `dirvish-fd', with target directory fixed to
-`default-directory'"
-    (interactive (list (completing-read-multiple "Pattern: " nil)))
-    (dirvish-fd default-directory pattern))
-
-  (defun a-dirvish-fd-full ()
-    "Simple wrapper around `dirvish-fd', with `current-prefix-arg'
-set to '(16) (so it asks to provide both arguments)."
-    (interactive)
-    (let ((current-prefix-arg '(16)))
-      (call-interactively #'dirvish-fd)))
-
-  (defun a-dirvish-side-quit ()
-    "Quits/kills `dirvish-side' session/window if it is visible (else does
-nothing)."
-    (interactive)
-    (when-let* ((viswin (dirvish-side--session-visible-p)))
-      (with-selected-window viswin
-        (dirvish-quit))))
-
   :init
   ;; Add, load, and compile extensions (seems due to bug (?))
   (when-let* ((libdir (locate-library "dirvish"))
@@ -1501,18 +1385,11 @@ nothing)."
 
   (setopt dirvish-collapse-separator "/")
 
-  :bind
-  (:prefix-map a-dirvish-map :prefix "C-c d" :prefix-docstring "Keymap for dirvish (global)"
-               ("d" . dirvish-dwim)
-        ("D" . dirvish)
-        ("j" . dirvish-quick-access)
-        ("s" . dirvish-side)
-        ("S" . a-dirvish-side-quit)
-        ("f" . a-dirvish-fd-default-directory)
-        ("F" . a-dirvish-fd-full)
-        ("C-f" . dirvish-fd))
-
   :config
+  (require 'local-dirvish)
+
+  (keymap-global-set "C-c d" 'a-dirvish-map-prefix)
+
   (keymap-set dirvish-mode-map "?" #'dirvish-dispatch)
   (keymap-set dirvish-mode-map "a" #'dirvish-chxxx-menu)
   (keymap-set dirvish-mode-map "e" #'dirvish-renaming-menu)

@@ -28,5 +28,26 @@ which see, with `0' as argument."
   (interactive)
   (popper-cycle 0))
 
+
+;;; Keymaps
+(defvar-keymap a-popper-map
+  :doc "Keymap for popper (global)"
+  :prefix 'a-popper-map-prefix
+  "k" #'popper-kill-latest-popup
+  "l" #'popper-lower-to-popup
+  "t" #'popper-toggle
+  "T" #'popper-toggle-type
+  "r" #'popper-raise-popup
+  "^" #'popper-raise-popup
+  "_" #'popper-lower-to-popup
+  "<left>" #'popper-cycle-backwards
+  "<right>" #'popper-cycle)
+
+(defvar-keymap a-popper-cycle-repeat-map
+  :doc "Keymap (repeatable) for popper cycling"
+  :repeat t
+  "<left>" #'popper-cycle-backwards
+  "<right>" #'popper-cycle)
+
 (provide 'local-popper)
 ;;; local-popper.el ends here

@@ -262,6 +262,56 @@ Meant as replacement for `smtpmail-send-it', e.g., in
            (smtpmail-stream-type (plist-get frompl :smtptype)))
       (smtpmail-send-it))))
 
+;; Contexts (Mu4e)
+(defconst PERSONAL_MU4E_CONTEXT
+  (make-mu4e-context
+   :name "Personal"
+   :enter-func (lambda () (mu4e-message "Entering context: Personal"))
+   :leave-func (lambda () (mu4e-message "Leaving context: Personal"))
+   :match-func (lambda (msg)
+                 (when msg
+                   (member (a-mailroot-from-mu4e-message msg)
+                           PERSONAL_MAILROOTS)))
+   :vars
+   `((mu4e-maildir-shortcuts . ((:maildir "/personal-mmeijers/INBOX" :key ?p)
+                                (:maildir "/kernel-mmeijers/INBOX" :key ?k)
+                                (:maildir "/kem-mmeijers/INBOX" :key ?r)))
+     (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query PERSONAL_MAILROOTS))
+                        (:name "All unread" :key ?u :query ,(concat "("
+                                                                    (a-mu4e-inbox-roots-query PERSONAL_MAILROOTS)
+                                                                    ") AND flag:unread"))
+                        (:name "Personal unread" :key ?p :query "maildir:/personal-mmeijers/INBOX AND flag:unread")
+                        (:name "Kernel unread" :key ?k :query "maildir:/kernel-mmeijers/INBOX AND flag:unread")
+                        (:name "KeM unread" :key ?r :query "maildir:/kem-mmeijers/INBOX AND flag:unread")))
+     (mu4e-get-mail-command . ,(concat "mbsync"
+                                       (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                                         (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
+                                       " personal"))))
+  "Mu4e context for personal addresses.")
+
+(defconst WORK_MU4E_CONTEXT
+  (make-mu4e-context
+   :name "Work"
+   :enter-func (lambda () (mu4e-message "Entering context: Work"))
+   :leave-func (lambda () (mu4e-message "Leaving context: Work"))
+   :match-func (lambda (msg)
+                 (when msg
+                   (member (a-mailroot-from-mu4e-message msg)
+                           PERSONAL_MAILROOTS)))
+   :vars
+   `((mu4e-maildir-shortcuts . ((:maildir "/research-mmeijers/INBOX" :key ?r)
+                                (:maildir "/teaching-mmeijers/INBOX" :key ?t)))
+     (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query WORK_MAILROOTS))
+                        (:name "All unread" :key ?u :query ,(concat "("
+                                                                    (a-mu4e-inbox-roots-query WORK_MAILROOTS)
+                                                                    ") AND flag:unread"))
+                        (:name "Research unread" :key ?r :query "maildir:/research-mmeijers/INBOX AND flag:unread")
+                        (:name "Teaching unread" :key ?t :query "maildir:/reaching-mmeijers/INBOX AND flag:unread")))
+     (mu4e-get-mail-command . ,(concat "mbsync"
+                                       (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                                         (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
+                                       " work"))))
+  "Mu4e context for work addresses.")
 
 (provide 'local-mu4e)
 ;;; local-mu4e.el ends here
