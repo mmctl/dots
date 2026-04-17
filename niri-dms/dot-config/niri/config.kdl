@@ -23,7 +23,7 @@ input {
     }
 
     mouse {
-        natural-scroll
+        // natural-scroll
         scroll-method "no-scroll"
     }
 
@@ -39,7 +39,7 @@ input {
 cursor {
     xcursor-theme "Adwaita"
     xcursor-size 24
-}                                                                           
+}
 
 // Gestures
 gestures {
@@ -53,6 +53,15 @@ layout {
     center-focused-column "never"
     always-center-single-column
     default-column-display "normal"
+    gaps 6
+
+    border {
+        width 1
+    }
+
+    focus-ring {
+        width 1
+    }
 
     preset-column-widths {
         proportion 0.33333
@@ -119,10 +128,6 @@ layer-rule {
     place-within-backdrop true
 }
 
-layer-rule {
-    match namespace="dms:blurwallpaper"
-    place-within-backdrop true
-}
 
 // Window rules
 window-rule {
@@ -195,7 +200,7 @@ recent-windows {
 
 // Environment
 environment {
-  XDG_CURRENT_DESKTOP "niri"
+    XDG_CURRENT_DESKTOP "niri"
 }
 
 // Miscellaneous
@@ -215,12 +220,7 @@ debug {
 }
 
 // Include dms files
-// include "dms/colors.kdl"
-include "dms/layout.kdl"
-// include "dms/alttab.kdl"
-// include "dms/binds.kdl"
 include "dms/outputs.kdl"
-// include "dms/cursor.kdl"
 
 // Include own files (overriding and merging with the above)
 include "colors.kdl"

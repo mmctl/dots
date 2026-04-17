@@ -2706,8 +2706,7 @@ starting directory."
 ;; EF themes
 (use-package ef-themes
   :ensure t
-
-  :defer t
+  :demand t
 
   :init
   (setopt modus-themes-italic-constructs t
