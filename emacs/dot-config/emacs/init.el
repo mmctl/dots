@@ -1,4 +1,4 @@
-;; -*- lexical-binding: t; -*-
+;; ;; -*- lexical-binding: t; -*-
 ;; init.el
 (setopt custom-file CUSTOM_FILE)
 
@@ -109,6 +109,7 @@
 ;; Frames/Windows
 (setopt frame-resize-pixelwise t)
 (setopt window-resize-pixelwise t)
+(setopt frame-inhibit-implied-resize t)
 
 (setopt switch-to-buffer-obey-display-actions t)
 (setopt switch-to-buffer-in-dedicated-window 'pop)

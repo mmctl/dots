@@ -96,7 +96,7 @@
 # Dependencies: enchant, ripgrep, fd
 # sudo dnf install enchant2-devel pkgconf-pkg-config
 # sudo dnf install ripgrep fd-find
-# sudo dnf install emacs-pgtk
+# sudo dnf install emacs-lucid
 # Create environment file:
 # mkdir -p "$XDG_CONFIG_HOME/systemd/user/emacs.service.d"
 # cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/env.conf" <<EOF

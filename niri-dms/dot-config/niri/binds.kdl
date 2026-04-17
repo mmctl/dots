@@ -107,7 +107,7 @@ binds {
     //// Programs
     Mod+T repeat=false hotkey-overlay-title="Open Terminal (Kitty)" { spawn "kitty"; }
     Mod+B repeat=false hotkey-overlay-title="Open Browser (Zen)" { spawn "zen-browser"; }
-    Mod+E repeat=false hotkey-overlay-title="Open Editor (Emacs)" { spawn "emacsclient" "-c" "-n" "--alternate-editor="; }
+    Mod+E repeat=false hotkey-overlay-title="Open Editor (Emacs)" { spawn "emacsclient" "-c" "--alternate-editor="; }
     Mod+D repeat=false hotkey-overlay-title="Open File Manager (Nautilus)" { spawn "nautilus"; }
 
     //// Meta
