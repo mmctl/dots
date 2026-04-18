@@ -2120,54 +2120,10 @@ that allows to include other templates by their name."
                ("w" . eglot-show-workspace-configuration))
 
   :init
-  ;; Setup and settings (before load)
   (setopt eglot-autoshutdown t)
 
   :config
-  ;; Setup and settings (after load)
-  ;; Keybindings
-  (defvar-keymap an-eglot-prog-map
-    :doc "Keymap for eglot programming bindings"
-    :prefix 'an-eglot-prog-map-prefix
-    "C-`" #'flymake-goto-next-error
-    "M-`" #'flymake-show-buffer-diagnostics
-    "C-a a" #'eglot-code-actions
-    "C-a x" #'eglot-code-action-extract
-    "C-a i" #'eglot-code-action-inline
-    "C-a o" #'eglot-code-action-organize-imports
-    "C-a r" #'eglot-code-action-rewrite
-    "C-a f" #'eglot-code-action-quickfix
-    "C-f ." #'eldoc-print-current-symbol-info
-    "C-b" #'eldoc-doc-buffer
-    "C-f i" #'eglot-find-implementation
-    "C-f t" #'eglot-find-typeDefinition
-    "C-f c" #'eglot-find-declaration
-    "C-f d" #'xref-find-definitions
-    "C-f D" #'xref-find-definitions-other-window
-    "C-f C-d" #'xref-find-definitions-other-frame
-    "C-f r" #'xref-find-references
-    "C-r" #'eglot-rename)
-
-  (defun a-setup-eglot-prog-map-local ()
-    "Binds `an-eglot-prog-map' to `C-c' in the local keymap if
-current buffer is managed by eglot, or unsets the local `C-c` binding otherwise.
-
-Meant as (buffer-local) hook for `eglot-managed-mode-hook' in
-programming major-mode with sparse keymaps (so the Eglot functionality
-makes up for the lack of direct major-mode functionality)."
-    (if (eglot-managed-p)
-        (keymap-local-set "C-c" 'an-eglot-prog-map-prefix)
-      (keymap-local-unset "C-c")))
-
-  (defun a-setup-eglot-prog-map-local-hook ()
-    "Adds `a-setup-eglot-prog-map-local' (buffer-local)
-hook to `eglot-managed-mode-hook' (after `eglot' is loaded).
-
-Meant as hook in programming major-modes with sparse keymaps (so the
-Eglot functionality makes up for the lack of direct major-mode
-functionality)"
-    (with-eval-after-load 'eglot
-      (add-hook 'eglot-managed-mode-hook #'a-setup-eglot-prog-map-local nil t)))
+  (require 'local-eglot)
 
   ;; Display
   (add-to-list 'display-buffer-alist
@@ -2261,6 +2217,8 @@ functionality)"
   (setopt cdlatex-sub-super-scripts-outside-math-mode nil)
 
   :config
+  (require 'local-cdlatex)
+
   ;; Keybindings
   (keymap-unset cdlatex-mode-map "TAB")
   (keymap-set cdlatex-mode-map "<backtab>" #'cdlatex-tab)
@@ -2332,6 +2290,7 @@ functionality)"
   (keymap-set markdown-view-mode-map "<end>" #'end-of-buffer))
 
 ;;; Programming
+;; Grammar installation deferred to `EMACS_DATA_DIR/install/install-treesit.el'
 (defconst TREESIT_DIR (file-name-as-directory
                        (expand-file-name "tree-sitter/" EMACS_DATA_DIR))
   "Directory used to store tree-sitter grammars")
@@ -2344,19 +2303,8 @@ functionality)"
   :defer t
 
   :init
-  ;; Setup and settings (before load)
   (add-to-list 'major-mode-remap-alist '(bash-mode . bash-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode))
-
-  :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(bash "https://github.com/tree-sitter/tree-sitter-bash"
-                        "v0.23.3")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
-    (unless (treesit-language-available-p 'bash)
-      (treesit-install-language-grammar 'bash TREESIT_DIR))))
+  (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode)))
 
 ;; C
 (use-package c-ts-mode
@@ -2371,50 +2319,26 @@ functionality)"
   (setopt c-ts-mode-indent-offset 4)
 
   :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(c "https://github.com/tree-sitter/tree-sitter-c"
-                     "v0.23.6")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
-    (add-to-list 'treesit-language-source-alist
-                 '(cpp "https://github.com/tree-sitter/tree-sitter-cpp"
-                       "v0.23.4")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
-    (unless (treesit-language-available-p 'c)
-      (treesit-install-language-grammar 'c TREESIT_DIR))
-    (unless (treesit-language-available-p 'cpp)
-      (treesit-install-language-grammar 'cpp TREESIT_DIR)))
-
   ;; Eglot (LSP)
   ;; Exdep: clangd
   (with-eval-after-load 'eglot
     (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd")))
 
-
-  (add-hook 'c-ts-mode-hook #'a-setup-eglot-prog-map-local-hook)
-  (add-hook 'c++-ts-mode-hook #'a-setup-eglot-prog-map-local-hook))
+  (with-eval-after-load 'local-eglot
+    (add-hook 'c-ts-mode-hook #'a-setup-eglot-prog-map-local-hook)
+    (add-hook 'c++-ts-mode-hook #'a-setup-eglot-prog-map-local-hook)))
 
 ;; Python
 (use-package python
   :defer t
 
   :init
-  ;; Setup and settings (before load)
-  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
-
-  :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(python "https://github.com/tree-sitter/tree-sitter-python"
-                          "v0.23.6")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
-    (unless (treesit-language-available-p 'python)
-      (treesit-install-language-grammar 'python TREESIT_DIR))))
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 ;; Rust
 (use-package rust-mode
   :ensure t
+  :defer t
 
   :mode ("\\.rs\\'" . rust-mode)
 
@@ -2422,28 +2346,9 @@ functionality)"
   (setopt rust-mode-treesitter-derive t)
 
   :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(rust "https://github.com/tree-sitter/tree-sitter-rust"
-                        "v0.23.3")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
-    (unless (treesit-language-available-p 'rust)
-      (treesit-install-language-grammar 'rust TREESIT_DIR)))
+  (require 'local-rust-mode)
 
-  ;; Project (root finding)
-  (defun project-find-cargo-toml (dir)
-    (when-let ((root (locate-dominating-file dir "Cargo.toml")))
-      (cons 'cargo-toml root)))
-  (cl-defmethod project-root ((project (head cargo-toml)))
-    (cdr project))
   (add-hook 'project-find-functions #'project-find-cargo-toml)
-
-  ;; Additional functionality
-  (defun rust-test-nocapture ()
-    (interactive)
-    (let ((rust-cargo-default-arguments "-- --nocapture"))
-      (rust-test)))
 
   ;; Keybindings
   (keymap-set rust-mode-map "C-c C-c c" #'rust-check)
@@ -2456,7 +2361,8 @@ functionality)"
   (keymap-set rust-mode-map "C-c C-p b" #'rust-playpen-buffer)
   (keymap-set rust-mode-map "C-c C-p r" #'rust-playpen-region)
 
-  (add-hook 'rust-mode-hook #'a-setup-eglot-prog-map-local-hook))
+  (with-eval-after-load 'local-eglot
+    (add-hook 'rust-mode-hook #'a-setup-eglot-prog-map-local-hook)))
 
 ;; Go
 (use-package go-ts-mode
@@ -2471,29 +2377,12 @@ functionality)"
   (setopt go-ts-mode-indent-offset 4)
 
   :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(go "https://github.com/tree-sitter/tree-sitter-go"
-                      "v0.23.4")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
-    (unless (treesit-language-available-p 'go)
-      (treesit-install-language-grammar 'go TREESIT_DIR))
-    (add-to-list 'treesit-language-source-alist
-                 '(gomod "https://github.com/camdencheek/tree-sitter-go-mod"
-                         "v1.0.2")) ; Sysvar: Fixed tag to match ABI of Emacs's tree-sitter
-    (unless (treesit-language-available-p 'gomod)
-      (treesit-install-language-grammar 'gomod TREESIT_DIR)))
+  (require 'local-go-ts-mode)
 
-  ;; Project (root finding)
-  (defun project-find-go-module (dir)
-    (when-let ((root (locate-dominating-file dir "go.mod")))
-      (cons 'go-module root)))
-  (cl-defmethod project-root ((project (head go-module)))
-    (cdr project))
   (add-hook 'project-find-functions #'project-find-go-module)
 
-  (add-hook 'go-ts-mode-hook #'a-setup-eglot-prog-map-local-hook))
+  (with-eval-after-load 'local-eglot
+    (add-hook 'go-ts-mode-hook #'a-setup-eglot-prog-map-local-hook)))
 
 ;; Yaml
 (use-package yaml-ts-mode
@@ -2501,34 +2390,15 @@ functionality)"
 
   :init
   ;; Setup and settings (before load)
-  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode))
-
-  :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(yaml "https://github.com/ikatyang/tree-sitter-yaml"))
-    (unless (treesit-language-available-p 'yaml)
-      (treesit-install-language-grammar 'yaml TREESIT_DIR))))
+  (add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode)))
 
 ;; Toml
 (use-package toml-ts-mode
   :mode ("\\.toml\\'" . toml-ts-mode)
 
   :init
-  ;; Setup and settings (before load)
   (add-to-list 'major-mode-remap-alist '(toml-mode . toml-ts-mode))
-  (add-to-list 'major-mode-remap-alist '(conf-toml-mode . toml-ts-mode))
-
-  :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(toml "https://github.com/tree-sitter/tree-sitter-toml"))
-    (unless (treesit-language-available-p 'toml)
-      (treesit-install-language-grammar 'toml TREESIT_DIR))))
+  (add-to-list 'major-mode-remap-alist '(conf-toml-mode . toml-ts-mode)))
 
 ;; Json
 (use-package json-ts-mode
@@ -2536,41 +2406,31 @@ functionality)"
 
   :init
   ;; Setup and settings (before load)
-  (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode))
-
-  :config
-  ;; Setup and settings (after load)
-  ;; Tree-sitter
-  (with-eval-after-load 'treesit
-    (add-to-list 'treesit-language-source-alist
-                 '(json "https://github.com/tree-sitter/tree-sitter-json"))
-    (unless (treesit-language-available-p 'json)
-      (treesit-install-language-grammar 'json TREESIT_DIR))))
+  (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode)))
 
 ;; OCaml
-;; (use-package neocaml
-;; (ocaml "https://github.com/tree-sitter/tree-sitter-ocaml" "v0.24.0" "grammars/ocaml/src")
-;; )
-
-
-(use-package tuareg
+(use-package neocaml
   :ensure t
-  :pin melpa
-
   :defer t
 
   :init
-  ;; Setup and settings (before load)
-  (setopt tuareg-electric-indent nil
-          tuareg-electric-close-vector nil)
+  (setopt neocaml-repl-history-file
+          (expand-file-name "neocaml-repl-history" EMACS_DATA_DIR))
+  (setopt neocaml-dune-use-opam-exec t)
 
-  (setopt tuareg-highlight-all-operators t))
+  (add-hook 'neocaml-base-mode-hook #'neocaml-repl-minor-mode)
+  (add-hook 'neocaml-base-mode-hook #'neocaml-dune-interaction-mode)
+  (add-hook 'neocaml-base-mode-hook #'prettify-symbols-mode))
 
-(use-package merlin
+(use-package ocaml-eglot
   :ensure t
-  :pin melpa
+  :defer t
 
-  :hook (tuareg-mode caml-mode))
+  :after neocaml
+
+  :hook
+  (neocaml-base-mode . ocaml-eglot))
+
 
 ;; Proof General (EasyCrypt)
 ;; Note, proof.el (which is provided by the proof-general package) is what is

@@ -16,6 +16,6 @@
   (setq-local cdlatex-use-dollar-to-ensure-math nil))
 
 
-(provide 'local-cdlatex.el)
+(provide 'local-cdlatex)
 
 ;;; local-cdlatex.el ends here
