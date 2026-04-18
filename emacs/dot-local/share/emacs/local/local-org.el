@@ -4,6 +4,7 @@
 (require 'org)
 (require 'org-agenda)
 
+
 ;;;###autoload
 (defun an-org-todo-manipulate-time (&optional arg)
   "As `org-todo'/`org-agenda-todo', but with the
@@ -17,7 +18,6 @@ date/time set to that entered by the user through `org-read-date'."
     (if (eq major-mode 'org-agenda-mode)
         (org-agenda-todo arg)
       (org-todo arg))))
-
 
 
 (provide 'local-org)

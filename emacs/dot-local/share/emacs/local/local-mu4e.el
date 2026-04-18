@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t; -*-
 ;; local-mu4e.el
+
 (require 'message)
 (require 'mail-extr)
 (require 'mu4e)

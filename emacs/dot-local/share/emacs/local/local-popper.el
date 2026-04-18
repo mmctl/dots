@@ -1,6 +1,8 @@
 ;; -*- lexical-binding: t; -*-
 ;; local-popper.el
+
 (require 'popper)
+
 
 (defun a-popper-group-by-directory-home-default ()
   "Returns an identifier to group popups, defaulting to the project root
@@ -14,6 +16,7 @@ default group."
                             (expand-file-name default-directory))
         default-directory)))
 
+;;;###autoload
 (defun a-popper-toggle-next (&optional arg)
   "Toggle next popup in group without burying current one through
  providing `popper-toggle', which see, a single prefix argument (by
@@ -22,6 +25,7 @@ additional prefix argument."
   (interactive "p")
   (popper-toggle (* 4 arg)))
 
+;;;###autoload
 (defun a-popper-cycle-default-group ()
   "Cycle to next popup in default group by calling `popper-cycle',
 which see, with `0' as argument."
@@ -48,6 +52,7 @@ which see, with `0' as argument."
   :repeat t
   "<left>" #'popper-cycle-backwards
   "<right>" #'popper-cycle)
+
 
 (provide 'local-popper)
 ;;; local-popper.el ends here

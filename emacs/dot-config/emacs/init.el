@@ -942,6 +942,12 @@
   (setopt text-mode-ispell-word-completion nil)
 
   :config
+  (with-eval-after-load 'vertico
+    (setopt global-corfu-minibuffer
+            (lambda ()
+              (not (or (bound-and-true-p vertico--input)
+                       (eq (current-local-map) read-passwd-map))))))
+
   ;; Activation
   (global-corfu-mode 1))
 
@@ -2828,40 +2834,6 @@ starting directory."
 
   (add-to-list 'global-mode-string '("" keycast-mode-line)))
 
-;; Local/cross-package enhancements
-(use-package local-pkgs
-  :ensure nil ; Provided locally
-
-  :bind
-  ;; (:map minibuffer-local-map
-  ;;       ("<backtab>" . an-embark-act-with-completing-read))
-  ;; (:map an-avy-map
-  ;;       ("r" . an-avy-region-char-1)
-  ;;       ("R" . an-avy-region-timer))
-  ;; :bind*
-  ;; ("M-J" . an-avy-region-timer)
-
-  :init
-
-  ;; (with-eval-after-load 'vertico
-  ;;   (add-hook 'minibuffer-setup-hook
-  ;;             (lambda ()
-  ;;               (when (bound-and-true-p vertico--input)
-  ;;                 (keymap-set vertico-map "M-P" #'an-embark-select-vertico-previous)
-  ;;                 (keymap-set vertico-map "M-N" #'an-embark-select-vertico-next)))))
-
-  )
-
-;; Corfu + Vertico
-(use-package corfu
-  :after vertico
-
-  :init
-  ;; Setup and settings (before load of this package, but after load of packages listed in `:after')
-  (setopt global-corfu-minibuffer
-          (lambda ()
-            (not (or (bound-and-true-p vertico--input)
-                     (eq (current-local-map) read-passwd-map))))))
 
 ;; Load custom file
 (load custom-file)

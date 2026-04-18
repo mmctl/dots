@@ -1,7 +1,10 @@
 ;; -*- lexical-binding: t; -*-
 ;; local-ace-window.el
+
 (require 'ace-window)
 
+
+;;;###autoload
 (defun an-ace-window-prefix ()
     "Sets `ace-window' as the function to choose window for displaying the
 buffer of the next command.
@@ -18,6 +21,7 @@ When `switch-to-buffer-obey-display-actions' is non-nil,
          (cons window type)))
      nil "[ace-window]")
     (message "Use `ace-window' to display next command buffer..."))
+
 
 (provide 'local-ace-window)
 ;;; local-ace-window.el

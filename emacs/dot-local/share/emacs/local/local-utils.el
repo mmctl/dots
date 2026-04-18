@@ -80,6 +80,7 @@ have `which-key''s pop-up stick while the prefix map is active."
       (which-key--create-buffer-and-show nil keymap))))
 
 ;;; Movement
+;;;###autoload
 (defun move-beginning-of-line-or-indentation (&optional arg)
   "Moves point to indentation or, if point is already there, to beginning of line.
 With ARG, moves to indentation ARG lines forward."
@@ -91,6 +92,7 @@ With ARG, moves to indentation ARG lines forward."
       (when (= (point) orig-point)
         (move-beginning-of-line nil)))))
 
+;;;###autoload
 (defun move-end-of-line-or-whitespace (&optional arg)
   "Moves point to beginning of whitespace at the end of the line or,
 if point is already there and `show-trailing-whitespace' is non-nil,
@@ -104,12 +106,14 @@ ARG - 1 lines forward."
       (when (and (null arg) show-trailing-whitespace (= (point) orig-point))
         (move-end-of-line nil)))))
 
+;;;###autoload
 (defun push-mark-no-activate (&optional location)
   "Pushes LOCATION (defaults to `point') to `mark-ring' without
 activating it."
   (interactive)
   (push-mark (or location (point))))
 
+;;;###autoload
 (defun exchange-point-and-mark-invert (&optional arg)
   "Identical to `exchange-point-and-mark' but inverts the prefix argument,
 meaning that (with Transient Mark mode on) it defaults to deactivating the mark
@@ -119,6 +123,7 @@ if it is active and not reactivating mark."
 
 
 ;;; Duplication
+;;;###autoload
 (defun duplicate-line-or-lines-in-region (&optional arg comment)
   "Duplicates current line or, when region is active, lines in current region;
 if COMMENT is non-nil, comments line(s) before duplication. With ARG,
@@ -152,6 +157,7 @@ point at same relative position in final duplication."
       (set-marker begm nil)
       (set-marker endm nil))))
 
+;;;###autoload
 (defun comment-and-duplicate-line-or-lines-in-region (&optional arg)
   "Comments and duplicates current line or, when region is active,
 lines in current region. With ARG, duplicates |ARG| times forward (ARG >
@@ -161,6 +167,7 @@ final duplication. Based on `duplicate-line-or-lines-in-region', which see."
   (duplicate-line-or-lines-in-region arg t))
 
 ;;; Transposing/Exchanging
+;;;###autoload
 (defun exchange-word (arg)
   "Exchanges word at point or, if there is none,
 next word after point, with following (ARG > 0) or
@@ -170,6 +177,7 @@ preceding (ARG < 0) word |ARG| times."
     (forward-word 1))
   (transpose-words arg))
 
+;;;###autoload
 (defun exchange-word-backward (arg)
   "Calls `exchange-word', which see, with ARG negated."
   (interactive "p")
@@ -177,6 +185,7 @@ preceding (ARG < 0) word |ARG| times."
 
 
 ;;; Joining
+;;;###autoload
 (defun join-line-stay (&optional arg)
   "Calls `join-line' |ARG| times, which see, but keeps point
 in same relative position. If ARG is negative, calls
@@ -186,6 +195,7 @@ in same relative position. If ARG is negative, calls
     (dotimes (_ (abs arg))
       (join-line (< arg 0)))))
 
+;;;###autoload
 (defun join-line-forward (&optional arg)
   "Joins current line to the following |ARG| lines and
 fix up whitespace at join. If ARG is negative, joins
@@ -195,6 +205,7 @@ internally, which see."
   (dotimes (_ (abs arg))
       (join-line (<= 0 arg))))
 
+;;;###autoload
 (defun join-line-forward-stay (&optional arg)
   "Calls `join-line-forward' with ARG, which see, but keeps point
 in same relative position."
@@ -204,6 +215,7 @@ in same relative position."
 
 
 ;;; Copying
+;;;###autoload
 (defun kill-ring-save-line (&optional arg)
   "Copies line at point. Calling this once copies the line
 from indentation up to (but not including) the trailing whitespace
@@ -230,6 +242,7 @@ then performs its action for that line. Leaves point as is."
 
 
 ;;; Yanking
+;;;###autoload
 (defun yank-line (&optional arg)
   "Yanks (in place) line at point.
 With ARG, moves |ARG| lines forward (ARG > 0) or backward (ARG < 0),
@@ -240,6 +253,7 @@ then copies that line. Does not move point."
 
 
 ;;; Killing
+;;;###autoload
 (defun kill-whole-thing (thing &optional arg)
   "Kills whole THING at point or, if no THING at point, up to and including next
 whole THING. If there is also no next THING, does nothing. With ARG, kills from
@@ -255,18 +269,21 @@ happen from killing THINGs). Does nothing when ARG = 0."
         (forward-thing thing arg)
         (kill-region fixpnt (point))))))
 
+;;;###autoload
 (defun kill-whole-word (&optional arg)
   "Executes `kill-whole-thing', which see,
 using `word' for thing, and directly passing ARG."
   (interactive "p")
   (kill-whole-thing 'word arg))
 
+;;;###autoload
 (defun kill-whole-symbol (&optional arg)
   "Executes `kill-whole-thing', which see,
 using `symbol' for thing, and directly passing ARG."
   (interactive "p")
   (kill-whole-thing 'symbol arg))
 
+;;;###autoload
 (defun backward-kill-line (&optional arg)
   "Kills from point to beginning of line.
 If point is at beginning of line, then
@@ -285,6 +302,7 @@ corresponding negated numeric value."
             (delete-horizontal-space t)))
       (kill-line 0))))
 
+;;;###autoload
 (defun kill-whole-line-back-to-indentation (&optional arg)
   "Kills whole line using `kill-whole-line' and moves back
 to indentation using `back-to-indentation'. Passes ARG
@@ -310,6 +328,7 @@ yields nothing, returns `nil'."
     (when bnds
       (goto-char (car bnds)) (buffer-substring-no-properties (car bnds) (cdr bnds)))))
 
+;;;###autoload
 (defun query-replace-thing-at-point ()
 "Calls `query-replace' with `query-replace-read-from-default'
 bound to `query-replace-from-default-thing-at-point', which see."
@@ -318,6 +337,7 @@ bound to `query-replace-from-default-thing-at-point', which see."
          (query-replace-read-from-default (lambda () default)))
     (call-interactively #'query-replace)))
 
+;;;###autoload
 (defun query-replace-regexp-thing-at-point ()
   "Calls `query-replace-regexp' with `query-replace-read-from-default'
 bound to `query-replace-from-default-thing-at-point', which see."
@@ -327,6 +347,7 @@ bound to `query-replace-from-default-thing-at-point', which see."
     (call-interactively #'query-replace-regexp)))
 
 ;;; Files and directories
+;;;###autoload
 (defun find-file-as-root (filename &optional arg)
   "Find FILENAME as root using `find-file', taking remote
 connections into account. With ARG, use `find-alternate-file' instead."
@@ -349,6 +370,7 @@ connections into account. With ARG, use `find-alternate-file' instead."
         (find-alternate-file fileid)
       (find-file fileid))))
 
+;;;###autoload
 (defun reopen-file-as-root ()
   "Reopen file visited by current buffer
 as root using `find-alternate-file'."
@@ -357,6 +379,7 @@ as root using `find-alternate-file'."
     (user-error "Current buffer not visiting a file"))
   (find-file-as-root buffer-file-name t))
 
+;;;###autoload
 (defun dired-as-root (dirname)
   "Find DIRNAME as root using `dired', taking remote
 connections into account."
@@ -376,6 +399,7 @@ connections into account."
                          (or remote-localname dirname))))
      (dired dirid)))
 
+;;;###autoload
 (defun dired-default-directory-as-root ()
   "Open directory (specifically, `default-directory')
 of current buffer as root using `dired'."
@@ -384,29 +408,34 @@ of current buffer as root using `dired'."
 
 
 ;;; Quitting
+;;;###autoload
 (defun save-buffers-kill-terminal-silent ()
   "Executes `save-buffers-kill-terminal', which see,
 automatically saving all buffers without asking."
   (interactive)
   (save-buffers-kill-terminal t))
 
+;;;###autoload
 (defun save-buffers-kill-emacs-silent ()
   "Executes `save-buffers-kill-emacs', which see,
 automatically saving all buffers without asking."
   (interactive)
   (save-buffers-kill-emacs t))
 
+;;;###autoload
 (defun save-buffers-restart-emacs ()
   "Executes `save-buffers-kill-emacs', which see,
 restarting Emacs afterward."
   (interactive)
   (save-buffers-kill-emacs nil t))
 
+;;;###autoload
 (defun save-buffers-restart-emacs-silent ()
   "Execute `save-buffers-restart-emacs', which see,
 automatically saving all buffers without asking."
   (interactive)
   (save-buffers-kill-emacs t t))
+
 
 (provide 'local-utils)
 

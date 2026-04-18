@@ -47,7 +47,6 @@
 (defun an-embark-ace-window-action (fun)
   "Select and switch to window with `ace-window', always dispatching,
 before calling FUN interactively."
-  (interactive)
   (with-demoted-errors "%s"
     (let* ((aw-dispatch-always t))
       (aw-switch-to-window (aw-select nil))
@@ -94,7 +93,6 @@ then calling `xref-find-definitions' interactively."
       :doc "Keymap for Embark's completing read prompter"
       "<backtab>" #'abort-recursive-edit)
 
-;;;###autoload
 (defmacro an-around-advice-with-minibuffer-keymap (keymap)
   "Expands to a lambda (taking a function and arguments) usable as around
 advice that applies the provided function to its arguments inside a

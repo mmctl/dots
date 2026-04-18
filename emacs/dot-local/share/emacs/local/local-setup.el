@@ -1,6 +1,7 @@
 ;; -*- lexical-binding: t -*-
 ;; local-setup.el (frames/modes)
 
+
 ;;; Utilities
 ;; Re-enable custom themes
 (defsubst local-reenable-custom-themes ()
@@ -108,6 +109,7 @@ setup."
   (display-line-numbers-mode 0)
   (hl-line-mode 0)
   (visual-line-mode 1))
+
 
 (provide 'local-setup)
 

@@ -17,12 +17,14 @@
 (require 'dirvish-quick-access)
 
 
+;;;###autoload
 (defun a-dirvish-fd-default-directory (pattern)
   "Simple wrapper around `dirvish-fd', with target directory fixed to
 `default-directory'"
   (interactive (list (completing-read-multiple "Pattern: " nil)))
   (dirvish-fd default-directory pattern))
 
+;;;###autoload
 (defun a-dirvish-fd-full ()
   "Simple wrapper around `dirvish-fd', with `current-prefix-arg'
 set to \='(16) (so it asks to provide both arguments)."
@@ -30,6 +32,7 @@ set to \='(16) (so it asks to provide both arguments)."
   (let ((current-prefix-arg '(16)))
     (call-interactively #'dirvish-fd)))
 
+;;;###autoload
 (defun a-dirvish-side-quit ()
   "Quits/kills `dirvish-side' session/window if it is visible (else does
 nothing)."
