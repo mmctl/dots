@@ -1130,7 +1130,6 @@ that allows to include other templates by their name."
                   (?w . avy-action-copy)
                   (?k . avy-action-kill-stay)
                   (?y . avy-action-yank)
-                  (?Y . avy-action-yank-line)
                   (?t . avy-action-teleport)
                   (?z . avy-action-zap-to-char)
                   (?i . avy-action-ispell)
@@ -1141,6 +1140,7 @@ that allows to include other templates by their name."
                   (?K . avy-action-a-kill-line-stay)
                   (?\C-k . avy-action-a-kill-whole-line-stay)
                   (?W . avy-action-a-copy-line)
+                  (?Y . avy-action-a-yank-line)
                   (?\C-w . avy-action-a-copy-whole-line)
                   (?\C-y . avy-action-a-yank-whole-line)
                   (?T . avy-action-a-teleport-line)
@@ -1473,7 +1473,10 @@ that allows to include other templates by their name."
 
 (use-package dirvish-extras
   :ensure nil ; Provided by `dirvish'
+  :demand t
+
   :after dirvish
+
   :config
   ;; Remove non-existent suffix (bug)
   (transient-remove-suffix 'dirvish-dispatch #'dirvish-fd-jump))
@@ -1481,16 +1484,18 @@ that allows to include other templates by their name."
 (use-package diredfl
   :ensure t
   :pin melpa
+  :demand t
 
   :hook
   (dired-mode . diredfl-mode)
   (dirvish-directory-view-mode . diredfl-mode)
 
   :init
-  ;; Setup and settings (before load)
   (setopt diredfl-ignore-compressed-flag nil))
 
 (use-package ediff
+  :defer t
+
   :bind
   (:prefix-map an-ediff-map :prefix "C-c e" :prefix-docstring "Keymap for ediff entry points (global)"
                ("b" . ediff-buffers)
@@ -1546,6 +1551,8 @@ that allows to include other templates by their name."
   (add-hook #'ediff-quit-hook #'an-ediff-restore-window-configuration 90))
 
 (use-package project
+  :demand t
+
   :init
   ;; Setup and settings (before load)
   (setopt project-list-file (expand-file-name "projects.eld" EMACS_DATA_DIR))
@@ -1553,6 +1560,7 @@ that allows to include other templates by their name."
 
 (use-package org
   :ensure t
+  :demand t
 
   :preface
   ;; Setup (preface)
@@ -1771,6 +1779,7 @@ that allows to include other templates by their name."
 
 (use-package org-super-agenda
   :ensure t
+  :defer t
 
   :after org-agenda
   :hook org-agenda-mode
@@ -1863,6 +1872,7 @@ that allows to include other templates by their name."
 
 (use-package org-modern
   :ensure t
+  :defer t
 
   :hook
   (org-mode . org-modern-mode)
@@ -1881,6 +1891,7 @@ that allows to include other templates by their name."
   (setopt org-modern-priority-faces '((?A . (:inherit org-priority :weight bold :inverse-video t))
                                       (?B . (:inherit org-warning :weight medium :inverse-video t))
                                       (?C . (:inherit org-cite :weight normal :slant oblique :inverse-video t))))
+
   :config
   (when (string-match-p "^Iosevka.*" (face-attribute 'default :family))
     (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
@@ -1891,20 +1902,18 @@ that allows to include other templates by their name."
   :vc (:url https://github.com/jdtsmith/org-modern-indent
             :branch main
             :rev :newest)
+  :defer t
 
   :after org
 
   :config
-  (defun setup-an-org-modern-indent-mode ()
-    (org-indent-mode 1)
-    (org-modern-indent-mode 1))
+  (require 'local-org)
 
-  (add-hook 'org-mode #'setup-an-org-modern-indent-mode 90))
+  (add-hook 'org-mode #'a-setup-org-modern-indent-mode 90))
 
 
 (use-package pdf-tools
   :ensure t
-
   :defer t
 
   :init
@@ -1916,7 +1925,8 @@ that allows to include other templates by their name."
   (pdf-loader-install t)
 
   :config
-  ;; Setup and settings (after load)
+  (require 'local-pdf-tools)
+
   (add-to-list 'pdf-view-incompatible-modes 'display-line-numbers-mode)
 
   ;; Keybindings
@@ -1940,19 +1950,6 @@ that allows to include other templates by their name."
   (keymap-set pdf-view-mode-map "M" #'pdf-view-jump-to-register)
 
   ;; Display
-  (defun an-around-advice-display-synctex (syncfun &rest args)
-    "Around advice that (locally) adds an entry to `display-buffer-alist'
-to reuse windows containing buffers with modes derived from
-TeX-mode (for opening other such buffers).
-
-Meant to be used with `synctex' functionality, so as to not pop up a new
-window when syncing to a location in a project TeX file that is not yet
-opened."
-    (let* ((display-buffer-alist (cons '((derived-mode . TeX-mode)
-                                         (display-buffer-reuse-window display-buffer-reuse-mode-window)
-                                         (reusable-frames . visible))
-                                       display-buffer-alist)))
-      (apply syncfun args)))
   (advice-add #'pdf-sync-backward-search :around #'an-around-advice-display-synctex)
 
   ;; Hooks
@@ -1964,6 +1961,7 @@ opened."
 (use-package diff-hl
   :ensure t
   :pin melpa
+  :demand t
 
   :init
   ;; Setup and settings (before load)
@@ -1988,6 +1986,8 @@ opened."
   (global-diff-hl-mode 1))
 
 (use-package transient
+  :demand t
+
   :init
   (defconst TRANSIENT_DIR (file-name-as-directory
                            (expand-file-name "transient/" EMACS_DATA_DIR))
@@ -2001,6 +2001,7 @@ opened."
 
 (use-package magit
   :ensure t
+  :defer t
 
   :bind
   ("C-x g" . magit-status)
@@ -2050,6 +2051,8 @@ opened."
 
 (use-package forge
   :ensure t
+  :defer t
+
   :after magit
 
   :init
@@ -2093,12 +2096,15 @@ opened."
   (keymap-set flymake-mode-map "C-c C-`" #'flymake-show-buffer-diagnostics))
 
 (use-package eldoc
+  :demand t
+
   :init
   (setopt eldoc-echo-area-display-truncation-message nil)
   (setopt eldoc-echo-area-use-multiline-p nil)
   (setopt eldoc-echo-area-prefer-doc-buffer 'maybe))
 
 (use-package eglot
+  :defer t
   :bind
   (:prefix-map an-eglot-map :prefix "C-c l" :prefix-docstring "Keymap for eglot (global)"
                ("`" . flymake-goto-next-error)
@@ -2153,6 +2159,7 @@ opened."
 
 (use-package dockerfile-mode
   :ensure t
+  :defer t
 
   :init
   (setopt dockerfile-build-progress "plain")
@@ -2161,7 +2168,6 @@ opened."
 
 (use-package tex
   :ensure auctex
-
   :defer t
 
   :init
@@ -2179,7 +2185,8 @@ opened."
   (setopt TeX-electric-math '("$" . "$"))
 
   :config
-  ;; Setup and settings (after load)
+  (require 'local-auctex)
+
   ;; Hooks
   (add-hook 'TeX-mode-hook #'local-setup-code-mode)
 
@@ -2188,11 +2195,7 @@ opened."
 
   (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 
-  ;; Swap to \( and \) instead of $ and $ (when using LaTeX instead of TeX)
-  (defun setup-a-latex-mode-electric-math ()
-    (setq-local TeX-electric-math '("\\(" . "\\)")))
-
-  (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-electric-math)
+  (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-electric-math)
 
   ;; Display
   (add-to-list 'display-buffer-alist
@@ -2224,6 +2227,7 @@ opened."
 
 (use-package cdlatex
   :ensure t
+  :defer t
 
   :hook (latex-mode LaTeX-mode)
 
@@ -2239,30 +2243,21 @@ opened."
   (keymap-unset cdlatex-mode-map "TAB")
   (keymap-set cdlatex-mode-map "<backtab>" #'cdlatex-tab)
 
-  ;; Ensure Corfu is not in automatic mode, as to not interfere with templates
-  (defun setup-a-cdlatex-corfu-mode ()
-    (with-eval-after-load 'corfu
-      (setq-local corfu-auto nil)))
-
-  ;; Swap to \( and \) instead of $ and $ (when using LaTeX instead of TeX)
-  (defun setup-a-latex-mode-not-use-dollar ()
-    (setq-local cdlatex-use-dollar-to-ensure-math nil))
-
   ;; Hooks
-  (add-hook 'cdlatex-mode-hook #'setup-a-cdlatex-corfu-mode)
-  (add-hook 'latex-mode-hook #'setup-a-latex-mode-not-use-dollar)
-  (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-not-use-dollar))
+  (add-hook 'cdlatex-mode-hook #'a-setup-cdlatex-corfu-mode)
+  (add-hook 'latex-mode-hook #'a-setup-latex-mode-not-use-dollar)
+  (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-not-use-dollar))
 
 (use-package math-delimiters
   :ensure t
   :vc (:url https://github.com/oantolin/math-delimiters
             :branch main
             :rev :newest)
-
   :defer t
 
   :init
-  ;; Setup and setting (before load)
+  (require 'local-math-delimiters-pre)
+
   (setopt math-delimiters-inline '("$" . "$")) ; Supported by both TeX and LaTeX
   (setopt math-delimiters-compressed-display-math nil)
 
@@ -2279,16 +2274,13 @@ opened."
   (with-eval-after-load 'cdlatex
     (keymap-unset cdlatex-mode-map "$" t))
 
-  ;; Swap to \( and \) instead of $ and $ (when using LaTeX instead of TeX)
-  (defun setup-a-latex-mode-math-delimiters ()
-    (setq-local math-delimiters-inline '("\\(" . "\\)")))
-
   ;; Hooks
-  (add-hook 'LaTeX-mode-hook #'setup-a-latex-mode-math-delimiters)
-  (add-hook 'latex-mode-hook #'setup-a-latex-mode-math-delimiters))
+  (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-math-delimiters)
+  (add-hook 'latex-mode-hook #'a-setup-latex-mode-math-delimiters))
 
 (use-package markdown-mode
   :ensure t
+  :defer t
 
   :mode ("README\\.md\\'" . gfm-mode)
 
@@ -2319,7 +2311,7 @@ opened."
 
 ;;; Programming
 (defconst TREESIT_DIR (file-name-as-directory
-                       (expand-file-name "tree-sitter/" (or (getenv "XDG_DATA_HOME") EMACS_DATA_DIR)))
+                       (expand-file-name "tree-sitter/" EMACS_DATA_DIR))
   "Directory used to store tree-sitter grammars")
 (unless (file-directory-p TREESIT_DIR)
   (make-directory TREESIT_DIR t))
@@ -2752,8 +2744,9 @@ starting directory."
   ;; Setup and settings (before load)
   (setopt nael-prepare-lsp nil))
 
+
 ;; Themes
-;; EF themes
+;; EF/Modus
 (use-package ef-themes
   :ensure t
   :demand t
@@ -2802,6 +2795,8 @@ starting directory."
           doom-modeline-percent-position nil
           doom-modeline-vcs-max-length 20))
 
+
+;; Miscellaneous
 (use-package keycast
   :ensure t
 

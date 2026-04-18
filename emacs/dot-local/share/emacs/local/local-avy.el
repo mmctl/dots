@@ -3,6 +3,7 @@
 
 (require 'avy)
 
+
 ;;; Actions
 ;;;###autoload
 (defun avy-action-a-push-mark-no-activate (pt)
@@ -74,6 +75,13 @@ point."
           (copy-region-as-kill (car bnds) (cdr bnds))))
     (select-window
      (cdr (ring-ref avy-ring 0))))
+  t)
+
+;;;###autoload
+(defun avy-action-a-yank-line (pt)
+  "Yanks to line end at PT (selected with Avy) to current point."
+  (avy-action-a-copy-line pt)
+  (save-excursion (yank))
   t)
 
 ;;;###autoload

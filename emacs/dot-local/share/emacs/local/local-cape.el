@@ -4,6 +4,7 @@
 (require 'cape)
 (require 'cape-keyword)
 
+
 ;;; Setup functionality
 ;;;###autoload
 (defun a-setup-cape-text-mode ()

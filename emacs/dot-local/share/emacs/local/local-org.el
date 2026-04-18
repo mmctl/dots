@@ -3,6 +3,8 @@
 
 (require 'org)
 (require 'org-agenda)
+(require 'org-modern)
+(require 'org-modern-indent)
 
 
 ;;;###autoload
@@ -18,6 +20,11 @@ date/time set to that entered by the user through `org-read-date'."
     (if (eq major-mode 'org-agenda-mode)
         (org-agenda-todo arg)
       (org-todo arg))))
+
+;;;###autoload
+(defun a-setup-org-modern-indent-mode ()
+    (org-indent-mode 1)
+    (org-modern-indent-mode 1))
 
 
 (provide 'local-org)
