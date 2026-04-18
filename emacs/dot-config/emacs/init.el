@@ -17,8 +17,9 @@
 (dolist (file (cons LOCAL_DIR (directory-files-recursively LOCAL_DIR "^[^.].*" t t)))
   (when (file-directory-p file)
     (add-to-list 'load-path file)
-    (let ((fileal (expand-file-name (concat (file-name-nondirectory (directory-file-name file)) "-autoloads.el")
-                                    file)))
+    (let ((fileal (expand-file-name
+                   (concat (file-name-nondirectory (directory-file-name file)) "-autoloads.el")
+                   file)))
       (loaddefs-generate file fileal)
       (load fileal))))
 
@@ -990,7 +991,7 @@
 
   :config
   (require 'local-cape)
-  
+
   ;; Keybindings
   (keymap-global-set "C-c w" #'cape-prefix-map)
 
@@ -1107,7 +1108,6 @@ that allows to include other templates by their name."
   ("M-J" . avy-goto-char-timer)
 
   :init
-  ;; Setup and settings (before load)
   (setopt avy-keys '(?f ?j ?s ?l ?a ?\;)
           avy-style 'at-full
           avy-all-windows 'all-frames
@@ -1115,15 +1115,31 @@ that allows to include other templates by their name."
           avy-single-candidate-jump nil)
   (setopt avy-timeout-seconds 0.2)
 
-  (setq-default avy-dispatch-alist '((?x . avy-action-kill-move)
-                                     (?m . avy-action-mark)
-                                     (?w . avy-action-copy)
-                                     (?k . avy-action-kill-stay)
-                                     (?y . avy-action-yank)
-                                     (?Y . avy-action-yank-line)
-                                     (?t . avy-action-teleport)
-                                     (?z . avy-action-zap-to-char)
-                                     (?i . avy-action-ispell))))
+  :config
+  (require 'local-avy)
+
+  (setq-default avy-dispatch-alist
+                '((?x . avy-action-kill-move)
+                  (?m . avy-action-mark)
+                  (?w . avy-action-copy)
+                  (?k . avy-action-kill-stay)
+                  (?y . avy-action-yank)
+                  (?Y . avy-action-yank-line)
+                  (?t . avy-action-teleport)
+                  (?z . avy-action-zap-to-char)
+                  (?i . avy-action-ispell)
+                  (?p . avy-action-a-push-mark-no-activate)
+                  (?P . avy-action-a-push-mark-activate)
+                  (?X . avy-action-a-kill-line-move)
+                  (?\C-x . avy-action-a-kill-whole-line-move)
+                  (?K . avy-action-a-kill-line-stay)
+                  (?\C-k . avy-action-a-kill-whole-line-stay)
+                  (?W . avy-action-a-copy-line)
+                  (?\C-w . avy-action-a-copy-whole-line)
+                  (?\C-y . avy-action-a-yank-whole-line)
+                  (?T . avy-action-a-teleport-line)
+                  (?\C-t . avy-action-a-teleport-whole-line))))
+
 
 (use-package consult
   :ensure t
@@ -1268,7 +1284,6 @@ that allows to include other templates by their name."
         ("M-b" . embark-become))
 
   :init
-  ;; Setup and settings (before load)
   (setopt embark-confirm-act-all t)
   (setopt embark-verbose-indicator-display-action
           '((display-buffer-reuse-window display-buffer-in-side-window)
@@ -1280,32 +1295,52 @@ that allows to include other templates by their name."
   ;; (setq-default prefix-help-command #'embark-prefix-help-command)
 
   :config
+  (require 'local-embark)
+
   ;; Keybindings
   (keymap-set embark-general-map "C-u" #'embark-select)
+
+  (keymap-set embark-bookmark-map "o" #'an-embark-ace-window-bookmark-jump)
+
+  (keymap-set embark-command-map "o" #'an-embark-ace-window-xref-find-definitions)
 
   (keymap-set embark-file-map "F" #'find-file-other-window)
   (keymap-set embark-file-map "C-f" #'find-file-other-frame)
   (keymap-set embark-file-map "M-f" #'find-file-as-root)
   (keymap-set embark-file-map "l" #'find-file-literally)
   (keymap-set embark-file-map "C" #'copy-directory)
+  (keymap-set embark-file-map "o" #'an-embark-ace-window-find-file)
+
+  (keymap-set embark-function-map "o" #'an-embark-ace-window-xref-find-definitions)
 
   (keymap-set embark-library-map "F" #'find-library-other-window)
   (keymap-set embark-library-map "C-f" #'find-library-other-frame)
+  (keymap-set embark-library-map "o" #'an-embark-ace-window-find-library)
 
   (keymap-set embark-buffer-map "g" #'switch-to-buffer)
   (keymap-set embark-buffer-map "G" #'switch-to-buffer-other-window)
   (keymap-set embark-buffer-map "M-g" #'switch-to-buffer-other-frame)
+  (keymap-set embark-buffer-map "o" #'an-embark-ace-window-pop-to-buffer)
 
   (keymap-set embark-identifier-map "f" #'xref-find-definitions)
   (keymap-set embark-identifier-map "F" #'xref-find-definitions-other-window)
   (keymap-set embark-identifier-map "C-f" #'xref-find-definitions-other-frame)
+  (keymap-set embark-identifier-map "o" #'an-embark-ace-window-xref-find-definitions)
 
   (keymap-set embark-symbol-map "f" #'embark-find-definition)
+  (keymap-set embark-symbol-map "o" #'an-embark-ace-window-xref-find-definitions)
 
   (keymap-set embark-package-map "f" #'describe-package)
 
   (keymap-set embark-become-file+buffer-map "F" #'find-file-other-window)
   (keymap-set embark-become-file+buffer-map "B" #'switch-to-buffer-other-window)
+
+  (with-eval-after-load 'avy
+    (add-to-list 'avy-dispatch-alist '(?o . avy-action-an-embark-select) t)
+    (add-to-list 'avy-dispatch-alist '(?, . avy-action-an-embark-act) t)
+    (add-to-list 'avy-dispatch-alist '(?. . avy-action-an-embark-dwim) t))
+
+  (keymap-set minibuffer-local-map "<backtab>" #'an-embark-act-with-completing-read)
 
   ;; Display
   (add-to-list 'display-buffer-alist
@@ -1320,7 +1355,12 @@ that allows to include other templates by their name."
   (with-eval-after-load 'popper
     (add-to-list 'popper-reference-buffers 'embark-collect-mode)
     (when popper-mode
-      (popper-mode 1))))
+      (popper-mode 1)))
+
+  ;; Advice
+  (advice-add 'embark-completing-read-prompter :around
+              (an-around-advice-with-minibuffer-keymap
+               an-embark-completing-read-prompter-map)))
 
 (use-package avy-embark-collect
   :ensure t
@@ -1535,7 +1575,6 @@ that allows to include other templates by their name."
                ("l" . org-store-link))
 
   :init
-  ;; Setup and settings (before load)
   ;; Modules
   (setopt org-modules '(ol-doi ol-bbdb ol-bibtex ol-docview ol-gnus ol-info ol-eww
                                org-crypt org-habit org-id))
@@ -1709,7 +1748,8 @@ that allows to include other templates by their name."
           org-habit-preceding-days 14)
 
   :config
-  ;; Setup and settings (after load)
+  (require 'local-org)
+
   (add-to-list 'org-agenda-files ORG_CALENDAR_FILE)
   (add-to-list 'org-agenda-files ORG_TODOS_FILE)
   (add-to-list 'org-agenda-files ORG_MEETINGS_FILE)
@@ -1717,6 +1757,9 @@ that allows to include other templates by their name."
   (add-to-list 'org-agenda-files ORG_AREAS_FILE)
 
   ;; Keybindings
+  (keymap-set org-mode-map "C-c M-t" #'an-org-todo-manipulate-time)
+  (keymap-set org-agenda-mode-map "C-c M-t" #'an-org-todo-manipulate-time)
+
   (keymap-unset org-mode-map "C-M-S-<left>") ; from: org-decrease-number-at-point
   (keymap-unset org-mode-map "C-M-S-<right>")) ; from: org-increase-number-at-point
 
@@ -2790,58 +2833,24 @@ starting directory."
   :ensure nil ; Provided locally
 
   :bind
-  (:map minibuffer-local-map
-        ("<backtab>" . an-embark-act-with-completing-read))
-  (:map an-avy-map
-        ("r" . an-avy-region-char-1)
-        ("R" . an-avy-region-timer))
+  ;; (:map minibuffer-local-map
+  ;;       ("<backtab>" . an-embark-act-with-completing-read))
+  ;; (:map an-avy-map
+  ;;       ("r" . an-avy-region-char-1)
+  ;;       ("R" . an-avy-region-timer))
   ;; :bind*
   ;; ("M-J" . an-avy-region-timer)
 
   :init
-  ;; Setup and settings (before load)
-  (with-eval-after-load 'avy
-    (add-to-list 'avy-dispatch-alist '(?p . avy-action-a-push-mark-no-activate) t)
-    (add-to-list 'avy-dispatch-alist '(?P . avy-action-a-push-mark-activate) t)
-    (add-to-list 'avy-dispatch-alist '(?X . avy-action-a-kill-line-move) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-x . avy-action-a-kill-whole-line-move) t)
-    (add-to-list 'avy-dispatch-alist '(?K . avy-action-a-kill-line-stay) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-k . avy-action-a-kill-whole-line-stay) t)
-    (add-to-list 'avy-dispatch-alist '(?W . avy-action-a-copy-line) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-w . avy-action-a-copy-whole-line) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-y . avy-action-a-yank-whole-line) t)
-    (add-to-list 'avy-dispatch-alist '(?T . avy-action-a-teleport-line) t)
-    (add-to-list 'avy-dispatch-alist '(?\C-t . avy-action-a-teleport-whole-line) t)
-    (add-to-list 'avy-dispatch-alist '(?o . avy-action-an-embark-select) t)
-    (add-to-list 'avy-dispatch-alist '(?, . avy-action-an-embark-act) t)
-    (add-to-list 'avy-dispatch-alist '(?. . avy-action-an-embark-dwim) t))
 
-  (with-eval-after-load 'embark
-    (defvar-keymap an-embark-completing-read-prompter-map
-      :doc "Keymap for Embark's completing read prompter"
-      "<backtab>" #'abort-recursive-edit)
-    (advice-add 'embark-completing-read-prompter :around
-                (an-around-advice-with-minibuffer-keymap an-embark-completing-read-prompter-map))
-    (keymap-set embark-file-map "o" #'an-embark-ace-window-find-file)
-    (keymap-set embark-library-map "o" #'an-embark-ace-window-find-library)
-    (keymap-set embark-buffer-map "o" #'an-embark-ace-window-pop-to-buffer)
-    (keymap-set embark-bookmark-map "o" #'an-embark-ace-window-bookmark-jump)
-    (keymap-set embark-command-map "o" #'an-embark-ace-window-xref-find-definitions)
-    (keymap-set embark-function-map "o" #'an-embark-ace-window-xref-find-definitions)
-    (keymap-set embark-symbol-map "o" #'an-embark-ace-window-xref-find-definitions)
-    (keymap-set embark-identifier-map "o" #'an-embark-ace-window-xref-find-definitions))
+  ;; (with-eval-after-load 'vertico
+  ;;   (add-hook 'minibuffer-setup-hook
+  ;;             (lambda ()
+  ;;               (when (bound-and-true-p vertico--input)
+  ;;                 (keymap-set vertico-map "M-P" #'an-embark-select-vertico-previous)
+  ;;                 (keymap-set vertico-map "M-N" #'an-embark-select-vertico-next)))))
 
-  (with-eval-after-load 'vertico
-    (add-hook 'minibuffer-setup-hook
-              (lambda ()
-                (when (bound-and-true-p vertico--input)
-                  (keymap-set vertico-map "M-P" #'an-embark-select-vertico-previous)
-                  (keymap-set vertico-map "M-N" #'an-embark-select-vertico-next)))))
-
-  (with-eval-after-load 'org
-    (keymap-set org-mode-map "C-c M-t" #'an-org-todo-manipulate-time))
-  (with-eval-after-load 'org-agenda
-    (keymap-set org-agenda-mode-map "C-c M-t" #'an-org-todo-manipulate-time)))
+  )
 
 ;; Corfu + Vertico
 (use-package corfu
