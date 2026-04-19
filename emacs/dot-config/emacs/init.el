@@ -2366,6 +2366,8 @@ that allows to include other templates by their name."
 
 ;; Go
 (use-package go-ts-mode
+  :defer t
+
   :mode (("\\.go\\'" . go-ts-mode)
          ("/go\\.mod\\'" . go-mod-ts-mode))
 
@@ -2386,6 +2388,8 @@ that allows to include other templates by their name."
 
 ;; Yaml
 (use-package yaml-ts-mode
+  :defer t
+
   :mode ("\\.ya?ml\\'" . yaml-ts-mode)
 
   :init
@@ -2394,6 +2398,8 @@ that allows to include other templates by their name."
 
 ;; Toml
 (use-package toml-ts-mode
+  :defer t
+
   :mode ("\\.toml\\'" . toml-ts-mode)
 
   :init
@@ -2402,6 +2408,8 @@ that allows to include other templates by their name."
 
 ;; Json
 (use-package json-ts-mode
+  :defer t
+
   :mode ("\\.json\\'" . json-ts-mode)
 
   :init
@@ -2468,105 +2476,19 @@ that allows to include other templates by their name."
   (setopt easycrypt-prog-name "easycrypt")
 
   :config
-  ;; Setup and settings (after load)
-  (defun setup-a-proof-response-mode ()
-    (toggle-truncate-lines -1)
-    (toggle-word-wrap 1))
-  (defun setup-a-proof-goals-mode ()
-    (toggle-truncate-lines -1)
-    (toggle-word-wrap -1))
-
-  ;; Keybindings
-  (defvar-keymap a-proof-mode-process-repeat-map
-    :doc "Keymap (repeatable) for processing proof commands"
-    :repeat (:hints ((proof-undo-last-successful-command . "p/u: Undo last succesful command")
-                     (proof-assert-next-command-interactive . "n: Assert next command")
-                     (proof-undo-and-delete-last-successful-command . "d: Undo and delete last successful command")))
-    "p" #'proof-undo-last-successful-command
-    "u" #'proof-undo-last-successful-command
-    "n" #'proof-assert-next-command-interactive
-    "d" #'proof-undo-and-delete-last-successful-command)
-  (defvar-keymap a-bufhist-repeat-map
-    :doc "Keymap (repeatable) for browsing and managing buffer history"
-    :repeat (:hints ((bufhist-prev . "p: Go to previous history element")
-                     (bufhist-next . "n: Go to next history element")
-                     (bufhist-first . "<: Go to first history element")
-                     (bufhist-last . ">: Go to last history element")
-                     (bufhist-delete . "d: Delete current history element")))
-    "p" #'bufhist-prev
-    "n" #'bufhist-next
-    "<" #'bufhist-first
-    ">" #'bufhist-last
-    "d" #'bufhist-delete)
-
-  (defun setup-a-bufhist-map ()
-    (keymap-set bufhist-mode-map "p" #'bufhist-prev)
-    (keymap-set bufhist-mode-map "n" #'bufhist-next)
-    (keymap-set bufhist-mode-map "<" #'bufhist-first)
-    (keymap-set bufhist-mode-map ">" #'bufhist-last)
-    (keymap-set bufhist-mode-map "c" #'bufhist-clear)
-    (keymap-set bufhist-mode-map "d" #'bufhist-delete))
-  (defun setup-a-proof-mode-map ()
-    (keymap-unset proof-mode-map "M-<up>")
-    (keymap-unset proof-mode-map "M-<down>")
-    (keymap-unset proof-mode-map "C-M-<up>")
-    (keymap-unset proof-mode-map "C-M-<down>")
-    (keymap-unset proof-mode-map "C-c v")
-    (keymap-set proof-mode-map "C-S-u" #'proof-undo-last-successful-command)
-    (keymap-set proof-mode-map "C-S-p" #'proof-undo-last-successful-command)
-    (keymap-set proof-mode-map "C-S-n" #'proof-assert-next-command-interactive)
-    (keymap-set proof-mode-map "C-c C-v" #'proof-goto-point)
-    (keymap-set proof-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
-    (keymap-set proof-mode-map "C-c C-a" #'proof-goto-command-start)
-    (keymap-set proof-mode-map "C-c C-e" #'proof-goto-command-end)
-    (keymap-set proof-mode-map "C-c C-l" #'proof-goto-end-of-locked)
-    (keymap-set proof-mode-map "C-c C-w" #'proof-layout-windows)
-    (keymap-set proof-mode-map "C-c C-o" #'proof-display-some-buffers)
-    (keymap-set proof-mode-map "C-c C-k" #'pg-response-clear-displays)
-    (keymap-set proof-mode-map "C-c C-x" #'proof-minibuffer-cmd)
-    (keymap-set proof-mode-map "C-c C-q" #'proof-shell-exit)
-    (keymap-set proof-mode-map "M-P" #'pg-previous-matching-input-from-input)
-    (keymap-set proof-mode-map "M-N" #'pg-next-matching-input-from-input)
-    (keymap-set proof-mode-map "C-M-p" #'pg-previous-input)
-    (keymap-set proof-mode-map "C-M-n" #'pg-next-input)
-    (keymap-set proof-mode-map "C-M-S-p" #'pg-previous-matching-input)
-    (keymap-set proof-mode-map "C-M-S-n" #'pg-next-matching-input)
-    (keymap-set proof-mode-map "C-c M-v" #'pg-toggle-visibility))
-  (defun setup-a-proof-response-mode-map ()
-    (keymap-set proof-response-mode-map "C-q" #'bury-buffer)
-    (keymap-set proof-response-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
-    (keymap-set proof-response-mode-map "C-c C-e" #'proof-next-error)
-    (keymap-set proof-response-mode-map "C-c C-w" #'proof-layout-windows)
-    (keymap-set proof-response-mode-map "C-c C-o" #'proof-display-some-buffers)
-    (keymap-set proof-response-mode-map "C-c C-k" #'pg-response-clear-displays)
-    (keymap-set proof-response-mode-map "C-c C-x" #'proof-minibuffer-cmd)
-    (keymap-set proof-response-mode-map "C-c C-q" #'proof-shell-exit))
-  (defun setup-a-proof-goals-mode-map ()
-    (keymap-set proof-goals-mode-map "C-q" #'bury-buffer)
-    (keymap-set proof-goals-mode-map "C-c C-d" #'proof-undo-and-delete-last-successful-command)
-    (keymap-set proof-goals-mode-map "C-c C-e" #'proof-next-error)
-    (keymap-set proof-goals-mode-map "C-c C-w" #'proof-layout-windows)
-    (keymap-set proof-goals-mode-map "C-c C-o" #'proof-display-some-buffers)
-    (keymap-set proof-goals-mode-map "C-c C-k" #'pg-response-clear-displays)
-    (keymap-set proof-goals-mode-map "C-c C-x" #'proof-minibuffer-cmd)
-    (keymap-set proof-goals-mode-map "C-c C-q" #'proof-shell-exit))
+  (require 'local-proof-general)
 
   ;; Hooks
-  (add-hook 'proof-mode-hook #'setup-a-proof-mode-map)
-  (add-hook 'proof-mode-hook #'setup-a-bufhist-map)
+  (add-hook 'proof-mode-hook #'a-setup-proof-mode-map)
+  (add-hook 'proof-mode-hook #'a-setup-bufhist-map)
 
-  (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode)
-  (add-hook 'proof-response-mode-hook #'setup-a-proof-response-mode-map)
+  (add-hook 'proof-response-mode-hook #'a-setup-proof-response-mode)
+  (add-hook 'proof-response-mode-hook #'a-setup-proof-response-mode-map)
 
-  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode)
-  (add-hook 'proof-goals-mode-hook #'setup-a-proof-goals-mode-map)
+  (add-hook 'proof-goals-mode-hook #'a-setup-proof-goals-mode)
+  (add-hook 'proof-goals-mode-hook #'a-setup-proof-goals-mode-map)
 
-  ;; Custom functionality
-  ;; Remove bufhist buttons
-  (defun silence-bufhist-insert-buttons (&rest args)
-    (setq-local bufhist-top-point (point-min)))
-
-  (advice-add 'bufhist-insert-buttons :override #'silence-bufhist-insert-buttons))
+  (advice-add 'bufhist-insert-buttons :override #'an-advice-override-silence-bufhist-insert-buttons))
 
 
 ;; EasyCrypt (extension)
@@ -2584,6 +2506,8 @@ that allows to include other templates by their name."
   (easycrypt-response-mode . easycrypt-ext-response-mode)
 
   :config
+  (require 'local-easycrypt-ext)
+
   ;; External integration
   (with-eval-after-load 'consult-imenu
     (add-to-list 'consult-imenu-config
@@ -2596,18 +2520,6 @@ that allows to include other templates by their name."
                                    (?a "Axioms" font-lock-builtin-face)
                                    (?l "Lemmas" font-lock-keyword-face)
                                    (?T "Theories" font-lock-type-face)))))
-
-  (defun ece-consult-ripgrep-standard-library ()
-    "Performs `consult-ripgrep' with EasyCrypt's standard library root as
-starting directory."
-    (interactive)
-    (consult-ripgrep (ece--standard-library-root-canonical)))
-
-  (defun ece-consult-fd-standard-library ()
-    "Performs `consult-fd' with EasyCrypt's standard library root as
-starting directory."
-    (interactive)
-    (consult-fd (ece--standard-library-root-canonical)))
 
   ;; Keybindings
   (keymap-set easycrypt-ext-general-map "C-c C-p" #'ece-proofshell-print)
@@ -2624,9 +2536,8 @@ starting directory."
   (keymap-set easycrypt-ext-general-map "C-c C-e" 'ece-exec-map-prefix)
   (keymap-set easycrypt-ext-general-map "C-c z e" 'ece-exec-map-prefix)
 
-  (with-eval-after-load 'consult
-    (keymap-set easycrypt-ext-general-map "C-c z F" #'ece-consult-fd-standard-library)
-    (keymap-set easycrypt-ext-general-map "C-c z r" #'ece-consult-ripgrep-standard-library)))
+  (keymap-set easycrypt-ext-general-map "C-c z F" #'ece-consult-fd-standard-library)
+  (keymap-set easycrypt-ext-general-map "C-c z r" #'ece-consult-ripgrep-standard-library))
 
 (use-package easycrypt-ext-cape
   :ensure nil ; Provided by `easycrypt-ext'
@@ -2696,7 +2607,6 @@ starting directory."
   :ensure t
 
   :init
-  ;; Setup and settings (before load)
   (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 (use-package doom-modeline
@@ -2705,7 +2615,6 @@ starting directory."
   :hook after-init
 
   :init
-  ;; Setup and settings (before load)
   (setopt doom-modeline-buffer-encoding nil
           doom-modeline-default-coding-system 'utf-8
           doom-modeline-time-icon nil
@@ -2723,28 +2632,21 @@ starting directory."
   (setopt keycast-mode-line-format "%10s%k%c%R%10s")
 
   :config
-  ;; Setup and settings (after load)
+  (require 'local-keycast)
+
   ;; Replacements
   (setopt keycast-substitute-alist
-          (append keycast-substitute-alist '((self-insert-command t Typing...)
-                                             ("<wheel-up>" t Scrolling...)
-                                             ("<double-wheel-up>" t Scrolling...)
-                                             ("<triple-wheel-up>" t Scrolling...)
-                                             ("<wheel-up>" t Scrolling...)
-                                             ("<double-wheel-up>" t Scrolling...)
-                                             ("<triple-wheel-up>" t Scrolling...)
-                                             ("<wheel-down>" t Scrolling...)
-                                             ("<double-wheel-down>" t Scrolling...)
-                                             ("<triple-wheel-down>" t Scrolling...))))
-
-  ;; Custom global minor mode for compatibility with `doom-modeline'
-  (define-minor-mode keycast-mode
-	  "Show current command and its key binding in the mode line, for use with
-`doom-modeline'."
-	  :global t
-	  (if keycast-mode
-		    (add-hook 'pre-command-hook 'keycast--update nil t)
-      (remove-hook 'pre-command-hook 'keycast--update t)))
+          (append keycast-substitute-alist
+                  '((self-insert-command t Typing...)
+                    ("<wheel-up>" t Scrolling...)
+                    ("<double-wheel-up>" t Scrolling...)
+                    ("<triple-wheel-up>" t Scrolling...)
+                    ("<wheel-up>" t Scrolling...)
+                    ("<double-wheel-up>" t Scrolling...)
+                    ("<triple-wheel-up>" t Scrolling...)
+                    ("<wheel-down>" t Scrolling...)
+                    ("<double-wheel-down>" t Scrolling...)
+                    ("<triple-wheel-down>" t Scrolling...))))
 
   (add-to-list 'global-mode-string '("" keycast-mode-line)))
 

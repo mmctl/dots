@@ -3,8 +3,9 @@
 
 (require 'embark)
 
+
 ;;; Avy
-(require 'avy)
+(defvar avy-ring)
 
 ;;;###autoload
 (defun avy-action-an-embark-select (pt)
@@ -41,7 +42,8 @@
 
 
 ;;; Ace-Window
-(require 'ace-window)
+(declare-function aw-select "ace-window")
+(declare-function aw-switch-to-window "ace-window")
 
 ;; Embark with Ace Window prefix
 (defun an-embark-ace-window-action (fun)

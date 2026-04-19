@@ -182,6 +182,7 @@
 # make -C "$XDG_DATA_HOME/easycrypt/repo"
 # ln -sr "$XDG_DATA_HOME/easycrypt/repo/ec.native" "$XDG_BIN_HOME/easycrypt"
 # Install correct versions of provers (see EasyCrypt README)
+# sudo dnf install cvc5 z3
 # easycrypt why3config
 
 # lean
