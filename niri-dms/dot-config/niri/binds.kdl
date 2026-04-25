@@ -109,14 +109,16 @@ binds {
     Mod+B repeat=false hotkey-overlay-title="Open Browser (Zen)" { spawn "zen-browser"; }
     Mod+E repeat=false hotkey-overlay-title="Open Editor (Emacs)" { spawn "emacsclient" "-c" "--alternate-editor="; }
     Mod+D repeat=false hotkey-overlay-title="Open File Manager (Nautilus)" { spawn "nautilus"; }
+    Mod+Z repeat=false hotkey-overlay-title="Open Zotero" { spawn "flatpak" "run" "org.zotero.Zotero"; }
+    Mod+Comma repeat=false hotkey-overlay-title="Open Signal" { spawn "flatpak" "run" "org.signal.Signal"; }
 
     //// Meta
     Mod+Q repeat=false { close-window; }
     Mod+Shift+Escape allow-inhibiting=false repeat=false { toggle-keyboard-shortcuts-inhibit; }
-    Mod+Shift+E { quit; }
+    Mod+Ctrl+Shift+Q { quit; }
 
     //// Help
-    Mod+Shift+Semicolon repeat=false { show-hotkey-overlay; }
+    Mod+Ctrl+Semicolon repeat=false { show-hotkey-overlay; }
 
     // DMS
     //// Managing
@@ -125,9 +127,9 @@ binds {
     Mod+N repeat=false hotkey-overlay-title="Notification Center" { spawn "dms" "ipc" "call" "notifications" "toggle"; }
     Mod+M repeat=false hotkey-overlay-title="Task Manager" { spawn "dms" "ipc" "call" "processlist" "focusOrToggle"; }
     Ctrl+Shift+Escape repeat=false hotkey-overlay-title="Task Manager" { spawn "dms" "ipc" "call" "processlist" "focusOrToggle"; }
-    
-    /// Settings
-    Mod+Comma repeat=false hotkey-overlay-title="Settings" { spawn "dms" "ipc" "call" "settings" "focusOrToggle"; }
+
+    //// Setting
+    Mod+Shift+Semicolon repeat=false hotkey-overlay-title="Settings" { spawn "dms" "ipc" "call" "settings" "focusOrToggle"; }
 
     //// System
     Super+Alt+L allow-inhibiting=false repeat=false hotkey-overlay-title="Lock Screen" { spawn "dms" "ipc" "call" "lock" "lock"; }

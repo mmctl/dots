@@ -315,6 +315,7 @@
 
 ;; Encryption
 (setopt epg-pinentry-mode 'loopback)
+(setopt epa-file-select-keys 'silent)
 
 ;; Miscellaneous
 (setq-default bidi-display-reordering 'left-to-right)

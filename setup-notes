@@ -19,6 +19,10 @@
 ### Install and setup BTRFS
 # grub btrfs
 
+## Dotfiles
+# sudo dnf install stow
+git clone https://github.com/mmctl/dots.git "$XDG_DATA_HOME/dots"
+
 ## Directories
 ### PARA
 # mkdir -p ~/projects ~/areas ~/resources ~/archives
@@ -27,12 +31,15 @@
 
 ## SSH + GPG
 # mkdir -p ~/.ssh ~/.gnupg
-# Generate keys: SSH personal and work, GPG local encryption
+# stow ssh
+# stow gpg
+# Generate keys: SSH personal and work
+ssh-keygen -t ed25519 -C "${USER}-personal@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_personal"
+ssh-keygen -t ed25519 -C "${USER}-work@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_work"
 # systemctl --user enable --now ssh-agent
+
 # Put ssh public keys on relevant accounts/servers (e.g., GitHub)
 
-## Dotfiles
-# sudo dnf install stow
 
 # Password manager
 # sudo dnf install rbw
@@ -93,8 +100,37 @@
 # Check default accounts in config (personal vs work, also for Forge)
 
 ## Emacs
-# Dependencies: enchant, ripgrep, fd
-# sudo dnf install enchant2-devel pkgconf-pkg-config
+# Dependencies: enchant (hunspell + dictionaries), ripgrep, fd
+# sudo dnf install enchant2-devel pkgconf-pkg-config hunspell
+
+sudo dnf install \
+ hunspell-af hunspell-ak hunspell-am hunspell-ar hunspell-as hunspell-ast \
+ hunspell-az hunspell-be hunspell-ber hunspell-bg hunspell-bn hunspell-br \
+ hunspell-ca hunspell-cop hunspell-cs hunspell-csb hunspell-cv hunspell-cy \
+ hunspell-da hunspell-de hunspell-dsb hunspell-el hunspell-en hunspell-en-GB \
+ hunspell-en-US hunspell-eo hunspell-es hunspell-es-AR hunspell-es-BO \
+ hunspell-es-CL hunspell-es-CO hunspell-es-CR hunspell-es-CU hunspell-es-DO \
+ hunspell-es-EC hunspell-es-ES hunspell-es-GQ hunspell-es-GT hunspell-es-HN \
+ hunspell-es-MX hunspell-es-NI hunspell-es-PA hunspell-es-PE hunspell-es-PR \
+ hunspell-es-PY hunspell-es-SV hunspell-es-US hunspell-es-UY hunspell-es-VE \
+ hunspell-et hunspell-eu hunspell-fa hunspell-fj hunspell-fo hunspell-fr \
+ hunspell-fur hunspell-fy hunspell-ga hunspell-gd hunspell-gl hunspell-grc \
+ hunspell-gu hunspell-gv hunspell-haw hunspell-hi hunspell-hil hunspell-hr \
+ hunspell-hsb hunspell-ht hunspell-hu hunspell-hy hunspell-ia hunspell-id \
+ hunspell-is hunspell-it hunspell-ka hunspell-kk hunspell-km hunspell-kn \
+ hunspell-ko hunspell-ku hunspell-ky hunspell-la hunspell-lb hunspell-ln \
+ hunspell-lt hunspell-lv hunspell-mai hunspell-mg hunspell-mi hunspell-mk \
+ hunspell-ml hunspell-mn hunspell-mos hunspell-mr hunspell-ms hunspell-mt \
+ hunspell-nb hunspell-nds hunspell-ne hunspell-nl hunspell-nn hunspell-nr \
+ hunspell-nso hunspell-ny hunspell-oc hunspell-om hunspell-or hunspell-pa \
+ hunspell-pl hunspell-pt hunspell-pt-BR hunspell-qu hunspell-quh hunspell-ro \
+ hunspell-ru hunspell-rw hunspell-sc hunspell-se hunspell-shs hunspell-si \
+ hunspell-sk hunspell-sl hunspell-smj hunspell-so hunspell-sq hunspell-sr \
+ hunspell-ss hunspell-st hunspell-sv hunspell-sw hunspell-ta hunspell-te \
+ hunspell-tet hunspell-th hunspell-tk hunspell-tl hunspell-tpi hunspell-tr \
+ hunspell-uk hunspell-ur hunspell-ve hunspell-wa hunspell-xh hunspell-yi \
+ hunspell-zu
+
 # sudo dnf install ripgrep fd-find
 # sudo dnf install emacs-lucid
 # Create environment file:
@@ -123,6 +159,21 @@
 
 # run emacs to install packages
 # fill .authinfo.gpg with passwords (Forge + mail)
+cat > "$XDG_DATA_HOME/emacs/.authinfo" <<EOF
+machine mail.your-server.de login $(rbw get --field username "Mailbox Personal (mmeijers.com)") password $(rbw get "Mailbox Personal (mmeijers.com)")
+machine mail.your-server.de login $(rbw get --field username "Mailbox Kernel (mmeijers.com)") password $(rbw get "Mailbox Kernel (mmeijers.com)")
+machine mail.your-server.de login $(rbw get --field username "Mailbox KeM (mmeijers.com)") password $(rbw get "Mailbox KeM (mmeijers.com)")
+machine mail.your-server.de login $(rbw get --field username "Mailbox Research (mmeijers.com)") password $(rbw get "Mailbox Research (mmeijers.com)")
+machine mail.your-server.de login $(rbw get --field username "Mailbox Teaching (mmeijers.com)") password $(rbw get "Mailbox Teaching (mmeijers.com)")
+machine mail.your-server.de login $(rbw get --field username "Mailbox Host (mmeijers.com)") password $(rbw get "Mailbox Host (mmeijers.com)")
+machine mail.your-server.de login $(rbw get --field username "Mailbox Dump (mmeijers.com)") password $(rbw get "Mailbox Dump (mmeijers.com)")
+machine api.github.com login $(rbw get --field username "GitHub (Formal)")^forge password $(rbw get --field "Personal Access Token" "GitHub (Formal)")
+machine api.github.com login $(rbw get --field username "GitHub (Informal)")^forge password $(rbw get --field "Personal Access Token" "GitHub (Informal)")
+EOF
+
+gpg -c "$XDG_DATA_HOME/emacs/.authinfo" && rm -- "$XDG_DATA_HOME/emacs/.authinfo"
+
+git clone git@github-personal:mmctl/org.git "$XDG_DATA_HOME/org"
 
 # systemctl --user enable emacs.service
 
@@ -143,7 +194,7 @@
 # TL_ROOT="/usr/local/texlive/$TL_YEAR"
 # cat >> "$HOME/.profile" <<EOF
 #
-# >>> Generated by install script: TeX Live environment >>>
+# >>> TeX Live environment >>>
 # export PATH="$TL_ROOT/bin/x86_64-linux:\$PATH"
 # export MANPATH="$TL_ROOT/texmf-dist/doc/man:\${MANPATH:-}"
 # export INFOPATH="$TL_ROOT/texmf-dist/doc/info:\${INFOPATH:-}"
@@ -170,7 +221,7 @@
 # opam init
 # cat >> "$HOME/.bashrc" <<'EOF'
 #
-# >>> Generated by install script: Opam initialization >>>
+# >>> Opam initialization >>>
 # [[ -r "$OPAMROOT/opam-init/init.sh" ]] && . "$OPAMROOT/opam-init/init.sh" >/dev/null 2>&1 || true 
 # <<< Opam initialization <<<
 # EOF
@@ -200,6 +251,9 @@
 
 # Socials
 ## Signal
+flatpak install flathub org.signal.Signal
+flatpak override --user --filesystem=xdg-config/gtk-3.0:ro org.signal.Signal
+flatpak override --user --filesystem=xdg-config/gtk-4.0:ro org.signal.Signal
 
 
 # Browser
@@ -213,12 +267,36 @@
 #Path=mm
 #Default=1
 #EOF
-# Open zen: install bitwarden extension
+# Open zen: install bitwarden, ublock origin
 
 
 # Documents
 #
 # Zotero
+zotflatid=org.zotero.Zotero
+zotflatbase="$HOME/.var/app/$zotflatid"
+
+mkdir -p "$zotflatbase"
+
+flatpak install flathub "$zotflatid"
+
+if [[ -e "$HOME/.zotero" && ! -e "$zotflatbase/.zotero" ]]; then
+  mv "$HOME/.zotero" "$zotflatbase/.zotero"
+fi
+
+if [[ -e "$HOME/Zotero" && ! -e "$zotflatbase/Zotero" ]]; then
+  mv "$HOME/Zotero" "$zotflatbase/Zotero"
+fi
+
+flatpak override --user \
+  --nofilesystem=home \
+  --persist=.zotero \
+  --persist=Zotero \
+  --filesystem=xdg-config/gtk-3.0:ro org.zotero.Zotero \
+  --filesystem=xdg-config/gtk-4.0:ro org.zotero.Zotero \
+  "$zotflatid"
+
+# Open zen: install zotero extensions
 
 # Keyboards
 # curl -fsSL https://install.qmk.fm | sh
@@ -226,5 +304,9 @@
 # git clone git@github-personal:mmctl/keyboards.git "$XDG_DATA_HOME/keyboards"
 # ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
 # ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
+
+# Website
+git clone --recurse-submodules git@github-personal:mmctl/website-personal.git "$HOME/projects/website"
+sudo dnf install hugo
 
 # reboot (or at least log out)

@@ -1,5 +1,9 @@
 [[ $- != *i* ]] && return
 
+# History
+mkdir -p "${XDG_STATE_HOME:-$HOME/.local/state}/bash"
+
+HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/bash/history"
 HISTSIZE=2500
 HISTFILESIZE=5000
 HISTCONTROL=ignoreboth:erasedups
