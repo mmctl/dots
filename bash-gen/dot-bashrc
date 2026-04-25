@@ -18,17 +18,18 @@ unset rc
 [[ ${TERM:-dumb} == dumb || ${TERM:-dumb} == linux ]] && return
 
 # BLE (preload)
-if [[ $- == *i* && -f "$XDG_DATA_HOME/bash/blesh/ble.sh" ]]; then
-    . "$XDG_DATA_HOME/bash/blesh/ble.sh" --attach=none
+if [[ -f "$XDG_DATA_HOME/bash/blesh/ble.sh" ]]; then
+   . "$XDG_DATA_HOME/bash/blesh/ble.sh" --attach=none
 fi
 
 # Extensions and integrations
 if [[ -z ${BLE_VERSION-} ]]; then
-    # No BLE loaded, so enable integrations manually 
+    # No BLE loaded, so enable integrations manually
+    BASH_COMPLETION_COMPAT_IGNORE=fzf
     [[ -f /etc/profile.d/bash_completion.sh ]] && . /etc/profile.d/bash_completion.sh
-    command -v fzf >/dev/null && eval "$(fzf --bash)"
-    command -v fd >/dev/null && eval "$(fd --gen-completions bash)"
-    command -v zoxide > /dev/null && eval "$(zoxide init bash)"
+    command -v fzf >/dev/null && _cached_eval fzf-full fzf --bash
+    command -v fd >/dev/null && _cached_eval fd-completions fd --gen-completions bash
+    command -v zoxide > /dev/null && _cached_eval zoxide-init-cd zoxide init bash --cmd cd
     
     # User-specific runcommands (extensions)
     config_extensions_dir="$XDG_CONFIG_HOME/bash/extensions"

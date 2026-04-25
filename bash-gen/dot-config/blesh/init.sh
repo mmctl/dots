@@ -1,9 +1,14 @@
 # Bash completions
+BASH_COMPLETION_COMPAT_IGNORE=fzf
 [[ -f /etc/profile.d/bash_completion.sh ]] && . /etc/profile.d/bash_completion.sh
 
 
+# FD
+command -v fd >/dev/null && _cached_eval fd-completions fd --gen-completions bash
+
+
 # FZF
-if command -v fzf > /dev/null; then
+if command -v fzf >/dev/null; then
     ble-import -d integration/fzf-completion
     ble-import -d integration/fzf-key-bindings
     ble-import -d integration/fzf-menu
@@ -11,9 +16,9 @@ fi
 
 
 # Zoxide
-if command -v zoxide > /dev/null; then
-   eval "$(zoxide init bash --cmd cd)"
-   ble-import -d integration/zoxide
+if command -v zoxide >/dev/null; then
+    _cached_eval zoxide-init-cd zoxide init bash --cmd cd
+    ble-import -d integration/zoxide
 fi
 
 
@@ -25,6 +30,15 @@ bleopt exec_exit_mark=
 bleopt edit_marker=
 bleopt edit_marker_error=
 
+# History
+bleopt history_share=1
+bleopt history_erasedups_limit=2500
+
+# Autocomplete
+bleopt complete_ambiguous=
+
+# Highlight
+bleopt highlight_filename=
 
 # Color scheme and faces
 [[ -f "$XDG_CONFIG_HOME/blesh/colors.sh" ]] && . "$XDG_CONFIG_HOME/blesh/colors.sh"

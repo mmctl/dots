@@ -20,7 +20,7 @@
   "Setup GUI frame."
   ;; Faces
   ;; Default/Fixed-pitch
-  (let ((ffl (font-family-list)))
+  (when-let* ((ffl (font-family-list)))
     (cond
      ((member "Iosevka" ffl)
       (set-face-attribute 'default frame :family "Iosevka" :height 140 :weight 'medium)
@@ -62,6 +62,7 @@
   (if (display-graphic-p frame)
       (local-setup-gui-frame frame)
     (local-setup-tty-frame frame)))
+
 
 (defun local-setup-frame-after (&optional frame)
   "Setup any (TTY or GUI) frame. Assumes global/default setup.")

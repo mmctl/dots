@@ -1,3 +1,10 @@
+# Ensure .profile is loaded only once (unless explicitly circumvented)
+if [ -n "${PROFILE_LOADED-}" ]; then
+  return 0 2>/dev/null || exit 0
+fi
+export PROFILE_LOADED=1
+
+
 # Environment variables
 ## Locale
 export LANG='en_US.UTF-8'
@@ -45,11 +52,12 @@ export GOBIN="$GOPATH/bin"
 export ELAN_HOME="$XDG_DATA_HOME/elan"
 
 
-## Default programs (non-GUI)
+## Default programs
 export PAGER='less'
 export MANPAGER='less'
 export SUDO_EDITOR='nano'
 export EDITOR='emacsclient -t --alternate-editor='
+export VISUAL='emacsclient -c --alternate-editor='
 export ALTERNATE_EDITOR='' # This will spawn an emacs daemon upon running emacsclient (if no daemon is running yet)
 
 

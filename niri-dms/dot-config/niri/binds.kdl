@@ -30,8 +30,8 @@ binds {
     Mod+8 { focus-workspace 8; }
     Mod+9 { focus-workspace 9; }
 
-    Mod+Ctrl+BracketLeft { focus-monitor-previous; }
-    Mod+Ctrl+BracketRight { focus-monitor-next; }
+    Mod+BracketLeft { focus-monitor-previous; }
+    Mod+BracketRight { focus-monitor-next; }
 
     Mod+Ctrl+V { switch-focus-between-floating-and-tiling; }
 
@@ -63,11 +63,11 @@ binds {
     Mod+Shift+Page_Down { move-workspace-down; }
     Mod+Shift+Page_Up { move-workspace-up; }
 
-    Mod+Shift+BracketLeft { move-workspace-to-monitor-previous; }
-    Mod+Shift+BracketRight { move-workspace-to-monitor-next; }
+    Mod+Shift+BracketLeft { move-column-to-monitor-previous; }
+    Mod+Shift+BracketRight { move-column-to-monitor-next; }
     
-    Mod+Shift+Backslash { move-column-to-monitor-previous; }
-    Mod+Shift+Slash { move-column-to-monitor-next; }
+    Mod+Shift+Backslash { move-workspace-to-monitor-previous; }
+    Mod+Shift+Slash { move-workspace-to-monitor-next; }
     
     Mod+Shift+Comma { consume-or-expel-window-left; }
     Mod+Shift+Period { consume-or-expel-window-right; }
