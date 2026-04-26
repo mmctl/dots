@@ -32,7 +32,6 @@ bleopt edit_marker_error=
 
 # History
 bleopt history_share=1
-bleopt history_erasedups_limit=2500
 
 # Autocomplete
 bleopt complete_ambiguous=
