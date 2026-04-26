@@ -17,7 +17,7 @@
 # sudo grub2-editenv - unset menu_auto_hide
 
 ### Install and setup BTRFS
-# grub btrfs
+# sudo dnf install btrfs-progs gawk inotify-tools
 
 ## Dotfiles
 # sudo dnf install stow
@@ -25,7 +25,7 @@ git clone https://github.com/mmctl/dots.git "$XDG_DATA_HOME/dots"
 
 ## Directories
 ### PARA
-# mkdir -p ~/projects ~/areas ~/resources ~/archives
+# mkdir -p "$HOME/projects" "$HOME/areas" "$HOME/resources" "$HOME/archives"
 # remove default user-dirs
 # stow xdg (user-dirs)
 
