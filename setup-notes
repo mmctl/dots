@@ -1,51 +1,82 @@
 # System
 ## Connect Wifi
 ## Store guest wifi password system-wide, everyone can connect
-## Store private wifi password in keyring, only mm can connect
+nmcli device wifi connect "GuestWiFiID" --ask
+nmcli connection modifi "GuestWiFiID" \
+  connection.autoconnect yes \
+  connection.autoconnect-priority 50 \
+  ipv4.route-metric 500 ipv6.route-metric 500
 
-## Setup fingerprint (if available)
+## Store private wifi password in keyring, only mm can connect
+nmcli device wifi connect "PrivateWiFiID" --ask
+nmcli connection modify "PrivateWiFi" \
+  connection.autoconnect yes \
+  connection.autoconnect-priority 100 \
+  ipv4.route-metric 300 ipv6.route-metric 300
+  connection.permissions "user:$USER" \
+  802-11-wireless-security.psk-flags 1
+
+## Prefer Ethernet over Wifi
+nmcli connection modify "EthernetID" ipv4.route-metric 100 ipv6.route-metric 100 \
+
+# Create snapper config for home 
+snapper -c home create-config /home
+snapper -c home set-config \
+  "ALLOW_USERS=$USER" \
+  NUMBER_LIMIT=25 NUMBER_LIMIT_IMPORTANT=25 \
+  TIMELINE_LIMIT_HOURLY=12 TIMELINE_LIMIT_DAILY=12 \
+  TIMELINE_LIMIT_WEEKLY=12 TIMELINE_LIMIT_MONTHLY=4 \
+  TIMELINE_LIMIT_YEARLY=0
+
 
 ## Update
-# sudo dnf upgrade --refresh
+sudo zypper refresh
+sudo zypper update
 # reboot
 
-## Filesystem (BTRFS)
-# sudo dnf install btrfs-progs snapper btrfs-assistant
 
-## Booting
-### Always show GRUB menu
-# sudo grub2-editenv - unset menu_auto_hide
+## Setup fingerprint (if available)
+sudo zypper install fprintd fprintd-pam
 
-### Install and setup BTRFS
-# sudo dnf install btrfs-progs gawk inotify-tools
-
-## Dotfiles
-# sudo dnf install stow
+XDG_DATA_HOME="$HOME/.local/share"
+mkdir -p "$XDG_DATA_HOME"
+sudo zypper install git stow
 git clone https://github.com/mmctl/dots.git "$XDG_DATA_HOME/dots"
+cd "$XDG_DATA_HOME/dots"
+git checkout personal-opensuse-tumbleweed
+rm "$HOME/.profile"
+stow base
+source "$HOME/.profile"
+
 
 ## Directories
 ### PARA
-# mkdir -p "$HOME/projects" "$HOME/areas" "$HOME/resources" "$HOME/archives"
-# remove default user-dirs
-# stow xdg (user-dirs)
+rmdir "$HOME/Desktop" "$HOME/Downloads" "$HOME/Templates" "$HOME/Public" "$HOME/Documents" "$HOME/Music" "$HOME/Pictures" "$HOME/Videos"
+mkdir -p "$HOME/projects" "$HOME/areas" "$HOME/resources" "$HOME/archives"
+rm "$XDG_CONFIG_HOME/user-dirs.dirs"
+stow xdg
 
 ## SSH + GPG
-# mkdir -p ~/.ssh ~/.gnupg
-# stow ssh
-# stow gpg
+mkdir -p "$HOME/.ssh" "$HOME/.gnupg"
+stow ssh gnupg
 # Generate keys: SSH personal and work
 ssh-keygen -t ed25519 -C "${USER}-personal@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_personal"
 ssh-keygen -t ed25519 -C "${USER}-work@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_work"
-# systemctl --user enable --now ssh-agent
-
 # Put ssh public keys on relevant accounts/servers (e.g., GitHub)
 
 
+# Building/development basics/essentials
+sudo zypper install --recommends -t pattern devel_basis
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path
+stow git
+
+
 # Password manager
-# sudo dnf install rbw
+sudo zypper install pinentry
+cargo install --locked rbw
+stow rbw
 
 # Desktop suite/environment
-## Stow base, source profile
 
 # sudo dnf install gtk3 gtk4 qt5ct qt6ct matugen
 # sudo dnf install adw-gtk3-theme 
@@ -63,11 +94,8 @@ ssh-keygen -t ed25519 -C "${USER}-work@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.s
 #   auth       sufficient   pam_fprintd.so
 
 
-# Install fonts 
-#Iosevka-Nerd      PkgTTC-IosevkaAile-34.2.1    PkgTTC-SGr-Iosevka-34.2.1      PkgTTC-SGr-IosevkaTerm-34.2.1      PkgWebFont-Iosevka-34.2.1
-#IosevkaTerm-Nerd  PkgTTC-IosevkaEtoile-34.2.1  PkgTTC-SGr-IosevkaSlab-34.2.1  PkgTTC-SGr-IosevkaTermSlab-34.2.1  PkgWebFont-IosevkaAile-34.2.1
-#Symbols Nerd Font Mono (https://raw.githubusercontent.com/rainstormstudio/nerd-icons.el/main/fonts/NFM.ttf)
-# "fc-cache -f -v"
+# Install fonts
+sudo zypper install iosevka-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
 
 # Stow dms
 
@@ -98,6 +126,9 @@ ssh-keygen -t ed25519 -C "${USER}-work@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.s
 ## Git
 # stow git
 # Check default accounts in config (personal vs work, also for Forge)
+
+# rust
+rustup component add rust-analyzer rust-src 
 
 ## Emacs
 # Dependencies: enchant (hunspell + dictionaries), ripgrep, fd
