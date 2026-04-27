@@ -7,6 +7,10 @@ BASH_COMPLETION_COMPAT_IGNORE=fzf
 command -v fd >/dev/null && _cached_eval fd-completions fd --gen-completions bash
 
 
+# Ripgrep/RG
+command -v rg >/dev/null && _cached_eval ripgrep-completions rg --generate complete-bash
+
+
 # FZF
 if command -v fzf >/dev/null; then
     ble-import -d integration/fzf-completion
