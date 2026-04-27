@@ -1,5 +1,19 @@
+# INSTALLATION
+# Installer image:     DVD / Offline Image
+# Bootloader:          GRUB EFI
+# Online repos:        Main Repository, Main Update Repository, Non-OSS Repository, Non-OSS Update Repository
+# Filesystem:          Btrfs root with snapshots (default layout)
+# Security:            SELinux
+# System Role:         Generic Desktop
+
+
+
+# BOOT
 # System
 ## Connect Wifi
+## List available WiFi networks
+nmcli device wifi list
+
 ## Store guest wifi password system-wide, everyone can connect
 nmcli device wifi connect "GuestWiFiID" --ask
 nmcli connection modifi "GuestWiFiID" \
@@ -16,6 +30,9 @@ nmcli connection modify "PrivateWiFi" \
   connection.permissions "user:$USER" \
   802-11-wireless-security.psk-flags 1
 
+## List Ethernet connections
+nmcli connection show
+
 ## Prefer Ethernet over Wifi
 nmcli connection modify "EthernetID" ipv4.route-metric 100 ipv6.route-metric 100 \
 
@@ -29,14 +46,21 @@ snapper -c home set-config \
   TIMELINE_LIMIT_YEARLY=0
 
 
-## Update
+## Add Packman Essentials repository and install codecs
+sudo zypper addrepo -cfp 90 'https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/' packman-essentials
 sudo zypper refresh
-sudo zypper update
+sudo zypper install --allow-vendor-change --from packman-essentials \
+  ffmpeg gstreamer-plugins-{good,bad,ugly,libav} libavcodec
+
+## Update
+sudo zypper dup
+
 # reboot
 
 
 ## Setup fingerprint (if available)
 sudo zypper install fprintd fprintd-pam
+sudo fprintd-enroll "$USER"
 
 XDG_DATA_HOME="$HOME/.local/share"
 mkdir -p "$XDG_DATA_HOME"
@@ -47,7 +71,7 @@ git checkout personal-opensuse-tumbleweed
 rm "$HOME/.profile"
 stow base
 source "$HOME/.profile"
-
+mkdir -p "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_BIN_HOME"
 
 ## Directories
 ### PARA
@@ -77,14 +101,36 @@ cargo install --locked rbw
 stow rbw
 
 # Desktop suite/environment
+sudo zypper install gtk3 gtk4 qt5ct qt6ct
+# adw-gtk3-theme 
 
-# sudo dnf install gtk3 gtk4 qt5ct qt6ct matugen
-# sudo dnf install adw-gtk3-theme 
 
 # DMS
-# stow dms
+# Install base
+sudo zypper install kitty niri xwayland-satellite
+
+## Add repository
+sudo zypper addrepo https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/home:AvengeMedia:danklinux.repo
+
+# Install remainder
+sudo zypper refresh
+sudo zypper install dms quickshell matugen dgop
+
+# Configure
+stow dms
+# Copy over machine-indpeendent settings from settings_base.json to settings.json
+
+# reboot into Niri
+
+
 # Enable greeter (dms greeter enable)
-# RBW plugin
+sudo zypper install greetd dms-greeter
+dms greeter enable
+dms greeter sync
+sudo systemctl enable greetd
+
+# Reboot
+
 # If still buggy fingerprint + pass auth in lockscreen/greeter:
 # > remove general fprint auth: 
 #   authselect disable-feature with-fingerprint && authselect apply-changes
@@ -94,99 +140,106 @@ stow rbw
 #   auth       sufficient   pam_fprintd.so
 
 
-# Install fonts
-sudo zypper install iosevka-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
+# (CD into dots directory for stowing)
 
-# Stow dms
-
-# Mail
-# sudo dnf install isync
-# mkdir -p \
-# "$MAILDIR/personal-mmeijers" \
-# "$MAILDIR/kernel-mmeijers" \
-# "$MAILDIR/kem-mmeijers" \
-# "$MAILDIR/research-mmeijers" \
-# "$MAILDIR/teaching-mmeijers" \
-# "$MAILDIR/host-mmeijers" \
-# "$MAILDIR/dump-mmeijers" 
-# stow isync
+# Fonts
+sudo zypper install iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
 
 # Development
+## SSH
+cat > "$XDG_CONFIG_HOME/systemd/user/ssh-agent.socket" <<'EOF'
+[Unit]
+Description=OpenSSH key agent
+Documentation=man:ssh-agent(1) man:ssh-add(1) man:ssh(1)
+
+[Socket]
+ListenStream=%t/ssh-agent.socket
+Service=ssh-agent.service
+Priority=6
+Backlog=5
+SocketMode=0600
+DirectoryMode=0700
+
+[Install]
+WantedBy=sockets.target
+EOF
+
+cat > "$XDG_CONFIG_HOME/systemd/user/ssh-agent.service" <<'EOF'
+# Requires SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket" set in environment
+[Unit]
+ConditionEnvironment=!SSH_AGENT_PID
+Description=OpenSSH key agent
+Documentation=man:ssh-agent(1) man:ssh-add(1) man:ssh(1)
+Requires=ssh-agent.socket
+
+[Service]
+ExecStart=/usr/bin/ssh-agent -D
+PassEnvironment=SSH_AGENT_PID
+SuccessExitStatus=2
+Type=simple
+
+[Install]
+Also=ssh-agent.socket
+EOF
+
+sudo systemctl --user enable --now ssh-agent
+
 ## Terminal + Shell
-# sudo dnf install kitty bash-completion fzf fd-find ripgrep zoxide
+sudo zypper install bash-completion fzf fd ripgrep zoxide starship
 # Ble.sh
-# curl -sS https://starship.rs/install.sh | sh
+git clone --recursive https://github.com/akinomyoga/ble.sh.git "$XDG_DATA_HOME/srcs/blesh"
+make -C "$XDG_DATA_HOME/srcs/blesh" install
 
-### Setup FZF and FD integration with bash
-# mkdir -p $XDG_DATA_HOME/bash 
-
-# stow bash-gen
-# stow readline
+stow bash-gen readline
 
 ## Git
-# stow git
+stow git
 # Check default accounts in config (personal vs work, also for Forge)
 
-# rust
-rustup component add rust-analyzer rust-src 
+# Mail
+sudo zypper install isync
+mkdir -p \
+  "$MAILDIR/personal-mmeijers" \
+  "$MAILDIR/kernel-mmeijers" \
+  "$MAILDIR/kem-mmeijers" \
+  "$MAILDIR/research-mmeijers" \
+  "$MAILDIR/teaching-mmeijers" \
+  "$MAILDIR/host-mmeijers" \
+  "$MAILDIR/dump-mmeijers" 
+stow isync
+mbsync --all
+
 
 ## Emacs
 # Dependencies: enchant (hunspell + dictionaries), ripgrep, fd
-# sudo dnf install enchant2-devel pkgconf-pkg-config hunspell
+sudo zypper install hunspell ripgrep fd
+sudo zypper install myspell-*
 
-sudo dnf install \
- hunspell-af hunspell-ak hunspell-am hunspell-ar hunspell-as hunspell-ast \
- hunspell-az hunspell-be hunspell-ber hunspell-bg hunspell-bn hunspell-br \
- hunspell-ca hunspell-cop hunspell-cs hunspell-csb hunspell-cv hunspell-cy \
- hunspell-da hunspell-de hunspell-dsb hunspell-el hunspell-en hunspell-en-GB \
- hunspell-en-US hunspell-eo hunspell-es hunspell-es-AR hunspell-es-BO \
- hunspell-es-CL hunspell-es-CO hunspell-es-CR hunspell-es-CU hunspell-es-DO \
- hunspell-es-EC hunspell-es-ES hunspell-es-GQ hunspell-es-GT hunspell-es-HN \
- hunspell-es-MX hunspell-es-NI hunspell-es-PA hunspell-es-PE hunspell-es-PR \
- hunspell-es-PY hunspell-es-SV hunspell-es-US hunspell-es-UY hunspell-es-VE \
- hunspell-et hunspell-eu hunspell-fa hunspell-fj hunspell-fo hunspell-fr \
- hunspell-fur hunspell-fy hunspell-ga hunspell-gd hunspell-gl hunspell-grc \
- hunspell-gu hunspell-gv hunspell-haw hunspell-hi hunspell-hil hunspell-hr \
- hunspell-hsb hunspell-ht hunspell-hu hunspell-hy hunspell-ia hunspell-id \
- hunspell-is hunspell-it hunspell-ka hunspell-kk hunspell-km hunspell-kn \
- hunspell-ko hunspell-ku hunspell-ky hunspell-la hunspell-lb hunspell-ln \
- hunspell-lt hunspell-lv hunspell-mai hunspell-mg hunspell-mi hunspell-mk \
- hunspell-ml hunspell-mn hunspell-mos hunspell-mr hunspell-ms hunspell-mt \
- hunspell-nb hunspell-nds hunspell-ne hunspell-nl hunspell-nn hunspell-nr \
- hunspell-nso hunspell-ny hunspell-oc hunspell-om hunspell-or hunspell-pa \
- hunspell-pl hunspell-pt hunspell-pt-BR hunspell-qu hunspell-quh hunspell-ro \
- hunspell-ru hunspell-rw hunspell-sc hunspell-se hunspell-shs hunspell-si \
- hunspell-sk hunspell-sl hunspell-smj hunspell-so hunspell-sq hunspell-sr \
- hunspell-ss hunspell-st hunspell-sv hunspell-sw hunspell-ta hunspell-te \
- hunspell-tet hunspell-th hunspell-tk hunspell-tl hunspell-tpi hunspell-tr \
- hunspell-uk hunspell-ur hunspell-ve hunspell-wa hunspell-xh hunspell-yi \
- hunspell-zu
+sudo zypper install emacs
+mkdir -p "$XDG_CONFIG_HOME/systemd/user/emacs.service.d"
+cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/env.conf" <<EOF
+[Service]
+Environment="XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
+Environment="XDG_DATA_HOME=$XDG_DATA_HOME"
+Environment="XDG_CACHE_HOME=$XDG_CACHE_HOME"
+Environment="XDG_STATE_HOME=$XDG_STATE_HOME"
+Environment="XDG_BIN_HOME=$XDG_BIN_HOME"
+Environment="PATH=$PATH"
+Environment="MANPATH=$MANPATH"
+Environment="INFOPATH=$INFOPATH"
+Environment="MAILDIR=$MAILDIR"
+Environment="SSH_AUTH_SOCK=%t/ssh-agent.socket"
+EOF
 
-# sudo dnf install ripgrep fd-find
-# sudo dnf install emacs-lucid
-# Create environment file:
-# mkdir -p "$XDG_CONFIG_HOME/systemd/user/emacs.service.d"
-# cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/env.conf" <<EOF
-# [Service]
-# Environment="XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
-# Environment="XDG_DATA_HOME=$XDG_DATA_HOME"
-# Environment="XDG_CACHE_HOME=$XDG_CACHE_HOME"
-# Environment="XDG_STATE_HOME=$XDG_STATE_HOME"
-# Environment="XDG_BIN_HOME=$XDG_BIN_HOME"
-# Environment="PATH=$PATH"
-# Environment="MANPATH=$MANPATH"
-# Environment="INFOPATH=$INFOPATH"
-# Environment="MAILDIR=$MAILDIR"
-# Environment="SSH_AUTH_SOCK=%t/ssh-agent.socket"
-# EOF
+cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/x11.conf" <<EOF
+[Service]
+ExecStart=
+ExecStart=/usr/bin/emacs-x11 --fg-daemon
+EOF
+
 
 ### Mu and mu4e (mail in Emacs)
-# sudo dnf install git meson gmime30-devel xapian-core-devel gcc-c++
-# mkdir -p "$XDG_DATA_HOME/mu" && cd "$XDG_DATA_HOME/mu"
-# git clone --branch v1.14.0 --depth 1 https://github.com/djcb/mu.git && cd mu
-# meson setup build
-# meson compile -C build
-# meson install -C build
+sudo zypper install mu4e
 
 # run emacs to install packages
 # fill .authinfo.gpg with passwords (Forge + mail)
@@ -206,7 +259,7 @@ gpg -c "$XDG_DATA_HOME/emacs/.authinfo" && rm -- "$XDG_DATA_HOME/emacs/.authinfo
 
 git clone git@github-personal:mmctl/org.git "$XDG_DATA_HOME/org"
 
-# systemctl --user enable emacs.service
+sudo systemctl --user enable emacs.service
 
 
 ## LaTeX
@@ -233,44 +286,50 @@ git clone git@github-personal:mmctl/org.git "$XDG_DATA_HOME/org"
 # EOF
 
 ## Programming
-# rust
-# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path
-# rustup component add rust-analyzer rust-src
+rustup component add rust-analyzer rust-src
 
 # go
-# dudo dnf install golang
-# go install golang.org/x/tools/gopls@latest
+sudo zypper install go
+go install golang.org/x/tools/gopls@latest
 
 # c/c++
-# sudo dnf install clang clang-tools-extra
+sudo zypper install clang clang-tools
 
 # python
-# pip install python-lsp-server
+sudo zypper install python313-python-lsp-server-all
 
 # ocaml
-# bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
-# opam init
-# cat >> "$HOME/.bashrc" <<'EOF'
-#
-# >>> Opam initialization >>>
-# [[ -r "$OPAMROOT/opam-init/init.sh" ]] && . "$OPAMROOT/opam-init/init.sh" >/dev/null 2>&1 || true 
-# <<< Opam initialization <<<
-# EOF
-# eval $(opam env --switch=default)
-# opam switch --empty create dev
-# eval $(opam env --switch=dev)
-# opam install dune ocaml-lsp-server odoc ocamlformat utop
-# opam pin -yn add easycrypt https://github.com/EasyCrypt/easycrypt.git
-# opam install --deps-only easycrypt
-# git clone git@github.com:EasyCrypt/easycrypt.git "$XDG_DATA_HOME/easycrypt/repo"
-# make -C "$XDG_DATA_HOME/easycrypt/repo"
-# ln -sr "$XDG_DATA_HOME/easycrypt/repo/ec.native" "$XDG_BIN_HOME/easycrypt"
-# Install correct versions of provers (see EasyCrypt README)
-# sudo dnf install cvc5 z3
-# easycrypt why3config
+bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
+opam init --disable-shell-hook
+cat >> "$HOME/.bashrc" <<'EOF'
+
+>>> Opam initialization >>>
+[[ -r "$OPAMROOT/opam-init/init.sh" ]] && . "$OPAMROOT/opam-init/init.sh" >/dev/null 2>&1 || true 
+<<< Opam initialization <<<
+EOF
+eval $(opam env --switch=default)
+opam switch --empty create dev
+eval $(opam env --switch=dev)
+opam install dune ocaml-lsp-server odoc ocamlformat utop
+
+# EasyCrypt
+opam pin -yn add easycrypt https://github.com/EasyCrypt/easycrypt.git
+opam install --deps-only easycrypt
+git clone git@github.com:EasyCrypt/easycrypt.git "$XDG_DATA_HOME/srcs/easycrypt"
+make -C "$XDG_DATA_HOME/srcs/easycrypt"
+ln -sr "$XDG_DATA_HOME/srcs/easycrypt/ec.native" "$XDG_BIN_HOME/easycrypt"
+# Install (correct versions of) provers CVC5 and Z3 (see EasyCrypt README)
+cvcvers=cvc5-1.2.1
+curl -L -o "$HOME/cvc5-Linux-x86_64-static-gpl.zip" \
+  https://github.com/cvc5/cvc5/releases/download/${cvcvers}/cvc5-Linux-x86_64-static-gpl.zip
+mkdir -p "$XDG_DATA_HOME/srcs/${cvcvers}"
+unzip "$HOME/cvc5-Linux-x86_64-static-gpl.zip" -d "$XDG_DATA_HOME/srcs/${cvcvers}"
+rm "$HOME/cvc5-Linux-x86_64-static-gpl.zip"
+
+easycrypt why3config
 
 # lean
-# curl https://elan.lean-lang.org/elan-init.sh -sSf | sh
+curl https://elan.lean-lang.org/elan-init.sh -sSf | sh
 
 # docker
 # sudo dnf remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-selinux docker-engine-selinux docker-engine 
@@ -311,13 +370,13 @@ mkdir -p "$zotflatbase"
 
 flatpak install flathub "$zotflatid"
 
-if [[ -e "$HOME/.zotero" && ! -e "$zotflatbase/.zotero" ]]; then
-  mv "$HOME/.zotero" "$zotflatbase/.zotero"
-fi
+# if [[ -e "$HOME/.zotero" && ! -e "$zotflatbase/.zotero" ]]; then
+#   mv "$HOME/.zotero" "$zotflatbase/.zotero"
+# fi
 
-if [[ -e "$HOME/Zotero" && ! -e "$zotflatbase/Zotero" ]]; then
-  mv "$HOME/Zotero" "$zotflatbase/Zotero"
-fi
+# if [[ -e "$HOME/Zotero" && ! -e "$zotflatbase/Zotero" ]]; then
+#   mv "$HOME/Zotero" "$zotflatbase/Zotero"
+# fi
 
 flatpak override --user \
   --nofilesystem=home \
@@ -337,7 +396,7 @@ flatpak override --user \
 # ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
 
 # Website
+sudo zypper install hugo
 git clone --recurse-submodules git@github-personal:mmctl/website-personal.git "$HOME/projects/website"
-sudo dnf install hugo
 
 # reboot (or at least log out)
