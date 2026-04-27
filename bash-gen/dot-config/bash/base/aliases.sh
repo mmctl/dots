@@ -19,4 +19,5 @@ fi
 if command -v flatpak >/dev/null; then
   flatpak info org.signal.Signal >/dev/null 2>&1 && alias signal='flatpak run org.signal.Signal'
   flatpak info org.zotero.Zotero >/dev/null 2>&1 && alias zotero='flatpak run org.zotero.Zotero'
+  flatpak info app.zen_browser.zen >/dev/null 2>&1 && alias zen="flatpak run app.zen_browser.zen -P $USER"
 fi

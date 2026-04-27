@@ -30,4 +30,3 @@ user_pref("extensions.formautofill.creditCards.enabled", false);
 user_pref("zen.view.compact.enable-at-startup", true);
 user_pref("zen.tabs.ctrl-tab.ignore-essential-tabs", true);
 user_pref("browser.ctrlTab.sortByRecentlyUsed", true);
-user_pref("zen.workspaces.continue-where-left-off", true);

@@ -114,17 +114,18 @@ sudo zypper addrepo https://download.opensuse.org/repositories/home:AvengeMedia:
 
 # Install remainder
 sudo zypper refresh
-sudo zypper install dms quickshell matugen dgop
+sudo zypper install dms quickshell matugen dgop greetd dms-greeter
 
 # Configure
-stow dms
-# Copy over machine-indpeendent settings from settings_base.json to settings.json
+stow dms environment-dms matugen-dms niri-dms wallpapers
+# Copy over machine-independent settings from settings_base.json to settings.json
+
+stow bash-gen kitty-gen starship-gen fzf-gen 
 
 # reboot into Niri
 
 
 # Enable greeter (dms greeter enable)
-sudo zypper install greetd dms-greeter
 dms greeter enable
 dms greeter sync
 sudo systemctl enable greetd
@@ -190,11 +191,9 @@ sudo zypper install bash-completion fzf fd ripgrep zoxide starship
 git clone --recursive https://github.com/akinomyoga/ble.sh.git "$XDG_DATA_HOME/srcs/blesh"
 make -C "$XDG_DATA_HOME/srcs/blesh" install
 
-stow bash-gen readline
+stow readline
+stow ripgrep
 
-## Git
-stow git
-# Check default accounts in config (personal vs work, also for Forge)
 
 # Mail
 sudo zypper install isync
@@ -241,7 +240,9 @@ EOF
 ### Mu and mu4e (mail in Emacs)
 sudo zypper install mu4e
 
+stow emacs
 # run emacs to install packages
+
 # fill .authinfo.gpg with passwords (Forge + mail)
 cat > "$XDG_DATA_HOME/emacs/.authinfo" <<EOF
 machine mail.your-server.de login $(rbw get --field username "Mailbox Personal (mmeijers.com)") password $(rbw get "Mailbox Personal (mmeijers.com)")
@@ -320,24 +321,39 @@ make -C "$XDG_DATA_HOME/srcs/easycrypt"
 ln -sr "$XDG_DATA_HOME/srcs/easycrypt/ec.native" "$XDG_BIN_HOME/easycrypt"
 # Install (correct versions of) provers CVC5 and Z3 (see EasyCrypt README)
 cvcvers=cvc5-1.2.1
-curl -L -o "$HOME/cvc5-Linux-x86_64-static-gpl.zip" \
-  https://github.com/cvc5/cvc5/releases/download/${cvcvers}/cvc5-Linux-x86_64-static-gpl.zip
-mkdir -p "$XDG_DATA_HOME/srcs/${cvcvers}"
-unzip "$HOME/cvc5-Linux-x86_64-static-gpl.zip" -d "$XDG_DATA_HOME/srcs/${cvcvers}"
-rm "$HOME/cvc5-Linux-x86_64-static-gpl.zip"
+cvcdir=cvc5-Linux-x86_64-static-gpl
+cvczip=${cvcdir}.zip
+curl -L -o "$HOME/${cvczip}" https://github.com/cvc5/cvc5/releases/download/${cvcvers}/${cvczip}
+unzip "$HOME/${cvczip}" -d "$XDG_DATA_HOME/srcs/${cvcvers}"
+mv "$XDG_DATA_HOME/srcs/${cvcvers}/${cvcdir}"/{.,}* "$XDG_DATA_HOME/srcs/${cvcvers}/"
+rmdir "$XDG_DATA_HOME/srcs/${cvcvers}/${cvcdir}"
+rm "$HOME/${cvczip}"
+ln -sr "$XDG_DATA_HOME/srcs/${cvcvers}/bin/cvc5" "$XDG_BIN_HOME/${cvcvers}"
+
+z3vers=z3-4.13.4
+z3dir=z3-4.13.4-x64-glibc-2.35
+z3zip=${z3dir}.zip
+curl -L -o "$HOME/${z3zip}" https://github.com/Z3Prover/z3/releases/download/${z3vers}/${z3zip}
+unzip "$HOME/${z3zip}" -d "$XDG_DATA_HOME/srcs/${z3vers}"
+mv "$XDG_DATA_HOME/srcs/${z3vers}/${z3dir}"/{.,}* "$XDG_DATA_HOME/srcs/${z3vers}/"
+rmdir "$XDG_DATA_HOME/srcs/${z3vers}/${z3dir}"
+rm "$HOME/${z3zip}"
+ln -sr "$XDG_DATA_HOME/srcs/${z3vers}/bin/z3" "$XDG_BIN_HOME/${z3vers}"
 
 easycrypt why3config
+stow easycrypt
 
 # lean
 curl https://elan.lean-lang.org/elan-init.sh -sSf | sh
 
 # docker
-# sudo dnf remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-selinux docker-engine-selinux docker-engine 
-# sudo dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo
-# sudo systemctl enable --now docker
+sudo zypper install docker 
+sudo systemctl enable --now docker
+sudo groupadd docker
+sudo usermod -aG docker $USER
 
 # Treesitter Emacs, check ABI version and ensure TREESIT_DIR matches with that of init
-# emacs --script "$XDG_DATA_HOME/emacs/install/install-treesit.el"
+emacs --script "$XDG_DATA_HOME/emacs/install/install-treesit.el"
 
 # Socials
 ## Signal
@@ -347,17 +363,12 @@ flatpak override --user --filesystem=xdg-config/gtk-4.0:ro org.signal.Signal
 
 
 # Browser
-# sudo dnf copr enable sneexy/zen-browser
-# sudo dnf install zen-browser
-# stow zen
-# cat > "$XDG_CONFIG_HOME/zen/profiles.ini" <<'EOF'
-#[Profile0]
-#Name=mm
-#IsRelative=1
-#Path=mm
-#Default=1
-#EOF
-# Open zen: install bitwarden, ublock origin
+flatpak install flathub app.zen_browser.zen
+flatpak override --user --filesystem=xdg-config/zen app.zen_browser.zen
+flatpak run app.zen_browser.zen -CreatProfile "$USER $XDG_CONFIG_HOME/zen/$USER"
+stow zen
+
+# Open zen: install bitwarden, ublock origin, goto settings and enable filters for cookie blocking etc
 
 
 # Documents
@@ -389,11 +400,11 @@ flatpak override --user \
 # Open zen: install zotero extensions
 
 # Keyboards
-# curl -fsSL https://install.qmk.fm | sh
-# qmk setup -H "$XDG_DATA_HOME/qmk_firmware"
-# git clone git@github-personal:mmctl/keyboards.git "$XDG_DATA_HOME/keyboards"
-# ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
-# ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
+curl -fsSL https://install.qmk.fm | sh
+qmk setup -H "$XDG_DATA_HOME/qmk_firmware"
+git clone git@github-personal:mmctl/keyboards.git "$XDG_DATA_HOME/keyboards"
+ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
+ln -sr "$XDG_DATA_HOME/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
 
 # Website
 sudo zypper install hugo
