@@ -42,7 +42,7 @@ bleopt history_erasedups_limit=2500
 bleopt complete_ambiguous=
 
 # Highlight
-bleopt highlight_filename=
+#bleopt highlight_filename=
 
 # Color scheme and faces
 [[ -f "$XDG_CONFIG_HOME/blesh/colors.sh" ]] && . "$XDG_CONFIG_HOME/blesh/colors.sh"
