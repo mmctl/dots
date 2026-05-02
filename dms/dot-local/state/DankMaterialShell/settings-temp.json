@@ -1,0 +1,27 @@
+{
+  "perModeWallpaper": true,
+  "wallpaperPathLight": "${XDG_DATA_HOME}/media/pictures/wallpapers/a_tree_with_pink_leaves.jpg",
+  "wallpaperPathDark": "${XDG_DATA_HOME}/media/pictures/wallpapers/a_mountain_with_trees_and_moon.jpg",
+  "wallpaperTransition": "fade",
+
+  "nightModeEnabled": true,
+  "nightModeTemperature": 5000,
+  "nightModeHighTemperature": 6500,
+  "nightModeAutoEnabled": true,
+  "nightModeAutoMode": "location",
+  "latitude": ${LATITUDE},
+  "longitude": ${LONGITUDE},
+  "nightModeUseIPLocation": false,
+
+  "themeModeAutoEnabled": true,
+  "themeModeAutoMode": "location",
+  "themeModeShareGammaSettings": true,
+
+  "weatherCoordinates": "${LATITUDE},${LONGITUDE}",
+  "weatherHourlyDetailed": true,
+
+  "showThirdPartyPlugins": true,
+  "searchAppActions": true,
+
+  "configVersion": 3
+}

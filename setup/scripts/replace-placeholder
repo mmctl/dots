@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+set -eu
+
+# Usage:
+#   replace-placeholder PLACEHOLDER REPLACEMENT input-file [output-file]
+#
+# Replaces all occurrences of ${PLACEHOLDER} with REPLACEMENT.
+#
+# If output-file is given:
+#   copy input-file to output-file, then replace in output-file.
+#
+# If output-file is omitted:
+#   replace directly in input-file.
+
+if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
+  echo "Usage: $0 PLACEHOLDER REPLACEMENT input-file [output-file]" >&2
+  exit 2
+fi
+
+placeholder=$1
+replacement=$2
+input=$3
+
+if [ "$#" -eq 4 ]; then
+    output=$4
+    cp -- "$input" "$output"
+    target=$output
+else
+    target=$input
+fi
+
+
+PLACEHOLDER=$placeholder REPLACEMENT=$replacement \
+perl -pi -e '
+  s/\$\{\Q$ENV{PLACEHOLDER}\E\}/$ENV{REPLACEMENT}/g
+' "$target"
