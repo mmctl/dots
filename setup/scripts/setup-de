@@ -157,6 +157,8 @@ sudo zypper install -y dms quickshell matugen dgop greetd dms-greeter
 rm -f -- "$HOME/.bashrc"
 (cd "$DOTS_DIR" && stow kitty-gen bash-gen fzf-gen starship-gen)
 
+DMS_PRIVESC='sudo'
+
 dms setup outputs
 
 systemctl --user daemon-reload

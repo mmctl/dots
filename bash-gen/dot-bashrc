@@ -18,8 +18,8 @@ unset rc
 [[ ${TERM:-dumb} == dumb || ${TERM:-dumb} == linux ]] && return
 
 # BLE (preload)
-if [[ -f "$XDG_DATA_HOME/bash/blesh/ble.sh" ]]; then
-   . "$XDG_DATA_HOME/bash/blesh/ble.sh" --attach=none
+if [[ -f "$XDG_DATA_HOME/blesh/ble.sh" ]]; then
+   . "$XDG_DATA_HOME/blesh/ble.sh" --attach=none
 fi
 
 # Extensions and integrations

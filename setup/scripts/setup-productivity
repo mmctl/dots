@@ -1,0 +1,218 @@
+#!/usr/bin/env sh
+set -eu
+
+if [ "$(id -u)" -eq 0 ]; then
+    echo "ERROR: Run this script as the target regular user, not as root." >&2
+    exit 1
+fi
+
+if ! command -v zypper >/dev/null 2>&1; then
+    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
+    exit 1
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+    echo "ERROR: git is not installed. Run the development/build essentials setup first." >&2
+    exit 1
+fi
+
+if ! command -v stow >/dev/null 2>&1; then
+    echo "ERROR: stow is not installed. Install it first:" >&2
+    echo "       sudo zypper install stow" >&2
+    exit 1
+fi
+
+echo "INFO: This script needs sudo for system configuration."
+sudo -v
+
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
+DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
+
+MAILDIR="${MAILDIR:-$XDG_DATA_HOME/mail}"
+AUTHINFO_FILE="${AUTHINFO_FILE:-$XDG_DATA_HOME/.authinfo.gpg}"
+
+MANPATH="${MANPATH:-}"
+INFOPATH="${INFOPATH:-}"
+
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-$XDG_RUNTIME_DIR/ssh-agent.socket}"
+else
+    SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-}"
+fi
+
+if [ ! -d "$DOTS_DIR" ]; then
+    echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
+    exit 1
+fi
+
+
+echo "INFO: Creating mail directories..."
+
+install -d -m 700 \
+        "$MAILDIR" \
+        "$MAILDIR/personal-mmeijers" \
+        "$MAILDIR/kernel-mmeijers" \
+        "$MAILDIR/kem-mmeijers" \
+        "$MAILDIR/research-mmeijers" \
+        "$MAILDIR/teaching-mmeijers" \
+        "$MAILDIR/host-mmeijers" \
+        "$MAILDIR/dump-mmeijers"
+
+echo "INFO: Created mail directories."
+
+echo "INFO: Synchronizing mail directories..."
+echo "INFO: Authenticate to password manager when prompted."
+
+sudo zypper install -y isync maildir-utils
+(cd "$DOTS_DIR" && stow isync)
+
+if ! command -v mbsync >/dev/null 2>&1; then
+    echo "ERROR: mbsync is not available after installing isync." >&2
+    exit 1
+fi
+
+mbsync --all
+
+echo "INFO: Synchronized mail directories."
+
+
+echo "INFO: Installing spellchecker and dictionaries..."
+
+sudo zypper install -y hunspell myspell-*
+
+echo "INFO: Installed spellchecker and dictionaries."
+
+
+echo "INFO: Installing editor (Emacs)..."
+
+sudo zypper install -y emacs emacs-x11 mu4e
+
+(cd "$DOTS_DIR" && stow emacs)
+
+install -d -m 700 "$XDG_CONFIG_HOME/systemd/user"
+
+cat > "$XDG_CONFIG_HOME/systemd/user/emacs-x11.service" <<EOF
+[Unit]
+Description=Emacs text editor
+Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/emacs-x11 --fg-daemon
+
+# Emacs will exit with status 15 after having received SIGTERM, which
+# is the default "KillSignal" value systemd uses to stop services.
+SuccessExitStatus=15
+
+# The location of the SSH auth socket varies by distribution, and some
+# set it from PAM, so don't override by default.
+# Environment=SSH_AUTH_SOCK=%t/keyring/ssh
+Restart=on-failure
+
+# Environment
+Environment="XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
+Environment="XDG_DATA_HOME=$XDG_DATA_HOME"
+Environment="XDG_CACHE_HOME=$XDG_CACHE_HOME"
+Environment="XDG_STATE_HOME=$XDG_STATE_HOME"
+Environment="XDG_BIN_HOME=$XDG_BIN_HOME"
+Environment="PATH=$PATH"
+Environment="MANPATH=$MANPATH"
+Environment="INFOPATH=$INFOPATH"
+Environment="MAILDIR=$MAILDIR"
+Environment="AUTHINFO_FILE=$AUTHINFO_FILE"
+Environment="SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl --user daemon-reload
+systemctl --user enable emacs-x11.service
+
+echo "INFO: Installing/initializing Emacs packages..."
+
+git clone git@github-personal:mmctl/org.git "$XDG_DATA_HOME/org"
+
+emacs --batch --load "$XDG_CONFIG_HOME/emacs/init.el"
+emacs --script "$XDG_DATA_HOME/emacs/install/install-treesit.el"
+
+echo "INFO: Installed Emacs packages."
+
+echo "INFO: Initializing mu/mu4e (mail)..."
+
+mu init --maildir="$MAILDIR"
+mu index
+
+echo "INFO: Initialized mu/mu4e."
+
+
+echo "INFO: Setting default file associations..."
+
+if command -v xdg-mime >/dev/null 2>&1; then
+    if xdg-mime default emacsclient.desktop text/plain; then
+        echo "INFO: Set text/plain default association to emacsclient.desktop."
+    else
+        echo "WARNING: Failed to set text/plain default association." >&2
+    fi
+else
+    echo "WARNING: xdg-mime not installed; skipping file associations." >&2
+fi
+
+echo "INFO: Installed editor (Emacs)."
+
+
+echo "INFO: Installing Flatpak with Flathub..."
+
+sudo zypper install -y flatpak
+flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+echo "INFO: Installed Flatpak with Flathub"
+
+
+echo "INFO: Installing browser (Zen)..."
+
+(cd "$DOTS_DIR" && stow zen)
+
+flatpak --user install -y flathub app.zen_browser.zen
+flatpak --user override --filesystem=xdg-config/zen app.zen_browser.zen
+flatpak --user run app.zen_browser.zen -CreateProfile "mm $XDG_CONFIG_HOME/zen/mm"
+
+echo "INFO: Installed browser (Zen)."
+
+
+echo "INFO: Installing messenger (Signal)..."
+
+flatpak --user install flathub -y org.signal.Signal
+flatpak --user override \
+  --filesystem=xdg-config/gtk-3.0:ro \
+  --filesystem=xdg-config/gtk-4.0:ro \
+  org.signal.Signal
+
+echo "INFO: Installed messenger (Signal)."
+
+
+echo "INFO: Installing research tools (Zotero)..."
+
+flatpak --user install flathub -y org.zotero.Zotero
+flatpak --user override \
+  --nofilesystem=home \
+  --persist=.zotero \
+  --persist=Zotero \
+  --filesystem=xdg-config/gtk-3.0:ro \
+  --filesystem=xdg-config/gtk-4.0:ro \
+  org.zotero.Zotero
+
+echo "INFO: Installed research tools (Zotero)."
+
+
+echo
+echo "INFO: Manual checkpoint:"
+echo "INFO:   Open Zen browser and install the following extensions:"
+echo "INFO:     Bitwarden, "
+echo "INFO:     uBlock Origin (enable filter lists), and"
+echo "INFO:     Zotero."
+echo "INFO:   Reboot."

@@ -32,7 +32,7 @@ git clone --branch personal-opensuse-tumbleweed --single-branch \
 cd "$DOTS_DIR"
 
 # System
-## Snapper (BTRFS snapshot management)
+## Snapper
 $DOTS_DIR/setup/scripts/setup-snapper
 
 ## Base profile and structure
@@ -47,59 +47,14 @@ $DOTS_DIR/setup/scripts/setup-security
 ## Desktop environment
 $DOTS_DIR/setup/scripts/setup-de
 
+## Productivity (mail, editor, ...)
+$DOTS_DIR/setup/scripts/setup-productivity
 
+## Development/build
+$DOTS_DIR/setup/scripts/setup-devel
 
-# Mail
-sudo zypper install isync
-mkdir -p \
-  "$MAILDIR/personal-mmeijers" \
-  "$MAILDIR/kernel-mmeijers" \
-  "$MAILDIR/kem-mmeijers" \
-  "$MAILDIR/research-mmeijers" \
-  "$MAILDIR/teaching-mmeijers" \
-  "$MAILDIR/host-mmeijers" \
-  "$MAILDIR/dump-mmeijers" 
-stow isync
-mbsync --all
-
-
-## Emacs
-# Dependencies: enchant (hunspell + dictionaries), ripgrep, fd
-sudo zypper install hunspell ripgrep fd
-sudo zypper install myspell-*
-
-sudo zypper install emacs emacs-x11
-mkdir -p "$XDG_CONFIG_HOME/systemd/user/emacs.service.d"
-cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/env.conf" <<EOF
-[Service]
-Environment="XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
-Environment="XDG_DATA_HOME=$XDG_DATA_HOME"
-Environment="XDG_CACHE_HOME=$XDG_CACHE_HOME"
-Environment="XDG_STATE_HOME=$XDG_STATE_HOME"
-Environment="XDG_BIN_HOME=$XDG_BIN_HOME"
-Environment="PATH=$PATH"
-Environment="MANPATH=$MANPATH"
-Environment="INFOPATH=$INFOPATH"
-Environment="MAILDIR=$MAILDIR"
-Environment="AUTHINFO_FILE=$AUTHINFO_FILE"
-Environment="SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
-EOF
-
-cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/x11.conf" <<EOF
-[Service]
-ExecStart=
-ExecStart=/usr/bin/emacs-x11 --fg-daemon
-EOF
-
-systemctl --user daemon-reload
-
-### Mu and mu4e (mail in Emacs)
-sudo zypper install mu4e maildir-utils
-
-stow emacs
-# run emacs to install packages
-
-git clone git@github-personal:mmctl/org.git "$XDG_DATA_HOME/org"
+# Productivity
+$DOTS_DIR/setup/scripts/setup-productivity
 
 systemctl --user enable emacs.service
 
@@ -200,57 +155,6 @@ curl -fsS https://elan.lean-lang.org/elan-init.sh | sh
 sudo zypper install docker 
 sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
-
-# Treesitter Emacs, check ABI version and ensure TREESIT_DIR matches with that of init
-emacs --script "$XDG_DATA_HOME/emacs/install/install-treesit.el"
-
-# Socials
-sudo zypper install flatpak
-flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-
-## Signal
-flatpak install flathub org.signal.Signal
-flatpak override --user \
-  --filesystem=xdg-config/gtk-3.0:ro \
-  --filesystem=xdg-config/gtk-4.0:ro \
-  org.signal.Signal
-
-# Browser
-flatpak install flathub app.zen_browser.zen
-flatpak override --user --filesystem=xdg-config/zen app.zen_browser.zen
-flatpak run app.zen_browser.zen -CreateProfile "$USER $XDG_CONFIG_HOME/zen/$USER"
-stow zen
-
-# Open zen: install bitwarden, ublock origin, goto settings and enable filters for cookie blocking etc
-
-
-# Documents
-#
-# Zotero
-zotflatid=org.zotero.Zotero
-zotflatbase="$HOME/.var/app/$zotflatid"
-
-mkdir -p "$zotflatbase"
-
-flatpak install flathub "$zotflatid"
-
-# if [[ -e "$HOME/.zotero" && ! -e "$zotflatbase/.zotero" ]]; then
-#   mv "$HOME/.zotero" "$zotflatbase/.zotero"
-# fi
-
-# if [[ -e "$HOME/Zotero" && ! -e "$zotflatbase/Zotero" ]]; then
-#   mv "$HOME/Zotero" "$zotflatbase/Zotero"
-# fi
-
-flatpak override --user \
-  --nofilesystem=home \
-  --persist=.zotero \
-  --persist=Zotero \
-  --filesystem=xdg-config/gtk-3.0:ro \
-  --filesystem=xdg-config/gtk-4.0:ro \
-  "$zotflatid"
-
-# Open zen: install zotero extensions
 
 # Keyboards
 curl -fsSL https://install.qmk.fm | sh
