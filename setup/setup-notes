@@ -37,46 +37,18 @@ cd "$DOTS_DIR" && git checkout personal-opensuse-tumbleweed
 ## Base profile and structure
 ./scripts/setup-base
 
-## Setup fingerprint (if available)
-sudo zypper install fprintd fprintd-pam
-sudo fprintd-enroll "$USER"
+## Development/build essentials/base
+./scripts/setup-devel-base
 
+## Security
+./scripts/setup-security
 
-## Directories
-### PARA
-# rmdir "$HOME/Desktop" "$HOME/Downloads" "$HOME/Templates" "$HOME/Public" "$HOME/Documents" "$HOME/Music" "$HOME/Pictures" "$HOME/Videos"
-install -d -m 700 "$HOME/projects" "$HOME/areas" "$HOME/resources" "$HOME/archives"
-# rm "$XDG_CONFIG_HOME/user-dirs.dirs"
-cd "$XDG_DATA_HOME/dots" && stow xdg
-
-## SSH + GPG
-install -d -m 700 "$HOME/.ssh" "$HOME/.gnupg"
-stow ssh gnupg
-# Generate keys: SSH personal and work
-ssh-keygen -t ed25519 -C "${USER}-personal@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_personal"
-ssh-keygen -t ed25519 -C "${USER}-work@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_work"
-# Put ssh public keys on relevant accounts/servers (e.g., GitHub)
-
-
-# Building/development basics/essentials
-sudo zypper install -t pattern devel_basis
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path
-
-
-# Password manager
-sudo zypper install pinentry
-cargo install --locked rbw
-cd "$XDG_DATA_HOME/dots" && stow rbw
-
-# Desktop suite/environment
-sudo zypper install gtk3 gtk4 qt5ct qt6ct
-sudo zypper install adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita
-sudo zypper install iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
+## Graphical environment
 
 
 # DMS
 # Install base
-sudo zypper install libwayland-server0 niri
+sudo zypper install libwayland-server0 niri gnome-keyring gnome-keyring-pam
 sudo zypper install kitty
 
 ## Add repositories
@@ -91,7 +63,6 @@ sudo zypper install dms quickshell matugen dgop greetd dms-greeter
 # Configure
 cd "$XDG_DATA_HOME/dots" && stow dms environment-dms matugen-dms niri-dms wallpapers
 cp -L "$XDG_CONFIG_HOME/DankMaterialShell/settings_base.json" "$XDG_CONFIG_HOME/DankMaterialShell/settings.json"
-rm "$HOME/.bashrc"
 cd "$XDG_DATA_HOME/dots" && stow bash-gen kitty-gen
 dms setup outputs
 # Copy over machine-independent settings from settings_base.json to settings.json
@@ -102,59 +73,7 @@ sudo systemctl enable greetd
 
 # Reboot
 
-# If still buggy fingerprint + pass auth in lockscreen/greeter:
-# > remove general fprint auth: 
-#   authselect disable-feature with-fingerprint && authselect apply-changes
-# > Enable fprint auth for sudo:
-#   sudoedit /etc/pam.d/sudo
-# > Add (before auth rule including system-auth): 
-#   auth       sufficient   pam_fprintd.so
-
-
-# Fonts
-sudo zypper install iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
-
 # Development
-mkdir -p "$XDG_CONFIG_HOME/systemd/user"
-
-## SSH
-cat > "$XDG_CONFIG_HOME/systemd/user/ssh-agent.socket" <<'EOF'
-[Unit]
-Description=OpenSSH key agent
-Documentation=man:ssh-agent(1) man:ssh-add(1) man:ssh(1)
-
-[Socket]
-ListenStream=%t/ssh-agent.socket
-Service=ssh-agent.service
-Priority=6
-Backlog=5
-SocketMode=0600
-DirectoryMode=0700
-
-[Install]
-WantedBy=sockets.target
-EOF
-
-cat > "$XDG_CONFIG_HOME/systemd/user/ssh-agent.service" <<'EOF'
-# Requires SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket" set in environment
-[Unit]
-ConditionEnvironment=!SSH_AGENT_PID
-Description=OpenSSH key agent
-Documentation=man:ssh-agent(1) man:ssh-add(1) man:ssh(1)
-Requires=ssh-agent.socket
-
-[Service]
-ExecStart=/usr/bin/ssh-agent -D
-PassEnvironment=SSH_AGENT_PID
-SuccessExitStatus=2
-Type=simple
-
-[Install]
-Also=ssh-agent.socket
-EOF
-
-systemctl --user daemon-reload
-systemctl --user enable --now ssh-agent.socket
 
 ## Terminal + Shell
 sudo zypper install bash-completion fzf fd ripgrep zoxide starship
@@ -198,7 +117,8 @@ Environment="PATH=$PATH"
 Environment="MANPATH=$MANPATH"
 Environment="INFOPATH=$INFOPATH"
 Environment="MAILDIR=$MAILDIR"
-Environment="SSH_AUTH_SOCK=%t/ssh-agent.socket"
+Environment="AUTHINFO_FILE=$AUTHINFO_FILE"
+Environment="SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
 EOF
 
 cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service.d/x11.conf" <<EOF
@@ -210,41 +130,10 @@ EOF
 systemctl --user daemon-reload
 
 ### Mu and mu4e (mail in Emacs)
-sudo zypper install mu4e
+sudo zypper install mu4e maildir-utils
 
 stow emacs
 # run emacs to install packages
-
-# fill .authinfo.gpg with passwords (Forge + mail)
-
-authinfo_gpg="${XDG_DATA_HOME:-$HOME/.local/share}/emacs/.authinfo.gpg"
-mkdir -p -- "$(dirname "$authinfo_gpg")"
-
-(
-  set +x
-  umask 077
-  authinfo_tmpdir="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/authinfo.XXXXXX")"
-  chmod 700 "$authinfo_tmpdir"
-
-  trap 'rm -rf -- "$authinfo_tmpdir"' EXIT
-
-  authinfo_tmp="$authinfo_tmpdir/authinfo"
-
-  cat > "$authinfo_tmp" <<EOF
-machine mail.your-server.de login $(rbw get --field username "Mailbox Personal (mmeijers.com)") password $(rbw get "Mailbox Personal (mmeijers.com)")
-machine mail.your-server.de login $(rbw get --field username "Mailbox Kernel (mmeijers.com)") password $(rbw get "Mailbox Kernel (mmeijers.com)")
-machine mail.your-server.de login $(rbw get --field username "Mailbox KeM (mmeijers.com)") password $(rbw get "Mailbox KeM (mmeijers.com)")
-machine mail.your-server.de login $(rbw get --field username "Mailbox Research (mmeijers.com)") password $(rbw get "Mailbox Research (mmeijers.com)")
-machine mail.your-server.de login $(rbw get --field username "Mailbox Teaching (mmeijers.com)") password $(rbw get "Mailbox Teaching (mmeijers.com)")
-machine mail.your-server.de login $(rbw get --field username "Mailbox Host (mmeijers.com)") password $(rbw get "Mailbox Host (mmeijers.com)")
-machine mail.your-server.de login $(rbw get --field username "Mailbox Dump (mmeijers.com)") password $(rbw get "Mailbox Dump (mmeijers.com)")
-machine api.github.com login $(rbw get --field username "GitHub (Formal)")^forge password $(rbw get --field "Personal Access Token" "GitHub (Formal)")
-machine api.github.com login $(rbw get --field username "GitHub (Informal)")^forge password $(rbw get --field "Personal Access Token" "GitHub (Informal)")
-EOF
-
-  gpg --symmetric --cipher-algo AES256 --output "$authinfo_gpg" "$authinfo_tmp"
-  chmod 600 "$authinfo_gpg"
-)
 
 git clone git@github-personal:mmctl/org.git "$XDG_DATA_HOME/org"
 
@@ -440,3 +329,18 @@ nmcli connection show
 
 ## Prefer Ethernet over Wifi
 nmcli connection modify "EthernetID" ipv4.route-metric 100 ipv6.route-metric 100
+
+
+
+## Setup fingerprint (if available)
+sudo zypper install fprintd fprintd-pam
+sudo fprintd-enroll "$USER"
+
+
+# If still buggy fingerprint + pass auth in DMS lockscreen/greeter:
+# > remove general fprint auth: 
+#   authselect disable-feature with-fingerprint && authselect apply-changes
+# > Enable fprint auth for sudo:
+#   sudoedit /etc/pam.d/sudo
+# > Add (before auth rule including system-auth): 
+#   auth       sufficient   pam_fprintd.so

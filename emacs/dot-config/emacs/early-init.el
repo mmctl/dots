@@ -54,7 +54,8 @@
 (defconst TRAMP_DIR (file-name-as-directory (expand-file-name "tramp/" EMACS_DATA_DIR))
   "Directory where tramp-related data is stored.")
 
-(defconst AUTHINFO_FILE (expand-file-name ".authinfo.gpg" EMACS_DATA_DIR)
+(defconst AUTHINFO_FILE (or (getenv "AUTHINFO_FILE")
+                            (expand-file-name ".authinfo.gpg" EMACS_DATA_DIR))
   "File where (encrypted) authentication information is stored.")
 
 (unless (file-directory-p PACKAGE_DIR)

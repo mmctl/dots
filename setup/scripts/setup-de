@@ -1,0 +1,109 @@
+#!/usr/bin/env sh
+set -eu
+
+if [ "$(id -u)" -eq 0 ]; then
+    echo "ERROR: Run this script as the target regular user, not as root." >&2
+    exit 1
+fi
+
+if ! command -v zypper >/dev/null 2>&1; then
+    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
+    exit 1
+fi
+
+if ! command -v stow >/dev/null 2>&1; then
+    echo "ERROR: stow is not installed. Install it first:" >&2
+    echo "       sudo zypper install stow" >&2
+    exit 1
+fi
+
+echo "This script needs sudo for system configuration."
+sudo -v
+
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
+
+if [ ! -d "$DOTS_DIR" ]; then
+    echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
+    exit 1
+fi
+
+REPLACE_PLACEHOLDER="${REPLACE_PLACEHOLDER:-$DOTS_DIR/scripts/replace-placeholder}"
+
+if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
+    echo "ERROR: replace-placeholder script not found or not executable: $REPLACE_PLACEHOLDER" >&2
+    exit 1
+fi
+
+echo "Installing graphical toolkits, themes and fonts..."
+
+sudo zypper install gtk3 gtk4 qt5ct qt6ct
+sudo zypper install adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita
+sudo zypper install iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
+
+echo "Installing graphical toolkits, themes and fonts."
+
+
+echo "Installing Wayland compositor (Niri) and keyrings..."
+
+sudo zypper install libwayland-server0 niri gnome-keyring gnome-keyring-pam
+
+echo "Installed Wayland compositor (Niri) and keyrings."
+
+
+echo "Installing terminal emulator (Kitty) and shell enhancements..."
+
+sudo zypper install kitty
+sudo zypper install bash-completion fzf fd ripgrep zoxide starship
+
+git clone --recursive https://github.com/akinomyoga/ble.sh.git "$XDG_DATA_HOME/srcs/blesh"
+make -C "$XDG_DATA_HOME/srcs/blesh" install
+
+(cd "$DOTS_DIR" && stow readline ripgrep)
+
+echo "Installed terminal emulator (Kitty) and shell enhancements."
+
+
+echo "Adding repositories for Quickshell environment (DMS)..."
+
+sudo zypper addrepo https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/home:AvengeMedia:danklinux.repo
+sudo zypper addrepo https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/home:AvengeMedia:dms.repo
+
+echo "Added repositories for Quickshell environment (DMS)."
+
+echo "Refreshing repositories..."
+echo "Verify the DMS key fingerprint when prompted:"
+echo "20CA 3E58 04CA 7500 9B36 71A4 2847 7848 3BC8 6115"
+
+sudo zypper refresh
+
+echo "Refreshed repositories."
+
+
+echo "Installing Quickshell environment (DMS)..."
+
+sudo zypper install dms quickshell matugen dgop greetd dms-greeter
+
+rm -f -- "$HOME/.bashrc"
+(cd "$DOTS_DIR" && stow dms environment-dms matugen-dms niri-dms kitty-gen bash-gen fzf-gen starship-gen wallpapers)
+"$REPLACE_PLACEHOLDER" XDG_DATA_HOME "$XDG_DATA_HOME" \
+    "$XDG_CONFIG_HOME/DankMaterialShell/settings-temp.json" \
+    "$XDG_CONFIG_HOME/DankMaterialShell/settings.json"
+
+"$REPLACE_PLACEHOLDER" XDG_DATA_HOME "$XDG_DATA_HOME" \
+    "$XDG_STATE_HOME/DankMaterialShell/session-temp.json" \
+    "$XDG_STATE_HOME/DankMaterialShell/session.json"
+
+dms setup outputs
+
+systemctl --user daemon-reload
+systemctl --user enable dms.service
+
+dms greeter enable
+dms greeter sync
+
+sudo systemctl enable greetd
+
+echo "Installed Quickshell environment (DMS)."

@@ -2,36 +2,200 @@
 set -eu
 
 if [ "$(id -u)" -eq 0 ] ; then
-   echo "ERROR: Run this script as the target regular user, not as root." >&2
-   exit 1
+    echo "ERROR: Run this script as the target regular user, not as root." >&2
+    exit 1
+fi
+
+if ! command -v zypper >/dev/null 2>&1; then
+    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
+    exit 1
 fi
 
 if ! command -v stow >/dev/null 2>&1; then
-  echo "ERROR: stow is not installed. Install it first:" >&2
-  echo "       sudo zypper install stow" >&2
-  exit 1
+    echo "ERROR: stow is not installed. Install it first:" >&2
+    echo "       sudo zypper install stow" >&2
+    exit 1
 fi
 
 echo "This script needs sudo for system configuration."
 sudo -v
 
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
 if [ ! -d "$DOTS_DIR" ]; then
-  echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
-  exit 1
+    echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
+    exit 1
 fi
 
 
+echo "Installing ssh, gpg, and pinentry..."
+
+sudo zypper install openssh gpg2 pinentry
+
 install -d -m 700 \
-  "$HOME/.ssh" \
-  "$HOME/.gnupg"
+        "$HOME/.ssh" \
+        "$HOME/.gnupg"
+(cd "$DOTS_DIR" && stow ssh gnupg)
 
-(cd $DOTS_DIR && stow ssh gpg)
+echo "Installed ssh, gpg, and pinentry."
 
-ssh-keygen -t ed25519 -C "${USER}-personal@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_personal"
-ssh-keygen -t ed25519 -C "${USER}-work@$(hostname)-$(date +%Y%m%d)" -f "$HOME/.ssh/${USER}_ed25519_work"
 
-sudo zypper install pinentry
-cargo install --locked rbw
-cd "$XDG_DATA_HOME/dots" && stow rbw
+echo "Creating ssh key pairs for work and personal use..."
+echo "Enter a passphrase for each new key when prompted."
+
+date_stamp="$(date +%Y%m%d)"
+host="$(hostname)"
+
+key_personal="$HOME/.ssh/${USER}_ed25519_personal"
+if [ -e "$key_personal" ]; then
+    echo "ssh key pair already exists: skipping: $key_personal"
+else
+    ssh-keygen -t ed25519 -C "${USER}-personal@${host}-${date_stamp}" -f "$key_personal"
+    echo "Created ssh key pair for personal use: $key_personal"
+fi
+
+key_work="$HOME/.ssh/${USER}_ed25519_work"
+if [ -e "$key_work" ]; then
+    echo "ssh key pair already exists: skipping: $key_work"
+else
+    ssh-keygen -t ed25519 -C "${USER}-work@${host}-${date_stamp}" -f "$key_work"
+    echo "Created ssh key pair for work use: $key_work"
+fi
+
+echo "Created ssh key pairs for work and personal use."
+
+
+echo "Setting up ssh-agent integration with systemd..."
+
+install -d -m 700 "$XDG_CONFIG_HOME/systemd/user"
+
+cat > "$XDG_CONFIG_HOME/systemd/user/ssh-agent.service" <<'EOF'
+[Unit]
+Description=OpenSSH key agent
+Documentation=man:ssh-agent(1) man:ssh-add(1) man:ssh(1)
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ssh-agent -D -a %t/ssh-agent.socket
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl --user daemon-reload
+systemctl --user enable --now ssh-agent.service
+
+echo "Set up ssh-agent integration with systemd."
+
+
+echo "Installing password manager and stowing configuration..."
+
+CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
+
+if [ -f "$CARGO_HOME/env" ]; then
+    . "$CARGO_HOME/env"
+fi
+
+if command -v rbw >/dev/null 2>&1; then
+    echo "Password manager (rbw) is already installed; skipping cargo install."
+else
+    if ! command -v cargo >/dev/null 2>&1; then
+        echo "ERROR: cargo is not available. Run the development/build essentials setup first." >&2
+        exit 1
+    fi
+    cargo install --locked rbw
+    echo "Installed password manager."
+fi
+
+(cd "$DOTS_DIR" && stow rbw)
+
+echo "Stowed password manager configuration."
+
+
+echo "Creating Authinfo file..."
+echo "Authenticate to password manager when prompted."
+
+if ! command -v rbw >/dev/null 2>&1; then
+    echo "ERROR: rbw is not available after installation." >&2
+    exit 1
+fi
+
+AUTHINFO_FILE="${AUTHINFO_FILE:-$XDG_DATA_HOME/.authinfo.gpg}"
+authinfo_dir="$(dirname -- "$AUTHINFO_FILE")"
+install -d -m 700 "$authinfo_dir"
+
+if [ -e "$AUTHINFO_FILE" ]; then
+    echo "Authinfo file already exists; skipping creation: $AUTHINFO_FILE."
+else
+    (
+        set +x
+        umask 077
+        authinfo_tmpdir="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/authinfo.XXXXXX")"
+        chmod 700 "$authinfo_tmpdir"
+
+        authinfo_tmp="$authinfo_tmpdir/authinfo"
+        authinfo_gpg_tmp="$(mktemp "$authinfo_dir/.authinfo.gpg.XXXXXX")"
+
+        trap 'rm -rf -- "$authinfo_tmpdir"; rm -f -- "$authinfo_gpg_tmp"' EXIT HUP INT TERM
+
+        echo "Fetching Authinfo credentials from password manager..."
+
+        mail_personal_user="$(rbw get --field username "Mailbox Personal (mmeijers.com)")"
+        mail_personal_pass="$(rbw get "Mailbox Personal (mmeijers.com)")"
+
+        mail_kernel_user="$(rbw get --field username "Mailbox Kernel (mmeijers.com)")"
+        mail_kernel_pass="$(rbw get "Mailbox Kernel (mmeijers.com)")"
+
+        mail_kem_user="$(rbw get --field username "Mailbox KeM (mmeijers.com)")"
+        mail_kem_pass="$(rbw get "Mailbox KeM (mmeijers.com)")"
+
+        mail_research_user="$(rbw get --field username "Mailbox Research (mmeijers.com)")"
+        mail_research_pass="$(rbw get "Mailbox Research (mmeijers.com)")"
+
+        mail_teaching_user="$(rbw get --field username "Mailbox Teaching (mmeijers.com)")"
+        mail_teaching_pass="$(rbw get "Mailbox Teaching (mmeijers.com)")"
+
+        mail_host_user="$(rbw get --field username "Mailbox Host (mmeijers.com)")"
+        mail_host_pass="$(rbw get "Mailbox Host (mmeijers.com)")"
+
+        mail_dump_user="$(rbw get --field username "Mailbox Dump (mmeijers.com)")"
+        mail_dump_pass="$(rbw get "Mailbox Dump (mmeijers.com)")"
+
+        github_formal_user="$(rbw get --field username "GitHub (Formal)")"
+        github_formal_token="$(rbw get --field "Personal Access Token" "GitHub (Formal)")"
+
+        github_informal_user="$(rbw get --field username "GitHub (Informal)")"
+        github_informal_token="$(rbw get --field "Personal Access Token" "GitHub (Informal)")"
+
+        cat > "$authinfo_tmp" <<EOF
+machine mail.your-server.de login $mail_personal_user password $mail_personal_pass
+machine mail.your-server.de login $mail_kernel_user password $mail_kernel_pass
+machine mail.your-server.de login $mail_kem_user password $mail_kem_pass
+machine mail.your-server.de login $mail_research_user password $mail_research_pass
+machine mail.your-server.de login $mail_teaching_user password $mail_teaching_pass
+machine mail.your-server.de login $mail_host_user password $mail_host_pass
+machine mail.your-server.de login $mail_dump_user password $mail_dump_pass
+machine api.github.com login ${github_formal_user}^forge password $github_formal_token
+machine api.github.com login ${github_informal_user}^forge password $github_informal_token
+EOF
+
+        gpg --symmetric \
+            --cipher-algo AES256 \
+            --output "$authinfo_gpg_tmp" \
+            "$authinfo_tmp"
+
+        chmod 600 "$authinfo_gpg_tmp"
+        mv -- "$authinfo_gpg_tmp" "$AUTHINFO_FILE"
+    )
+
+    echo "Created Authinfo file."
+fi
+
+
+echo
+echo "Manual checkpoint:"
+echo "  Add these public SSH keys to the relevant accounts:"
+echo "    $key_personal.pub"
+echo "    $key_work.pub"

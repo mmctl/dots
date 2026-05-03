@@ -2,19 +2,19 @@
 set -eu
 
 if [ "$(id -u)" -eq 0 ]; then
-   echo "ERROR: Run this script as the target regular user, not as root." >&2
-   exit 1
+    echo "ERROR: Run this script as the target regular user, not as root." >&2
+    exit 1
 fi
 
 if ! command -v zypper >/dev/null 2>&1; then
-  echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
-  exit 1
+    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
+    exit 1
 fi
 
 if ! command -v stow >/dev/null 2>&1; then
-  echo "ERROR: stow is not installed. Install it first:" >&2
-  echo "       sudo zypper install stow" >&2
-  exit 1
+    echo "ERROR: stow is not installed. Install it first:" >&2
+    echo "       sudo zypper install stow" >&2
+    exit 1
 fi
 
 echo "This script needs sudo for system configuration."
@@ -27,8 +27,8 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
 if [ ! -d "$DOTS_DIR" ]; then
-  echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
-  exit 1
+    echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
+    exit 1
 fi
 
 
@@ -50,11 +50,11 @@ XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
 
 install -d -m 700 \
-  "$XDG_CACHE_HOME" \
-  "$XDG_CONFIG_HOME" \
-  "$XDG_DATA_HOME" \
-  "$XDG_STATE_HOME" \
-  "$XDG_BIN_HOME"
+        "$XDG_CACHE_HOME" \
+        "$XDG_CONFIG_HOME" \
+        "$XDG_DATA_HOME" \
+        "$XDG_STATE_HOME" \
+        "$XDG_BIN_HOME"
 
 rm -f -- "$XDG_CONFIG_HOME/user-dirs.dirs"
 (cd "$DOTS_DIR" && stow xdg)
@@ -65,21 +65,21 @@ echo "Created XDG directories and set user-dirs."
 echo "Creating PARA directories..."
 
 install -d -m 700 \
-  "$HOME/projects" \
-  "$HOME/areas" \
-  "$HOME/resources" \
-  "$HOME/archives"
-  
+        "$HOME/projects" \
+        "$HOME/areas" \
+        "$HOME/resources" \
+        "$HOME/archives"
+
 echo "Created PARA directories."
 
 
 echo "Adding Packman Essentials repository..."
 
 if sudo zypper lr "$PACKMAN_ESSENTIALS_ALIAS" >/dev/null 2>&1; then
-  echo "Repository '$PACKMAN_ESSENTIALS_ALIAS' already exists; skipping."
+    echo "Repository '$PACKMAN_ESSENTIALS_ALIAS' already exists; skipping."
 else
-  sudo zypper addrepo -cfp 90 "$PACKMAN_ESSENTIALS_URL" "$PACKMAN_ESSENTIALS_ALIAS"
-  echo "Added Packman Essentials repository."
+    sudo zypper addrepo -cfp 90 "$PACKMAN_ESSENTIALS_URL" "$PACKMAN_ESSENTIALS_ALIAS"
+    echo "Added Packman Essentials repository."
 fi
 
 
@@ -95,13 +95,13 @@ echo "Refreshed repositories"
 echo "Installing codecs from Packman Essentials repository..."
 
 sudo zypper install --allow-vendor-change --from "$PACKMAN_ESSENTIALS_ALIAS" \
-  ffmpeg \
-  gstreamer-plugins-good \
-  gstreamer-plugins-bad \
-  gstreamer-plugins-ugly \
-  gstreamer-plugins-libav \
-  libavcodec
-  
+     ffmpeg \
+     gstreamer-plugins-good \
+     gstreamer-plugins-bad \
+     gstreamer-plugins-ugly \
+     gstreamer-plugins-libav \
+     libavcodec
+
 echo "Installed codecs from Packman Essentials repository."
 
 

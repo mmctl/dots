@@ -2,13 +2,13 @@
 set -eu
 
 if [ "$(id -u)" -eq 0 ]; then
-  echo "ERROR: Run this script as the target regular user, not as root." >&2
-  exit 1
+    echo "ERROR: Run this script as the target regular user, not as root." >&2
+    exit 1
 fi
 
 if ! command -v zypper >/dev/null 2>&1; then
-  echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
-  exit 1
+    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
+    exit 1
 fi
 
 echo "This script needs sudo for system configuration."
@@ -29,29 +29,29 @@ CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
 RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
 
 if [ -f "$CARGO_HOME/env" ]; then
-  . "$CARGO_HOME/env"
-  echo "Sourced existing Rust environment."
+    . "$CARGO_HOME/env"
+    echo "Sourced existing Rust environment."
 else
-  echo "Did not find existing Rust environment."
+    echo "Did not find existing Rust environment."
 fi
 
 
 echo "Installing or updating Rust toolchain..."
 
 if command -v rustup >/dev/null 2>&1; then
-  echo "rustup already installed; updating stable Rust toolchain..."
-  rustup update stable
-  echo "Updated stable Rust toolchain."
+    echo "rustup already installed; updating stable Rust toolchain..."
+    rustup update stable
+    echo "Updated stable Rust toolchain."
 else
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
-    sh -s -- -y --no-modify-path
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+        sh -s -- -y --no-modify-path
 
-  if [ -f "$CARGO_HOME/env" ]; then
-    . "$CARGO_HOME/env"
-  else
-    echo "ERROR: Rust installer completed, but $CARGO_HOME/env was not created." >&2
-    exit 1
-  fi
+    if [ -f "$CARGO_HOME/env" ]; then
+        . "$CARGO_HOME/env"
+    else
+        echo "ERROR: Rust installer completed, but $CARGO_HOME/env was not created." >&2
+        exit 1
+    fi
 
-  echo "Installed Rust toolchain."
+    echo "Installed Rust toolchain."
 fi
