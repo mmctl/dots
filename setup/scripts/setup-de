@@ -98,7 +98,7 @@ echo "INFO: Installed terminal emulator (Kitty) and shell enhancements."
 
 echo "INFO: Adding repositories for Quickshell environment..."
 
-danklinux_repo_url='https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/home:AvengeMedia:danklinux.repo'
+danklinux_repo_url='https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/'
 danklinux_repo_alias='danklinux'
 if zypper lr "$danklinux_repo_alias" >/dev/null 2>&1; then
     echo "INFO: Repository '${danklinux_repo_alias}' already exists; skipping."
@@ -107,7 +107,7 @@ else
     echo "INFO: Added DankLinux repository."
 fi
 
-dms_repo_url='https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/home:AvengeMedia:dms.repo'
+dms_repo_url='https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/'
 dms_repo_alias='dms'
 if zypper lr "$dms_repo_alias" >/dev/null 2>&1; then
     echo "INFO: Repository '${dms_repo_alias}' already exists; skipping."
