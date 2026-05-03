@@ -11,6 +11,16 @@ if ! command -v zypper >/dev/null 2>&1; then
     exit 1
 fi
 
+if ! command -v git >/dev/null 2>&1; then
+    echo "ERROR: git is not installed. Run the development/build essentials setup first." >&2
+    exit 1
+fi
+
+if ! command -v make >/dev/null 2>&1; then
+    echo "ERROR: make is not installed. Run the development/build essentials setup first." >&2
+    exit 1
+fi
+
 if ! command -v stow >/dev/null 2>&1; then
     echo "ERROR: stow is not installed. Install it first:" >&2
     echo "       sudo zypper install stow" >&2
@@ -37,20 +47,29 @@ if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
     exit 1
 fi
 
-echo "Installing graphical toolkits, themes and fonts..."
 
-sudo zypper install gtk3 gtk4 qt5ct qt6ct
-sudo zypper install adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita
-sudo zypper install iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
+echo "Installing basic desktop runtime for Wayland..."
+
+sudo zypper install \
+     libdrm2 Mesa Mesa-dri Mesa-libEGL1 Mesa-libGL1 Mesa-libva Mesa-vulkan-device-select \
+     dbus-1 dbus-1-tools \
+     libwayland-server0 libwayland-client0 libwayland-egl1 \
+     polkit polkit-default-privs gnome-keyring gnome-keyring-pam \
+     pipewire wireplumber \
+     xdg-desktop-portal xdg-desktop-portal-gtk \
+     xwayland
+
+echo "Installed basic desktop runtime for Wayland."
+
+
+echo "Installing graphical toolkits, themes, and fonts..."
+
+sudo zypper install \
+     gtk3 gtk4 qt5ct qt6ct \
+     adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita \
+     iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
 
 echo "Installing graphical toolkits, themes and fonts."
-
-
-echo "Installing Wayland compositor (Niri) and keyrings..."
-
-sudo zypper install libwayland-server0 niri gnome-keyring gnome-keyring-pam
-
-echo "Installed Wayland compositor (Niri) and keyrings."
 
 
 echo "Installing terminal emulator (Kitty) and shell enhancements..."
@@ -58,7 +77,18 @@ echo "Installing terminal emulator (Kitty) and shell enhancements..."
 sudo zypper install kitty
 sudo zypper install bash-completion fzf fd ripgrep zoxide starship
 
-git clone --recursive https://github.com/akinomyoga/ble.sh.git "$XDG_DATA_HOME/srcs/blesh"
+install -d -m 700 "$XDG_DATA_HOME/srcs"
+
+if [ -d "$XDG_DATA_HOME/srcs/blesh/.git" ]; then
+    echo "ble.sh repository already exists; updating."
+    git -C "$XDG_DATA_HOME/srcs/blesh" pull --ff-only
+    git -C "$XDG_DATA_HOME/srcs/blesh" submodule update --init --recursive
+else
+    git clone --recursive \
+        https://github.com/akinomyoga/ble.sh.git \
+        "$XDG_DATA_HOME/srcs/blesh"
+fi
+
 make -C "$XDG_DATA_HOME/srcs/blesh" install
 
 (cd "$DOTS_DIR" && stow readline ripgrep)
@@ -66,12 +96,28 @@ make -C "$XDG_DATA_HOME/srcs/blesh" install
 echo "Installed terminal emulator (Kitty) and shell enhancements."
 
 
-echo "Adding repositories for Quickshell environment (DMS)..."
+echo "Adding repositories for Quickshell environment..."
 
-sudo zypper addrepo https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/home:AvengeMedia:danklinux.repo
-sudo zypper addrepo https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/home:AvengeMedia:dms.repo
+danklinux_repo_url='https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/home:AvengeMedia:danklinux.repo'
+danklinux_repo_alias='danklinux'
+if zypper lr "$danklinux_repo_alias" >/dev/null 2>&1; then
+    echo "Repository '${danklinux_repo_alias}' already exists; skipping."
+else
+    sudo zypper addrepo "$danklinux_repo_url" "$danklinux_repo_alias"
+    echo "Added DankLinux repository."
+fi
 
-echo "Added repositories for Quickshell environment (DMS)."
+dms_repo_url='https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/home:AvengeMedia:dms.repo'
+dms_repo_alias='dms'
+if zypper lr "$dms_repo_alias" >/dev/null 2>&1; then
+    echo "Repository '${dms_repo_alias}' already exists; skipping."
+else
+    sudo zypper addrepo "$dms_repo_url" "$dms_repo_alias"
+    echo "Added DMS repository."
+fi
+
+echo "Added repositories for Quickshell environment."
+
 
 echo "Refreshing repositories..."
 echo "Verify the DMS key fingerprint when prompted:"
@@ -82,19 +128,34 @@ sudo zypper refresh
 echo "Refreshed repositories."
 
 
-echo "Installing Quickshell environment (DMS)..."
+echo "Installing Wayland compositor (Niri).."
+
+sudo zypper install niri
+
+echo "Installed Wayland compositor (Niri)."
+
+
+echo "Installing Quickshell environment..."
 
 sudo zypper install dms quickshell matugen dgop greetd dms-greeter
 
-rm -f -- "$HOME/.bashrc"
-(cd "$DOTS_DIR" && stow dms environment-dms matugen-dms niri-dms kitty-gen bash-gen fzf-gen starship-gen wallpapers)
-"$REPLACE_PLACEHOLDER" XDG_DATA_HOME "$XDG_DATA_HOME" \
+(cd "$DOTS_DIR" && stow dms environment-dms matugen-dms niri-dms wallpapers)
+"$REPLACE_PLACEHOLDER" XDG_CONFIG_HOME "$XDG_CONFIG_HOME" \
     "$XDG_CONFIG_HOME/DankMaterialShell/settings-temp.json" \
     "$XDG_CONFIG_HOME/DankMaterialShell/settings.json"
 
 "$REPLACE_PLACEHOLDER" XDG_DATA_HOME "$XDG_DATA_HOME" \
     "$XDG_STATE_HOME/DankMaterialShell/session-temp.json" \
     "$XDG_STATE_HOME/DankMaterialShell/session.json"
+
+"$REPLACE_PLACEHOLDER" LATITUDE "51.4392648" \
+    "$XDG_STATE_HOME/DankMaterialShell/session.json"
+
+"$REPLACE_PLACEHOLDER" LONGITUDE "5.4786330" \
+    "$XDG_STATE_HOME/DankMaterialShell/session.json"
+
+rm -f -- "$HOME/.bashrc"
+(cd "$DOTS_DIR" && stow kitty-gen bash-gen fzf-gen starship-gen)
 
 dms setup outputs
 
@@ -106,4 +167,4 @@ dms greeter sync
 
 sudo systemctl enable greetd
 
-echo "Installed Quickshell environment (DMS)."
+echo "Installed Quickshell environment."

@@ -20,9 +20,6 @@ fi
 echo "This script needs sudo for system configuration."
 sudo -v
 
-PACKMAN_ESSENTIALS_URL="https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/"
-PACKMAN_ESSENTIALS_ALIAS="packman-essentials"
-
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
@@ -75,10 +72,13 @@ echo "Created PARA directories."
 
 echo "Adding Packman Essentials repository..."
 
-if sudo zypper lr "$PACKMAN_ESSENTIALS_ALIAS" >/dev/null 2>&1; then
-    echo "Repository '$PACKMAN_ESSENTIALS_ALIAS' already exists; skipping."
+packman_essentials_url="https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/"
+packman_essentials_alias="packman-essentials"
+
+if sudo zypper lr "$packman_essentials_alias" >/dev/null 2>&1; then
+    echo "Repository '${packman_essentials_alias}' already exists; skipping."
 else
-    sudo zypper addrepo -cfp 90 "$PACKMAN_ESSENTIALS_URL" "$PACKMAN_ESSENTIALS_ALIAS"
+    sudo zypper addrepo -cfp 90 "$packman_essentials_url" "$packman_essentials_alias"
     echo "Added Packman Essentials repository."
 fi
 
@@ -94,7 +94,7 @@ echo "Refreshed repositories"
 
 echo "Installing codecs from Packman Essentials repository..."
 
-sudo zypper install --allow-vendor-change --from "$PACKMAN_ESSENTIALS_ALIAS" \
+sudo zypper install --allow-vendor-change --from "$packman_essentials_alias" \
      ffmpeg \
      gstreamer-plugins-good \
      gstreamer-plugins-bad \
