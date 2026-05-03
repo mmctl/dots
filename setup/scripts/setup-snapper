@@ -6,17 +6,18 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
-echo "This script needs sudo for system configuration."
+echo "INFO: This script needs sudo for system configuration."
 sudo -v
 
 if sudo btrfs subvolume show /home >/dev/null 2>&1; then
-    echo "/home is a BTRFS subvolume; configuring snapper config 'home'."
+    echo "INFO: /home is a BTRFS subvolume; configuring snapper config 'home'..."
 
     if sudo snapper -c home get-config >/dev/null 2>&1; then
-        echo "Snapper config 'home' already exists; leaving snapshot structure intact."
+        echo "INFO: Snapper config 'home' already exists; leaving snapshot structure intact."
     else
-        echo "Creating snapper config 'home' for /home."
+        echo "INFO: Creating snapper config 'home' for /home..."
         sudo snapper -c home create-config /home
+        echo "INFO: Created snapper config 'home' for /home."
     fi
 
     sudo snapper -c home set-config \
@@ -32,7 +33,7 @@ if sudo btrfs subvolume show /home >/dev/null 2>&1; then
          TIMELINE_LIMIT_MONTHLY=4 \
          TIMELINE_LIMIT_YEARLY=0
 
-    echo "Configured snapper for /home."
+    echo "INFO: Configured snapper for /home."
 else
-    echo "/home is not a BTRFS subvolume; skipping snapper config 'home'."
+    echo "INFO: /home is not a BTRFS subvolume; skipping snapper config 'home'."
 fi

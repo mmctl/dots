@@ -26,25 +26,26 @@ export XDG_DATA_HOME="$HOME/.local/share"
 install -d -m 700 "$XDG_DATA_HOME"
 sudo zypper install git stow
 export DOTS_DIR="$XDG_DATA_HOME/dots"
-git clone https://github.com/mmctl/dots.git "$DOTS_DIR"
-cd "$DOTS_DIR" && git checkout personal-opensuse-tumbleweed
-
+git clone --branch personal-opensuse-tumbleweed --single-branch \
+  https://github.com/mmctl/dots.git \
+  "$DOTS_DIR"
+cd "$DOTS_DIR"
 
 # System
 ## Snapper (BTRFS snapshot management)
-./scripts/setup-snapper
+$DOTS_DIR/setup/scripts/setup-snapper
 
 ## Base profile and structure
-./scripts/setup-base
+$DOTS_DIR/setup/scripts/setup-base
 
 ## Development/build essentials/base
-./scripts/setup-devel-base
+$DOTS_DIR/setup/scripts/setup-devel-base
 
 ## Security
-./scripts/setup-security
+$DOTS_DIR/setup/scripts/setup-security
 
 ## Desktop environment
-./scripts/setup-de
+$DOTS_DIR/setup/scripts/setup-de
 
 
 

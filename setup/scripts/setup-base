@@ -17,7 +17,7 @@ if ! command -v stow >/dev/null 2>&1; then
     exit 1
 fi
 
-echo "This script needs sudo for system configuration."
+echo "INFO: This script needs sudo for system configuration."
 sudo -v
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -29,16 +29,16 @@ if [ ! -d "$DOTS_DIR" ]; then
 fi
 
 
-echo "Stowing .profile..."
+echo "INFO: Stowing .profile..."
 rm -f -- "$HOME/.profile"
 
 (cd "$DOTS_DIR" && stow base)
 . "$HOME/.profile"
 
-echo "Stowed .profile."
+echo "INFO: Stowed .profile."
 
 
-echo "Creating XDG directories and setting user-dirs..."
+echo "INFO: Creating XDG directories and setting user-dirs..."
 
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -56,10 +56,10 @@ install -d -m 700 \
 rm -f -- "$XDG_CONFIG_HOME/user-dirs.dirs"
 (cd "$DOTS_DIR" && stow xdg)
 
-echo "Created XDG directories and set user-dirs."
+echo "INFO: Created XDG directories and set user-dirs."
 
 
-echo "Creating PARA directories..."
+echo "INFO: Creating PARA directories..."
 
 install -d -m 700 \
         "$HOME/projects" \
@@ -67,34 +67,34 @@ install -d -m 700 \
         "$HOME/resources" \
         "$HOME/archives"
 
-echo "Created PARA directories."
+echo "INFO: Created PARA directories."
 
 
-echo "Adding Packman Essentials repository..."
+echo "INFO: Adding Packman Essentials repository..."
 
 packman_essentials_url="https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/"
 packman_essentials_alias="packman-essentials"
 
 if sudo zypper lr "$packman_essentials_alias" >/dev/null 2>&1; then
-    echo "Repository '${packman_essentials_alias}' already exists; skipping."
+    echo "INFO: Repository '${packman_essentials_alias}' already exists; skipping."
 else
     sudo zypper addrepo -cfp 90 "$packman_essentials_url" "$packman_essentials_alias"
-    echo "Added Packman Essentials repository."
+    echo "INFO: Added Packman Essentials repository."
 fi
 
 
-echo "Refreshing repositories..."
-echo "Verify the Packman Essentials key fingerprint when prompted:"
-echo "F887 5B88 0D51 8B6B 8C53 0D13 45A1 D067 1ABD 1AFB"
+echo "INFO: Refreshing repositories..."
+echo "INFO: Verify the Packman Essentials key fingerprint when prompted:"
+echo "INFO: F887 5B88 0D51 8B6B 8C53 0D13 45A1 D067 1ABD 1AFB"
 
 sudo zypper refresh
 
-echo "Refreshed repositories"
+echo "INFO: Refreshed repositories"
 
 
-echo "Installing codecs from Packman Essentials repository..."
+echo "INFO: Installing codecs from Packman Essentials repository..."
 
-sudo zypper install --allow-vendor-change --from "$packman_essentials_alias" \
+sudo zypper install -y --allow-vendor-change --from "$packman_essentials_alias" \
      ffmpeg \
      gstreamer-plugins-good \
      gstreamer-plugins-bad \
@@ -102,15 +102,15 @@ sudo zypper install --allow-vendor-change --from "$packman_essentials_alias" \
      gstreamer-plugins-libav \
      libavcodec
 
-echo "Installed codecs from Packman Essentials repository."
+echo "INFO: Installed codecs from Packman Essentials repository."
 
 
-echo "Updating packages..."
+echo "INFO: Updating packages..."
 
 sudo zypper dup
 
-echo "Updated packages."
+echo "INFO: Updated packages."
 
 echo
-echo "Manual checkpoint:"
-echo "  Reboot before continuing with the setup."
+echo "INFO: Manual checkpoint:"
+echo "INFO:   Reboot."

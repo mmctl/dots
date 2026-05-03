@@ -11,37 +11,37 @@ if ! command -v zypper >/dev/null 2>&1; then
     exit 1
 fi
 
-echo "This script needs sudo for system configuration."
+echo "INFO: This script needs sudo for system configuration."
 sudo -v
 
 
-echo "Installing development/build essentials..."
+echo "INFO: Installing development/build essentials..."
 
-sudo zypper install -t pattern devel_basis
-sudo zypper install curl ca-certificates
+sudo zypper install -y -t pattern devel_basis
+sudo zypper install -y curl ca-certificates
 
-echo "Installed development/build essentials."
+echo "INFO: Installed development/build essentials."
 
 
-echo "Sourcing existing Rust environment if present..."
+echo "INFO: Sourcing existing Rust environment if present..."
 
 CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
 RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
 
 if [ -f "$CARGO_HOME/env" ]; then
     . "$CARGO_HOME/env"
-    echo "Sourced existing Rust environment."
+    echo "INFO: Sourced existing Rust environment."
 else
-    echo "Did not find existing Rust environment."
+    echo "INFO: Did not find existing Rust environment."
 fi
 
 
-echo "Installing or updating Rust toolchain..."
+echo "INFO: Installing or updating Rust toolchain..."
 
 if command -v rustup >/dev/null 2>&1; then
-    echo "rustup already installed; updating stable Rust toolchain..."
+    echo "INFO: rustup already installed; updating stable Rust toolchain..."
     rustup update stable
-    echo "Updated stable Rust toolchain."
+    echo "INFO: Updated stable Rust toolchain."
 else
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
         sh -s -- -y --no-modify-path
@@ -53,5 +53,5 @@ else
         exit 1
     fi
 
-    echo "Installed Rust toolchain."
+    echo "INFO: Installed Rust toolchain."
 fi
