@@ -168,3 +168,8 @@ dms greeter sync
 sudo systemctl enable greetd
 
 echo "Installed Quickshell environment."
+
+
+echo
+echo "Manual checkpoint:"
+echo "  Reboot."

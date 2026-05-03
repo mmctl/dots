@@ -43,46 +43,9 @@ cd "$DOTS_DIR" && git checkout personal-opensuse-tumbleweed
 ## Security
 ./scripts/setup-security
 
-## Graphical environment
+## Desktop environment
+./scripts/setup-de
 
-
-# DMS
-# Install base
-sudo zypper install libwayland-server0 niri gnome-keyring gnome-keyring-pam
-sudo zypper install kitty
-
-## Add repositories
-sudo zypper addrepo https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/home:AvengeMedia:danklinux.repo
-sudo zypper addrepo https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/home:AvengeMedia:dms.repo
-
-# Install
-sudo zypper refresh
-# Check key fingerprint: 20CA 3E58 04CA 7500 9B36 71A4 2847 7848 3BC8 6115
-sudo zypper install dms quickshell matugen dgop greetd dms-greeter
-
-# Configure
-cd "$XDG_DATA_HOME/dots" && stow dms environment-dms matugen-dms niri-dms wallpapers
-cp -L "$XDG_CONFIG_HOME/DankMaterialShell/settings_base.json" "$XDG_CONFIG_HOME/DankMaterialShell/settings.json"
-cd "$XDG_DATA_HOME/dots" && stow bash-gen kitty-gen
-dms setup outputs
-# Copy over machine-independent settings from settings_base.json to settings.json
-systemctl --user enable dms
-dms greeter enable
-dms greeter sync
-sudo systemctl enable greetd
-
-# Reboot
-
-# Development
-
-## Terminal + Shell
-sudo zypper install bash-completion fzf fd ripgrep zoxide starship
-# Ble.sh
-git clone --recursive https://github.com/akinomyoga/ble.sh.git "$XDG_DATA_HOME/srcs/blesh"
-make -C "$XDG_DATA_HOME/srcs/blesh" install
-
-stow readline
-stow ripgrep
 
 
 # Mail
