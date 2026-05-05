@@ -23,40 +23,38 @@ nmcli device wifi connect "WiFiNetworkID" --ask
 
 ## Get configuration files and setup scripts
 export XDG_DATA_HOME="$HOME/.local/share"
-install -d -m 700 "$XDG_DATA_HOME"
+export XDG_STATE_HOME="$HOME/.local/state"
+mkdir -p -- "$XDG_DATA_HOME" "$XDG_STATE_HOME"
 sudo zypper install git stow
 export DOTS_DIR="$XDG_DATA_HOME/dots"
 git clone --branch personal-opensuse-tumbleweed --single-branch \
   https://github.com/mmctl/dots.git \
   "$DOTS_DIR"
-cd "$DOTS_DIR"
+cd -- "$DOTS_DIR"
+
 
 # System
 ## Snapper
-$DOTS_DIR/setup/scripts/setup-snapper
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-snapper"
 
 ## Base profile and structure
-$DOTS_DIR/setup/scripts/setup-base
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-base"
 
 ## Development/build essentials/base
-$DOTS_DIR/setup/scripts/setup-devel-base
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-devel-base"
 
 ## Security
-$DOTS_DIR/setup/scripts/setup-security
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-security"
 
 ## Desktop environment
-$DOTS_DIR/setup/scripts/setup-de
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-de"
 
 ## Productivity (mail, editor, ...)
-$DOTS_DIR/setup/scripts/setup-productivity
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-productivity"
 
 ## Development/build
-$DOTS_DIR/setup/scripts/setup-devel
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-devel"
 
-# Productivity
-$DOTS_DIR/setup/scripts/setup-productivity
-
-systemctl --user enable emacs.service
 
 
 ## LaTeX

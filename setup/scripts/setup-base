@@ -1,44 +1,46 @@
 #!/usr/bin/env sh
 set -eu
 
+# Setup logging
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/logging-utils"
+
+
 if [ "$(id -u)" -eq 0 ]; then
-    echo "ERROR: Run this script as the target regular user, not as root." >&2
-    exit 1
+    setup_log_die "Run this script as the target regular user, not as root."
 fi
 
 if ! command -v zypper >/dev/null 2>&1; then
-    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
-    exit 1
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
 if ! command -v stow >/dev/null 2>&1; then
-    echo "ERROR: stow is not installed. Install it first:" >&2
-    echo "       sudo zypper install stow" >&2
-    exit 1
+    setup_log_info "stow is not installed. Installing..."
+    sudo zypper install -y stow
+    setup_log_info "Installed stow."
 fi
 
-echo "INFO: This script needs sudo for system configuration."
-sudo -v
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
 if [ ! -d "$DOTS_DIR" ]; then
-    echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
-    exit 1
+    setup_log_die "dotfiles directory not found: $DOTS_DIR"
 fi
 
 
-echo "INFO: Stowing .profile..."
+setup_log_info "Stowing .profile..."
 rm -f -- "$HOME/.profile"
 
-(cd "$DOTS_DIR" && stow base)
+(cd -- "$DOTS_DIR" && stow base)
 . "$HOME/.profile"
 
-echo "INFO: Stowed .profile."
+setup_log_info "Stowed .profile."
 
 
-echo "INFO: Creating XDG directories and setting user-dirs..."
+setup_log_info "Creating XDG directories and setting user-dirs..."
 
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -46,7 +48,7 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
 
-install -d -m 700 \
+mkdir -p -- \
         "$XDG_CACHE_HOME" \
         "$XDG_CONFIG_HOME" \
         "$XDG_DATA_HOME" \
@@ -54,45 +56,45 @@ install -d -m 700 \
         "$XDG_BIN_HOME"
 
 rm -f -- "$XDG_CONFIG_HOME/user-dirs.dirs"
-(cd "$DOTS_DIR" && stow xdg)
+(cd -- "$DOTS_DIR" && stow xdg)
 
-echo "INFO: Created XDG directories and set user-dirs."
+setup_log_info "Created XDG directories and set user-dirs."
 
 
-echo "INFO: Creating PARA directories..."
+setup_log_info "Creating PARA directories..."
 
-install -d -m 700 \
+install -d -m 700 -- \
         "$HOME/projects" \
         "$HOME/areas" \
         "$HOME/resources" \
         "$HOME/archives"
 
-echo "INFO: Created PARA directories."
+setup_log_info "Created PARA directories."
 
 
-echo "INFO: Adding Packman Essentials repository..."
+setup_log_info "Adding Packman Essentials repository..."
 
 packman_essentials_url="https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/"
 packman_essentials_alias="packman-essentials"
 
 if sudo zypper lr "$packman_essentials_alias" >/dev/null 2>&1; then
-    echo "INFO: Repository '${packman_essentials_alias}' already exists; skipping."
+    setup_log_info "Repository '${packman_essentials_alias}' already exists; skipping."
 else
     sudo zypper addrepo -cfp 90 "$packman_essentials_url" "$packman_essentials_alias"
-    echo "INFO: Added Packman Essentials repository."
+    setup_log_info "Added Packman Essentials repository."
 fi
 
 
-echo "INFO: Refreshing repositories..."
-echo "INFO: Verify the Packman Essentials key fingerprint when prompted:"
-echo "INFO: F887 5B88 0D51 8B6B 8C53 0D13 45A1 D067 1ABD 1AFB"
+setup_log_info "Refreshing repositories..."
+setup_log_info "Verify the Packman Essentials key fingerprint when prompted:"
+setup_log_info "F887 5B88 0D51 8B6B 8C53 0D13 45A1 D067 1ABD 1AFB"
 
 sudo zypper refresh
 
-echo "INFO: Refreshed repositories"
+setup_log_info "Refreshed repositories"
 
 
-echo "INFO: Installing codecs from Packman Essentials repository..."
+setup_log_info "Installing codecs from Packman Essentials repository..."
 
 sudo zypper install -y --allow-vendor-change --from "$packman_essentials_alias" \
      ffmpeg \
@@ -102,15 +104,14 @@ sudo zypper install -y --allow-vendor-change --from "$packman_essentials_alias" 
      gstreamer-plugins-libav \
      libavcodec
 
-echo "INFO: Installed codecs from Packman Essentials repository."
+setup_log_info "Installed codecs from Packman Essentials repository."
 
 
-echo "INFO: Updating packages..."
+setup_log_info "Updating packages..."
 
-sudo zypper dup
+sudo zypper dup -y
 
-echo "INFO: Updated packages."
+setup_log_info "Updated packages."
 
-echo
-echo "INFO: Manual checkpoint:"
-echo "INFO:   Reboot."
+setup_log_info "Manual checkpoint:"
+setup_log_info "  Reboot."

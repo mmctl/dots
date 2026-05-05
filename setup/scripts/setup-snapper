@@ -1,23 +1,27 @@
 #!/usr/bin/env sh
 set -eu
 
+# Setup logging
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/logging-utils"
+
+
 if [ "$(id -u)" -eq 0 ]; then
-    echo "ERROR: Run this script as the target regular user, not as root." >&2
-    exit 1
+    setup_log_die "Run this script as the target regular user, not as root."
 fi
 
-echo "INFO: This script needs sudo for system configuration."
-sudo -v
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 if sudo btrfs subvolume show /home >/dev/null 2>&1; then
-    echo "INFO: /home is a BTRFS subvolume; configuring snapper config 'home'..."
+    setup_log_info "/home is a BTRFS subvolume; configuring snapper config 'home'..."
 
     if sudo snapper -c home get-config >/dev/null 2>&1; then
-        echo "INFO: Snapper config 'home' already exists; leaving snapshot structure intact."
+        setup_log_info "Snapper config 'home' already exists; leaving snapshot structure intact."
     else
-        echo "INFO: Creating snapper config 'home' for /home..."
+        setup_log_info "Creating snapper config 'home' for /home..."
         sudo snapper -c home create-config /home
-        echo "INFO: Created snapper config 'home' for /home."
+        setup_log_info "Created snapper config 'home' for /home."
     fi
 
     sudo snapper -c home set-config \
@@ -33,7 +37,7 @@ if sudo btrfs subvolume show /home >/dev/null 2>&1; then
          TIMELINE_LIMIT_MONTHLY=4 \
          TIMELINE_LIMIT_YEARLY=0
 
-    echo "INFO: Configured snapper for /home."
+    setup_log_info "Configured snapper for /home."
 else
-    echo "INFO: /home is not a BTRFS subvolume; skipping snapper config 'home'."
+    setup_log_info "/home is not a BTRFS subvolume; skipping snapper config 'home'."
 fi

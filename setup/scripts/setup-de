@@ -1,34 +1,35 @@
 #!/usr/bin/env sh
 set -eu
 
+# Setup logging
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/logging-utils"
+
+
 if [ "$(id -u)" -eq 0 ]; then
-    echo "ERROR: Run this script as the target regular user, not as root." >&2
-    exit 1
+    setup_log_die "Run this script as the target regular user, not as root."
 fi
 
 if ! command -v zypper >/dev/null 2>&1; then
-    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
-    exit 1
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
 if ! command -v git >/dev/null 2>&1; then
-    echo "ERROR: git is not installed. Run the development/build essentials setup first." >&2
-    exit 1
+    setup_log_die "git is not installed. Run the development/build essentials setup first."
 fi
 
 if ! command -v make >/dev/null 2>&1; then
-    echo "ERROR: make is not installed. Run the development/build essentials setup first." >&2
-    exit 1
+    setup_log_die "make is not installed. Run the development/build essentials setup first."
 fi
 
 if ! command -v stow >/dev/null 2>&1; then
-    echo "ERROR: stow is not installed. Install it first:" >&2
-    echo "       sudo zypper install stow" >&2
-    exit 1
+    setup_log_info "stow is not installed. Installing..."
+    sudo zypper install -y stow
+    setup_log_info "Installed stow."
 fi
 
-echo "INFO: This script needs sudo for system configuration."
-sudo -v
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
@@ -36,19 +37,17 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
 if [ ! -d "$DOTS_DIR" ]; then
-    echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
-    exit 1
+    setup_log_die "dotfiles directory not found: $DOTS_DIR"
 fi
 
 REPLACE_PLACEHOLDER="${REPLACE_PLACEHOLDER:-$DOTS_DIR/setup/scripts/replace-placeholder}"
 
 if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
-    echo "ERROR: replace-placeholder script not found or not executable: $REPLACE_PLACEHOLDER" >&2
-    exit 1
+    setup_log_die "replace-placeholder script not found or not executable: $REPLACE_PLACEHOLDER"
 fi
 
 
-echo "INFO: Installing basic desktop runtime for Wayland..."
+setup_log_info "Installing basic desktop runtime for Wayland..."
 
 sudo zypper install -y \
      libdrm2 Mesa Mesa-dri Mesa-libEGL1 Mesa-libGL1 Mesa-libva Mesa-vulkan-device-select \
@@ -59,20 +58,20 @@ sudo zypper install -y \
      xdg-desktop-portal xdg-desktop-portal-gtk \
      xwayland
 
-echo "INFO: Installed basic desktop runtime for Wayland."
+setup_log_info "Installed basic desktop runtime for Wayland."
 
 
-echo "INFO: Installing graphical toolkits, themes, and fonts..."
+setup_log_info "Installing graphical toolkits, themes, and fonts..."
 
 sudo zypper install -y \
      gtk3 gtk4 qt5ct qt6ct \
      adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita \
      iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
 
-echo "INFO: Installing graphical toolkits, themes and fonts."
+setup_log_info "Installing graphical toolkits, themes and fonts."
 
 
-echo "INFO: Installing terminal emulator (Kitty) and shell enhancements..."
+setup_log_info "Installing terminal emulator (Kitty) and shell enhancements..."
 
 sudo zypper install -y kitty
 sudo zypper install -y bash-completion fzf fd ripgrep zoxide starship
@@ -80,7 +79,7 @@ sudo zypper install -y bash-completion fzf fd ripgrep zoxide starship
 install -d -m 700 "$XDG_DATA_HOME/srcs"
 
 if [ -d "$XDG_DATA_HOME/srcs/blesh/.git" ]; then
-    echo "INFO: ble.sh repository already exists; updating."
+    setup_log_info "ble.sh repository already exists; updating."
     git -C "$XDG_DATA_HOME/srcs/blesh" pull --ff-only
     git -C "$XDG_DATA_HOME/srcs/blesh" submodule update --init --recursive
 else
@@ -91,55 +90,55 @@ fi
 
 make -C "$XDG_DATA_HOME/srcs/blesh" install
 
-(cd "$DOTS_DIR" && stow readline ripgrep)
+(cd -- "$DOTS_DIR" && stow readline ripgrep)
 
-echo "INFO: Installed terminal emulator (Kitty) and shell enhancements."
+setup_log_info "Installed terminal emulator (Kitty) and shell enhancements."
 
 
-echo "INFO: Adding repositories for Quickshell environment..."
+setup_log_info "Adding repositories for Quickshell environment..."
 
 danklinux_repo_url='https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/'
 danklinux_repo_alias='danklinux'
 if zypper lr "$danklinux_repo_alias" >/dev/null 2>&1; then
-    echo "INFO: Repository '${danklinux_repo_alias}' already exists; skipping."
+    setup_log_info "Repository '${danklinux_repo_alias}' already exists; skipping."
 else
     sudo zypper addrepo "$danklinux_repo_url" "$danklinux_repo_alias"
-    echo "INFO: Added DankLinux repository."
+    setup_log_info "Added DankLinux repository."
 fi
 
 dms_repo_url='https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/'
 dms_repo_alias='dms'
 if zypper lr "$dms_repo_alias" >/dev/null 2>&1; then
-    echo "INFO: Repository '${dms_repo_alias}' already exists; skipping."
+    setup_log_info "Repository '${dms_repo_alias}' already exists; skipping."
 else
     sudo zypper addrepo "$dms_repo_url" "$dms_repo_alias"
-    echo "INFO: Added DMS repository."
+    setup_log_info "Added DMS repository."
 fi
 
-echo "INFO: Added repositories for Quickshell environment."
+setup_log_info "Added repositories for Quickshell environment."
 
 
-echo "INFO: Refreshing repositories..."
-echo "INFO: Verify the DMS key fingerprint when prompted:"
-echo "INFO: 20CA 3E58 04CA 7500 9B36 71A4 2847 7848 3BC8 6115"
+setup_log_info "Refreshing repositories..."
+setup_log_info "Verify the DMS key fingerprint when prompted:"
+setup_log_info "20CA 3E58 04CA 7500 9B36 71A4 2847 7848 3BC8 6115"
 
 sudo zypper refresh
 
-echo "INFO: Refreshed repositories."
+setup_log_info "Refreshed repositories."
 
 
-echo "INFO: Installing Wayland compositor (Niri).."
+setup_log_info "Installing Wayland compositor (Niri).."
 
 sudo zypper install -y niri
 
-echo "INFO: Installed Wayland compositor (Niri)."
+setup_log_info "Installed Wayland compositor (Niri)."
 
 
-echo "INFO: Installing Quickshell environment..."
+setup_log_info "Installing Quickshell environment..."
 
 sudo zypper install -y dms quickshell matugen dgop greetd dms-greeter
 
-(cd "$DOTS_DIR" && stow dms environment-dms matugen-dms niri-dms wallpapers)
+(cd -- "$DOTS_DIR" && stow dms environment-dms matugen-dms niri-dms wallpapers)
 "$REPLACE_PLACEHOLDER" XDG_CONFIG_HOME "$XDG_CONFIG_HOME" \
     "$XDG_CONFIG_HOME/DankMaterialShell/settings-temp.json" \
     "$XDG_CONFIG_HOME/DankMaterialShell/settings.json"
@@ -155,7 +154,7 @@ sudo zypper install -y dms quickshell matugen dgop greetd dms-greeter
     "$XDG_STATE_HOME/DankMaterialShell/session.json"
 
 rm -f -- "$HOME/.bashrc"
-(cd "$DOTS_DIR" && stow kitty-gen bash-gen fzf-gen starship-gen)
+(cd -- "$DOTS_DIR" && stow kitty-gen bash-gen fzf-gen starship-gen)
 
 DMS_PRIVESC='sudo'
 
@@ -169,9 +168,8 @@ dms greeter sync
 
 sudo systemctl enable greetd
 
-echo "INFO: Installed Quickshell environment."
+setup_log_info "Installed Quickshell environment."
 
 
-echo
-echo "INFO: Manual checkpoint:"
-echo "INFO:   Reboot."
+setup_log_info "Manual checkpoint:"
+setup_log_info "  Reboot."

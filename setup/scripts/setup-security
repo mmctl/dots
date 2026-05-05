@@ -1,73 +1,75 @@
 #!/usr/bin/env sh
 set -eu
 
+# Setup logging
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/logging-utils"
+
+
 if [ "$(id -u)" -eq 0 ] ; then
-    echo "ERROR: Run this script as the target regular user, not as root." >&2
-    exit 1
+    setup_log_die "Run this script as the target regular user, not as root."
 fi
 
 if ! command -v zypper >/dev/null 2>&1; then
-    echo "ERROR: zypper is not available; this script is intended for openSUSE." >&2
-    exit 1
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
 if ! command -v stow >/dev/null 2>&1; then
-    echo "ERROR: stow is not installed. Install it first:" >&2
-    echo "       sudo zypper install stow" >&2
-    exit 1
+    setup_log_info "stow is not installed. Installing..."
+    sudo zypper install -y stow
+    setup_log_info "Installed stow."
 fi
 
-echo "INFO: This script needs sudo for system configuration."
-sudo -v
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
 if [ ! -d "$DOTS_DIR" ]; then
-    echo "ERROR: dotfiles directory not found: $DOTS_DIR" >&2
-    exit 1
+    setup_log_die "dotfiles directory not found: $DOTS_DIR"
 fi
 
 
-echo "INFO: Installing ssh, gpg, and pinentry..."
+setup_log_info "Installing ssh, gpg, and pinentry..."
 
 sudo zypper install -y openssh gpg2 pinentry
 
 install -d -m 700 \
         "$HOME/.ssh" \
         "$HOME/.gnupg"
-(cd "$DOTS_DIR" && stow ssh gnupg)
+(cd -- "$DOTS_DIR" && stow ssh gnupg)
 
-echo "INFO: Installed ssh, gpg, and pinentry."
+setup_log_info "Installed ssh, gpg, and pinentry."
 
 
-echo "INFO: Creating ssh key pairs for work and personal use..."
-echo "INFO: Enter a passphrase for each new key when prompted."
+setup_log_info "Creating ssh key pairs for work and personal use..."
+setup_log_info "Enter a passphrase for each new key when prompted."
 
 date_stamp="$(date +%Y%m%d)"
 host="$(hostname)"
 
 key_personal="$HOME/.ssh/${USER}_ed25519_personal"
 if [ -e "$key_personal" ]; then
-    echo "INFO: ssh key pair already exists: skipping: $key_personal"
+    setup_log_info "ssh key pair already exists: skipping: $key_personal"
 else
     ssh-keygen -t ed25519 -C "${USER}-personal@${host}-${date_stamp}" -f "$key_personal"
-    echo "INFO: Created ssh key pair for personal use: $key_personal"
+    setup_log_info "Created ssh key pair for personal use: $key_personal"
 fi
 
 key_work="$HOME/.ssh/${USER}_ed25519_work"
 if [ -e "$key_work" ]; then
-    echo "INFO: ssh key pair already exists: skipping: $key_work"
+    setup_log_info "ssh key pair already exists: skipping: $key_work"
 else
     ssh-keygen -t ed25519 -C "${USER}-work@${host}-${date_stamp}" -f "$key_work"
-    echo "INFO: Created ssh key pair for work use: $key_work"
+    setup_log_info "Created ssh key pair for work use: $key_work"
 fi
 
-echo "INFO: Created ssh key pairs for work and personal use."
+setup_log_info "Created ssh key pairs for work and personal use."
 
 
-echo "INFO: Setting up ssh-agent integration with systemd..."
+setup_log_info "Setting up ssh-agent integration with systemd..."
 
 install -d -m 700 "$XDG_CONFIG_HOME/systemd/user"
 
@@ -87,10 +89,10 @@ EOF
 systemctl --user daemon-reload
 systemctl --user enable --now ssh-agent.service
 
-echo "INFO: Set up ssh-agent integration with systemd."
+setup_log_info "Set up ssh-agent integration with systemd."
 
 
-echo "INFO: Installing password manager and stowing configuration..."
+setup_log_info "Installing password manager and stowing configuration..."
 
 CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
 
@@ -99,27 +101,25 @@ if [ -f "$CARGO_HOME/env" ]; then
 fi
 
 if command -v rbw >/dev/null 2>&1; then
-    echo "INFO: Password manager (rbw) is already installed; skipping cargo install."
+    setup_log_info "Password manager (rbw) is already installed; skipping cargo install."
 else
     if ! command -v cargo >/dev/null 2>&1; then
-        echo "ERROR: cargo is not available. Run the development/build essentials setup first." >&2
-        exit 1
+        setup_log_die "cargo is not available. Run the development/build essentials setup first."
     fi
     cargo install --locked rbw
-    echo "INFO: Installed password manager."
+    setup_log_info "Installed password manager."
 fi
 
-(cd "$DOTS_DIR" && stow rbw)
+(cd -- "$DOTS_DIR" && stow rbw)
 
-echo "INFO: Stowed password manager configuration."
+setup_log_info "Stowed password manager configuration."
 
 
-echo "INFO: Creating Authinfo file..."
-echo "INFO: Authenticate to password manager when prompted."
+setup_log_info "Creating Authinfo file..."
+setup_log_info "Authenticate to password manager when prompted."
 
 if ! command -v rbw >/dev/null 2>&1; then
-    echo "ERROR: rbw is not available after installation." >&2
-    exit 1
+    setup_log_die "rbw is not available after installation."
 fi
 
 AUTHINFO_FILE="${AUTHINFO_FILE:-$XDG_DATA_HOME/.authinfo.gpg}"
@@ -127,7 +127,7 @@ authinfo_dir="$(dirname -- "$AUTHINFO_FILE")"
 install -d -m 700 "$authinfo_dir"
 
 if [ -e "$AUTHINFO_FILE" ]; then
-    echo "INFO: Authinfo file already exists; skipping creation: $AUTHINFO_FILE."
+    setup_log_info "Authinfo file already exists; skipping creation: $AUTHINFO_FILE."
 else
     (
         set +x
@@ -140,7 +140,7 @@ else
 
         trap 'rm -rf -- "$authinfo_tmpdir"; rm -f -- "$authinfo_gpg_tmp"' EXIT HUP INT TERM
 
-        echo "INFO: Fetching Authinfo credentials from password manager..."
+        setup_log_info "Fetching Authinfo credentials from password manager..."
 
         mail_personal_user="$(rbw get --field username "Mailbox Personal (mmeijers.com)")"
         mail_personal_pass="$(rbw get "Mailbox Personal (mmeijers.com)")"
@@ -190,12 +190,11 @@ EOF
         mv -- "$authinfo_gpg_tmp" "$AUTHINFO_FILE"
     )
 
-    echo "INFO: Created Authinfo file."
+    setup_log_info "Created Authinfo file."
 fi
 
 
-echo
-echo "INFO: Manual checkpoint:"
-echo "INFO:   Add these public SSH keys to the relevant accounts:"
-echo "INFO:     $key_personal.pub"
-echo "INFO:     $key_work.pub"
+setup_log_info "Manual checkpoint:"
+setup_log_info "  Add these public SSH keys to the relevant accounts:"
+setup_log_info "    $key_personal.pub"
+setup_log_info "    $key_work.pub"
