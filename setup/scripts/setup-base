@@ -113,5 +113,5 @@ sudo zypper dup -y
 
 setup_log_info "Updated packages."
 
-setup_log_info "Manual checkpoint:"
-setup_log_info "  Reboot."
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Reboot."

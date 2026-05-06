@@ -27,8 +27,11 @@ touch "$log_file" || exit 1
 chmod 600 -- "$log_file" || exit 1
 
 {
-    printf '[%s] [INFO] Running %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
+    printf '[%s] [INFO] Executing %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
     printf '[%s] [INFO] Logging to %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
 
     "$script_path"
+
+    printf '[%s] [INFO] Executed %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
+    printf '[%s] [INFO] Logged to %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
 } 2>&1 | tee -a "$log_file"

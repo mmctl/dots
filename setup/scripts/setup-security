@@ -194,7 +194,7 @@ EOF
 fi
 
 
-setup_log_info "Manual checkpoint:"
-setup_log_info "  Add these public SSH keys to the relevant accounts:"
-setup_log_info "    $key_personal.pub"
-setup_log_info "    $key_work.pub"
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Add these public SSH keys to the relevant accounts:"
+setup_log_action "    $key_personal.pub"
+setup_log_action "    $key_work.pub"

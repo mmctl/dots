@@ -79,13 +79,16 @@ sudo zypper install -y bash-completion fzf fd ripgrep zoxide starship
 install -d -m 700 "$XDG_DATA_HOME/srcs"
 
 if [ -d "$XDG_DATA_HOME/srcs/blesh/.git" ]; then
-    setup_log_info "ble.sh repository already exists; updating."
+    setup_log_info "ble.sh repository already exists; updating..."
     git -C "$XDG_DATA_HOME/srcs/blesh" pull --ff-only
     git -C "$XDG_DATA_HOME/srcs/blesh" submodule update --init --recursive
+    setup_log_info "Updated ble.sh."
 else
+    setup_log_info "Cloning ble.sh repository..."
     git clone --recursive \
         https://github.com/akinomyoga/ble.sh.git \
         "$XDG_DATA_HOME/srcs/blesh"
+    setup_log_info "Cloned ble.sh repository."
 fi
 
 make -C "$XDG_DATA_HOME/srcs/blesh" install
@@ -171,5 +174,5 @@ sudo systemctl enable greetd
 setup_log_info "Installed Quickshell environment."
 
 
-setup_log_info "Manual checkpoint:"
-setup_log_info "  Reboot."
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Reboot."
