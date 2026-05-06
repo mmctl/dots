@@ -21,39 +21,34 @@ sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 setup_log_info "Installing development/build essentials..."
 
 sudo zypper install -y -t pattern devel_basis
-sudo zypper install -y curl ca-certificates
+sudo zypper install -y curl ca-certificates cmake ninja meson
 
 setup_log_info "Installed development/build essentials."
 
 
 setup_log_info "Sourcing existing Rust environment if present..."
 
-CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
-RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
+export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
 
 if [ -f "$CARGO_HOME/env" ]; then
     . "$CARGO_HOME/env"
     setup_log_info "Sourced existing Rust environment."
-else
-    setup_log_info "Did not find existing Rust environment."
 fi
 
 
-setup_log_info "Installing or updating Rust toolchain..."
+setup_log_info "Installing or updating stable Rust toolchain..."
 
-if command -v rustup >/dev/null 2>&1; then
-    setup_log_info "rustup already installed; updating stable Rust toolchain..."
-    rustup update stable
-    setup_log_info "Updated stable Rust toolchain."
-else
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
-        sh -s -- -y --no-modify-path
-
-    if [ -f "$CARGO_HOME/env" ]; then
-        . "$CARGO_HOME/env"
-    else
-        setup_log_die "Rust installer completed, but $CARGO_HOME/env was not created."
-    fi
-
-    setup_log_info "Installed Rust toolchain."
+if ! command -v rustup >/dev/null 2>&1; then
+    setup_log_info "rustup is not installed. Installing..."
+    sudo zypper install -y rustup
+    setup_log_info "Installed rustup."
 fi
+
+rustup toolchain install stable
+rustup default stable
+
+setup_log_info "Installed or updated stable Rust toolchain."
+
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Ensure '${CARGO_HOME}/bin' is added to PATH"

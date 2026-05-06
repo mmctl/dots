@@ -19,6 +19,12 @@ export XDG_STATE_HOME="$HOME/.local/state"
 
 export XDG_BIN_HOME="$HOME/.local/bin"
 
+### PARA
+export PROJECTS_DIR="$HOME/projects"
+export AREAS_DIR="$HOME/areas"
+export RESOURCES_DIR="$HOME/resources"
+export ARCHIVES_DIR="$HOME/archives"
+
 ### Dotfiles
 export DOTS_DIR="$XDG_DATA_HOME/dots"
 

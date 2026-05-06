@@ -63,11 +63,16 @@ setup_log_info "Created XDG directories and set user-dirs."
 
 setup_log_info "Creating PARA directories..."
 
+PROJECTS_DIR="${PROJECTS_DIR:-$HOME/projects}"
+AREAS_DIR="${AREAS_DIR:-$HOME/areas}"
+RESOURCES_DIR="${RESOURCES_DIR:-$HOME/resources}"
+ARCHIVES_DIR="${ARCHIVES_DIR:-$HOME/archives}"
+
 install -d -m 700 -- \
-        "$HOME/projects" \
-        "$HOME/areas" \
-        "$HOME/resources" \
-        "$HOME/archives"
+        "$PROJECTS_DIR" \
+        "$AREAS_DIR" \
+        "$RESOURCES_DIR" \
+        "$ARCHIVES_DIR"
 
 setup_log_info "Created PARA directories."
 
