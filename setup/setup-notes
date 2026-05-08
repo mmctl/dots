@@ -54,8 +54,8 @@ git clone --branch personal-opensuse-tumbleweed --single-branch \
 ## Development/build
 "$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-devel"
 
-## Projects
-"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-projects"
+## PARA
+"$DOTS_DIR/setup/scripts/run-setup-script" "$DOTS_DIR/setup/scripts/setup-para"
 
 
 ## LaTeX
@@ -141,42 +141,6 @@ sudo usermod -aG docker $USER
 
 # Projects
 PROJECTS_DIR="${PROJECTS_DIR:-$HOME/projects}"
-
-# Keyboards
-curl -fsSL https://install.qmk.fm | sh
-qmk setup -H "$XDG_DATA_HOME/qmk_firmware"
-git clone git@github-personal:mmctl/keyboards.git "$PROJECTS_DIR/keyboards"
-ln -srf "$PROJECTS_DIR/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
-ln -srf "$PROJECTS_DIR/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
-
-# Website
-sudo zypper install hugo
-git clone --recurse-submodules git@github-personal:mmctl/website-personal.git "$PROJECTS_DIR/website"
-
-# EasyCrypt development
-git clone git@github-work:EasyCrypt/easycrypt.git "$PROJECTS_DIR/easycrypt-dev"
-
-# Emacs development
-install -d -m 700 -- "$PROJECTS_DIR/emacs-dev"
-
-## EasyCrypt Extensions
-git clone git@github-personal:mmctl/easycrypt-ext.git "$PROJECTS_DIR/emacs-dev/easycrypt-ext"
-
-## Move it
-git clone git@github-personal:mmctl/move-it.git "$PROJECTS_DIR/emacs-dev/move-it"
-
-# LaTeX dissertation template
-git clone git@github-personal:mmctl/latex-dissertation-template.git "$PROJECTS_DIR/latex-dissertation-template"
-
-
-# Areas
-AREAS_DIR="${AREAS_DIR:-$HOME/areas}"
-
-# Work
-install -d -m 700 -- "$AREAS_DIR/work"
-
-# Curriculum vitae and cover letters
-git clone git@github-personal:mmctl/cvcl.git "$AREAS_DIR/work/cvcl"
 
 
 # reboot (or at least log out)
