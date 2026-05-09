@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 set -eu
 
-# Setup logging
+# Setup logging and git utilities
 script_dir="$(dirname -- "$(realpath "$0")")"
 . "$script_dir/logging-utils"
+. "$script_dir/git-utils"
 
 
 if [ "$(id -u)" -eq 0 ]; then
@@ -14,13 +15,11 @@ if ! command -v zypper >/dev/null 2>&1; then
     setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
-if ! command -v git >/dev/null 2>&1; then
-    setup_log_die "git is not installed. Run the development/build essentials setup first."
-fi
-
-if ! command -v make >/dev/null 2>&1; then
-    setup_log_die "make is not installed. Run the development/build essentials setup first."
-fi
+for bcmd in git make; do
+    if ! command -v "$bcmd" >/dev/null 2>&1; then
+        setup_log_die "$bcmd is not installed. Run the development/build essentials setup first."
+    fi
+done
 
 if ! command -v stow >/dev/null 2>&1; then
     setup_log_info "stow is not installed. Installing..."
@@ -76,20 +75,11 @@ setup_log_info "Installing terminal emulator (Kitty) and shell enhancements..."
 sudo zypper install -y kitty
 sudo zypper install -y bash-completion fzf fd ripgrep zoxide starship
 
-install -d -m 700 "$XDG_DATA_HOME/srcs"
+mkdir -p -- "$XDG_DATA_HOME/srcs"
 
-if [ -d "$XDG_DATA_HOME/srcs/blesh/.git" ]; then
-    setup_log_info "ble.sh repository already exists; updating..."
-    git -C "$XDG_DATA_HOME/srcs/blesh" pull --ff-only
-    git -C "$XDG_DATA_HOME/srcs/blesh" submodule update --init --recursive
-    setup_log_info "Updated ble.sh."
-else
-    setup_log_info "Cloning ble.sh repository..."
-    git clone --recursive \
-        https://github.com/akinomyoga/ble.sh.git \
-        "$XDG_DATA_HOME/srcs/blesh"
-    setup_log_info "Cloned ble.sh repository."
-fi
+clone_or_update --recurse-submodules \
+                'https://github.com/akinomyoga/ble.sh.git' \
+                "$XDG_DATA_HOME/srcs/blesh/"
 
 make -C "$XDG_DATA_HOME/srcs/blesh" install
 

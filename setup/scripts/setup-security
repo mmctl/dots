@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
-# Setup logging
+# Setup logging utilities
 script_dir="$(dirname -- "$(realpath "$0")")"
 . "$script_dir/logging-utils"
 
 
-if [ "$(id -u)" -eq 0 ] ; then
+if [ "$(id -u)" -eq 0 ]; then
     setup_log_die "Run this script as the target regular user, not as root."
 fi
 

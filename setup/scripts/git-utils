@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+# Source this file; do not execute it.
+
+clone_or_update() {
+    recurse=0
+
+    case ${1:-} in
+        --recurse-submodules)
+            recurse=1
+            shift
+            ;;
+    esac
+
+    if [ "$#" -ne 2 ]; then
+        setup_log_die "clone_or_update: expected [--recurse-submodules] REPO DEST"
+    fi
+
+    repo=$1
+    dest=$2
+
+    if [ -d "$dest/.git" ]; then
+        setup_log_info "Updating repository '$dest'..."
+        git -C "$dest" pull --ff-only
+
+        if [ "$recurse" -eq 1 ]; then
+            setup_log_info "Updating submodules in '$dest'..."
+            git -C "$dest" submodule update --init --recursive
+            setup_log_info "Updated submodules in '$dest'."
+        fi
+        setup_log_info "Updated repository '$dest'."
+    elif [ -e "$dest" ]; then
+        setup_log_die "Destination '$dest' exists but is not a Git repository."
+    else
+        if [ "$recurse" -eq 1 ]; then
+            setup_log_info "Cloning repository '$repo' with submodules into '$dest'..."
+            git clone --recurse-submodules "$repo" "$dest"
+            setup_log_info "Cloned repository '$repo' with submodules into '$dest'."
+        else
+            setup_log_info "Cloning repository '$repo' into '$dest'..."
+            git clone "$repo" "$dest"
+            setup_log_info "Cloned repository '$repo' into '$dest'."
+        fi
+    fi
+}

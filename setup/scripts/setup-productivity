@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 set -eu
 
-# Setup logging
+# Setup logging and git utilities
 script_dir="$(dirname -- "$(realpath "$0")")"
 . "$script_dir/logging-utils"
+. "$script_dir/git-utils"
 
 
 if [ "$(id -u)" -eq 0 ]; then
@@ -53,7 +54,7 @@ fi
 
 setup_log_info "Creating mail directories..."
 
-install -d -m 700 \
+install -d -m 700 -- \
         "$MAILDIR" \
         "$MAILDIR/personal-mmeijers" \
         "$MAILDIR/kernel-mmeijers" \
@@ -90,19 +91,20 @@ setup_log_info "Installed spellchecker and dictionaries."
 setup_log_info "Installing editor (Emacs)..."
 
 sudo zypper install -y emacs emacs-x11 mu4e
+ln -sf -- "$(which emacs-x11)" "$XDG_BIN_HOME/emacs"
 
 (cd -- "$DOTS_DIR" && stow emacs)
 
-install -d -m 700 "$XDG_CONFIG_HOME/systemd/user"
+install -d -m 700 -- "$XDG_CONFIG_HOME/systemd/user"
 
-cat > "$XDG_CONFIG_HOME/systemd/user/emacs-x11.service" <<EOF
+cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service" <<EOF
 [Unit]
 Description=Emacs text editor
 Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/emacs-x11 --fg-daemon
+ExecStart=/usr/bin/emacs --fg-daemon
 
 # Emacs will exit with status 15 after having received SIGTERM, which
 # is the default "KillSignal" value systemd uses to stop services.
@@ -131,11 +133,11 @@ WantedBy=default.target
 EOF
 
 systemctl --user daemon-reload
-systemctl --user enable emacs-x11.service
+systemctl --user enable emacs.service
 
 setup_log_info "Installing/initializing Emacs packages..."
 
-git clone git@github-personal:mmctl/org.git "$XDG_DATA_HOME/org"
+clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
 
 emacs --batch --load "$XDG_CONFIG_HOME/emacs/init.el"
 emacs --script "$XDG_DATA_HOME/emacs/install/install-treesit.el"
@@ -182,7 +184,7 @@ Terminal=false
 Type=Application
 EOF
 
-    update-desktop-database "$XDG_DATA_HOME/applications" 2>/dev/null || true
+    update-desktop-database "$XDG_DATA_HOME/applications" || true
 
     xdg-mime default emacsclient.desktop text/plain
     xdg-mime default emacsclient-mail.desktop x-scheme-handler/mailto
