@@ -3,7 +3,6 @@
 ;; (See https://www.gnu.org/software/emacs/manual/html_node/elisp/Startup-Summary.html)
 
 ;;; Base directories and files
-
 ;; Configuration
 (defconst EMACS_CONFIG_DIR (file-name-as-directory
                             (if (getenv "XDG_CONFIG_HOME")
@@ -95,7 +94,6 @@
 (unless (file-directory-p LOCKS_DIR)
   (make-directory LOCKS_DIR t))
 
-
 ;; Load path (system-wide, non-distro)
 (let ((sysldir (file-name-as-directory "/usr/local/share/emacs/site-lisp/")))
   (when (file-directory-p sysldir)
@@ -105,7 +103,6 @@
 
 
 ;;; Native compilation
-
 (setopt native-comp-jit-compilation t
         native-comp-async-query-on-exit t)
 (setopt package-native-compile t)
@@ -114,19 +111,16 @@
 
 
 ;;; Garbage collection
-
 (setopt gc-cons-threshold 33554432
         gc-cons-percentage 0.15)
 
 
 ;;; Package system and management
-
 (setopt package-user-dir PACKAGE_DIR)
 (setopt package-gnupghome-dir (file-name-as-directory (expand-file-name "gnupg/" package-user-dir)))
-
+(setopt package-enable-at-startup nil)
 
 ;;; Default/Base frame
-
 (setopt default-frame-alist
         '((fullscreen . maximize)
           (fullscreen-restore . fullheight)
@@ -151,6 +145,5 @@
 
 
 ;;; Miscellaneous
-
 ;; File loading
 (setopt load-prefer-newer t)
