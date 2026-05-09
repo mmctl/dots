@@ -1,5 +1,40 @@
 # Source this file; do not execute it.
 
+# Logging
+setup_log_timestamp() {
+    date '+%Y-%m-%d %H:%M:%S'
+}
+
+setup_log() {
+    level=$1
+    shift
+
+    printf '[%s] [%s] %s\n' "$(setup_log_timestamp)" "$level" "$*"
+}
+
+setup_log_info() {
+    setup_log INFO "$@"
+}
+
+setup_log_action() {
+    setup_log ACTION "$@"
+}
+
+setup_log_warn() {
+    setup_log WARNING "$@"
+}
+
+setup_log_error() {
+    setup_log ERROR "$@"
+}
+
+setup_log_die() {
+    setup_log_error "$@"
+    exit 1
+}
+
+
+# Git
 clone_or_update() {
     recurse=0
 

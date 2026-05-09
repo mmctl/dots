@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 set -eu
 
-# Setup logging utilities
+# Setup utilities
 script_dir="$(dirname -- "$(realpath "$0")")"
-. "$script_dir/logging-utils"
+. "$script_dir/utils"
 
 
 if [ "$(id -u)" -eq 0 ]; then
