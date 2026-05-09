@@ -1280,13 +1280,6 @@ that allows to include other templates by their name."
 
 
 ;; User interface and feel
-(use-package circadian
-  :config
-
-  (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
-                             (:sunset . modus-vivendi-tinted)))
-  (circadian-setup))
-
 (use-package doom-modeline
   :hook after-init
 
@@ -1314,6 +1307,12 @@ that allows to include other templates by their name."
           modus-themes-preset-overrides-warmer)
   (setopt modus-vivendi-tinted-palette-overrides
           modus-themes-preset-overrides-cooler))
+
+(use-package circadian
+  :config
+  (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
+                             (:sunset . modus-vivendi-tinted)))
+  (circadian-setup))
 
 (use-package keycast
   :init
@@ -1366,7 +1365,6 @@ that allows to include other templates by their name."
 
 ;; File and directory management
 (use-package diredfl
-  :pin melpa
   :demand t
 
   :hook

@@ -256,7 +256,7 @@ Meant as replacement for `smtpmail-send-it', e.g., in
     (unless from
       (error "`From' field non-existent or not parseable"))
     (unless frompl
-      (error "Failed to find SMTP configuration for %s"))
+      (error "Failed to find SMTP configuration for %s" from))
     (let* ((smtpmail-smtp-user from)
            (smtpmail-smtp-server (plist-get frompl :smtpserver))
            (smtpmail-smtp-service (plist-get frompl :smtpport))
