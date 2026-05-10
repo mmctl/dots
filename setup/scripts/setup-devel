@@ -136,18 +136,18 @@ setup_log_info "Installed EasyCrypt base dependencies (in opam switch 'dev')."
 
 setup_log_info "Building EasyCrypt..."
 mkdir -p -- "$XDG_DATA_HOME/srcs" "$XDG_BIN_HOME"
-clone_or_update 'https://github.com/EasyCrypt/easycrypt.git' "$XDG_DATA_HOME/srcs/easycrypt/.git"
+clone_or_update 'https://github.com/EasyCrypt/easycrypt.git' "$XDG_DATA_HOME/srcs/easycrypt/"
 make -C "$XDG_DATA_HOME/srcs/easycrypt"
 ln -srf -- "$XDG_DATA_HOME/srcs/easycrypt/ec.native" "$XDG_BIN_HOME/easycrypt"
 setup_log_info "Built EasyCrypt."
 
 setup_log_info "Installing SMT provers (for EasyCrypt)..."
 
+setup_log_info "Installing SMT prover '${cvcvers}'..."
 cvcvers=cvc5-1.2.1
 if [ -x "$XDG_DATA_HOME/srcs/${cvcvers}/bin/cvc5" ]; then
-    setup_log_info "SMT prover '${cvcvers}' already installed."
+    setup_log_info "Found SMT prover '${cvcvers}' locally."
 else
-    setup_log_info "Installing SMT prover '${cvcvers}'..."
     cvcdir=cvc5-Linux-x86_64-static-gpl
     cvczip=${cvcdir}.zip
     curl -fsSL -o "$HOME/${cvczip}" "https://github.com/cvc5/cvc5/releases/download/${cvcvers}/${cvczip}"
@@ -161,11 +161,11 @@ ln -srf -- "$XDG_DATA_HOME/srcs/${cvcvers}/bin/cvc5" "$XDG_BIN_HOME/cvc5"
 ln -srf -- "$XDG_DATA_HOME/srcs/${cvcvers}/bin/cvc5" "$XDG_BIN_HOME/${cvcvers}"
 setup_log_info "Installed SMT prover '${cvcvers}'."
 
+setup_log_info "Installing SMT prover '${z3vers}'..."
 z3vers=z3-4.13.4
 if [ -x "$XDG_DATA_HOME/srcs/${z3vers}/bin/z3" ]; then
-    setup_log_info "SMT prover '${z3vers}' already installed."
+    setup_log_info "Found SMT prover '${z3vers}' locally."
 else
-    setup_log_info "Installing SMT prover '${z3vers}'..."
     z3dir=z3-4.13.4-x64-glibc-2.35
     z3zip=${z3dir}.zip
     curl -fsSL -o "$HOME/${z3zip}" "https://github.com/Z3Prover/z3/releases/download/${z3vers}/${z3zip}"
@@ -199,3 +199,7 @@ sudo zypper install -y docker
 sudo systemctl enable --now docker
 sudo usermod -aG docker "$USER"
 setup_log_info "Installed (and enabled) Docker."
+
+
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Reboot."

@@ -46,7 +46,6 @@ fi
 
 
 setup_log_info "Installing basic desktop runtime for Wayland..."
-
 sudo zypper install -y \
      libdrm2 Mesa Mesa-dri Mesa-libEGL1 Mesa-libGL1 Mesa-libva Mesa-vulkan-device-select \
      dbus-1 dbus-1-tools \
@@ -55,17 +54,14 @@ sudo zypper install -y \
      pipewire wireplumber \
      xdg-desktop-portal xdg-desktop-portal-gtk \
      xwayland
-
 setup_log_info "Installed basic desktop runtime for Wayland."
 
 
 setup_log_info "Installing graphical toolkits, themes, and fonts..."
-
 sudo zypper install -y \
      gtk3 gtk4 qt5ct qt6ct \
      adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita \
      iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
-
 setup_log_info "Installing graphical toolkits, themes and fonts."
 
 
@@ -79,7 +75,6 @@ mkdir -p -- "$XDG_DATA_HOME/srcs"
 clone_or_update --recurse-submodules \
                 'https://github.com/akinomyoga/ble.sh.git' \
                 "$XDG_DATA_HOME/srcs/blesh/"
-
 make -C "$XDG_DATA_HOME/srcs/blesh" install
 
 (cd -- "$DOTS_DIR" && stow readline ripgrep)
@@ -113,16 +108,12 @@ setup_log_info "Added repositories for Quickshell environment."
 setup_log_info "Refreshing repositories..."
 setup_log_info "Verify the DMS key fingerprint when prompted:"
 setup_log_info "20CA 3E58 04CA 7500 9B36 71A4 2847 7848 3BC8 6115"
-
 sudo zypper refresh
-
 setup_log_info "Refreshed repositories."
 
 
 setup_log_info "Installing Wayland compositor (Niri).."
-
 sudo zypper install -y niri
-
 setup_log_info "Installed Wayland compositor (Niri)."
 
 
@@ -155,6 +146,11 @@ dms greeter sync
 sudo systemctl enable greetd
 
 setup_log_info "Installed Quickshell environment."
+
+
+setup_log_info "Installing graphical file manager (Nautilus)..."
+sudo zypper -y install nautilus
+setup_log_info "Installed graphical file manager (Nautilus)."
 
 
 setup_log_action "Manual checkpoint:"

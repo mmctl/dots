@@ -165,7 +165,7 @@ if command -v xdg-mime >/dev/null 2>&1; then
 [Desktop Entry]
 Name=Emacsclient
 Comment=Run Emacsclient, starting a server if none is currently running
-Exec=emacsclient --alternate-editor= --create-frame --no-wait %F
+Exec=emacsclient --alternate-editor= --create-frame %F
 Icon=emacs
 Categories=Development;TextEditor;Utility;
 MimeType=text/plain;text/english;text/x-c;text/x-csrc;text/x-chdr;text/x-c++src;text/x-c++hdr;text/x-python;text/x-shellscript;text/x-tex;text/markdown;application/x-shellscript;application/json;application/xml;
@@ -179,7 +179,7 @@ EOF
 Name=Emacsclient Mail
 Comment=Compose mail with Emacsclient
 Categories=Network;Email;
-Exec=emacsclient --alternate-editor= --create-frame --no-wait --eval '(message-mailto "%u")'
+Exec=emacsclient --alternate-editor= --create-frame --eval '(message-mailto "%u")'
 Icon=emacs
 MimeType=x-scheme-handler/mailto;
 NoDisplay=true
@@ -187,7 +187,7 @@ Terminal=false
 Type=Application
 EOF
 
-    update-desktop-database "$XDG_DATA_HOME/applications" || true
+    update-desktop-database "$XDG_DATA_HOME/applications"
 
     xdg-mime default emacsclient.desktop text/plain
     xdg-mime default emacsclient-mail.desktop x-scheme-handler/mailto
@@ -242,6 +242,7 @@ flatpak --user override \
   org.zotero.Zotero
 
 setup_log_info "Installed research tools (Zotero)."
+
 
 setup_log_action "Manual checkpoint:"
 setup_log_action "  Open Zen browser and install the following extensions:"
