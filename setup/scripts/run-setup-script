@@ -18,6 +18,11 @@ if [ ! -x "$script_path" ]; then
     exit 1
 fi
 
+if command -v script >/dev/null 2>&1; then
+    printf '%s\n' "error: required command not found: script" >&2
+    exit 1
+fi
+
 script_name=$(basename "$script_path")
 log_dir="${XDG_STATE_HOME:-$HOME/.local/state}/setup"
 log_file="$log_dir/$script_name-$(date '+%Y%m%d-%H%M%S').log"
@@ -26,12 +31,22 @@ install -d -m 700 -- "$log_dir"
 touch "$log_file" || exit 1
 chmod 600 -- "$log_file" || exit 1
 
-{
-    printf '[%s] [INFO] Executing %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
-    printf '[%s] [INFO] Logging to %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
+script -q -e -f --log-io -- sh -c '
+    script_path=$1
+    log_file=$2
+
+    printf "[%s] [INFO] Executing %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
+    printf "[%s] [INFO] Logging to %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
 
     "$script_path"
+    status=$?
 
-    printf '[%s] [INFO] Executed %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
-    printf '[%s] [INFO] Logged to %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
-} 2>&1 | tee -a "$log_file"
+    if [ "$status" -eq 0 ]; then
+        printf "[%s] [INFO] Executed %s\n" "$(date "+%Y-%m-%d %H:%M:%S")" "$script_path"
+    else
+        printf "[%s] [ERROR] Failed with exit status %s: %s\n" "$(date "+%Y-%m-%d %H:%M:%S")" "$status" "$script_path"
+    fi
+
+    printf "[%s] [INFO] Logged to %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
+    exit "$status"
+' sh run-setup-script-child "$script_path" "$log_file"
