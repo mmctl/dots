@@ -139,12 +139,6 @@ sudo zypper install -y dms quickshell matugen dgop greetd dms-greeter
     "$XDG_STATE_HOME/DankMaterialShell/session-temp.json" \
     "$XDG_STATE_HOME/DankMaterialShell/session.json"
 
-"$REPLACE_PLACEHOLDER" LATITUDE "51.4392648" \
-    "$XDG_STATE_HOME/DankMaterialShell/session.json"
-
-"$REPLACE_PLACEHOLDER" LONGITUDE "5.4786330" \
-    "$XDG_STATE_HOME/DankMaterialShell/session.json"
-
 rm -f -- "$HOME/.bashrc"
 (cd -- "$DOTS_DIR" && stow kitty-gen bash-gen fzf-gen starship-gen)
 

@@ -27,6 +27,7 @@
 
 (setopt package-selected-packages
         '(;; Package bootstrap/security
+          use-package
           gnu-elpa-keyring-update
           ;; General editing
           easy-kill
@@ -1280,6 +1281,14 @@ that allows to include other templates by their name."
 
 
 ;; User interface and feel
+(use-package circadian
+  :demand t
+
+  :config
+  (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
+                             (:sunset . modus-vivendi-tinted)))
+  (circadian-setup))
+
 (use-package doom-modeline
   :hook after-init
 
@@ -1308,13 +1317,9 @@ that allows to include other templates by their name."
   (setopt modus-vivendi-tinted-palette-overrides
           modus-themes-preset-overrides-cooler))
 
-(use-package circadian
-  :config
-  (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
-                             (:sunset . modus-vivendi-tinted)))
-  (circadian-setup))
-
 (use-package keycast
+  :defer t
+
   :init
   (setopt keycast-mode-line-format "%10s%k%c%R%10s")
 

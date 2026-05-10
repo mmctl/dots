@@ -9,15 +9,15 @@
   "nightModeHighTemperature": 6500,
   "nightModeAutoEnabled": true,
   "nightModeAutoMode": "location",
-  "latitude": ${LATITUDE},
-  "longitude": ${LONGITUDE},
+  "latitude": 51.4392648,
+  "longitude": 5.4786330,
   "nightModeUseIPLocation": false,
 
   "themeModeAutoEnabled": true,
   "themeModeAutoMode": "location",
   "themeModeShareGammaSettings": true,
 
-  "weatherCoordinates": "${LATITUDE},${LONGITUDE}",
+  "weatherCoordinates": "51.4392648,5.4786330",
   "weatherHourlyDetailed": true,
 
   "showThirdPartyPlugins": true,
