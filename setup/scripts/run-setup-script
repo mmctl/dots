@@ -31,10 +31,7 @@ install -d -m 700 -- "$log_dir"
 touch "$log_file" || exit 1
 chmod 600 -- "$log_file" || exit 1
 
-script -q -e -f -O -- sh -c '
-    script_path=$1
-    log_file=$2
-
+{
     printf "[%s] [INFO] Executing %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
     printf "[%s] [INFO] Logging to %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
 
@@ -48,5 +45,6 @@ script -q -e -f -O -- sh -c '
     fi
 
     printf "[%s] [INFO] Logged to %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
+
     exit "$status"
-' sh run-setup-script-child "$script_path" "$log_file"
+} 2>&1 | tee -a "$log_file"

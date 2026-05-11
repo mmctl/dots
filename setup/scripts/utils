@@ -76,3 +76,62 @@ clone_or_update() {
         fi
     fi
 }
+
+
+# GPG
+normalize_fingerprint() {
+    printf '%s' "$1" |
+        tr -d '[:space:]' |
+        tr '[:lower:]' '[:upper:]'
+}
+
+key_fingerprint() {(
+    key_file=$1
+
+    tmpdir=$(mktemp -d) || exit 1
+    trap 'rm -rf -- "$tmpdir"' EXIT HUP INT TERM
+
+    gnupg_home="$tmpdir/gnupg"
+    install -d -m 700 -- "$gnupg_home"
+
+    key_with_colons="$tmpdir/key.colons"
+
+    if ! GNUPGHOME="$gnupg_home" gpg --batch --quiet --show-keys --with-colons "$key_file" > "$key_with_colons"; then
+      exit 1
+    fi
+
+    awk --field-separator=: '
+        $1 == "fpr" {
+            print toupper($10)
+            found = 1
+            exit
+        }
+
+        END {
+            if (!found)
+                 exit 1
+       }
+    ' "$key_with_colons"
+
+)}
+
+verify_key_file() {
+    key_file=$1
+    expected_fpr=$(normalize_fingerprint "$2")
+
+    if ! actual_fpr=$(key_fingerprint "$key_file"); then
+        setup_log_die "Could not read GPG fingerprint from: '%s'" "$key_file"
+    fi
+
+    actual_fpr=$(normalize_fingerprint "$actual_fpr")
+
+    if [ "$actual_fpr" != "$expected_fpr" ]; then
+       setup_log_error 'Unexpected key fingerprint:'
+       setup_log_error '   File: %s' "$key_file"
+       setup_log_error '   Expected: %s' "$expected_fpr"
+       setup_log_error '   Actual:   %s' "$actual_fpr"
+       exit 1
+    fi
+
+    setup_log_info "Successfully verified key file '$key_file'."
+}
