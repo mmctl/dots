@@ -63,8 +63,8 @@ setup_log_info "Created XDG directories and set user-dirs."
 
 setup_log_info "Adding Packman Essentials repository..."
 
-packman_essentials_url="https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/"
-packman_essentials_alias="packman-essentials"
+packman_essentials_url='https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/'
+packman_essentials_alias='packman-essentials'
 
 if sudo zypper lr "$packman_essentials_alias" >/dev/null 2>&1; then
     setup_log_info "Repository '${packman_essentials_alias}' already exists; skipping."
