@@ -22,7 +22,7 @@ done
 
 if ! command -v stow >/dev/null 2>&1; then
     setup_log_info "stow is not installed. Installing..."
-    sudo zypper install -y stow
+    sudo zypper --non-interactive --no-color install stow
     setup_log_info "Installed stow."
 fi
 
@@ -46,7 +46,7 @@ fi
 
 
 setup_log_info "Installing basic desktop runtime for Wayland..."
-sudo zypper install -y \
+sudo zypper --non-interactive --no-color install \
      libdrm2 Mesa Mesa-dri Mesa-libEGL1 Mesa-libGL1 Mesa-libva Mesa-vulkan-device-select \
      dbus-1 dbus-1-tools \
      libwayland-server0 libwayland-client0 libwayland-egl1 \
@@ -58,7 +58,7 @@ setup_log_info "Installed basic desktop runtime for Wayland."
 
 
 setup_log_info "Installing graphical toolkits, themes, and fonts..."
-sudo zypper install -y \
+sudo zypper --non-interactive --no-color install \
      gtk3 gtk4 qt5ct qt6ct \
      adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita \
      iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
@@ -67,8 +67,8 @@ setup_log_info "Installing graphical toolkits, themes and fonts."
 
 setup_log_info "Installing terminal emulator (Kitty) and shell enhancements..."
 
-sudo zypper install -y kitty
-sudo zypper install -y bash-completion fzf fd ripgrep zoxide starship
+sudo zypper --non-interactive --no-color install kitty
+sudo zypper --non-interactive --no-color install bash-completion fzf fd ripgrep zoxide starship
 
 mkdir -p -- "$XDG_DATA_HOME/srcs"
 
@@ -84,21 +84,43 @@ setup_log_info "Installed terminal emulator (Kitty) and shell enhancements."
 
 setup_log_info "Adding repositories for Quickshell environment..."
 
+setup_log_info "Adding DankLinux repository..."
 danklinux_repo_url='https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/'
 danklinux_repo_alias='danklinux'
+
 if zypper lr "$danklinux_repo_alias" >/dev/null 2>&1; then
     setup_log_info "Repository '${danklinux_repo_alias}' already exists; skipping."
 else
-    sudo zypper addrepo "$danklinux_repo_url" "$danklinux_repo_alias"
+    danklinux_repo_key_url='https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/openSUSE_Tumbleweed/repodata/repo.xml.key'
+    danklinux_repo_key_exp='20CA3E5804CA75009B3671A4284778483BC86115'
+
+    setup_log_info "Handling DankLinux repository GPG key..."
+    if ! download_and_import_rpm_key "$danklinux_repo_key_url" "$danklinux_repo_key_exp"; then
+       setup_log_die "Failed to download, verify, and import DankLinux repository GPG key."
+    fi
+    setup_log_info "Handled DankLinux repository GPG key."
+
+    sudo zypper --non-interactive --no-color addrepo -cf "$danklinux_repo_url" "$danklinux_repo_alias"
     setup_log_info "Added DankLinux repository."
 fi
 
+setup_log_info "Adding DMS repository..."
 dms_repo_url='https://download.opensuse.org/repositories/home:/AvengeMedia:/dms/openSUSE_Tumbleweed/'
 dms_repo_alias='dms'
+
 if zypper lr "$dms_repo_alias" >/dev/null 2>&1; then
     setup_log_info "Repository '${dms_repo_alias}' already exists; skipping."
 else
-    sudo zypper addrepo "$dms_repo_url" "$dms_repo_alias"
+    dms_repo_key_url='https://download.opensuse.org/repositories/home:AvengeMedia:dms/openSUSE_Tumbleweed/repodata/repo.xml.key'
+    dms_repo_key_exp='20CA3E5804CA75009B3671A4284778483BC86115'
+
+    setup_log_info "Handling DMS repository GPG key..."
+    if ! download_and_import_rpm_key "$dms_repo_key_url" "$dms_repo_key_exp"; then
+       setup_log_die "Failed to download, verify, and import DMS repository GPG key."
+    fi
+    setup_log_info "Handled DMS repository GPG key."
+
+    sudo zypper --non-interactive --no-color addrepo -cf "$dms_repo_url" "$dms_repo_alias"
     setup_log_info "Added DMS repository."
 fi
 
@@ -106,20 +128,18 @@ setup_log_info "Added repositories for Quickshell environment."
 
 
 setup_log_info "Refreshing repositories..."
-setup_log_info "Verify the DMS key fingerprint when prompted:"
-setup_log_info "20CA 3E58 04CA 7500 9B36 71A4 2847 7848 3BC8 6115"
-sudo zypper refresh
+sudo zypper --non-interactive --no-color refresh
 setup_log_info "Refreshed repositories."
 
 
 setup_log_info "Installing Wayland compositor (Niri).."
-sudo zypper install -y niri
+sudo zypper --non-interactive --no-color install niri
 setup_log_info "Installed Wayland compositor (Niri)."
 
 
 setup_log_info "Installing Quickshell environment..."
 
-sudo zypper install -y dms quickshell matugen dgop greetd dms-greeter
+sudo zypper --non-interactive --no-color install dms quickshell matugen dgop greetd dms-greeter
 
 (cd -- "$DOTS_DIR" && stow dms environment-dms matugen-dms niri-dms wallpapers)
 "$REPLACE_PLACEHOLDER" XDG_CONFIG_HOME "$XDG_CONFIG_HOME" \
@@ -149,7 +169,7 @@ setup_log_info "Installed Quickshell environment."
 
 
 setup_log_info "Installing graphical file manager (Nautilus)..."
-sudo zypper -y install nautilus
+sudo zypper --non-interactive --no-color install nautilus
 setup_log_info "Installed graphical file manager (Nautilus)."
 
 

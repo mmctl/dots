@@ -20,7 +20,7 @@ fi
 
 if ! command -v stow >/dev/null 2>&1; then
     setup_log_info "stow is not installed. Installing..."
-    sudo zypper install -y stow
+    sudo zypper --non-interactive --no-color install stow
     setup_log_info "Installed stow."
 fi
 
@@ -68,7 +68,7 @@ setup_log_info "Created mail directories."
 setup_log_info "Synchronizing mail directories..."
 setup_log_info "Authenticate to password manager when prompted."
 
-sudo zypper install -y isync maildir-utils
+sudo zypper --non-interactive --no-color install isync maildir-utils
 (cd -- "$DOTS_DIR" && stow isync)
 
 if ! command -v mbsync >/dev/null 2>&1; then
@@ -82,7 +82,7 @@ setup_log_info "Synchronized mail directories."
 
 setup_log_info "Installing spellchecker and dictionaries..."
 
-sudo zypper install -y \
+sudo zypper --non-interactive --no-color install \
      hunspell \
      'myspell-en*' \
      'myspell-nl*' \
@@ -95,7 +95,7 @@ setup_log_info "Installed spellchecker and dictionaries."
 
 setup_log_info "Installing editor (Emacs)..."
 
-sudo zypper install -y emacs emacs-x11 mu4e
+sudo zypper --non-interactive --no-color install emacs emacs-x11 mu4e
 ln -sf -- "$(which emacs-x11)" "$XDG_BIN_HOME/emacs"
 
 (cd -- "$DOTS_DIR" && stow emacs)
@@ -202,7 +202,7 @@ setup_log_info "Installed editor (Emacs)."
 
 setup_log_info "Installing Flatpak with Flathub..."
 
-sudo zypper install -y flatpak
+sudo zypper --non-interactive --no-color install flatpak
 flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
 setup_log_info "Installed Flatpak with Flathub"

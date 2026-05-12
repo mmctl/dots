@@ -20,8 +20,8 @@ sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 setup_log_info "Installing development/build essentials..."
 
-sudo zypper install -y -t pattern devel_basis
-sudo zypper install -y unzip curl ca-certificates cmake ninja meson
+sudo zypper --non-interactive --no-color install -t pattern devel_basis
+sudo zypper --non-interactive --no-color install unzip curl ca-certificates cmake ninja meson
 
 setup_log_info "Installed development/build essentials."
 
@@ -41,7 +41,7 @@ setup_log_info "Installing or updating stable Rust toolchain..."
 
 if ! command -v rustup >/dev/null 2>&1; then
     setup_log_info "rustup is not installed. Installing..."
-    sudo zypper install -y rustup
+    sudo zypper --non-interactive --no-color install rustup
     setup_log_info "Installed rustup."
 fi
 

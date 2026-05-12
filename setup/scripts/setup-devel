@@ -22,7 +22,7 @@ done
 
 if ! command -v stow >/dev/null 2>&1; then
     setup_log_info "stow is not installed. Installing..."
-    sudo zypper install -y stow
+    sudo zypper --non-interactive --no-color install stow
     setup_log_info "Installed stow."
 fi
 
@@ -41,7 +41,7 @@ fi
 
 
 setup_log_info "Installing TeXLive..."
-sudo zypper install -y texlive-scheme-full
+sudo zypper --non-interactive --no-color install texlive-scheme-full
 setup_log_info "Installed TeXLive."
 
 
@@ -59,7 +59,7 @@ setup_log_info "Installing (or updating) stable Rust toolchain..."
 
 if ! command -v rustup >/dev/null 2>&1; then
     setup_log_info "rustup is not installed. Installing..."
-    sudo zypper install -y rustup
+    sudo zypper --non-interactive --no-color install rustup
     setup_log_info "Installed rustup."
 fi
 
@@ -73,25 +73,25 @@ setup_log_info "Installed additional Rust components."
 
 
 setup_log_info "Installing Golang and corresponding tools..."
-sudo zypper install -y go gopls
+sudo zypper --non-interactive --no-color install go gopls
 setup_log_info "Installed Golang and corresponding tools."
 
 
 setup_log_info "Installing C/C++ and corresponding tools..."
-sudo zypper install -y -t pattern devel_C_C++
-sudo zypper install -y clang clang-tools
+sudo zypper --non-interactive --no-color install -t pattern devel_C_C++
+sudo zypper --non-interactive --no-color install clang clang-tools
 setup_log_info "Installed C/C++ and corresponding tools."
 
 
 setup_log_info "Installing Python3 and corresponding tools..."
-sudo zypper install -y -t pattern devel_python3
+sudo zypper --non-interactive --no-color install -t pattern devel_python3
 pyflavor="$(python3 -c 'import sys; print(f"python{sys.version_info.major}{sys.version_info.minor}")')"
-sudo zypper install -y "${pyflavor}-python-lsp-server-all"
+sudo zypper --non-interactive --no-color install "${pyflavor}-python-lsp-server-all"
 setup_log_info "Installed Python3 and corresponding tools."
 
 
 setup_log_info "Installing opam..."
-sudo zypper install -y opam
+sudo zypper --non-interactive --no-color install opam
 setup_log_info "Installed opam."
 
 if ! opam var root >/dev/null 2>&1; then
@@ -195,7 +195,7 @@ setup_log_info "Installed Lean."
 
 
 setup_log_info "Installing (and enabling) Docker..."
-sudo zypper install -y docker
+sudo zypper --non-interactive --no-color install docker
 sudo systemctl enable --now docker
 sudo usermod -aG docker "$USER"
 setup_log_info "Installed (and enabled) Docker."

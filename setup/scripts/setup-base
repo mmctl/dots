@@ -16,7 +16,7 @@ fi
 
 if ! command -v stow >/dev/null 2>&1; then
     setup_log_info "stow is not installed. Installing..."
-    sudo zypper install -y stow
+    sudo zypper --non-interactive --no-color install stow
     setup_log_info "Installed stow."
 fi
 
@@ -66,26 +66,31 @@ setup_log_info "Adding Packman Essentials repository..."
 packman_essentials_url='https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/'
 packman_essentials_alias='packman-essentials'
 
-if sudo zypper lr "$packman_essentials_alias" >/dev/null 2>&1; then
+if sudo zypper --non-interactive --no-color lr "$packman_essentials_alias" >/dev/null 2>&1; then
     setup_log_info "Repository '${packman_essentials_alias}' already exists; skipping."
 else
-    sudo zypper addrepo -cfp 90 "$packman_essentials_url" "$packman_essentials_alias"
+    packman_essentials_key_url='https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/repodata/repo.xml.key'
+    packman_essentials_key_exp='F8875B880D518B6B8C530D1345A1D0671ABD1AFB'
+
+    setup_log_info "Handling Packman Essentials repository GPG key..."
+    if ! download_and_import_rpm_key "$packman_essentials_key_url" "$packman_essentials_key_exp"; then
+       setup_log_die "Failed to download, verify, and import Packman Essentials repository GPG key."
+    fi
+    setup_log_info "Handled Packman Essentials repository GPG key."
+
+    sudo zypper --non-interactive --no-color addrepo -cfp 90 "$packman_essentials_url" "$packman_essentials_alias"
     setup_log_info "Added Packman Essentials repository."
 fi
 
 
 setup_log_info "Refreshing repositories..."
-setup_log_info "Verify the Packman Essentials key fingerprint when prompted:"
-setup_log_info "F887 5B88 0D51 8B6B 8C53 0D13 45A1 D067 1ABD 1AFB"
-
-sudo zypper refresh
-
+sudo zypper --non-interactive --no-color refresh
 setup_log_info "Refreshed repositories"
 
 
 setup_log_info "Installing codecs from Packman Essentials repository..."
 
-sudo zypper install -y --allow-vendor-change --from "$packman_essentials_alias" \
+sudo zypper --non-interactive --no-color install --allow-vendor-change --from "$packman_essentials_alias" \
      ffmpeg \
      gstreamer-plugins-good \
      gstreamer-plugins-bad \
@@ -98,7 +103,7 @@ setup_log_info "Installed codecs from Packman Essentials repository."
 
 setup_log_info "Updating packages..."
 
-sudo zypper dup -y
+sudo zypper --non-interactive --no-color dup
 
 setup_log_info "Updated packages."
 

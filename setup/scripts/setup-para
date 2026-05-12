@@ -60,7 +60,7 @@ setup_log_info "Set up project 'keyboard'."
 setup_log_info "Setting up project 'website'..."
 
 setup_log_info "Installing hugo..."
-sudo zypper install -y hugo
+sudo zypper --non-interactive --no-color install hugo
 setup_log_info "Installed hugo."
 
 clone_or_update --recurse-submodules \
