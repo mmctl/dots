@@ -14,14 +14,15 @@ if ! command -v zypper >/dev/null 2>&1; then
     setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
+
 if ! command -v stow >/dev/null 2>&1; then
     setup_log_info "stow is not installed. Installing..."
     sudo zypper --non-interactive --no-color install stow
     setup_log_info "Installed stow."
 fi
-
-setup_log_info "This script needs sudo for system configuration."
-sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"

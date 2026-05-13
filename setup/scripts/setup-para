@@ -14,14 +14,17 @@ if ! command -v zypper >/dev/null 2>&1; then
     setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
-for bcmd in git curl; do
-    if ! command -v "$bcmd" >/dev/null 2>&1; then
-        setup_log_die "$bcmd is not installed. Run the development/build essentials setup first."
-    fi
-done
-
 setup_log_info "This script needs sudo for system configuration."
 sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
+
+for bcmd in git curl; do
+    if ! command -v "$bcmd" >/dev/null 2>&1; then
+        setup_log_info "$bcmd is not installed. Installing..."
+        sudo zypper --non-interactive --no-color install "$bcmd"
+        setup_log_info "Installed $bcmd."
+    fi
+done
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
@@ -52,7 +55,7 @@ qmk setup -y --home="$XDG_DATA_HOME/qmk_firmware"
 setup_log_info "Installed qmk."
 
 clone_or_update 'git@github-personal:mmctl/keyboards.git' "$PROJECTS_DIR/keyboards"
-ln -srf --"$PROJECTS_DIR/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
+ln -srf -- "$PROJECTS_DIR/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
 ln -srf -- "$PROJECTS_DIR/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
 
 setup_log_info "Set up project 'keyboard'."

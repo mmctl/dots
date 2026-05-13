@@ -13,11 +13,12 @@ fi
 setup_log_info "This script needs sudo for system configuration."
 sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
+
 if sudo btrfs subvolume show /home >/dev/null 2>&1; then
     setup_log_info "/home is a BTRFS subvolume; configuring snapper config 'home'..."
 
     if sudo snapper -c home get-config >/dev/null 2>&1; then
-        setup_log_info "Snapper config 'home' already exists; leaving snapshot structure intact."
+        setup_log_warn "Snapper config 'home' already exists; leaving snapshot structure intact."
     else
         setup_log_info "Creating snapper config 'home' for /home..."
         sudo snapper -c home create-config /home
@@ -39,5 +40,5 @@ if sudo btrfs subvolume show /home >/dev/null 2>&1; then
 
     setup_log_info "Configured snapper for /home."
 else
-    setup_log_info "/home is not a BTRFS subvolume; skipping snapper config 'home'."
+    setup_log_warn "/home is not a BTRFS subvolume; skipping snapper config 'home'."
 fi

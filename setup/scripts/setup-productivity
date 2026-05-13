@@ -14,18 +14,17 @@ if ! command -v zypper >/dev/null 2>&1; then
     setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
-if ! command -v git >/dev/null 2>&1; then
-    setup_log_die "git is not installed. Run the development/build essentials setup first."
-fi
-
-if ! command -v stow >/dev/null 2>&1; then
-    setup_log_info "stow is not installed. Installing..."
-    sudo zypper --non-interactive --no-color install stow
-    setup_log_info "Installed stow."
-fi
-
 setup_log_info "This script needs sudo for system configuration."
 sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
+
+for bcmd in git stow; do
+    if ! command -v "$bcmd" >/dev/null 2>&1; then
+        setup_log_info "$bcmd is not installed. Installing..."
+        sudo zypper --non-interactive --no-color install "$bcmd"
+        setup_log_info "Installed $bcmd."
+    fi
+done
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
@@ -194,7 +193,7 @@ EOF
 
     setup_log_info "Set default file associations."
 else
-    setup_log_warning "xdg-mime not installed; skipping file associations."
+    setup_log_warn "xdg-mime not installed; skipping file associations."
 fi
 
 setup_log_info "Installed editor (Emacs)."
