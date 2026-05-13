@@ -69,7 +69,7 @@ packman_essentials_alias='packman-essentials'
 if sudo zypper --non-interactive --no-color lr "$packman_essentials_alias" >/dev/null 2>&1; then
     setup_log_info "Repository '${packman_essentials_alias}' already exists; skipping."
 else
-    packman_essentials_key_url='https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/repodata/repo.xml.key'
+    packman_essentials_key_url='https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/repodata/repomd.xml.key'
     packman_essentials_key_exp='F8875B880D518B6B8C530D1345A1D0671ABD1AFB'
 
     setup_log_info "Handling Packman Essentials repository GPG key..."

@@ -172,7 +172,7 @@ download_and_import_rpm_key() (
 
     key_file="$tmpdir/keyfile"
     
-    curl -fsSL -o "$key_file" "$key_url"
+    curl -fsSL -o "$key_file" "$key_url" || exit 1
 
     verify_key_file "$key_file" "$fpr_exp" || exit 1
 
