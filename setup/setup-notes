@@ -100,3 +100,11 @@ sudo fprintd-enroll "$USER"
 #   sudoedit /etc/pam.d/sudo
 # > Add (before auth rule including system-auth): 
 #   auth       sufficient   pam_fprintd.so
+
+
+
+
+
+### Test Run 1
+# Installation
+# YaST error: NTP cannot be saved because chrony is not installed

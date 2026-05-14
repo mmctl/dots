@@ -17,15 +17,24 @@ During installation, use the following baseline:
 - Installer image: DVD / offline image.
 - Online repositories: Main Repository, Main Update Repository, Non-OSS Repository, and Non-OSS Update Repository.
 - System role: Generic Desktop.
-- Boot loader: GRUB2 EFI.
-- Software patterns:
-  - Graphical Environments: Fonts.
-  - Documentation: Help and Support Documentation, Documentation.
-  - Base Technologies: Kernel dump tooling, Base System, Enhanced Base System, SELinux Support, x86-64-v3 optimized packages, YaST Base Utilities, YaST Desktop Utilities, and Minimal Appliance Base.
+- Installation Settings/Overview:
+  - Booting:
+    - Boot loader: GRUB2 EFI.
+  - Software:
+    - Patterns (select manually):
+      - Graphical Environments: Fonts.
+      - Base Technologies: Kernel dump tooling, Base System, Enhanced Base System, SELinux Support, x86-64-v3 optimized packages, YaST Base Utilities, YaST Desktop Utilities, and Minimal Appliance Base.
+      - Documentation: Help and Support Documentation, Documentation
 
 After the first boot, continue with the steps below.
 
 ## 1. Connect to the network
+
+Ensure that NetworkManager is enabled.
+
+```sh
+sudo systemctl enable --now NetworkManager.service
+```
 
 Use NetworkManager from the terminal to connect to a temporary Wi-Fi network.
 
