@@ -279,7 +279,8 @@ especially Docker group membership, take effect.
 run_setup para
 ```
 
-This script creates the personal PARA directory structure and checks out project repositories.
+This script creates the personal PARA directory structure and checks out project
+repositories.
 
 It creates private directories with mode `700`:
 
