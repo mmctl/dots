@@ -108,3 +108,7 @@ sudo fprintd-enroll "$USER"
 ### Test Run 1
 # Installation
 # YaST error: NTP cannot be saved because chrony is not installed
+# QT_QPA_PLATFORMTHEME overwritten to qt5 (despite setting in environment.d)
+# GTK settings not picked up by flatpak applications
+# Power menu not centered
+# 
