@@ -96,6 +96,7 @@
           (diff-hl . "melpa")
           (proof-general . "melpa")))
 
+(setopt package-vc-register-as-project nil)
 (setopt package-vc-selected-packages
         '((move-it
            :url "https://github.com/mmctl/move-it"
