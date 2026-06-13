@@ -50,5 +50,13 @@ rustup default stable
 
 setup_log_info "Installed or updated stable Rust toolchain."
 
+
+setup_log_info "Stowing git..."
+
+(cd -- "$DOTS_DIR" && stow git)
+
+setup_log_info "Stowed git."
+
+
 setup_log_action "Manual checkpoint:"
 setup_log_action "  Ensure '${CARGO_HOME}/bin' is added to PATH"

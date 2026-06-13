@@ -11,7 +11,7 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 
 if ! command -v zypper >/dev/null 2>&1; then
-   setup_log_die "zypper is not available; this script is intended for openSUSE."
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
 setup_log_info "This script needs sudo for system configuration."
