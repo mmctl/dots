@@ -139,9 +139,11 @@ else
         authinfo_tmp="$authinfo_tmpdir/authinfo"
         authinfo_gpg_tmp="$(mktemp "$authinfo_dir/.authinfo.gpg.XXXXXX")"
 
-        trap 'rm -rf -- "$authinfo_tmpdir"; rm -f -- "$authinfo_gpg_tmp"' EXIT HUP INT TERM
+        trap 'rm -rf -- "$authinfo_tmpdir"; rm -f -- "$authinfo_gpg_tmp"; rbw lock' EXIT HUP INT TERM
 
         setup_log_info "Fetching Authinfo credentials from password manager..."
+
+        rbw unlock
 
         mail_personal_user="$(rbw get --field username "Mailbox Personal (mmeijers.com)")"
         mail_personal_pass="$(rbw get "Mailbox Personal (mmeijers.com)")"
@@ -169,6 +171,8 @@ else
 
         github_informal_user="$(rbw get --field username "GitHub (Informal)")"
         github_informal_token="$(rbw get --field "Personal Access Token" "GitHub (Informal)")"
+
+        rbw lock
 
         cat > "$authinfo_tmp" <<EOF
 machine mail.your-server.de login $mail_personal_user password $mail_personal_pass
@@ -200,3 +204,13 @@ setup_log_action "  Add these public SSH keys to the relevant accounts:"
 setup_log_action "    $key_personal.pub"
 setup_log_action "    $key_work.pub"
 setup_log_action "    (Accounts to consider: forges, webservers, ...)"
+setup_log_action "  Can expose keys temporarily on LAN:"
+setup_log_action "    cp -- $key_personal $key_work /tmp/"
+setup_log_action "    cd -- /tmp && python3 -m http.server 8000 --bind 0.0.0.0"
+setup_log_action "    sudo firewall-cmd --add-port=8000/tcp"
+setup_log_action "  Then, access keys from LAN:"
+setup_log_action "    http://$(hostname -I):8000/$key_personal"
+setup_log_action "    http://$(hostname -I):8000/$key_work"
+setup_log_action "  Afterward, undo firewall changes and kill serving process:"
+setup_log_action "    sudo firewall-cmd --remove-port=8000/tcp"
+setup_log_action "    sudo fuser -k 8000/tcp"

@@ -56,7 +56,7 @@ setup_log_info "Installed basic desktop runtime for Wayland."
 
 setup_log_info "Installing graphical toolkits, themes, and fonts..."
 sudo zypper --non-interactive --no-color install \
-     gtk3 gtk4 qt5ct qt6ct \
+     gtk3 gtk4 \
      adwaita-fonts adwaita-icon-theme adwaita-icon-theme-legacy gtk3-metatheme-adwaita \
      iosevka-fonts iosevka-slab-fonts iosevka-aile-fonts iosevka-etoile-fonts symbols-only-nerd-fonts
 setup_log_info "Installing graphical toolkits, themes and fonts."

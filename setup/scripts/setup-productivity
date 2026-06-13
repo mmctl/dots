@@ -237,8 +237,6 @@ flatpak --user override \
   --nofilesystem=home \
   --persist=.zotero \
   --persist=Zotero \
-  --filesystem=xdg-config/gtk-3.0:ro \
-  --filesystem=xdg-config/gtk-4.0:ro \
   org.zotero.Zotero
 
 setup_log_info "Installed research tools (Zotero)."
