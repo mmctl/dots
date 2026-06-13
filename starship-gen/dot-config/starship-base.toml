@@ -120,7 +120,7 @@ map_symbol = true
 disabled = false
 
 [character]
-format = ' $symbol '
+format = ' $symbol  '
 success_symbol = '[󱞩](fg:success)'
 error_symbol = '[󱞩](fg:error)'
 disabled = false
