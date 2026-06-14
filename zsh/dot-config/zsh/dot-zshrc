@@ -1,0 +1,26 @@
+# .zshrc
+
+# User-specific base setup
+() {
+    local rc
+    local config_base_dir="${XDG_CONFIG_HOME:-$HOME/.config}/zsh/base"
+
+    for rc in "$config_base_dir"/*.zsh(N); do
+        [[ -f $rc ]] && source "$rc"
+    done
+}
+
+
+# Exit when terminal capabilities too limited
+[[ ${TERM:-dumb} == dumb ]] && return
+
+
+# User-specific runcommands and extensions
+() {
+    local rc
+    local config_extensions_dir="${XDG_CONFIG_HOME:-$HOME/.config}/zsh/extensions"
+
+    for rc in "$config_extensions_dir"/*.zsh(N); do
+        [[ -f $rc ]] && source "$rc"
+    done
+}

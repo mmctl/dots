@@ -55,8 +55,8 @@ qmk setup -y --home="$XDG_DATA_HOME/qmk_firmware"
 setup_log_info "Installed qmk."
 
 clone_or_update 'git@github-personal:mmctl/keyboards.git' "$PROJECTS_DIR/keyboards"
-ln -srf -- "$PROJECTS_DIR/keyboards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
-ln -srf -- "$PROJECTS_DIR/keyboards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
+ln -srf -- "$PROJECTS_DIR/keyboards/qmk-boards/lily58/rev1/mb/mmbasic" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmbasic"
+ln -srf -- "$PROJECTS_DIR/keyboards/qmk-boards/lily58/rev1/mb/mmhrm" "$XDG_DATA_HOME/qmk_firmware/keyboards/lily58/keymaps/mmhrm"
 
 setup_log_info "Set up project 'keyboard'."
 

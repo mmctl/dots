@@ -256,7 +256,7 @@ Manual checkpoint: open Zen Browser and install the following extensions:
 - uBlock Origin, including the desired filter lists.
 - Zotero Connector.
 
-Reboot after this step.
+Also, connect Signal and log in to Zotero. Reboot after this step.
 
 ### 4.7 Install the full development environment
 
