@@ -1,11 +1,16 @@
 # 99-plugins.zsh
 
 () {
-    local dir="${ZPLUGDIR:-${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins}"
+    local plugdir="${ZPLUGDIR:-${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins}"
 
-    [[ -r "$dir/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] &&
-        source "$dir/zsh-autosuggestions/zsh-autosuggestions.zsh"
+    if (( $+commands[fzf] )) &&
+           [[ -r "$plugdir/fzf-tab/fzf-tab.plugin.zsh" ]]; then
+        source "$plugdir/fzf-tab/fzf-tab.plugin.zsh"
+    fi
 
-    [[ -r "$dir/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] &&
-        source "$dir/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+    [[ -r "$plugdir/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] &&
+        source "$plugdir/zsh-autosuggestions/zsh-autosuggestions.zsh"
+
+    [[ -r "$plugdir/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] &&
+        source "$plugdir/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 }

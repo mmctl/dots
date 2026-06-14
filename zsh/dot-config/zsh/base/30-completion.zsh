@@ -1,14 +1,16 @@
 # 30-completion.zsh
 
-autoload -Uz compinit
+zstyle ':completion:*' menu no
 
-local completion_cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
-mkdir -p -- "$completion_cache"
-
-compinit -d "$completion_cache/zcompdump"
-
-# Interactive menu selection requires normal terminal cursor capabilities
-if [[ ${TERM:-dumb} != dumb ]]; then
-    zmodload zsh/complist
-    zstyle ':completion:*' menu select
+if [[ -n ${LS_COLORS-} ]]; then
+    zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 fi
+
+() {
+    local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+
+    mkdir -p -- "$cache_dir"
+
+    autoload -Uz compinit
+    compinit -d "$cache_dir/zcompdump"
+}
