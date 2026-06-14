@@ -2,15 +2,56 @@
 
 bindkey -e
 
-# Region handling
+# Mark and region handling.
 bindkey '^@'   set-mark-command
 bindkey '^X^X' exchange-point-and-mark
 bindkey '^[w'  copy-region-as-kill
 bindkey '^W'   kill-region
 
-# Word deletion
-bindkey '^H'      backward-kill-word
-bindkey '^[[3;5~' kill-word
+# Character deletion, respecting an active region.
+backward-delete-char-or-region() {
+    if (( REGION_ACTIVE )); then
+        zle kill-region
+    else
+        zle backward-delete-char
+    fi
+}
+zle -N backward-delete-char-or-region
+
+delete-char-or-region() {
+    if (( REGION_ACTIVE )); then
+        zle kill-region
+    else
+        zle delete-char
+    fi
+}
+zle -N delete-char-or-region
+
+bindkey '^?'    backward-delete-char-or-region
+bindkey '^[[3~' delete-char-or-region
+
+# Word deletion, also respecting an active region.
+backward-kill-word-or-region() {
+    if (( REGION_ACTIVE )); then
+        zle kill-region
+    else
+        zle backward-kill-word
+    fi
+}
+zle -N backward-kill-word-or-region
+
+kill-word-or-region() {
+    if (( REGION_ACTIVE )); then
+        zle kill-region
+    else
+        zle kill-word
+    fi
+}
+zle -N kill-word-or-region
+
+bindkey '^H'         backward-kill-word-or-region
+bindkey '^[[127;5u'  backward-kill-word-or-region
+bindkey '^[[3;5~'    kill-word-or-region
 
 # Undo and redo
 bindkey '^_'  undo
