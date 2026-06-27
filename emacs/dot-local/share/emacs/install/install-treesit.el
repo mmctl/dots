@@ -3,19 +3,6 @@
 
 (require 'treesit)
 
-(defconst EMACS_DATA_DIR (file-name-as-directory
-                          (if (getenv "XDG_DATA_HOME")
-                              (expand-file-name "emacs/" (getenv "XDG_DATA_HOME"))
-                            user-emacs-directory))
-  "Directory where (additional) Emacs data is stored.")
-
-(defconst TREESIT_DIR (file-name-as-directory
-                       (expand-file-name "tree-sitter/" EMACS_DATA_DIR))
-  "Directory used to store tree-sitter grammars")
-(unless (file-directory-p TREESIT_DIR)
-  (make-directory TREESIT_DIR t))
-(add-to-list 'treesit-extra-load-path TREESIT_DIR)
-
 (defconst TREESIT_LANGUAGE_SOURCES
   '((bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.23.3")
     (c "https://github.com/tree-sitter/tree-sitter-c" "v0.23.6")

@@ -142,8 +142,9 @@ clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
 
 emacs --batch \
       --load "$XDG_CONFIG_HOME/emacs/early-init.el" \
-      --load "$XDG_CONFIG_HOME/emacs/init.el"
-emacs --script "$XDG_DATA_HOME/emacs/install/install-treesit.el"
+      --load "$XDG_CONFIG_HOME/emacs/init.el" \
+      --load "$XDG_DATA_HOME/emacs/install/install-treesit.el" \
+      --load "$XDG_DATA_HOME/emacs/install/finish-native-comp.el"
 
 setup_log_info "Installed Emacs packages."
 
