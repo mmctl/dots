@@ -1,0 +1,29 @@
+[templates.kitty-tabs]
+input_path = "~/.config/noctalia/templates/kitty-tabs.conf"
+output_path = "~/.config/kitty/tabs.conf"
+
+[templates.kitty-colors]
+input_path = "~/.config/noctalia/templates/kitty-colors.conf"
+output_path = "~/.config/kitty/colors.conf"
+
+[templates.starship]
+input_path = "~/.config/noctalia/templates/starship-palette.toml"
+output_path = "~/.cache/noctalia/starship-palette.toml"
+post_hook = "cat ~/.config/starship-base.toml ~/.cache/noctalia/starship-palette.toml > ~/.config/starship.toml"
+
+[templates.fzf]
+input_path = "~/.config/noctalia/templates/fzf-colors.conf"
+output_path = "~/.cache/noctalia/fzf-colors.conf"
+post_hook = "cat ~/.config/fzf/fzf-base.conf ~/.cache/noctalia/fzf-colors.conf > ~/.config/fzf/fzf.conf"
+
+[templates.niri]
+input_path = "~/.config/noctalia/templates/niri-colors.kdl"
+output_path = "~/.config/niri/colors.kdl"
+
+[templates.zen-chrome]
+input_path = "~/.config/noctalia/templates/zen-userchrome.css"
+output_path = "~/.config/zen/mm/chrome/userChrome.css"
+
+[templates.zen-content]
+input_path = "~/.config/noctalia/templates/zen-usercontent.css"
+output_path = "~/.config/zen/mm/chrome/userContent.css"

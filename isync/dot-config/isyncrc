@@ -127,6 +127,35 @@ Create Both
 CopyArrivalDate yes
 SyncState *
 
+## contracting@mmeijers.com
+IMAPAccount contracting-mmeijers
+Host mail.your-server.de
+User contracting@mmeijers.com
+PassCmd "rbw get \"Mailbox Contracting (mmeijers.com)\""
+TLSType IMAPS
+#SSLType IMAPS
+#SSLVersions TLSv1.2 TLSv1.3
+
+IMAPStore contracting-mmeijers-remote
+Account contracting-mmeijers
+
+MaildirStore contracting-mmeijers-local
+Path  ~/.local/share/mail/contracting-mmeijers/
+Inbox ~/.local/share/mail/contracting-mmeijers/INBOX/
+MaxSize 50m
+SubFolders Verbatim
+
+Channel contracting-mmeijers
+Far :contracting-mmeijers-remote:
+Near :contracting-mmeijers-local:
+Sync New Gone Flags
+#Sync New Delete Flags
+Patterns *
+Create Both
+#Expunge Both
+CopyArrivalDate yes
+SyncState *
+
 ## teaching@mmeijers.com
 IMAPAccount teaching-mmeijers
 Host mail.your-server.de
@@ -159,6 +188,7 @@ SyncState *
 ## Group
 Group work
 Channel research-mmeijers
+Channel contracting-mmeijers
 Channel teaching-mmeijers
 
 

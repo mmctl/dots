@@ -60,6 +60,7 @@ install -d -m 700 -- \
         "$MAILDIR/research-mmeijers" \
         "$MAILDIR/teaching-mmeijers" \
         "$MAILDIR/host-mmeijers" \
+        "$MAILDIR/contracting-mmeijers" \
         "$MAILDIR/dump-mmeijers"
 
 setup_log_info "Created mail directories."

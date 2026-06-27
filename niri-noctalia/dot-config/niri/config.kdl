@@ -1,0 +1,231 @@
+// Niri configuration, DMS
+
+// Input device
+input {
+    warp-mouse-to-focus mode="center-xy"
+    focus-follows-mouse max-scroll-amount="15%"
+
+    keyboard {
+        xkb {
+            // This section is empty, so niri will fetch xkb settings
+            // from org.freedesktop.locale1. Control these using
+            // localectl set-x11-keymap.
+        }
+    }
+
+    touchpad {
+        natural-scroll
+        scroll-method "two-finger"
+        tap
+        dwt
+        dwtp
+        drag true
+    }
+
+    mouse {
+        // natural-scroll
+        scroll-method "no-scroll"
+    }
+
+    trackpoint {
+        natural-scroll
+        scroll-method "no-scroll"
+    }
+}
+
+// Output device
+
+// Cursor
+cursor {
+    xcursor-theme "Adwaita"
+    xcursor-size 24
+}
+
+// Gestures
+gestures {
+    hot-corners {
+        off
+    }
+}
+
+// Layout
+layout {
+    center-focused-column "never"
+    always-center-single-column
+    default-column-display "normal"
+    gaps 6
+
+    border {
+        width 1
+    }
+
+    focus-ring {
+        width 2
+    }
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+
+    default-column-width { proportion 0.5; }
+
+    preset-window-heights {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+}
+prefer-no-csd
+
+// Overview
+overview {
+    zoom 0.5
+
+    workspace-shadow {
+        off
+    }
+}
+
+// Animations
+animations {
+    workspace-switch {
+        spring damping-ratio=0.80 stiffness=523 epsilon=0.0001
+    }
+    window-open {
+        duration-ms 150
+        curve "ease-out-expo"
+    }
+    window-close {
+        duration-ms 150
+        curve "ease-out-quad"
+    }
+    horizontal-view-movement {
+        spring damping-ratio=0.85 stiffness=423 epsilon=0.0001
+    }
+    window-movement {
+        spring damping-ratio=0.75 stiffness=323 epsilon=0.0001
+    }
+    window-resize {
+        spring damping-ratio=0.85 stiffness=423 epsilon=0.0001
+    }
+    config-notification-open-close {
+        spring damping-ratio=0.65 stiffness=923 epsilon=0.001
+    }
+    screenshot-ui-open {
+        duration-ms 200
+        curve "ease-out-quad"
+    }
+    overview-open-close {
+        spring damping-ratio=0.85 stiffness=800 epsilon=0.0001
+    }
+}
+
+// Layer rules
+layer-rule {
+    match namespace="^quickshell$"
+    place-within-backdrop true
+}
+
+
+// Window rules
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+    tiled-state true
+    draw-border-with-background false
+}
+
+window-rule {
+    match app-id=r#"^org\.gnome\."#
+    draw-border-with-background false
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+window-rule {
+    match app-id=r#"^gnome-control-center$"#
+    match app-id=r#"^pavucontrol$"#
+    match app-id=r#"^nm-connection-editor$"#
+    default-column-width { proportion 0.5; }
+    open-floating false
+}
+window-rule {
+    match app-id=r#"^gnome-calculator$"#
+    match app-id=r#"^galculator$"#
+    match app-id=r#"^blueman-manager$"#
+    match app-id=r#"^org\.gnome\.Nautilus$"#
+    match app-id=r#"^xdg-desktop-portal$"#
+    open-floating true
+}
+window-rule {
+    match app-id=r#"^steam$"# title=r#"^notificationtoasts_\d+_desktop$"#
+    default-floating-position x=10 y=10 relative-to="bottom-right"
+    open-focused false
+}
+window-rule {
+    match app-id=r#"^org\.wezfurlong\.wezterm$"#
+    match app-id="Alacritty"
+    match app-id="zen"
+    match app-id="com.mitchellh.ghostty"
+    match app-id="kitty"
+    draw-border-with-background false
+}
+window-rule {
+    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    match app-id="zoom"
+    open-floating true
+}
+window-rule {
+    match app-id=r#"org.quickshell$"#
+    open-floating true
+}
+
+// Recent windows
+recent-windows {
+    debounce-ms 750
+    open-delay-ms 150
+
+    binds {
+        Mod+Tab         { next-window scope="output"; }
+        Mod+Shift+Tab   { previous-window scope="output"; }
+        Mod+grave       { next-window filter="app-id"; }
+        Mod+Shift+grave { previous-window filter="app-id"; }
+    }
+
+    highlight {
+        corner-radius 12
+    }
+}
+
+// Environment
+environment {
+    XDG_CURRENT_DESKTOP "niri"
+    QT_QPA_PLATFORMTHEME "gtk3"
+    TERMINAL "kitty"
+}
+
+// Miscellaneous
+hotkey-overlay {
+    skip-at-startup
+}
+
+config-notification {
+    disable-failed
+}
+
+screenshot-path "~/.local/share/media/pictures/screenshots/screenshot_%Y-%m-%d %H-%M-%S.png"
+
+// Debugging
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
+
+
+// Include own files (overriding and merging with the above)
+include "colors.kdl"
+include "binds.kdl"
+
+
+// Program spawning
+spawn-at-startup "qs" "-c" "noctalia-shell"

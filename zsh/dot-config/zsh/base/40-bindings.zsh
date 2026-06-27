@@ -2,6 +2,10 @@
 
 bindkey -e
 
+# Word movement
+bindkey '^[[1;5D' backward-word  # Ctrl-Left
+bindkey '^[[1;5C' forward-word   # Ctrl-Right
+
 # Mark and region handling.
 bindkey '^@'   set-mark-command
 bindkey '^X^X' exchange-point-and-mark

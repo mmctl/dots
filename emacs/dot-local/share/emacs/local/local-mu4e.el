@@ -54,6 +54,7 @@ corresponding configuration.")
 (defconst WORK_ADDRESS_CONFIGS
   (list
    (an-address-configuration-with-domain-defaults "mmeijers.com" "research@mmeijers.com" "/research-mmeijers")
+   (an-address-configuration-with-domain-defaults "mmeijers.com" "contracting@mmeijers.com" "/contracting-mmeijers")
    (an-address-configuration-with-domain-defaults "mmeijers.com" "teaching@mmeijers.com" "/teaching-mmeijers"))
   "List of (property lists representing) work email addresses and
 corresponding configuration.")
@@ -301,12 +302,14 @@ Meant as replacement for `smtpmail-send-it', e.g., in
                            PERSONAL_MAILROOTS)))
    :vars
    `((mu4e-maildir-shortcuts . ((:maildir "/research-mmeijers/INBOX" :key ?r)
+                                (:maildir "/contracting-mmeijers/INBOX" :key ?c)
                                 (:maildir "/teaching-mmeijers/INBOX" :key ?t)))
      (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query WORK_MAILROOTS))
                         (:name "All unread" :key ?u :query ,(concat "("
                                                                     (a-mu4e-inbox-roots-query WORK_MAILROOTS)
                                                                     ") AND flag:unread"))
                         (:name "Research unread" :key ?r :query "maildir:/research-mmeijers/INBOX AND flag:unread")
+                        (:name "Contracting unread" :key ?c :query "maildir:/contracting-mmeijers/INBOX AND flag:unread")
                         (:name "Teaching unread" :key ?t :query "maildir:/reaching-mmeijers/INBOX AND flag:unread")))
      (mu4e-get-mail-command . ,(concat "mbsync"
                                        (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
