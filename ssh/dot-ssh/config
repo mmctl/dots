@@ -19,10 +19,10 @@ Host github-personal
     IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
 
-Host github-work
+Host github-professional
     HostName github.com
     User MM45
-    IdentityFile "%d/.ssh/%u_ed25519_work"
+    IdentityFile "%d/.ssh/%u_ed25519_professional"
     IdentitiesOnly yes
 
 ## General

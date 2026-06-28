@@ -73,7 +73,7 @@ clone_or_update --recurse-submodules \
 setup_log_info "Set up project 'website'."
 
 setup_log_info "Setting up project 'easycrypt-dev'..."
-clone_or_update 'git@github-work:EasyCrypt/easycrypt.git' "$PROJECTS_DIR/easycrypt-dev"
+clone_or_update 'git@github-professional:EasyCrypt/easycrypt.git' "$PROJECTS_DIR/easycrypt-dev"
 setup_log_info "Set up project 'easycrypt-dev'."
 
 setup_log_info "Setting up project 'emacs-dev'..."

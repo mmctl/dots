@@ -221,17 +221,18 @@ forges and web servers:
 
 ```text
 ~/.ssh/${USER}_ed25519_personal.pub
-~/.ssh/${USER}_ed25519_work.pub
+~/.ssh/${USER}_ed25519_professional.pub
 ```
 
 ### 4.5 Install the desktop environment
 
 ```sh
-run_setup de
+run_setup de-dms  # DankMaterialShell
+run_setup de-noct # Noctalia
 ```
 
 This script installs the Wayland desktop stack. It adds the DankLinux and DMS
-repositories, installs Niri, DMS (Quickshell), greetd, Kitty graphical
+repositories, installs Niri, DMS or Noctalia (Quickshell), greetd, Kitty graphical
 file-management tools, fonts, desktop integration tools, and related utilities.
 It also enables the DMS user service and the greetd system service.
 
@@ -391,7 +392,7 @@ The setup creates and uses the following locations:
 | `~/.local/state`                                       | XDG state directory.                                                                |
 | `~/.local/bin`                                         | User-local executables and symlinks.                                                |
 | `~/.ssh/${USER}_ed25519_personal`                      | Personal SSH private key.                                                           |
-| `~/.ssh/${USER}_ed25519_work`                          | Work SSH private key.                                                               |
+| `~/.ssh/${USER}_ed25519_professional`                          | Professional SSH private key.                                                               |
 | `~/.config/systemd/user/ssh-agent.service`             | User-level SSH agent service.                                                       |
 | `~/.local/share/.authinfo.gpg`                         | Encrypted Authinfo file for mail and forge credentials.                             |
 | `~/.local/share/mail`                                  | Maildir root used by isync, mu, and mu4e.                                           |

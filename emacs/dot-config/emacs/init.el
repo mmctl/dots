@@ -2050,7 +2050,11 @@ that allows to include other templates by their name."
   :hook (nael-mode . abbrev-mode)
 
   :init
-  (setopt nael-prepare-lsp nil))
+  (setopt nael-prepare-lsp nil)
+
+  :config
+  (with-eval-after-load 'local-eglot
+    (add-hook 'nael-mode-hook #'a-setup-eglot-prog-map-local-hook))
 
 
 ;; Reading and writing

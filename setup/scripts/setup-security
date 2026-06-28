@@ -45,7 +45,7 @@ install -d -m 700 \
 setup_log_info "Installed ssh, gpg, and pinentry."
 
 
-setup_log_info "Creating ssh key pairs for work and personal use..."
+setup_log_info "Creating ssh key pairs for professional and personal use..."
 setup_log_info "Enter a passphrase for each new key when prompted."
 
 date_stamp="$(date +%Y%m%d)"
@@ -59,15 +59,15 @@ else
     setup_log_info "Created ssh key pair for personal use: $key_personal"
 fi
 
-key_work="$HOME/.ssh/${USER}_ed25519_work"
-if [ -e "$key_work" ]; then
-    setup_log_info "ssh key pair already exists: skipping: $key_work"
+key_professional="$HOME/.ssh/${USER}_ed25519_professional"
+if [ -e "$key_professional" ]; then
+    setup_log_info "ssh key pair already exists: skipping: $key_professional"
 else
-    ssh-keygen -t ed25519 -C "${USER}-work@${host}-${date_stamp}" -f "$key_work"
-    setup_log_info "Created ssh key pair for work use: $key_work"
+    ssh-keygen -t ed25519 -C "${USER}-professional@${host}-${date_stamp}" -f "$key_professional"
+    setup_log_info "Created ssh key pair for professional use: $key_professional"
 fi
 
-setup_log_info "Created ssh key pairs for work and personal use."
+setup_log_info "Created ssh key pairs for professional and personal use."
 
 
 setup_log_info "Setting up ssh-agent integration with systemd..."
@@ -205,18 +205,18 @@ fi
 
 key_personal_pub="${key_personal}.pub"
 key_personal_pub_share="personal.pub"
-key_work_pub="${key_work}.pub"
-key_work_pub_share="work.pub"
+key_professional_pub="${key_professional}.pub"
+key_professional_pub_share="professional.pub"
 
 setup_log_action "Manual checkpoint:"
 setup_log_action "  Add these public SSH keys to the relevant accounts:"
 setup_log_action "    $key_personal_pub"
-setup_log_action "    $key_work_pub"
+setup_log_action "    $key_professional_pub"
 setup_log_action "    (Accounts to consider: forges, webservers, ...)"
 setup_log_action "  Can expose public keys temporarily on LAN:"
 setup_log_action "    share_dir=\$(mktemp -d --tmpdir ssh-public-keys.XXXXXX)"
 setup_log_action "    cp -- \"$key_personal_pub\" \"\$share_dir/$key_personal_pub_share\""
-setup_log_action "    cp -- \"$key_work_pub\" \"\$share_dir/$key_work_pub_share\""
+setup_log_action "    cp -- \"$key_professional_pub\" \"\$share_dir/$key_professional_pub_share\""
 setup_log_action "    ip -brief -4 address"
 setup_log_action "    lan_ip=X # Replace X with actual LAN IPv4 address"
 setup_log_action "    sudo firewall-cmd --get-active-zones"
@@ -225,7 +225,7 @@ setup_log_action "    sudo firewall-cmd --zone=\"\$fw_zone\" --add-port=8000/tcp
 setup_log_action "    python3 -m http.server 8000 --bind \"\$lan_ip\" --directory \"\$share_dir\""
 setup_log_action "  Then, access keys from LAN:"
 setup_log_action "    http://\${lan_ip}:8000/$key_personal_pub_share"
-setup_log_action "    http://\${lan_ip}:8000/$key_work_pub_share"
+setup_log_action "    http://\${lan_ip}:8000/$key_professional_pub_share"
 setup_log_action "  Afterward, kill serving process (Ctrl + C), undo firewall changes, and remove temporary files:"
 setup_log_action "    sudo firewall-cmd --zone=\"\$fw_zone\" --remove-port=8000/tcp"
 setup_log_action "    rm -rf -- \"\$share_dir\""
