@@ -19,9 +19,12 @@
     (ocaml-interface "https://github.com/tree-sitter/tree-sitter-ocaml" "v0.24.2" "grammars/interface/src"))
   "Alist of tree-sitter grammars to install, formatted for `treesit-language-source-alist'.")
 
+(message "Installing treesitter grammars...")
 
 (dolist (gramal TREESIT_LANGUAGE_SOURCES)
   (let ((lang (car gramal)))
     (add-to-list 'treesit-language-source-alist gramal)
     (unless (treesit-language-available-p lang)
       (treesit-install-language-grammar lang TREESIT_DIR))))
+
+(message "Installed treesitter grammars.")

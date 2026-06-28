@@ -85,6 +85,7 @@ clone_or_update 'https://github.com/zsh-users/zsh-syntax-highlighting.git' \
 clone_or_update 'https://github.com/Aloxaf/fzf-tab.git' \
                 "$ZPLUGDIR/fzf-tab"
 
+rm -f -- "$HOME/.zsh_history" "$HOME/.zcompdump"
 (cd -- "$DOTS_DIR" && stow readline ripgrep zsh)
 
 setup_log_info "Installed terminal emulator (Kitty) and shell enhancements."
