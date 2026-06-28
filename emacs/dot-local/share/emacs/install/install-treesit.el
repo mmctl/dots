@@ -1,5 +1,6 @@
 ;; -*- lexical-binding: t -*-
 ;; install-treesit.el
+;; Meant to be run with `early-init.el' and `init.el' loaded.
 
 (require 'treesit)
 

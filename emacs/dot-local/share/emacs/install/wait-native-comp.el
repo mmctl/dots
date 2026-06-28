@@ -1,5 +1,7 @@
 ;; -*- lexical-binding: t -*-
-;; finish-native-comp.el
+;; wait-native-comp.el
+;; Meant to be run at the end of initial non-interactive installation/setup
+;; (e.g., via `--batch')
 
 (when (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
@@ -7,7 +9,4 @@
 
   (while (or comp-files-queue
              (> (comp--async-runnings) 0))
-    ;; Allow compiler subprocess output and sentinels to be processed.
     (accept-process-output nil 0.1)))
-
-(message "Native compilation finished")

@@ -157,6 +157,9 @@ else
         mail_research_user="$(rbw get --field username "Mailbox Research (mmeijers.com)")"
         mail_research_pass="$(rbw get "Mailbox Research (mmeijers.com)")"
 
+        mail_contracting_user="$(rbw get --field username "Mailbox Contracting (mmeijers.com)")"
+        mail_contracting_pass="$(rbw get "Mailbox Contracting (mmeijers.com)")"
+
         mail_teaching_user="$(rbw get --field username "Mailbox Teaching (mmeijers.com)")"
         mail_teaching_pass="$(rbw get "Mailbox Teaching (mmeijers.com)")"
 
@@ -179,6 +182,7 @@ machine mail.your-server.de login $mail_personal_user password $mail_personal_pa
 machine mail.your-server.de login $mail_kernel_user password $mail_kernel_pass
 machine mail.your-server.de login $mail_kem_user password $mail_kem_pass
 machine mail.your-server.de login $mail_research_user password $mail_research_pass
+machine mail.your-server.de login $mail_contracting_user password $mail_contracting_pass
 machine mail.your-server.de login $mail_teaching_user password $mail_teaching_pass
 machine mail.your-server.de login $mail_host_user password $mail_host_pass
 machine mail.your-server.de login $mail_dump_user password $mail_dump_pass

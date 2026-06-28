@@ -144,7 +144,7 @@ emacs --batch \
       --load "$XDG_CONFIG_HOME/emacs/early-init.el" \
       --load "$XDG_CONFIG_HOME/emacs/init.el" \
       --load "$XDG_DATA_HOME/emacs/install/install-treesit.el" \
-      --load "$XDG_DATA_HOME/emacs/install/finish-native-comp.el"
+      --load "$XDG_DATA_HOME/emacs/install/wait-native-comp.el"
 
 setup_log_info "Installed Emacs packages."
 
