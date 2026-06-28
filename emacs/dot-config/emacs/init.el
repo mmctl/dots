@@ -2054,7 +2054,7 @@ that allows to include other templates by their name."
 
   :config
   (with-eval-after-load 'local-eglot
-    (add-hook 'nael-mode-hook #'a-setup-eglot-prog-map-local-hook))
+    (add-hook 'nael-mode-hook #'a-setup-eglot-prog-map-local-hook)))
 
 
 ;; Reading and writing
