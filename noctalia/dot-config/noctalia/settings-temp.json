@@ -288,7 +288,7 @@
         ]
     },
     "colorSchemes": {
-        "darkMode": true,
+        "darkMode": false,
         "generationMethod": "tonal-spot",
         "manualSunrise": "06:30",
         "manualSunset": "18:30",
@@ -532,7 +532,7 @@
     },
     "notifications": {
         "backgroundOpacity": 1,
-        "clearDismissed": true,
+        "clearDismissed": false,
         "criticalUrgencyDuration": 13,
         "density": "default",
         "enableBatteryToast": true,
@@ -680,9 +680,9 @@
             {
                 "enabled": true,
                 "id": "qt"
-            },
+            }
         ],
-        "enableUserTheming": false
+        "enableUserTheming": true
     },
     "ui": {
         "boxBorderEnabled": false,

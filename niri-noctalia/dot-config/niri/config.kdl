@@ -223,8 +223,8 @@ debug {
 
 
 // Include own files (overriding and merging with the above)
-include "colors.kdl"
 include "binds.kdl"
+include optional=true "colors.kdl"
 
 
 // Program spawning

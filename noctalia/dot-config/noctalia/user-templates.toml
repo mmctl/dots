@@ -7,7 +7,7 @@ input_path = "~/.config/noctalia/templates/kitty-colors.conf"
 output_path = "~/.config/kitty/colors.conf"
 
 [templates.starship]
-input_path = "~/.config/noctalia/templates/starship-palette.toml"
+input_path = "~/.config/noctalia/templates/starship-pallete.toml"
 output_path = "~/.cache/noctalia/starship-palette.toml"
 post_hook = "cat ~/.config/starship-base.toml ~/.cache/noctalia/starship-palette.toml > ~/.config/starship.toml"
 
