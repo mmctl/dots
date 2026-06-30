@@ -17,18 +17,66 @@ During installation, use the following baseline:
 - Installer image: DVD / offline image.
 - Online repositories: Main Repository, Main Update Repository, Non-OSS Repository, and Non-OSS Update Repository.
 - System role: Generic Desktop.
+- Disk:
+  - Guided Setup ->
+        - Choose what to do with Linux/other partitions:
+          [IF WANT SINGLE FRESH INSTALL] Remove even if not needed
+        - Enable Disk Encryption:
+          - Authentication:
+            [If TPM2 available] TPM2 and PIN
+            [Else] Password only
+        - Settings for the root partition:
+          - File system type: Btrfs
+            Enable snapshots
+          (No "Propose separate home partition")
+          - Propose separate swap partition
+            (No "Enlarge to RAM size for suspend", unless need/want hibernation)
 - Installation Settings/Overview:
-  - Booting:
-    - Boot loader: GRUB2 EFI.
-  - Software:
+  - Booting ->
+    - Boot loader type:
+      - [If TPM2-based disk encryption] Systemd boot
+      - [Else] Anything (GRUB2 for EFI gives nicer menu)
+  - Software ->
     - Patterns (select manually):
       - Graphical Environments: Fonts.
-      - Base Technologies: Kernel dump tooling, Base System, Enhanced Base System, SELinux Support, x86-64-v3 optimized packages, YaST Base Utilities, YaST Desktop Utilities, and Minimal Appliance Base.
+      - Base Technologies: Kernel dump tooling, Base System, Enhanced Base System, SELinux Support, x86-64-v3 optimized packages, [If laptop] Mobile, YaST Base Utilities, YaST Desktop Utilities, and Minimal Appliance Base.
       - Documentation: Help and Support Documentation, Documentation
 
 After the first boot, continue with the steps below.
 
-## 1. Connect to the network
+## 0. [If TPM2+PIN-based disk encryption] Set dedicated PIN for disk encryption
+
+Before proceeding, ensure that the LUKS password or recovery key is available.
+This credential remains the fallback if TPM unlocking fails.
+
+Inspect the encrypted devices and their existing enrollment slots:
+
+```bash
+sudo sdbootutil list-devices
+sudo systemd-cryptenroll X # Replace X by a device name, e.g., /dev/nvme0np2
+```
+
+Each device should have both:
+
+* n independent `password` or `recovery` enrollment, and
+* a `tpm2` enrollment.
+
+Replace the existing TPM enrollment with TPM2+PIN:
+
+```bash
+sudo sdbootutil enroll --method=tpm2+pin
+```
+
+Regenerate the PCR 15 prediction:
+
+```bash
+sudo sdbootutil update-predictions --measure-pcr
+```
+
+When prompted for a device password, enter the **LUKS password or recovery credential**, not the new TPM2 boot PIN.
+Do not reboot if this command reports an error.
+
+## 1. [If not automatically connected to tetwork] Connect to the network
 
 Ensure that NetworkManager is enabled.
 
