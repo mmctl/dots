@@ -93,6 +93,15 @@ systemctl --user enable --now ssh-agent.service
 setup_log_info "Set up ssh-agent integration with systemd."
 
 
+setup_log_info "Storing known SSH hosts..."
+
+cat > "$HOME/.ssh/known_hosts" <<'EOF'
+github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+EOF
+
+setup_log_info "Stored known SSH hosts."
+
+
 setup_log_info "Installing password manager and stowing configuration..."
 
 CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"

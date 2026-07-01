@@ -143,8 +143,8 @@ clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
 emacs --batch \
       --load "$XDG_CONFIG_HOME/emacs/early-init.el" \
       --load "$XDG_CONFIG_HOME/emacs/init.el" \
-      --load "$XDG_DATA_HOME/emacs/install/install-treesit.el" \
-      --load "$XDG_DATA_HOME/emacs/install/wait-native-comp.el"
+      --load "$XDG_DATA_HOME/emacs/install/install-treesit.el"
+      # --load "$XDG_DATA_HOME/emacs/install/wait-native-comp.el"
 
 setup_log_info "Installed Emacs packages."
 
@@ -253,6 +253,7 @@ setup_log_info "Cleaned up."
 
 
 setup_log_action "Manual checkpoint:"
+setup_log_action "  Run non-daemon Emacs (`emacs`), install the pdf-tools server, and wait for native compilation to finish."
 setup_log_action "  Open Zen browser and install the following extensions:"
 setup_log_action "    Bitwarden, "
 setup_log_action "    uBlock Origin (enable filter lists), and"
