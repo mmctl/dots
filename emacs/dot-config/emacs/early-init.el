@@ -103,6 +103,23 @@
 
 
 ;;; Native compilation
+;; Compilation and driver options (see https://www.jamescherti.com/compiling-emacs/)
+(setopt native-comp-compiler-options
+        (append
+         (when (and (executable-find "gcc")
+                    (executable-find "awk"))
+           (process-lines
+            shell-file-name shell-command-switch
+            "LC_ALL=C gcc -march=native -Q --help=target 2>/dev/null |
+             awk '$1 == \"-march=\" || $1 == \"-mtune=\" { print $1 $2 }'"))
+         '("-fno-omit-frame-pointer"
+           "-fno-finite-math-only")))
+(setopt native-comp-driver-options
+        '("-Wl,-z,pack-relative-relocs"
+          "-Wl,--as-needed"))
+(setopt native-comp-debug 0)
+(setopt native-comp-speed 2)
+
 (setopt native-comp-jit-compilation t
         native-comp-async-query-on-exit t)
 (setopt package-native-compile t)

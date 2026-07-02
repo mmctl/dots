@@ -1195,13 +1195,18 @@
 (use-package tempel
   :demand t
 
+  :preface
+  (defvar-keymap a-tempel-map
+    :doc "Keymap for tempel (global)"
+    :prefix 'a-tempel-map-prefix
+    "c" #'tempel-complete
+    "e" #'tempel-expand
+    "i" #'tempel-insert)
+  (keymap-global-set "C-c t" 'a-tempel-map-prefix)
+
   :bind
   ("M-c" . tempel-complete) ; from: capitalize-word
   ("M-C" . tempel-expand)
-  (:prefix-map a-tempel-map :prefix "C-c t" :prefix-docstring "Keymap for tempel (global)"
-               ("c" . tempel-complete)
-               ("e" . tempel-expand)
-               ("i" . tempel-insert))
 
   :init
   ;; Create and store templates directory
