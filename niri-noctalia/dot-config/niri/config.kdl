@@ -56,7 +56,7 @@ layout {
     gaps 6
 
     border {
-        width 1
+        width 2
     }
 
     focus-ring {
@@ -123,6 +123,11 @@ animations {
 }
 
 // Layer rules
+layer-rule {
+  match namespace="^noctalia-overview*"
+  place-within-backdrop true
+}
+
 layer-rule {
     match namespace="^quickshell$"
     place-within-backdrop true
@@ -225,6 +230,7 @@ debug {
 // Include own files (overriding and merging with the above)
 include "binds.kdl"
 include optional=true "colors.kdl"
+include optional=true "monitors.kdl"
 
 
 // Program spawning

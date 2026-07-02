@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+set -eu
+
+# Setup utilities
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/utils"
+
+
+if [ "$(id -u)" -eq 0 ]; then
+    setup_log_die "Run this script as the target regular user, not as root."
+fi
+
+if ! command -v zypper >/dev/null 2>&1; then
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
+fi
+
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
