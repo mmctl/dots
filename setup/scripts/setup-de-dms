@@ -51,7 +51,8 @@ sudo zypper --non-interactive --no-color install \
      polkit polkit-default-privs gnome-keyring gnome-keyring-pam \
      pipewire wireplumber \
      xdg-desktop-portal xdg-desktop-portal-gtk \
-     xwayland
+     xwayland \
+     bluez
 setup_log_info "Installed basic desktop runtime for Wayland."
 
 

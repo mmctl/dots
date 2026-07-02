@@ -2175,8 +2175,6 @@ that allows to include other templates by their name."
   (setopt pdf-view-display-size 'fit-page)
   (setopt pdf-view-use-unicode-ligther t)
 
-  (pdf-loader-install t)
-
   :config
   (require 'local-pdf-tools)
 
