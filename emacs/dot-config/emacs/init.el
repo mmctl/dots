@@ -1222,6 +1222,11 @@
   (keymap-set tempel-map "M-<" #'tempel-beginning)
   (keymap-set tempel-map "M->" #'tempel-end)
 
+  (tempel-key "b" bug a-tempel-map)
+  (tempel-key "f" fixme a-tempel-map)
+  (tempel-key "n" now a-tempel-map)
+  (tempel-key "t" todo a-tempel-map)
+
   ;; Custom functionality
   (defun a-tempel-include (elt)
     "Define `include' element (taken and slightly adjusted from TempEL github repo)
