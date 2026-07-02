@@ -34,7 +34,10 @@
           goggles
           jinx
           scratch
-          undo-tree
+          ;; undo-tree
+          undo-fu
+          undo-fu-session
+          ;; vundo
           wgrep
           ;; Completion and actions
           ace-window
@@ -71,6 +74,7 @@
           markdown-mode
           neocaml
           ocaml-eglot
+          rainbow-delimiters
           rust-mode
           ;; Proof assistants
           proof-general
@@ -748,7 +752,17 @@
   :bind
   ("C-c s" . scratch))
 
-(use-package undo-tree
+(use-package undo-fu
+  :demand t
+
+  :config
+  (keymap-global-set "<remap> <undo>" 'undo-fu-only-undo)
+  (keymap-global-set "<remap> <undo-only>" 'undo-fu-only-undo)
+  (keymap-global-set "C-_" 'undo-fu-only-undo)
+  (keymap-global-set "<remap> <undo-redo>" 'undo-fu-only-redo)
+  (keymap-global-set "M-_" 'undo-fu-only-redo))
+
+(use-package undo-fu-session
   :demand t
 
   :init
@@ -756,18 +770,14 @@
   (defconst UNDO_DIR (file-name-as-directory (expand-file-name "undos/" EMACS_DATA_DIR))
     "Directory where (automatically generated) undo (history) files are stored.")
   (unless (file-directory-p UNDO_DIR)
-    (make-directory UNDO_DIR t))
-  (setopt undo-tree-history-directory-alist `(("." . ,UNDO_DIR)))
+      (make-directory UNDO_DIR t))
+  (setopt undo-fu-session-directory UNDO_DIR)
 
-  (setopt undo-tree-incompatible-major-modes '(term-mode image-mode doc-view-mode pdf-view-mode))
-  (setopt undo-tree-visualizer-diff t)
+  (setopt undo-fu-session-incompatible-major-modes
+          '(term-mode image-mode doc-view-mode pdf-view-mode))
 
   :config
-  ;; Keybindings
-  (keymap-set undo-tree-map "<remap> <undo-redo>" #'undo-tree-redo)
-
-  ;; Activation
-  (global-undo-tree-mode 1))
+  (undo-fu-session-global-mode 1))
 
 (use-package wgrep
   :demand t
@@ -1300,13 +1310,13 @@ that allows to include other templates by their name."
   :init
   (setopt modus-themes-italic-constructs t
           modus-themes-bold-constructs nil)
-  (setopt modus-themes-prompts '(italic))
 
   :config
   (modus-themes-include-derivatives-mode 1)
 
   (setopt modus-operandi-tinted-palette-overrides
           modus-themes-preset-overrides-warmer)
+
   (setopt modus-vivendi-tinted-palette-overrides
           modus-themes-preset-overrides-cooler))
 
@@ -1876,7 +1886,6 @@ that allows to include other templates by their name."
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
 (use-package rust-mode
-
   :defer t
 
   :mode ("\\.rs\\'" . rust-mode)
@@ -1902,6 +1911,11 @@ that allows to include other templates by their name."
 
   (with-eval-after-load 'local-eglot
     (add-hook 'rust-mode-hook #'a-setup-eglot-prog-map-local-hook)))
+
+(use-package rainbow-delimiters
+  :defer t
+
+  :hook prog-mode)
 
 (use-package sh-script
   :defer t

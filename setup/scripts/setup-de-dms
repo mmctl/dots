@@ -50,7 +50,7 @@ sudo zypper --non-interactive --no-color install \
      libwayland-server0 libwayland-client0 libwayland-egl1 \
      polkit polkit-default-privs gnome-keyring gnome-keyring-pam \
      pipewire wireplumber \
-     xdg-desktop-portal xdg-desktop-portal-gtk \
+     xdg-desktop-portal xdg-desktop-portal-gtk libnotify-tools \
      xwayland \
      bluez
 setup_log_info "Installed basic desktop runtime for Wayland."
