@@ -3,6 +3,8 @@
 bindkey -e
 
 # Word movement
+bindkey '^P' backward-word  # Ctrl-p
+bindkey '^N' forward-word  # Ctrl-n
 bindkey '^[[1;5D' backward-word  # Ctrl-Left
 bindkey '^[[1;5C' forward-word   # Ctrl-Right
 
@@ -60,3 +62,6 @@ bindkey '^[[3;5~'    kill-word-or-region
 # Undo and redo
 bindkey '^_'  undo
 bindkey '^[/' redo
+
+# Completion/expansion
+bindkey '^I' complete-word
