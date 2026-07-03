@@ -58,13 +58,13 @@ sudo systemd-cryptenroll X # Replace X by a device name, e.g., /dev/nvme0np2
 
 Each device should have both:
 
-* n independent `password` or `recovery` enrollment, and
+* an independent `password` or `recovery` enrollment, and
 * a `tpm2` enrollment.
 
 Replace the existing TPM enrollment with TPM2+PIN:
 
 ```bash
-sudo sdbootutil enroll --method=tpm2+pin
+sudo sdbootutil enroll --method=tpm2+pin --ask-pin
 ```
 
 Regenerate the PCR 15 prediction:
@@ -419,11 +419,12 @@ packages and enroll the current user.
 
 ```sh
 sudo zypper install fprintd fprintd-pam
-sudo fprintd-enroll "$USER"
+sudo fprintd-enroll -f right-index-finger "$USER"
+sudo fprintd-enroll -f left-index-finger "$USER"
 ```
 
-If fingerprint authentication remains buggy in the DMS lock screen or greeter,
-disable the general fingerprint feature and enable fingerprint authentication
+If fingerprint authentication remains buggy in the lock screen or greeter,
+try disabling the general fingerprint feature and enable fingerprint authentication
 only for `sudo`.
 
 ## 7. Important generated files and directories

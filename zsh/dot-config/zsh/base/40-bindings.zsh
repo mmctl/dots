@@ -60,8 +60,8 @@ bindkey '^[[127;5u'  backward-kill-word-or-region
 bindkey '^[[3;5~'    kill-word-or-region
 
 # Undo and redo
-bindkey '^_'  undo
-bindkey '^[/' redo
+bindkey '^_' undo
+bindkey '^[_' redo
 
 # Completion/expansion
 bindkey '^I' complete-word
