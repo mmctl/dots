@@ -212,12 +212,49 @@ EOF
 fi
 
 
+setup_log_info "Checking availability fingerprint authentication..."
+if sudo pam-config --query --fprintd >/dev/null 2>&1; then
+    setup_log_info "Enabling fingerprint for non-login authentication (sudo)..."
+
+    tmp_common="$(mktemp)"
+    tmp_sudo="$(mktemp)"
+    trap 'rm -f "$tmp_common" "$tmp_sudo"' EXIT
+
+    cat > "$tmp_common" <<'EOF'
+#%PAM-1.0
+auth sufficient pam_fprintd.so max-tries=3 timeout=10
+auth include common-auth
+EOF
+
+    cat > "$tmp_sudo" <<'EOF'
+#%PAM-1.0
+auth     include        common-auth-nonlogin
+account  include        common-account
+password include        common-password
+session  optional       pam_keyinit.so revoke
+session  include        common-session-nonlogin
+EOF
+
+    sudo install -o root -g root -m 0644 "$tmp_common" /etc/pam.d/common-auth-nonlogin
+    sudo install -o root -g root -m 0644 "$tmp_sudo" /etc/pam.d/sudo
+
+    setup_log_info "Enabled fingerprint for non-login authentication (sudo)."
+else
+    setup_log_info "Fingerprint authentication not available."
+fi
+
+
 key_personal_pub="${key_personal}.pub"
 key_personal_pub_share="personal.pub"
 key_professional_pub="${key_professional}.pub"
 key_professional_pub_share="professional.pub"
 
 setup_log_action "Manual checkpoint:"
+setup_log_action "  If fingerprint authentication has been enabled, enroll fingerprint(s):"
+setup_log_action "    fprintd-enroll -f right-index-finger \"$USER\""
+setup_log_action "    fprintd-verify -f right-index-finger \"$USER\""
+setup_log_action "    fprintd-enroll -f left-index-finger \"$USER\""
+setup_log_action "    fprintd-verify -f left-index-finger \"$USER\""
 setup_log_action "  Add these public SSH keys to the relevant accounts:"
 setup_log_action "    $key_personal_pub"
 setup_log_action "    $key_professional_pub"
