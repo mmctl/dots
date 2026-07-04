@@ -1,0 +1,136 @@
+#!/usr/bin/env sh
+set -eu
+
+config_file="${XDG_CONFIG_HOME:-$HOME/.config}/restic/backup-home.conf"
+
+if [ ! -r "$config_file" ]; then
+    printf 'Missing restic home-backup config: %s\n' "$config_file" >&2
+    exit 1
+fi
+
+# shellcheck source=/dev/null
+. "$config_file"
+
+
+notify() {
+    urgency=$1
+    title=$2
+    body=$3
+
+    notify-send \
+        --app-name="Restic Backup: Home" \
+        --icon=drive-harddisk \
+        --urgency="$urgency" \
+        "$title" \
+        "$body" \
+        >/dev/null 2>&1 || true
+}
+
+
+mounted_here=0
+attempted=0
+backup_ok=0
+maintenance_ok=0
+unmount_ok=1
+
+cleanup() {
+    status=$?
+
+    trap - EXIT HUP INT TERM
+
+    if [ "$mounted_here" -eq 1 ]; then
+        if ! umount "$BACKUP_MOUNTPOINT"; then
+            unmount_ok=0
+            status=1
+        fi
+    fi
+
+    if [ "$attempted" -eq 1 ]; then
+        if [ "$backup_ok" -ne 1 ]; then
+            notify \
+                critical \
+                "Home backup failed" \
+                "The restic backup did not complete. Inspect: journalctl --user -u restic-home-backup.service"
+
+        elif [ "$maintenance_ok" -ne 1 ]; then
+            notify \
+                critical \
+                "Home backup saved; maintenance failed" \
+                "The snapshot was saved, but retention or pruning failed."
+
+        elif [ "$unmount_ok" -ne 1 ]; then
+            notify \
+                critical \
+                "Home backup complete; drive still mounted" \
+                "The backup completed, but the backup drive could not be unmounted."
+
+        elif [ "$mounted_here" -eq 1 ]; then
+            notify \
+                normal \
+                "Home backup complete" \
+                "The backup completed successfully. The drive has been unmounted."
+
+        else
+            notify \
+                normal \
+                "Home backup complete" \
+                "The backup completed successfully. The drive was already mounted and remains mounted."
+        fi
+    fi
+
+    exit "$status"
+}
+
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+
+if [ ! -e "$BACKUP_DEVICE" ]; then
+    printf 'Backup drive is not connected; skipping.\n'
+    exit 0
+fi
+
+if mountpoint -q "$BACKUP_MOUNTPOINT"; then
+    mounted_here=0
+else
+    mount "$BACKUP_MOUNTPOINT"
+    mounted_here=1
+fi
+
+attempted=1
+
+notify \
+    normal \
+    "Home backup started" \
+    "Running restic backup of $RESTIC_BACKUP_SOURCE."
+
+
+restic \
+    --repository "$RESTIC_REPOSITORY" \
+    --password-command "$RESTIC_PASSWORD_COMMAND" \
+    backup \
+    --tag home \
+    --tag automatic \
+    --one-file-system \
+    --exclude-caches \
+    --exclude-file "$RESTIC_EXCLUDE_FILE" \
+    "$RESTIC_BACKUP_SOURCE"
+
+backup_ok=1
+
+
+restic \
+    --repository "$RESTIC_REPOSITORY" \
+    --password-command "$RESTIC_PASSWORD_COMMAND" \
+    forget \
+    --tag home \
+    --keep-last 1 \
+    --keep-daily "$KEEP_DAILY" \
+    --keep-weekly "$KEEP_WEEKLY" \
+    --keep-monthly "$KEEP_MONTHLY" \
+    --keep-yearly "$KEEP_YEARLY" \
+    --prune
+
+maintenance_ok=1

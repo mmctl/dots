@@ -14,6 +14,147 @@ if ! command -v zypper >/dev/null 2>&1; then
     setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
+
 setup_log_info "This script needs sudo for system configuration."
 sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
+
+# Input processing
+setup_log_info "Processing input..."
+if [ "$#" -ne 1 ]; then
+    cat <<EOF
+Usage:
+  $(basename "$0") FILESYSTEM_UUID
+
+Example:
+  $(basename "$0") 01234567-89ab-cdef-0123-456789abcdef
+EOF
+    setup_log_die "Expected exactly one argument: the filesystem UUID of the backup media."
+fi
+
+backup_fs_uuid=$1
+backup_device="/dev/disk/by-uuid/$backup_fs_uuid"
+
+if ! backup_fs_type="$(sudo blkid -o value -s TYPE -t "UUID=$backup_fs_uuid")"; then
+    setup_log_die "Could not determine filesystem type for UUID: $backup_fs_uuid"
+fi
+if [ -z "$backup_fs_type" ]; then
+    setup_log_die "No filesystem found for UUID: $backup_fs_uuid"
+fi
+
+setup_log_info "Backup filesystem UUID (device): $backup_fs_uuid ($backup_device)"
+setup_log_info "Backup filesystem type: $backup_fs_type"
+setup_log_info "Processed input."
+
+
+if ! command -v rbw >/dev/null 2>&1; then
+    setup_log_info "Password manager (rbw) not available. Run the security setup first."
+fi
+
+
+if ! command -v notify-send >/dev/null 2>&1; then
+    setup_log_info "libnotify-tools is not installed. Installing..."
+    sudo zypper --non-interactive --no-color install libnotify-tools
+    setup_log_info "Installed libnotify-tools."
+fi
+
+
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
+
+if [ ! -d "$DOTS_DIR" ]; then
+    setup_log_die "dotfiles directory not found: $DOTS_DIR"
+fi
+
+REPLACE_PLACEHOLDER="${REPLACE_PLACEHOLDER:-$DOTS_DIR/setup/scripts/replace-placeholder}"
+
+if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
+    setup_log_die "replace-placeholder script not found or not executable: $REPLACE_PLACEHOLDER"
+fi
+
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+LIBEXEC_DIR="${LIBEXEC_DIR:-$HOME/.local/libexec}"
+
+BACKUP_MOUNTPOINT="${BACKUP_MOUNTPOINT:-/mnt/restic-backup}"
+
+RESTIC_CONFIG_DIR="${RESTIC_CONFIG_DIR:-$XDG_CONFIG_HOME/restic}"
+RESTIC_HOME_CONFIG_FILE="${RESTIC_HOME_CONFIG_FILE:-$RESTIC_CONFIG_DIR/backup-home.conf}"
+RESTIC_HOME_EXCLUDE_FILE="${RESTIC_HOME_EXCLUDE_FILE:-$RESTIC_CONFIG_DIR/excludes-backup-home.conf}"
+RESTIC_HOME_REPOSITORY_NAME="${RESTIC_HOME_REPOSITORY_NAME:-repository-home}"
+RESTIC_REPOSITORY="$BACKUP_MOUNTPOINT/$RESTIC_HOME_REPOSITORY_NAME"
+
+RESTIC_PASSWORD_ITEM="${RESTIC_PASSWORD_ITEM:-restic-backup-home}"
+RESTIC_PASSWORD_FOLDER="${RESTIC_PASSWORD_FOLDER:-backups-and-recovery}"
+
+RESTIC_KEEP_DAILY="${RESTIC_KEEP_DAILY:-7}"
+RESTIC_KEEP_WEEKLY="${RESTIC_KEEP_WEEKLY:-4}"
+RESTIC_KEEP_MONTHLY="${RESTIC_KEEP_MONTHLY:-12}"
+RESTIC_KEEP_YEARLY="${RESTIC_KEEP_YEARLY:-5}"
+
+
+setup_log_info "Installing backup software (Restic)..."
+sudo zypper --non-interactive --no-color install restic
+setup_log_info "Installed backup software (Restic)."
+
+
+setup_log_info "Stowing (portable) Restic configuration and assets..."
+
+(cd -- "$DOTS_DIR" && stow restic)
+
+"$REPLACE_PLACEHOLDER" XDG_DATA_HOME "$XDG_DATA_HOME" \
+    "$XDG_CONFIG_HOME/restic/excludes-backup-home-temp.conf" \
+    "$XDG_CONFIG_HOME/restic/excludes-backup-home.conf"
+"$REPLACE_PLACEHOLDER" HOME "$HOME" \
+    "$XDG_CONFIG_HOME/restic/excludes-backup-home.conf" \
+    "$XDG_CONFIG_HOME/restic/excludes-backup-home.conf"
+
+"$REPLACE_PLACEHOLDER" LIBEXEC_DIR "$LIBEXEC_DIR" \
+    "$XDG_CONFIG_HOME/systemd/user/restic-backup-home-temp.service" \
+    "$XDG_CONFIG_HOME/systemd/user/restic-backup-home.service"
+
+setup_log_info "Stowed (portable) Restic configuration and assets."
+
+
+if rbw get "$RESTIC_PASSWORD_ITEM" >/dev/null 2>&1; ; then
+    setup_log_info "Entry $RESTIC_PASSWORD_ITEM already exists in passowrd manager; skipping creation."
+else
+    setup_log_info "Generating entry in password manager (folder: $RESTIC_PASSWORD_FOLDER, name: $RESTIC_PASSWORD_ITEM)..."
+    rbw generate --folder "$RESTIC_PASSWORD_FOLDER" 14 "$RESTIC_PASSWORD_ITEM" "$USER"
+    setup_log_info "Generated entry in password manager (folder: $RESTIC_PASSWORD_FOLDER, name: $RESTIC_PASSWORD_ITEM)."
+fi
+
+RESTIC_PASSWORD_ID="$(rbw get --field id "$RESTIC_PASSWORD_ITEM")"
+RESTIC_PASSWORD_COMMAND="${RESTIC_PASSWORD_COMMAND:-rbw get $RESTIC_PASSWORD_ID}"
+
+setup_log_info "Writing Restic configuration ($RESTIC_HOME_CONFIG_FILE)..."
+
+tmp_config="$(mktemp "$RESTIC_HOME_CONFIG_FILE.tmp.XXXXXX")"
+
+{
+    cat <<EOF
+BACKUP_FS_UUID='$backup_fs_uuid'
+BACKUP_FS_TYPE='$backup_fs_type'
+BACKUP_DEVICE='$backup_device'
+BACKUP_MOUNTPOINT='$BACKUP_MOUNTPOINT'
+
+RESTIC_BACKUP_SOURCE='$HOME'
+RESTIC_REPOSITORY='$RESTIC_REPOSITORY'
+RESTIC_EXCLUDE_FILE='$RESTIC_HOME_EXCLUDE_FILE'
+
+RESTIC_PASSWORD_ID='$RESTIC_PASSWORD_ID'
+RESTIC_PASSWORD_COMMAND='$RESTIC_PASSWORD_COMMAND'
+
+RESTIC_KEEP_DAILY='$RESTIC_KEEP_DAILY'
+RESTIC_KEEP_WEEKLY='$RESTIC_KEEP_WEEKLY'
+RESTIC_KEEP_MONTHLY='$RESTIC_KEEP_MONTHLY'
+RESTIC_KEEP_YEARLY='$RESTIC_KEEP_YEARLY'
+EOF
+} > "$tmp_config"
+
+chmod 600 -- "$tmp_config"
+mv -f -- "$tmp_config" "$RESTIC_HOME_CONFIG_FILE"
+
+setup_log_info "Wrote Restic configuration ($RESTIC_HOME_CONFIG_FILE)."
+
+
 

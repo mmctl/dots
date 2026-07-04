@@ -19,6 +19,9 @@ export XDG_STATE_HOME="$HOME/.local/state"
 
 export XDG_BIN_HOME="$HOME/.local/bin"
 
+### Scripts
+export LIBEXEC_DIR="$HOME/.local/libexec"
+
 ### Shells
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 export ZPLUGDIR="$XDG_DATA_HOME/zsh/plugins"

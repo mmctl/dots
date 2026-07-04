@@ -43,20 +43,22 @@ rm -f -- "$HOME/.profile"
 setup_log_info "Stowed .profile."
 
 
-setup_log_info "Creating XDG directories and setting user-dirs..."
+setup_log_info "Creating base (XDG) directories and setting user-dirs..."
 
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
+LIBEXEC_DIR="${LIBEXEC_DIR:-$HOME/.local/libexec}"
 
 mkdir -p -- \
         "$XDG_CACHE_HOME" \
         "$XDG_CONFIG_HOME" \
         "$XDG_DATA_HOME" \
         "$XDG_STATE_HOME" \
-        "$XDG_BIN_HOME"
+        "$XDG_BIN_HOME" \
+        "$LIBEXEC_DIR"
 
 rm -f -- "$XDG_CONFIG_HOME/user-dirs.dirs"
 (cd -- "$DOTS_DIR" && stow xdg)
