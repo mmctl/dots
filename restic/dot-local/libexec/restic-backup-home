@@ -4,11 +4,10 @@ set -eu
 config_file="${XDG_CONFIG_HOME:-$HOME/.config}/restic/backup-home.conf"
 
 if [ ! -r "$config_file" ]; then
-    printf 'Missing restic home-backup config: %s\n' "$config_file" >&2
+    printf 'Missing restic home backup configuration: %s\n' "$config_file" >&2
     exit 1
 fi
 
-# shellcheck source=/dev/null
 . "$config_file"
 
 
@@ -18,7 +17,7 @@ notify() {
     body=$3
 
     notify-send \
-        --app-name="Restic Backup: Home" \
+        --app-name="Backup: Home" \
         --icon=drive-harddisk \
         --urgency="$urgency" \
         "$title" \
@@ -49,32 +48,28 @@ cleanup() {
         if [ "$backup_ok" -ne 1 ]; then
             notify \
                 critical \
-                "Home backup failed" \
-                "The restic backup did not complete. Inspect: journalctl --user -u restic-home-backup.service"
-
+                "Backup failed" \
+                "Backup did not complete. Inspect: journalctl --user -u restic-backup-home.service"
         elif [ "$maintenance_ok" -ne 1 ]; then
             notify \
                 critical \
-                "Home backup saved; maintenance failed" \
-                "The snapshot was saved, but retention or pruning failed."
-
+                "Backup succeeded; maintenance failed" \
+                "Backup completed successfully, but retention or pruning failed."
         elif [ "$unmount_ok" -ne 1 ]; then
             notify \
                 critical \
-                "Home backup complete; drive still mounted" \
-                "The backup completed, but the backup drive could not be unmounted."
-
+                "Backup and maintenance succeeded; drive still mounted" \
+                "Backup and maintenance completed successfully, but backup drive could not be unmounted."
         elif [ "$mounted_here" -eq 1 ]; then
             notify \
                 normal \
-                "Home backup complete" \
-                "The backup completed successfully. The drive has been unmounted."
-
+                "Backup and maintanance succeeded; drive unmounted" \
+                "Backup and maintainance completed successfully and backup drive has been unmounted."
         else
             notify \
                 normal \
-                "Home backup complete" \
-                "The backup completed successfully. The drive was already mounted and remains mounted."
+                "Backup and maintanance succeeded; drive remains mounted" \
+                "Backup and maintainance completed successfully. The backup drive was already mounted before and remains mounted."
         fi
     fi
 
@@ -88,27 +83,41 @@ trap 'exit 143' TERM
 
 
 if [ ! -e "$BACKUP_DEVICE" ]; then
-    printf 'Backup drive is not connected; skipping.\n'
+    printf 'Backup drive is not connected; skipping backup.\n'
     exit 0
 fi
 
+
 if mountpoint -q "$BACKUP_MOUNTPOINT"; then
+    expected_source="$(readlink -f -- "$BACKUP_DEVICE")"
+    actual_source="$(findmnt -rn --target "$BACKUP_MOUNTPOINT" --output SOURCE)"
+    actual_source="$(readlink -f -- "$actual_source")"
+
+    if [ "$actual_source" != "$expected_source" ]; then
+        printf '%s\n' "Backup mountpoint is occupied by a different filesystem." >&2
+        printf '  Mountpoint:  %s\n' "$BACKUP_MOUNTPOINT" >&2
+        printf '  Expected:    %s -> %s\n' "$BACKUP_DEVICE" "$expected_source" >&2
+        printf '  Actual:      %s\n' "$actual_source" >&2
+        exit 1
+    fi
+
     mounted_here=0
 else
     mount "$BACKUP_MOUNTPOINT"
     mounted_here=1
 fi
 
+
 attempted=1
+
 
 notify \
     normal \
-    "Home backup started" \
-    "Running restic backup of $RESTIC_BACKUP_SOURCE."
-
+    "Backup started" \
+    "Backing up $RESTIC_BACKUP_SOURCE to $RESTIC_REPOSITORY..."
 
 restic \
-    --repository "$RESTIC_REPOSITORY" \
+    --repo "$RESTIC_REPOSITORY" \
     --password-command "$RESTIC_PASSWORD_COMMAND" \
     backup \
     --tag home \
@@ -120,17 +129,16 @@ restic \
 
 backup_ok=1
 
-
 restic \
-    --repository "$RESTIC_REPOSITORY" \
+    --repo "$RESTIC_REPOSITORY" \
     --password-command "$RESTIC_PASSWORD_COMMAND" \
     forget \
     --tag home \
     --keep-last 1 \
-    --keep-daily "$KEEP_DAILY" \
-    --keep-weekly "$KEEP_WEEKLY" \
-    --keep-monthly "$KEEP_MONTHLY" \
-    --keep-yearly "$KEEP_YEARLY" \
+    --keep-daily "$RESTIC_KEEP_DAILY" \
+    --keep-weekly "$RESTIC_KEEP_WEEKLY" \
+    --keep-monthly "$RESTIC_KEEP_MONTHLY" \
+    --keep-yearly "$RESTIC_KEEP_YEARLY" \
     --prune
 
 maintenance_ok=1

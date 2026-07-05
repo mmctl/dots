@@ -6,12 +6,13 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
-if [ "$#" -ne 1 ]; then
-    printf '%s\n' "usage: $0 script" >&2
+if [ "$#" -lt 1 ]; then
+    printf '%s\n' "usage: $0 script [args]" >&2
     exit 2
 fi
 
 script_path=$1
+shift
 
 if [ ! -x "$script_path" ]; then
     printf '%s\n' "error: script not found or not executable: $script_path" >&2
@@ -30,7 +31,7 @@ chmod 600 -- "$log_file" || exit 1
     printf "[%s] [INFO] Executing %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$script_path"
     printf "[%s] [INFO] Logging to %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$log_file"
 
-    "$script_path"
+    "$script_path" "$@"
     status=$?
 
     if [ "$status" -eq 0 ]; then

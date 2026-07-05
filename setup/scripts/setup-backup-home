@@ -85,6 +85,7 @@ RESTIC_REPOSITORY="$BACKUP_MOUNTPOINT/$RESTIC_HOME_REPOSITORY_NAME"
 
 RESTIC_PASSWORD_ITEM="${RESTIC_PASSWORD_ITEM:-restic-backup-home}"
 RESTIC_PASSWORD_FOLDER="${RESTIC_PASSWORD_FOLDER:-backups-and-recovery}"
+RESTIC_PASSWORD_COMMAND="${RESTIC_PASSWORD_COMMAND:-rbw get $RESTIC_PASSWORD_ITEM}"
 
 RESTIC_KEEP_DAILY="${RESTIC_KEEP_DAILY:-7}"
 RESTIC_KEEP_WEEKLY="${RESTIC_KEEP_WEEKLY:-4}"
@@ -105,7 +106,6 @@ setup_log_info "Stowing (portable) Restic configuration and assets..."
     "$XDG_CONFIG_HOME/restic/excludes-backup-home-temp.conf" \
     "$XDG_CONFIG_HOME/restic/excludes-backup-home.conf"
 "$REPLACE_PLACEHOLDER" HOME "$HOME" \
-    "$XDG_CONFIG_HOME/restic/excludes-backup-home.conf" \
     "$XDG_CONFIG_HOME/restic/excludes-backup-home.conf"
 
 "$REPLACE_PLACEHOLDER" LIBEXEC_DIR "$LIBEXEC_DIR" \
@@ -115,16 +115,14 @@ setup_log_info "Stowing (portable) Restic configuration and assets..."
 setup_log_info "Stowed (portable) Restic configuration and assets."
 
 
-if rbw get "$RESTIC_PASSWORD_ITEM" >/dev/null 2>&1; ; then
+if rbw get "$RESTIC_PASSWORD_ITEM" >/dev/null 2>&1; then
     setup_log_info "Entry $RESTIC_PASSWORD_ITEM already exists in passowrd manager; skipping creation."
 else
     setup_log_info "Generating entry in password manager (folder: $RESTIC_PASSWORD_FOLDER, name: $RESTIC_PASSWORD_ITEM)..."
-    rbw generate --folder "$RESTIC_PASSWORD_FOLDER" 14 "$RESTIC_PASSWORD_ITEM" "$USER"
+    rbw generate --folder "$RESTIC_PASSWORD_FOLDER" 14 "$RESTIC_PASSWORD_ITEM" "$USER" >/dev/null 2>&1
     setup_log_info "Generated entry in password manager (folder: $RESTIC_PASSWORD_FOLDER, name: $RESTIC_PASSWORD_ITEM)."
 fi
 
-RESTIC_PASSWORD_ID="$(rbw get --field id "$RESTIC_PASSWORD_ITEM")"
-RESTIC_PASSWORD_COMMAND="${RESTIC_PASSWORD_COMMAND:-rbw get $RESTIC_PASSWORD_ID}"
 
 setup_log_info "Writing Restic configuration ($RESTIC_HOME_CONFIG_FILE)..."
 
@@ -132,8 +130,6 @@ tmp_config="$(mktemp "$RESTIC_HOME_CONFIG_FILE.tmp.XXXXXX")"
 
 {
     cat <<EOF
-BACKUP_FS_UUID='$backup_fs_uuid'
-BACKUP_FS_TYPE='$backup_fs_type'
 BACKUP_DEVICE='$backup_device'
 BACKUP_MOUNTPOINT='$BACKUP_MOUNTPOINT'
 
@@ -141,7 +137,6 @@ RESTIC_BACKUP_SOURCE='$HOME'
 RESTIC_REPOSITORY='$RESTIC_REPOSITORY'
 RESTIC_EXCLUDE_FILE='$RESTIC_HOME_EXCLUDE_FILE'
 
-RESTIC_PASSWORD_ID='$RESTIC_PASSWORD_ID'
 RESTIC_PASSWORD_COMMAND='$RESTIC_PASSWORD_COMMAND'
 
 RESTIC_KEEP_DAILY='$RESTIC_KEEP_DAILY'
@@ -157,4 +152,91 @@ mv -f -- "$tmp_config" "$RESTIC_HOME_CONFIG_FILE"
 setup_log_info "Wrote Restic configuration ($RESTIC_HOME_CONFIG_FILE)."
 
 
+setup_log_info "Initializing Restic home-backup repository ($RESTIC_HOME_REPOSITORY_NAME)..."
 
+sudo install -d -m 755 -- "$BACKUP_MOUNTPOINT"
+
+setup_log_info "Mounting backup filesystem..."
+mounted_here=0
+if mountpoint -q "$BACKUP_MOUNTPOINT"; then
+    expected_source="$(readlink -f -- "$backup_device")"
+    actual_source="$(findmnt -rn --target "$BACKUP_MOUNTPOINT" --output SOURCE)"
+    actual_source="$(readlink -f -- "$actual_source")"
+
+    if [ "$actual_source" != "$expected_source" ]; then
+        setup_log_error "Backup mountpoint is occupied by a different filesystem."
+        setup_log_error "  Mountpoint:  $BACKUP_MOUNTPOINT"
+        setup_log_error "  Expected:    $backup_device -> $expected_source"
+        setup_log_error "  Actual:      $actual_source"
+        setup_log_die "Not initializing Restic repository on an unexpected filesystem."
+    fi
+
+    setup_log_info "Backup filesystem is already mounted at $BACKUP_MOUNTPOINT."
+else
+    setup_log_info "Temporarily mounting backup filesystem for repository initialization..."
+
+    sudo mount \
+        -t "$backup_fs_type" \
+        -o nosuid,nodev,noexec \
+        "$backup_device" \
+        "$BACKUP_MOUNTPOINT"
+
+    mounted_here=1
+
+    setup_log_info "Mounted backup filesystem."
+fi
+
+sudo install -d -m 700 -o "$USER" -g "$(id -gn)" -- "$RESTIC_REPOSITORY"
+
+if restic \
+    --repo "$RESTIC_REPOSITORY" \
+    --password-command "$RESTIC_PASSWORD_COMMAND" \
+    cat config >/dev/null 2>&1
+then
+    setup_log_info "Restic home-backup repository already initialized."
+else
+    restic \
+        --repo "$RESTIC_REPOSITORY" \
+        --password-command "$RESTIC_PASSWORD_COMMAND" \
+        init
+
+    setup_log_info "Initialized Restic home-backup repository."
+fi
+
+if [ "$mounted_here" -eq 1 ]; then
+    setup_log_info "Unmounting backup filesystem..."
+    sudo umount "$BACKUP_MOUNTPOINT"
+    setup_log_info "Unmounted backup filesystem."
+fi
+
+
+setup_log_info "Enabling Restic home-backup systemd (user) timer..."
+systemctl --user daemon-reload
+systemctl --user enable restic-backup-home.timer
+setup_log_info "Enabled Restic home-backup systemd (user) timer."
+
+
+case "$backup_fs_type" in
+    btrfs|xfs)
+        fstab_passno=0
+        ;;
+    *)
+        fstab_passno=2
+        ;;
+esac
+
+fstab_line="UUID=$backup_fs_uuid $BACKUP_MOUNTPOINT $backup_fs_type noauto,user,nofail,nosuid,nodev,noexec 0 $fstab_passno"
+
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Check /etc/fstab for an existing entry for either:"
+setup_log_action "    UUID=$backup_fs_uuid"
+setup_log_action "    $BACKUP_MOUNTPOINT"
+setup_log_action "  If no such entry exists, add:"
+setup_log_action "    $fstab_line"
+setup_log_action "  Then reload systemd's view of fstab:"
+setup_log_action "    sudo systemctl daemon-reload"
+setup_log_action "  Test mounting as the regular user:"
+setup_log_action "    mount '$BACKUP_MOUNTPOINT'"
+setup_log_action "    umount '$BACKUP_MOUNTPOINT'"
+setup_log_action "  Optionally, run one backup immediately:"
+setup_log_action "    systemctl --user start restic-backup-home.service"
