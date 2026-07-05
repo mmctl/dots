@@ -33,6 +33,53 @@ if [ ! -d "$DOTS_DIR" ]; then
 fi
 
 
+ADMIN_USER="${ADMIN_USER:-${USER:?USER is not set}}"
+
+setup_log_info "Setting up overall authentication approach..."
+
+setup_log_info "Setting up wheel group and corresponding authentication policy..."
+zypper --non-interactive --no-color install system-group-wheel sudo-policy-wheel-auth-self
+setup_log_info "Set up wheel group and corresponding authentication policy."
+
+setup_log_info "Adding admin user ($ADMIN_USER) to wheel group..."
+usermod -aG wheel "$ADMIN_USER"
+setup_log_info "Added admin user ($ADMIN_USER) to wheel group."
+
+setup_log_info "Checking availability fingerprint authentication..."
+if sudo pam-config --query --fprintd >/dev/null 2>&1; then
+    setup_log_info "Fingerprint authentication available."
+    setup_log_info "Enabling fingerprint for non-login authentication (sudo)..."
+
+    tmp_common="$(mktemp)"
+    tmp_sudo="$(mktemp)"
+    trap 'rm -f "$tmp_common" "$tmp_sudo"' EXIT
+
+    cat > "$tmp_common" <<'EOF'
+#%PAM-1.0
+auth sufficient pam_fprintd.so
+auth include common-auth
+EOF
+
+    cat > "$tmp_sudo" <<'EOF'
+#%PAM-1.0
+auth     include        common-auth-nonlogin
+account  include        common-account
+password include        common-password
+session  optional       pam_keyinit.so revoke
+session  include        common-session-nonlogin
+EOF
+
+    sudo install -o root -g root -m 0644 "$tmp_common" /etc/pam.d/common-auth-nonlogin
+    sudo install -o root -g root -m 0644 "$tmp_sudo" /etc/pam.d/sudo
+
+    setup_log_info "Enabled fingerprint for non-login authentication (sudo)."
+else
+    setup_log_info "Fingerprint authentication not available."
+fi
+
+setup_log_info "Set up overall authentication approach."
+
+
 setup_log_info "Installing ssh, gpg, and pinentry..."
 
 sudo zypper --non-interactive --no-color install openssh gpg2 pinentry
@@ -146,7 +193,7 @@ else
         chmod 700 "$authinfo_tmpdir"
 
         authinfo_tmp="$authinfo_tmpdir/authinfo"
-        authinfo_gpg_tmp="$(mktemp "$authinfo_dir/.authinfo.gpg.XXXXXX")"
+        authinfo_gpg_tmp="$authinfo_dir/.authinfo.gpg.XXXXXX"
 
         trap 'rm -rf -- "$authinfo_tmpdir"; rm -f -- "$authinfo_gpg_tmp"; rbw lock' EXIT HUP INT TERM
 
@@ -212,38 +259,6 @@ EOF
 fi
 
 
-setup_log_info "Checking availability fingerprint authentication..."
-if sudo pam-config --query --fprintd >/dev/null 2>&1; then
-    setup_log_info "Enabling fingerprint for non-login authentication (sudo)..."
-
-    tmp_common="$(mktemp)"
-    tmp_sudo="$(mktemp)"
-    trap 'rm -f "$tmp_common" "$tmp_sudo"' EXIT
-
-    cat > "$tmp_common" <<'EOF'
-#%PAM-1.0
-auth sufficient pam_fprintd.so max-tries=3 timeout=10
-auth include common-auth
-EOF
-
-    cat > "$tmp_sudo" <<'EOF'
-#%PAM-1.0
-auth     include        common-auth-nonlogin
-account  include        common-account
-password include        common-password
-session  optional       pam_keyinit.so revoke
-session  include        common-session-nonlogin
-EOF
-
-    sudo install -o root -g root -m 0644 "$tmp_common" /etc/pam.d/common-auth-nonlogin
-    sudo install -o root -g root -m 0644 "$tmp_sudo" /etc/pam.d/sudo
-
-    setup_log_info "Enabled fingerprint for non-login authentication (sudo)."
-else
-    setup_log_info "Fingerprint authentication not available."
-fi
-
-
 key_personal_pub="${key_personal}.pub"
 key_personal_pub_share="personal.pub"
 key_professional_pub="${key_professional}.pub"
@@ -258,21 +273,4 @@ setup_log_action "    fprintd-verify -f left-index-finger \"$USER\""
 setup_log_action "  Add these public SSH keys to the relevant accounts:"
 setup_log_action "    $key_personal_pub"
 setup_log_action "    $key_professional_pub"
-setup_log_action "    (Accounts to consider: forges, webservers, ...)"
-setup_log_action "  Can expose public keys temporarily on LAN:"
-setup_log_action "    share_dir=\$(mktemp -d --tmpdir ssh-public-keys.XXXXXX)"
-setup_log_action "    cp -- \"$key_personal_pub\" \"\$share_dir/$key_personal_pub_share\""
-setup_log_action "    cp -- \"$key_professional_pub\" \"\$share_dir/$key_professional_pub_share\""
-setup_log_action "    ip -brief -4 address"
-setup_log_action "    lan_ip=X # Replace X with actual LAN IPv4 address"
-setup_log_action "    sudo firewall-cmd --get-active-zones"
-setup_log_action "    fw_zone=X # Replace X with actual firewall zone corresponding to LAN interface"
-setup_log_action "    sudo firewall-cmd --zone=\"\$fw_zone\" --add-port=8000/tcp --timeout=10m"
-setup_log_action "    python3 -m http.server 8000 --bind \"\$lan_ip\" --directory \"\$share_dir\""
-setup_log_action "  Then, access keys from LAN:"
-setup_log_action "    http://\${lan_ip}:8000/$key_personal_pub_share"
-setup_log_action "    http://\${lan_ip}:8000/$key_professional_pub_share"
-setup_log_action "  Afterward, kill serving process (Ctrl + C), undo firewall changes, and remove temporary files:"
-setup_log_action "    sudo firewall-cmd --zone=\"\$fw_zone\" --remove-port=8000/tcp"
-setup_log_action "    rm -rf -- \"\$share_dir\""
-setup_log_action "  Verify received keys before uploading!"
+setup_log_action "  Reboot."
