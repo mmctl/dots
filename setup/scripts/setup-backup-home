@@ -157,7 +157,11 @@ setup_log_info "Initializing Restic home-backup repository ($RESTIC_HOME_REPOSIT
 sudo install -d -m 755 -- "$BACKUP_MOUNTPOINT"
 
 setup_log_info "Mounting backup filesystem..."
+
 mounted_here=0
+
+trap '[ "$mounted_here" -eq 1 ] && sudo umount "$BACKUP_MOUNTPOINT" || true' EXIT HUP INT TERM
+
 if mountpoint -q "$BACKUP_MOUNTPOINT"; then
     expected_source="$(readlink -f -- "$backup_device")"
     actual_source="$(findmnt -rn --target "$BACKUP_MOUNTPOINT" --output SOURCE)"
@@ -209,6 +213,7 @@ if [ "$mounted_here" -eq 1 ]; then
     setup_log_info "Unmounted backup filesystem."
 fi
 
+trap - EXIT HUP INT TERM
 
 setup_log_info "Enabling Restic home-backup systemd (user) timer..."
 systemctl --user daemon-reload
