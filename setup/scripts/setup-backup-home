@@ -130,7 +130,7 @@ tmp_config="$(mktemp "$RESTIC_HOME_CONFIG_FILE.tmp.XXXXXX")"
 
 {
     cat <<EOF
-BACKUP_DEVICE='$backup_device'
+BACKUP_FS_UUID='$backup_fs_uuid'
 BACKUP_MOUNTPOINT='$BACKUP_MOUNTPOINT'
 
 RESTIC_BACKUP_SOURCE='$HOME'
@@ -159,25 +159,12 @@ sudo install -d -m 755 -- "$BACKUP_MOUNTPOINT"
 setup_log_info "Mounting backup filesystem..."
 
 mounted_here=0
-
 trap '[ "$mounted_here" -eq 1 ] && sudo umount "$BACKUP_MOUNTPOINT" || true' EXIT HUP INT TERM
 
 if mountpoint -q "$BACKUP_MOUNTPOINT"; then
-    expected_source="$(readlink -f -- "$backup_device")"
-    actual_source="$(findmnt -rn --target "$BACKUP_MOUNTPOINT" --output SOURCE)"
-    actual_source="$(readlink -f -- "$actual_source")"
-
-    if [ "$actual_source" != "$expected_source" ]; then
-        setup_log_error "Backup mountpoint is occupied by a different filesystem."
-        setup_log_error "  Mountpoint:  $BACKUP_MOUNTPOINT"
-        setup_log_error "  Expected:    $backup_device -> $expected_source"
-        setup_log_error "  Actual:      $actual_source"
-        setup_log_die "Not initializing Restic repository on an unexpected filesystem."
-    fi
-
-    setup_log_info "Backup filesystem is already mounted at $BACKUP_MOUNTPOINT."
+    confirm_mounted "$backup_fs_uuid" "$BACKUP_MOUNTPOINT"
 else
-    setup_log_info "Temporarily mounting backup filesystem for repository initialization..."
+    setup_log_info "Mounting backup filesystem (for repository initialization)..."
 
     sudo mount \
         -t "$backup_fs_type" \
@@ -187,7 +174,7 @@ else
 
     mounted_here=1
 
-    setup_log_info "Mounted backup filesystem."
+    setup_log_info "Mounted backup filesystem (for repository initialization)."
 fi
 
 sudo install -d -m 700 -o "$USER" -g "$(id -gn)" -- "$RESTIC_REPOSITORY"

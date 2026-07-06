@@ -82,25 +82,29 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 
-if [ ! -e "$BACKUP_DEVICE" ]; then
-    printf 'Backup drive is not connected; skipping backup.\n'
+if [ ! -e "/dev/disk/by-uuid/$BACKUP_FS_UUID" ]; then
+    printf 'Backup drive (UUID: %s) is not connected; skipping backup.\n' "$BACKUP_FS_UUID"
     exit 0
 fi
 
 
 if mountpoint -q "$BACKUP_MOUNTPOINT"; then
-    expected_source="$(readlink -f -- "$BACKUP_DEVICE")"
-    actual_source="$(findmnt -rn --target "$BACKUP_MOUNTPOINT" --output SOURCE)"
-    actual_source="$(readlink -f -- "$actual_source")"
+    actual_uuid="$(findmnt -rn --mountpoint "$BACKUP_MOUNTPOINT" --output UUID || true)"
 
-    if [ "$actual_source" != "$expected_source" ]; then
-        printf '%s\n' "Backup mountpoint is occupied by a different filesystem." >&2
-        printf '  Mountpoint:  %s\n' "$BACKUP_MOUNTPOINT" >&2
-        printf '  Expected:    %s -> %s\n' "$BACKUP_DEVICE" "$expected_source" >&2
-        printf '  Actual:      %s\n' "$actual_source" >&2
+    if [ -z "$actual_uuid" ]; then
+        printf 'Could not determine mounted filesystem UUID for %s.\n' "$BACKUP_MOUNTPOINT" >&2
         exit 1
     fi
 
+    if [ "$actual_uuid" != "$expected_uuid" ]; then
+        printf 'Backup mountpoint is occupied by a different filesystem.\n' >&2
+        printf '  Mountpoint: %s\n' "$BACKUP_MOUNTPOINT" >&2
+        printf '  Expected:   %s\n' "$expected_uuid" >&2
+        printf '  Actual:     %s\n' "$actual_uuid" >&2
+        exit 1
+    fi
+
+    printf 'Backup filesystem already mounted at %s.\n' "$BACKUP_MOUNTPOINT"
     mounted_here=0
 else
     mount "$BACKUP_MOUNTPOINT"
