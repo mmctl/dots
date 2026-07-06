@@ -27,8 +27,10 @@
 
 (setopt package-selected-packages
         '(;; Package bootstrap/security
-          use-package
+          age
           gnu-elpa-keyring-update
+          pinentry
+          use-package
           ;; General editing
           easy-kill
           goggles
@@ -685,8 +687,29 @@
 
 
 ;; Bootstrap/security
+(use-package age
+  :demand t
+
+  :init
+  (setopt age-program (or (executable-find "rage")
+                          (executable-find "age")))
+
+
+  ;; (setopt age-default-identity "default-skey-stub")
+  ;; (setopt age-default-recipients '("default-pkey" "backup-pkey"))
+
+  :config
+  (setenv "PINENTRY_PROGRAM" "pinentry-emacs")
+  (age-file-enable))
+
 (use-package gnu-elpa-keyring-update
   :demand t)
+
+(use-package pinentry
+  :demand t
+
+  :config
+  (pinentry-start))
 
 ;; General editing
 (use-package easy-kill

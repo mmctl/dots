@@ -92,6 +92,15 @@ install -d -m 700 \
 setup_log_info "Installed ssh, gpg, and pinentry."
 
 
+setup_log_info "Installing hardware (YubiKey) support and utilities..."
+
+sudo zypper --non-interactive --no-color install pcsc-lite yubikey-manager
+
+sudo systemctl enable --now pcscd
+
+setup_log_info "Installed hardware (YubiKey) support and utilities."
+
+
 setup_log_info "Creating ssh key pairs for professional and personal use..."
 setup_log_info "Enter a passphrase for each new key when prompted."
 
@@ -149,13 +158,30 @@ EOF
 setup_log_info "Stored known SSH hosts."
 
 
-setup_log_info "Installing password manager and stowing configuration..."
-
 CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
 
 if [ -f "$CARGO_HOME/env" ]; then
     . "$CARGO_HOME/env"
 fi
+
+setup_log_info "Installing file encryption tooling (age/rage) and plugins..."
+
+zypper --non-interactive --no-color install rage-encryption
+
+if command -v age-plugin-yubikey >/dev/null 2>&1; then
+    setup_log_info "Yubikey plugin for file encryption tooling (age/rage) already installed; skipping cargo install."
+else
+    if ! command -v cargo >/dev/null 2>&1; then
+        setup_log_die "cargo is not available. Run the development/build essentials setup first."
+    fi
+    cargo install --locked age-plugin-yubikey
+    setup_log_info "Installed Yubikey plugin for file encryption tooling (age/rage)."
+fi
+
+setup_log_info "Installed file encryption tooling (rage) and plugins."
+
+
+setup_log_info "Installing password manager (rbw) and stowing configuration..."
 
 if command -v rbw >/dev/null 2>&1; then
     setup_log_info "Password manager (rbw) is already installed; skipping cargo install."
@@ -164,12 +190,12 @@ else
         setup_log_die "cargo is not available. Run the development/build essentials setup first."
     fi
     cargo install --locked rbw
-    setup_log_info "Installed password manager."
+    setup_log_info "Installed password manager (rbw)."
 fi
 
 (cd -- "$DOTS_DIR" && stow rbw)
 
-setup_log_info "Stowed password manager configuration."
+setup_log_info "Stowed password manager (rbw) configuration."
 
 
 setup_log_info "Creating Authinfo file..."
