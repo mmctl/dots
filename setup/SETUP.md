@@ -85,7 +85,11 @@ For a TPM2 enrollment with PIN (remove the `+pin` if you prefer without PIN):
 sudo sdbootutil enroll --method=tpm2+pin
 ```
 
-For a FIDO2 enrollment, first insert your hardware key check whether it is detected:
+For a FIDO2 enrollment with PIN and touch, ensure a PIN has been set on the key (for its FIDO2 application) before enrolling;
+otherwise, a touch-only enrollment is created, and re-enrollment is necessary to utilize a PIN (if set at a later point).
+
+For both types of FIDO2 enrollment, however, the enrollment process is the same.
+First insert your hardware key to check whether it is detected:
 
 ```sh
 sudo systemd-cryptenroll --fido2-device=list
