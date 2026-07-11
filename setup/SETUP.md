@@ -23,8 +23,7 @@ During installation, use the following baseline:
           [IF WANT SINGLE FRESH INSTALL] Remove even if not needed
         - Enable Disk Encryption:
           - Authentication:
-            [If TPM2 available] TPM2 and PIN
-            [Else] Password only
+            Password only (for now, will set up after first boot)
         - Settings for the root partition:
           - File system type: Btrfs
             Enable snapshots
@@ -34,17 +33,29 @@ During installation, use the following baseline:
 - Installation Settings/Overview:
   - Booting ->
     - Boot loader type:
-      - [If TPM2-based disk encryption] Systemd boot
+      - [If disk encryption] Systemd boot
       - [Else] Anything (GRUB2 for EFI gives nicer menu)
   - Software ->
     - Patterns (select manually):
-      - Graphical Environments: Fonts.
-      - Base Technologies: Kernel dump tooling, Base System, Enhanced Base System, SELinux Support, x86-64-v3 optimized packages, [If laptop] Mobile, YaST Base Utilities, YaST Desktop Utilities, and Minimal Appliance Base.
-      - Documentation: Help and Support Documentation, Documentation
+      - Graphical Environments:
+        - Fonts
+      - Base Technologies:
+        - Kernel dump tooling
+        - Base System
+        - Enhanced Base System
+        - SELinux Support
+        - x86-64-v3 optimized packages
+        - [If laptop] Mobile
+        - YaST Base Utilities
+        - YaST Desktop Utilities
+        - Minimal Appliance Base
+      - Documentation:
+        - Help and Support Documentation
+        - Documentation
 
 After the first boot, continue with the steps below.
 
-## 0. [If TPM2+PIN-based disk encryption] Set dedicated PIN for disk encryption
+## 0. [If disk encryption] Set up recovery and authentication methods for disk encryption
 
 Before proceeding, ensure that the LUKS password or recovery key is available.
 This credential remains the fallback if TPM unlocking fails.
@@ -56,27 +67,54 @@ sudo sdbootutil list-devices
 sudo systemd-cryptenroll X # Replace X by a device name, e.g., /dev/nvme0np2
 ```
 
-Each device should have both:
+Each device should have an independent `password` and/or `recovery` enrollment.
+If it does not have a `recovery` enrollment, create one:
 
-* an independent `password` or `recovery` enrollment, and
-* a `tpm2` enrollment.
-
-Replace the existing TPM enrollment with TPM2+PIN:
-
-```bash
-sudo sdbootutil enroll --method=tpm2+pin --ask-pin
+```sh
+sudo sdbootutil enroll --method=recovery-key
 ```
 
-Regenerate the PCR 15 prediction:
+*Write the printed recovery key down on a piece of paper, and store it securely.*
 
-```bash
+Then, depending on your preferences, you can create a (1) TPM2 enrollment, preferably with PIN, and/or
+(2) FIDO2 enrollment, preferably two (one for a primary key, and one for a backup key).
+
+For a TPM2 enrollment with PIN (remove the `+pin` if you prefer without PIN):
+
+```sh
+sudo sdbootutil enroll --method=tpm2+pin
+```
+
+For a FIDO2 enrollment, first insert your hardware key check whether it is detected:
+
+```sh
+sudo systemd-cryptenroll --fido2-device=list
+```
+
+If your key is detected, create the enrollment:
+
+```sh
+sudo sdbootutil enroll --method=fido2
+```
+
+Repeat the FIDO2 enrollment process for each (backup) key, if you have any.
+
+After completing your enrollments, regenerate/update the PCR 15 predictions:
+
+```sh
 sudo sdbootutil update-predictions --measure-pcr
 ```
 
-When prompted for a device password, enter the **LUKS password or recovery credential**, not the new TPM2 boot PIN.
-Do not reboot if this command reports an error.
+If no error occurs during any of these commands, reboot and test out every enrollment at least once, including the recovery key.
+Do not reboot if any of these commands report an error.
 
-## 1. [If not automatically connected to tetwork] Connect to the network
+If everything works as expected, you may remove the password if you wish:
+
+```sh
+sudo sdbootutil unenroll --method=password
+```
+
+## 1. [If not automatically connected to network] Connect to the network
 
 Ensure that NetworkManager is enabled.
 
@@ -120,19 +158,19 @@ git clone --branch personal-opensuse-tumbleweed --single-branch https://github.c
 
 The setup scripts are expected under:
 
-```text
+```sh
 $DOTS_DIR/setup/scripts/
 ```
 
 The dotfiles repository itself is stored at:
 
-```text
+```sh
 $XDG_DATA_HOME/dots
 ```
 
 With the default values above, that resolves to:
 
-```text
+```sh
 ~/.local/share/dots
 ```
 
