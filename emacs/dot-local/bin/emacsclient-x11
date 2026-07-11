@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+if [ -z "${DISPLAY:-}" ]; then
+    printf '%s\n' \
+    'emacsclient-x11: DISPLAY is unset; invoking emacsclient without --display, so its default display-selection fallback will be used' >&2
+    exec /usr/bin/emacsclient "$@"
+else
+    exec /usr/bin/emacsclient --display="$DISPLAY" "$@"
+fi
