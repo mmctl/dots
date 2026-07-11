@@ -713,7 +713,7 @@
                                                       (file-name-nondirectory idfile)))
                                     AGE_IDENTITIES)
                                    (car-safe AGE_IDENTITIES)))
-  (setopt age-default-recipients AGE_RECIPIENTS)
+  (setopt age-default-recipient AGE_RECIPIENTS)
 
   :config
   (setenv "PINENTRY_PROGRAM" "pinentry-emacs")
