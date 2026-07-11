@@ -6,34 +6,41 @@ Host website
     User mmeije
     IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
+    # IdentityAgent none # Do not use an agent with FIDO2 keys
+    # AddKeysToAgent no # Do not use an agent with FIDO2 keys
 
 ### Forges
 Host github-personal
     HostName github.com
-    User mmctl
+    User git
     IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
-
+    IdentityAgent none # Do not use an agent with FIDO2 keys
+    AddKeysToAgent no # Do not use an agent with FIDO2 keys
 
 ## Professional
 ### Forges
 Host github-professional
     HostName github.com
-    User MM45
+    User git
     IdentityFile "%d/.ssh/%u_ed25519_professional"
     IdentitiesOnly yes
+    # IdentityAgent none # Do not use an agent with FIDO2 keys
+    # AddKeysToAgent no # Do not use an agent with FIDO2 keys
 
 
 ## General/Fallback
 ### Forges
 Host github.com gitlab.com
     HostName %h
-    User mmctl
+    User git
     IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
+    # IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
+    # IdentityAgent none # Do not use an agent with FIDO2 keys
+    # AddKeysToAgent no # Do not use an agent with FIDO2 keys
 
 ### Defaults
 ## Each of these can be overwritten for specific hosts
