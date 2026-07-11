@@ -135,7 +135,11 @@ else
     setup_log_info "Installed Yubikey plugin for file encryption tooling (age/rage)."
 fi
 
+(cd -- "$DOTS_DIR" && stow age)
+install -d -m 700 -- "$XDG_CONFIG_HOME/age/identities"
+
 setup_log_info "Installed file encryption tooling (rage) and plugins."
+
 
 
 setup_log_info "Installing password manager (rbw) and stowing configuration..."
@@ -248,8 +252,12 @@ setup_log_action "    fprintd-enroll -f right-index-finger \"$USER\""
 setup_log_action "    fprintd-verify -f right-index-finger \"$USER\""
 setup_log_action "    fprintd-enroll -f left-index-finger \"$USER\""
 setup_log_action "    fprintd-verify -f left-index-finger \"$USER\""
-setup_log_action "  Extract SSH identity and public-key files from hardware keys:"
+setup_log_action "  Extract SSH identity files from hardware keys:"
 setup_log_action "    cd -- $HOME/.ssh"
 setup_log_action "    ssh-keygen -K"
 setup_log_action "  Rename and delete the extracted files as appropriate for machine (see $HOME/.ssh/config for names)."
+setup_log_action "  Extract age identity files from hardware keys:"
+setup_log_action "    cd -- $XDG_CONFIG_HOME/age/identities"
+setup_log_action "    age-yubikey-plugin -i"
+setup_log_action "  Store each relevant identity as appopriate for machine (see $XDG_CONFIG_HOME/age/recipients/ for names)."
 setup_log_action "  Reboot."

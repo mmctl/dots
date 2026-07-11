@@ -694,9 +694,26 @@
   (setopt age-program (or (executable-find "rage")
                           (executable-find "age")))
 
+  (defconst AGE_IDENTITIES (let ((age-id-dir (file-name-as-directory
+                                              (expand-file-name "age/identities/"
+                                                                (or (getenv "XDG_CONFIG_HOME") "~/.config/")))))
+                             (when (file-directory-p age-id-dir)
+                               (directory-files age-id-dir t directory-files-no-dot-files-regexp)))
+    "List containing age identity files (available at launch).")
+  (defconst AGE_RECIPIENTS (let ((age-rec-dir (file-name-as-directory
+                                              (expand-file-name "age/recipients/"
+                                                                (or (getenv "XDG_CONFIG_HOME") "~/.config/")))))
+                             (when (file-directory-p age-rec-dir)
+                               (directory-files age-rec-dir t directory-files-no-dot-files-regexp)))
+    "List containing age recipient files (available at launch).")
 
-  ;; (setopt age-default-identity "default-skey-stub")
-  ;; (setopt age-default-recipients '("default-pkey" "backup-pkey"))
+  (setopt age-default-identity (or (seq-find
+                                    (lambda (idfile)
+                                      (string-match-p "primary\\.identity\\'"
+                                                      (file-name-nondirectory idfile)))
+                                    AGE_IDENTITIES)
+                                   (car-safe AGE_IDENTITIES)))
+  (setopt age-default-recipients AGE_RECIPIENTS)
 
   :config
   (setenv "PINENTRY_PROGRAM" "pinentry-emacs")

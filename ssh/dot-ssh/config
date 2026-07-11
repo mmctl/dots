@@ -5,7 +5,7 @@ Host website
     HostName 188.40.3.216
     User mmeije
     IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_backup"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_secondary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
@@ -17,7 +17,8 @@ Host github-personal
     HostName github.com
     User git
     IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_secondary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_tertiary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
@@ -30,7 +31,7 @@ Host github-professional
     HostName github.com
     User git
     IdentityFile "%d/.ssh/%u_ed25519_sk_professional_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_professional_forges_backup"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_professional_forges_secondary"
     # IdentityFile "%d/.ssh/%u_ed25519_professional"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
@@ -44,7 +45,7 @@ Host github.com gitlab.com
     HostName %h
     User git
     IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_secondary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
