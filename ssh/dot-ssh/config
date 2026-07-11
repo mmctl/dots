@@ -1,19 +1,13 @@
 # SSH Configuration (User-specific)
-## Website
+## Personal
+### Website
 Host website
     HostName 188.40.3.216
     User mmeije
     IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
 
-## Git
-Host github.com gitlab.com
-    HostName %h
-    User mmctl
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
-    # IdentityFile "%d/.ssh/%u_ed25519_personal"
-    IdentitiesOnly yes
-
+### Forges
 Host github-personal
     HostName github.com
     User mmctl
@@ -21,13 +15,27 @@ Host github-personal
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
 
+
+## Professional
+### Forges
 Host github-professional
     HostName github.com
     User MM45
     IdentityFile "%d/.ssh/%u_ed25519_professional"
     IdentitiesOnly yes
 
-## General
+
+## General/Fallback
+### Forges
+Host github.com gitlab.com
+    HostName %h
+    User mmctl
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
+    # IdentityFile "%d/.ssh/%u_ed25519_personal"
+    IdentitiesOnly yes
+
+### Defaults
 ## Each of these can be overwritten for specific hosts
 ## by simply specifying the option in a preceding
 ## stanza/section that matches that host
