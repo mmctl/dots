@@ -48,31 +48,9 @@ setup_log_info "Added admin user ($ADMIN_USER) to wheel group."
 setup_log_info "Checking availability fingerprint authentication..."
 if sudo pam-config --query --fprintd >/dev/null 2>&1; then
     setup_log_info "Fingerprint authentication available."
-    setup_log_info "Enabling fingerprint for non-login authentication (sudo)..."
-
-    tmp_common="$(mktemp)"
-    tmp_sudo="$(mktemp)"
-    trap 'rm -f "$tmp_common" "$tmp_sudo"' EXIT
-
-    cat > "$tmp_common" <<'EOF'
-#%PAM-1.0
-auth sufficient pam_fprintd.so
-auth include common-auth
-EOF
-
-    cat > "$tmp_sudo" <<'EOF'
-#%PAM-1.0
-auth     include        common-auth-nonlogin
-account  include        common-account
-password include        common-password
-session  optional       pam_keyinit.so revoke
-session  include        common-session-nonlogin
-EOF
-
-    sudo install -o root -g root -m 0644 "$tmp_common" /etc/pam.d/common-auth-nonlogin
-    sudo install -o root -g root -m 0644 "$tmp_sudo" /etc/pam.d/sudo
-
-    setup_log_info "Enabled fingerprint for non-login authentication (sudo)."
+    setup_log_info "Enabling fingerprint for authentication..."
+    sudo pam-config --add --fprintd
+    setup_log_info "Enabled fingerprint for authentication."
 else
     setup_log_info "Fingerprint authentication not available."
 fi
@@ -103,27 +81,6 @@ setup_log_info "Installed hardware (YubiKey) support and utilities."
 
 setup_log_info "Creating ssh key pairs for professional and personal use..."
 setup_log_info "Enter a passphrase for each new key when prompted."
-
-date_stamp="$(date +%Y%m%d)"
-host="$(hostname)"
-
-key_personal="$HOME/.ssh/${USER}_ed25519_personal"
-if [ -e "$key_personal" ]; then
-    setup_log_info "ssh key pair already exists: skipping: $key_personal"
-else
-    ssh-keygen -t ed25519 -C "${USER}-personal@${host}-${date_stamp}" -f "$key_personal"
-    setup_log_info "Created ssh key pair for personal use: $key_personal"
-fi
-
-key_professional="$HOME/.ssh/${USER}_ed25519_professional"
-if [ -e "$key_professional" ]; then
-    setup_log_info "ssh key pair already exists: skipping: $key_professional"
-else
-    ssh-keygen -t ed25519 -C "${USER}-professional@${host}-${date_stamp}" -f "$key_professional"
-    setup_log_info "Created ssh key pair for professional use: $key_professional"
-fi
-
-setup_log_info "Created ssh key pairs for professional and personal use."
 
 
 setup_log_info "Setting up ssh-agent integration with systemd..."
@@ -285,18 +242,14 @@ EOF
 fi
 
 
-key_personal_pub="${key_personal}.pub"
-key_personal_pub_share="personal.pub"
-key_professional_pub="${key_professional}.pub"
-key_professional_pub_share="professional.pub"
-
 setup_log_action "Manual checkpoint:"
 setup_log_action "  If fingerprint authentication has been enabled, enroll fingerprint(s):"
 setup_log_action "    fprintd-enroll -f right-index-finger \"$USER\""
 setup_log_action "    fprintd-verify -f right-index-finger \"$USER\""
 setup_log_action "    fprintd-enroll -f left-index-finger \"$USER\""
 setup_log_action "    fprintd-verify -f left-index-finger \"$USER\""
-setup_log_action "  Add these public SSH keys to the relevant accounts:"
-setup_log_action "    $key_personal_pub"
-setup_log_action "    $key_professional_pub"
+setup_log_action "  Extract SSH identity and public-key files from hardware keys:"
+setup_log_action "    cd -- $HOME/.ssh"
+setup_log_action "    ssh-keygen -K"
+setup_log_action "  Rename and delete the extracted files as appropriate for machine (see $HOME/.ssh/config for names)."
 setup_log_action "  Reboot."
