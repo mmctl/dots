@@ -4,30 +4,38 @@
 Host website
     HostName 188.40.3.216
     User mmeije
-    IdentityFile "%d/.ssh/%u_ed25519_personal"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_backup"
+    # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
-    # IdentityAgent none # Do not use an agent with FIDO2 keys
-    # AddKeysToAgent no # Do not use an agent with FIDO2 keys
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
 
 ### Forges
 Host github-personal
     HostName github.com
     User git
     IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
-    IdentityAgent none # Do not use an agent with FIDO2 keys
-    AddKeysToAgent no # Do not use an agent with FIDO2 keys
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
 
 ## Professional
 ### Forges
 Host github-professional
     HostName github.com
     User git
-    IdentityFile "%d/.ssh/%u_ed25519_professional"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_professional_forges_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_professional_forges_backup"
+    # IdentityFile "%d/.ssh/%u_ed25519_professional"
     IdentitiesOnly yes
-    # IdentityAgent none # Do not use an agent with FIDO2 keys
-    # AddKeysToAgent no # Do not use an agent with FIDO2 keys
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
 
 
 ## General/Fallback
@@ -36,11 +44,12 @@ Host github.com gitlab.com
     HostName %h
     User git
     IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
-    # IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_backup"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
-    # IdentityAgent none # Do not use an agent with FIDO2 keys
-    # AddKeysToAgent no # Do not use an agent with FIDO2 keys
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
 
 ### Defaults
 ## Each of these can be overwritten for specific hosts
