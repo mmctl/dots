@@ -64,7 +64,7 @@ Inspect the encrypted devices and their existing enrollment slots:
 
 ```bash
 sudo sdbootutil list-devices
-sudo systemd-cryptenroll X # Replace X by a device name, e.g., /dev/nvme0np2
+sudo systemd-cryptenroll /dev/nvme0n1p2 # Replace with actual name of device
 ```
 
 Each device should have an independent `password` and/or `recovery` enrollment.
@@ -117,6 +117,24 @@ If everything works as expected, you may remove the password if you wish:
 ```sh
 sudo sdbootutil unenroll --method=password
 ```
+
+Last, but definitely not least, backup the LUKS header of each encrypted device:
+
+```sh
+LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of encrypted device
+LUKS_UUID="$(sudo cryptsetup luksUUID "$LUKS_DEVICE")"
+LUKS_BACKUP_NAME="luks-header-${LUKS_UUID}.img"
+sudo cryptsetup luksHeaderBackup --header-backup-file="$LUKS_BACKUP_NAME" "$LUKS_DEVICE"
+```
+
+Including the LUKS UUID in the filename makes it clear which encrypted volume
+the backup belongs to. During recovery, you are responsible for pairing the
+header backup with the correct encrypted device.
+
+Store the header backup somewhere safe and externally, that is, not on the same
+physical drive as the encrypted volume. Preferably, also test that each
+backed-up header can successfully unlock its corresponding volume. This process
+is described [at the end of these setup instructions](#testing-recovery-of-luks-headers).
 
 ## 1. [If not automatically connected to network] Connect to the network
 
@@ -497,7 +515,51 @@ The setup creates and uses the following locations:
 | `~/resources`                                          | PARA resources directory.                                                           |
 | `~/archives`                                           | PARA archives directory.                                                            |
 
-## 8. Troubleshooting
+## 8. Testing and Troubleshooting
+
+### Testing recovery of LUKS headers
+
+Boot from a Linux live or rescue medium and set the encrypted device and corresponding
+header-backup file:
+
+```sh
+LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of encrypted device
+LUKS_BACKUP_FILE=/path/to/backup-header-file-<luksUUID>.img # Replace with actual path to backup header file for LUKS_DEVICE
+LUKS_MAPPING_NAME=luks-recovery # Arbitrary temporary mapping name
+```
+
+Test the backup by using it as a detached header:
+
+```sh
+sudo cryptsetup open \
+    --readonly \
+    --header "$LUKS_BACKUP_FILE" \
+    "$LUKS_DEVICE" \
+    "$LUKS_MAPPING_NAME"
+
+sudo blkid "/dev/mapper/$LUKS_MAPPING_NAME"
+```
+
+Enter a recovery key or other credential that was valid when the header backup was
+created. The test succeeds if the mapping opens and `blkid` recognizes the expected
+filesystem or storage layout.
+
+Close the temporary LUKS mapping:
+```
+sudo cryptsetup close "$LUKS_MAPPING_NAME"
+```
+
+If the recovery test succeeds, you can perform the actual recovery if needed:
+
+```sh
+sudo cryptsetup luksHeaderRestore \
+    --header-backup-file "$LUKS_BACKUP_FILE" \
+    "$LUKS_DEVICE"
+```
+
+This replaces the current LUKS header, keyslots, and token enrollments with those
+contained in the backup. After restoring the header, review the enrollments and create
+a new header backup.
 
 ### Find the latest setup log
 
