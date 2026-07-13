@@ -141,49 +141,49 @@ setup_log_info "Built EasyCrypt."
 
 setup_log_info "Installing SMT provers (for EasyCrypt)..."
 
-setup_log_info "Installing SMT prover '${cvcvers}'..."
-cvcvers=cvc5-1.2.1
-if [ -x "$SRCS_DIR/${cvcvers}/bin/cvc5" ]; then
-    setup_log_info "Found SMT prover '${cvcvers}' locally."
-else
-    cvcdir=cvc5-Linux-x86_64-static-gpl
-    cvczip=${cvcdir}.zip
-    curl -fsSL -o "$HOME/${cvczip}" "https://github.com/cvc5/cvc5/releases/download/${cvcvers}/${cvczip}"
-    unzip -d "$SRCS_DIR/${cvcvers}" "$HOME/${cvczip}"
-    cp -a -- "$SRCS_DIR/${cvcvers}/${cvcdir}/." "$SRCS_DIR/${cvcvers}/"
-    rm -rf -- "$SRCS_DIR/${cvcvers:?}/${cvcdir:?}/"
-    rm -- "$HOME/${cvczip:?}"
-fi
+# setup_log_info "Installing SMT prover '${cvcvers}'..."
+# cvcvers=cvc5-1.2.1
+# if [ -x "$SRCS_DIR/${cvcvers}/bin/cvc5" ]; then
+#     setup_log_info "Found SMT prover '${cvcvers}' locally."
+# else
+#     cvcdir=cvc5-Linux-x86_64-static-gpl
+#     cvczip=${cvcdir}.zip
+#     curl -fsSL -o "$HOME/${cvczip}" "https://github.com/cvc5/cvc5/releases/download/${cvcvers}/${cvczip}"
+#     unzip -d "$SRCS_DIR/${cvcvers}" "$HOME/${cvczip}"
+#     cp -a -- "$SRCS_DIR/${cvcvers}/${cvcdir}/." "$SRCS_DIR/${cvcvers}/"
+#     rm -rf -- "$SRCS_DIR/${cvcvers:?}/${cvcdir:?}/"
+#     rm -- "$HOME/${cvczip:?}"
+# fi
 
-ln -srf -- "$SRCS_DIR/${cvcvers}/bin/cvc5" "$XDG_BIN_HOME/cvc5"
-ln -srf -- "$SRCS_DIR/${cvcvers}/bin/cvc5" "$XDG_BIN_HOME/${cvcvers}"
-setup_log_info "Installed SMT prover '${cvcvers}'."
+# ln -srf -- "$SRCS_DIR/${cvcvers}/bin/cvc5" "$XDG_BIN_HOME/cvc5"
+# ln -srf -- "$SRCS_DIR/${cvcvers}/bin/cvc5" "$XDG_BIN_HOME/${cvcvers}"
+# setup_log_info "Installed SMT prover '${cvcvers}'."
 
-setup_log_info "Installing SMT prover '${z3vers}'..."
-z3vers=z3-4.13.4
-if [ -x "$SRCS_DIR/${z3vers}/bin/z3" ]; then
-    setup_log_info "Found SMT prover '${z3vers}' locally."
-else
-    z3dir=z3-4.13.4-x64-glibc-2.35
-    z3zip=${z3dir}.zip
-    curl -fsSL -o "$HOME/${z3zip}" "https://github.com/Z3Prover/z3/releases/download/${z3vers}/${z3zip}"
-    unzip -d "$SRCS_DIR/${z3vers}" "$HOME/${z3zip}"
-    cp -a -- "$SRCS_DIR/${z3vers}/${z3dir}/." "$SRCS_DIR/${z3vers}"
-    rm -rf -- "$SRCS_DIR/${z3vers:?}/${z3dir:?}"
-    rm -- "$HOME/${z3zip:?}"
-fi
+# setup_log_info "Installing SMT prover '${z3vers}'..."
+# z3vers=z3-4.13.4
+# if [ -x "$SRCS_DIR/${z3vers}/bin/z3" ]; then
+#     setup_log_info "Found SMT prover '${z3vers}' locally."
+# else
+#     z3dir=z3-4.13.4-x64-glibc-2.35
+#     z3zip=${z3dir}.zip
+#     curl -fsSL -o "$HOME/${z3zip}" "https://github.com/Z3Prover/z3/releases/download/${z3vers}/${z3zip}"
+#     unzip -d "$SRCS_DIR/${z3vers}" "$HOME/${z3zip}"
+#     cp -a -- "$SRCS_DIR/${z3vers}/${z3dir}/." "$SRCS_DIR/${z3vers}"
+#     rm -rf -- "$SRCS_DIR/${z3vers:?}/${z3dir:?}"
+#     rm -- "$HOME/${z3zip:?}"
+# fi
 
-ln -srf -- "$SRCS_DIR/${z3vers}/bin/z3" "$XDG_BIN_HOME/z3"
-ln -srf -- "$SRCS_DIR/${z3vers}/bin/z3" "$XDG_BIN_HOME/${z3vers}"
-setup_log_info "Installed SMT prover '${z3vers}'."
+# ln -srf -- "$SRCS_DIR/${z3vers}/bin/z3" "$XDG_BIN_HOME/z3"
+# ln -srf -- "$SRCS_DIR/${z3vers}/bin/z3" "$XDG_BIN_HOME/${z3vers}"
+# setup_log_info "Installed SMT prover '${z3vers}'."
 
-setup_log_info "Installed SMT provers (for EasyCrypt)."
+# setup_log_info "Installed SMT provers (for EasyCrypt)."
 
-setup_log_info "Configuring EasyCrypt..."
-easycrypt why3config
+# setup_log_info "Configuring EasyCrypt..."
+# easycrypt why3config
+# setup_log_info "Configured EasyCrypt."
+
 (cd -- "$DOTS_DIR" && stow easycrypt)
-setup_log_info "Configured EasyCrypt."
-
 setup_log_info "Installed EasyCrypt."
 
 
@@ -200,4 +200,9 @@ setup_log_info "Installed (and enabled) Docker."
 
 
 setup_log_action "Manual checkpoint:"
+setup_log_action "  Install SMT provers, e.g.:"
+setup_log_action "    Z3 (https://github.com/Z3Prover/z3/releases/)"
+setup_log_action "    CVC5 (https://github.com/cvc5/cvc5/releases)"
+setup_log_action "  Configure EasyCrypt/Why3 with SMT provers:"
+setup_log_action "    easycrypt why3config"
 setup_log_action "  Reboot."

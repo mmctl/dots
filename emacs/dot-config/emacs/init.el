@@ -174,7 +174,7 @@
         create-lockfiles t)
 
 ;; Authentication
-(setopt auth-sources (list AUTHINFO_FILE))
+(setopt auth-sources `(,AUTHINFO_FILE default))
 
 ;; Shell
 (setopt eshell-directory-name (file-name-as-directory

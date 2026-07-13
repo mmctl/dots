@@ -48,7 +48,7 @@ sudo zypper --non-interactive --no-color install \
      libdrm2 Mesa Mesa-dri Mesa-libEGL1 Mesa-libGL1 Mesa-libva Mesa-vulkan-device-select \
      dbus-1 dbus-1-tools \
      libwayland-server0 libwayland-client0 libwayland-egl1 \
-     polkit polkit-default-privs gnome-keyring gnome-keyring-pam \
+     pam-config polkit polkit-default-privs gnome-keyring gnome-keyring-pam secret-tool \
      pipewire wireplumber \
      xdg-desktop-portal xdg-desktop-portal-gtk libnotify-tools \
      xwayland \

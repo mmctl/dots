@@ -1,0 +1,78 @@
+#!/usr/bin/env sh
+set -eu
+
+# Setup utilities
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/utils"
+
+
+if [ "$(id -u)" -eq 0 ]; then
+    setup_log_die "Run this script as the target regular user, not as root."
+fi
+
+if ! command -v zypper >/dev/null 2>&1; then
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
+fi
+
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
+
+setup_log_info "Installing graphical file manager (Nautilus)..."
+sudo zypper --non-interactive --no-color install nautilus
+setup_log_info "Installed graphical file manager (Nautilus)."
+
+
+setup_log_info "Installing Flatpak with Flathub..."
+
+sudo zypper --non-interactive --no-color install flatpak
+flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+setup_log_info "Installed Flatpak with Flathub."
+
+
+setup_log_info "Installing browser (Zen)..."
+
+(cd -- "$DOTS_DIR" && stow zen)
+
+flatpak --user install -y flathub app.zen_browser.zen
+flatpak --user override --filesystem="$DOTS_DIR/zen/dot-config/zen/mm" app.zen_browser.zen
+flatpak --user override --filesystem=xdg-config/zen app.zen_browser.zen
+flatpak --user run app.zen_browser.zen -CreateProfile "mm $XDG_CONFIG_HOME/zen/mm"
+
+setup_log_info "Installed browser (Zen)."
+
+setup_log_info "Installing messenger (Signal)..."
+
+flatpak --user install flathub -y org.signal.Signal
+flatpak --user override \
+  --filesystem=xdg-config/gtk-3.0:ro \
+  --filesystem=xdg-config/gtk-4.0:ro \
+  org.signal.Signal
+
+setup_log_info "Installed messenger (Signal)."
+
+setup_log_info "Installing research tools (Zotero)..."
+
+flatpak --user install flathub -y org.zotero.Zotero
+flatpak --user override \
+  --nofilesystem=home \
+  --persist=.zotero \
+  --persist=Zotero \
+  --filesystem=xdg-config/gtk-3.0:ro \
+  --filesystem=xdg-config/gtk-4.0:ro \
+  org.zotero.Zotero
+
+setup_log_info "Installed research tools (Zotero)."
+
+
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Log in to Signal."
+setup_log_action "  Log in to Zotero."
+setup_log_action "  Open Zen browser:"
+setup_log_action "    Log in to Proton and check \"Keep me signed in\" on a trusted device:"
+setup_log_action "      https://account.proton.me/login"
+setup_log_action "    Install the following extensions:"
+setup_log_action "      Proton Pass, "
+setup_log_action "      uBlock Origin (enable filter lists), and"
+setup_log_action "      Zotero Connector."

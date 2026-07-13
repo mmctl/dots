@@ -335,19 +335,113 @@ forges and web servers:
 ### 4.5 Install the desktop environment
 
 ```sh
-run_setup de-dms  # DankMaterialShell
-run_setup de-noct # Noctalia
+run_setup de-base-dms  # DankMaterialShell
+run_setup de-base-noct # Noctalia
 ```
 
-This script installs the Wayland desktop stack. It adds the DankLinux and DMS
-repositories, installs Niri, DMS or Noctalia (Quickshell), greetd, Kitty graphical
-file-management tools, fonts, desktop integration tools, and related utilities.
-It also enables the DMS user service and the greetd system service.
+This script installs the Wayland desktop stack. Specifically, it installs Niri,
+DMS or Noctalia (Quickshell), greetd, Kitty, fonts, desktop integration tools,
+and related utilities. It also enables the DMS user service and the greetd
+system service.
 
 Manual checkpoint: reboot after this step so that the greeter, user services,
-shell configuration, and desktop stack are started cleanly.
+shell configuration, and desktop stack are started cleanly. Login with your password
+to initialize the keyring.
+
+Afterward, install additional graphical applications/extensions for the desktop environment:
+
+```sh
+run_setup de-ext
+```
+
+This particularly installs Nautilus (graphical file management), Flatpak (with
+Flathub), Zen browser, Signal, and Zotero.
+
+Manual checkpoint: Open Zen browser and log in to Proton, checking "Keep me
+signed in" on a trusted device. Then, install the following extensions (still in
+Zen browser):
+
+- Proton Pass.
+- uBlock Origin, including the desired filter lists.
+- Zotero Connector.
+
+Also, connect Signal, and log in to Zotero. Reboot after this step.
+
 
 ### 4.6 Install productivity tools
+
+Before running the productivity script, a few manual steps are required (which
+we opt for due to current lack of upstream programmatic/unattended installation
+options).
+
+First, install [Proton Drive
+CLI](https://proton.me/download/drive/cli/index.html) and [Proton
+Bridge](https://proton.me/support/protonmail-bridge-install).
+
+Log in to Proton Pass CLI:
+
+```sh
+pass-cli login
+```
+
+Log in to Proton Drive:
+
+```sh
+proton-drive auth login
+```
+
+Launch Proton Bridge, log in, and [enable "Split
+addresses"](https://proton.me/support/difference-combined-addresses-mode-split-addresses-mode).
+Then, export the Bridge-local TLS certificate (Settings), and store it at
+`$XDG_CONFIG_HOME/proton/bridge/cert.pem`.
+
+Store the Bridge-local IMAP/SMTP credentials in the keyring, once for each Proton account (this is for retrieval through `mbsync`):
+
+```sh
+# Enter password reported in Bridge when asked
+secret-tool store \
+    --label='Proton Bridge (personal)' \
+    service proton-bridge \
+    account personal
+```
+
+And once per email address associated with a Proton account (this is for sending and receiving through Emacs):
+
+```sh
+# Replace values with actual host, port, and user reported in Bridge
+# Enter password reported in Bridge when asked
+secret-tool store \
+    --label='Proton Bridge IMAP (example@proton.me)' \
+    service proton-bridge
+    host 127.0.0.1 \
+    port 1143 \
+    user example@proton.me
+
+secret-tool store \
+    --label='Proton Bridge SMTP (example@proton.me)' \
+    service proton-bridge
+    host 127.0.0.1 \
+    port 1025 \
+    user example@proton.me
+
+# Replace values with actual host, port, and user reported in Bridge
+# Enter password reported in Bridge when asked
+secret-tool store \
+    --label='Proton Bridge IMAP (example@mmeijers.com)' \
+    service proton-bridge
+    host 127.0.0.1 \
+    port 1143 \
+    user example@mmeijers.com
+
+secret-tool store \
+    --label='Proton Bridge SMTP (example@mmeijers.com)' \
+    service proton-bridge
+    host 127.0.0.1 \
+    port 1025 \
+    user example@mmeijers.com
+```
+
+At this point, run the actual productivity setup:
 
 ```sh
 run_setup productivity
@@ -355,17 +449,9 @@ run_setup productivity
 
 This script installs and prepares the main productivity applications. It sets up
 Emacs and its user service, installs mail tooling such as isync and mu, and
-Myspell dictionaries, prepares the Maildir layout, configures desktop entries
-and MIME handlers for Emacsclient, installs Flatpak and Flathub, and installs
-Zen Browser, Signal, and Zotero.
+Myspell dictionaries, prepares the Maildir layout, and configures desktop entries
+and MIME handlers for Emacsclient.
 
-Manual checkpoint: open Zen Browser and install the following extensions:
-
-- Bitwarden.
-- uBlock Origin, including the desired filter lists.
-- Zotero Connector.
-
-Also, connect Signal and log in to Zotero. Reboot after this step.
 
 ### 4.7 Install the full development environment
 
@@ -376,7 +462,7 @@ run_setup devel
 This script installs the larger development environment for writing,
 programming, formal methods, proof engineering, and container work. In
 particular, it installs TeX Live, Rust components, Go, C/C++, Python tooling,
-opam and OCaml tooling, EasyCrypt, cvc5, Z3, Lean, Docker, and
+opam and OCaml tooling, EasyCrypt, Lean, Docker, and
 QMK-related tools.
 
 Manual checkpoint: reboot after this step so that group membership changes,
