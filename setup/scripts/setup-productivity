@@ -14,7 +14,7 @@ if ! command -v zypper >/dev/null 2>&1; then
     setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
-for pcmd in age proton-drive protonmail-bridge; do
+for pcmd in age pass-cli proton-drive protonmail-bridge; do
     if ! command -v proton-drive >/dev/null 2>&1; then
         setup_log_die "$pcmd is not available; please follow installation instructions in order."
     fi

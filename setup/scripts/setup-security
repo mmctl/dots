@@ -158,6 +158,17 @@ setup_log_info "Installed file encryption tooling (rage) and plugins."
 
 # setup_log_info "Stowed password manager (rbw) configuration."
 
+setup_log_info "Importing Proton Bridge GPG key..."
+
+proton_bridge_key_url='https://proton.me/download/bridge/bridge_pubkey.gpg'
+proton_bridge_key_exp='D51E64D3E63EDC3EEF7864CEE2C75D68E6234B07'
+
+if ! download_and_import_rpm_key "$proton_bridge_key_url" "$proton_bridge_key_exp"; then
+    setup_log_die "Failed to download, verify, and import Proton Bridge GPG key."
+fi
+
+setup_log_info "Imported Proton Bridge GPG key."
+
 
 setup_log_info "Installing password manager (Proton Pass CLI)..."
 curl -fsSL https://proton.me/download/pass-cli/install.sh | bash

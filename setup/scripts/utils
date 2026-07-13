@@ -114,7 +114,6 @@ key_fingerprint() (
                  exit 1
        }
     ' "$key_with_colons"
-
 )
 
 verify_key_file() {

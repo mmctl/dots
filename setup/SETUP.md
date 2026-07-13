@@ -320,17 +320,11 @@ command -v rustup
 run_setup security
 ```
 
-This script prepares SSH, GPG, the password-manager command-line client, and the
-encrypted Authinfo file used by mail and forge tooling. For SSH, the script generates
-two key pairs, and will prompt for passwords on the secret keys.
+This script prepares SSH, GPG, age, the password-manager command-line client,
+and the VPN client.
 
-Manual checkpoint: add these public keys to the relevant accounts, such as
-forges and web servers:
-
-```text
-~/.ssh/${USER}_ed25519_personal.pub
-~/.ssh/${USER}_ed25519_professional.pub
-```
+Manual checkpoint: enroll fingerprints and extract any relevant SSH/age identities
+from hardware keys. Reboot.
 
 ### 4.5 Install the desktop environment
 
@@ -348,13 +342,14 @@ Manual checkpoint: reboot after this step so that the greeter, user services,
 shell configuration, and desktop stack are started cleanly. Login with your password
 to initialize the keyring.
 
-Afterward, install additional graphical applications/extensions for the desktop environment:
+After reboot, install additional graphical applications/extensions for the
+desktop environment:
 
 ```sh
 run_setup de-ext
 ```
 
-This particularly installs Nautilus (graphical file management), Flatpak (with
+This installs Nautilus (graphical file management), Flatpak (with
 Flathub), Zen browser, Signal, and Zotero.
 
 Manual checkpoint: Open Zen browser and log in to Proton, checking "Keep me
@@ -392,8 +387,8 @@ proton-drive auth login
 
 Launch Proton Bridge, log in, and [enable "Split
 addresses"](https://proton.me/support/difference-combined-addresses-mode-split-addresses-mode).
-Then, export the Bridge-local TLS certificate (Settings), and store it at
-`$XDG_CONFIG_HOME/proton/bridge/cert.pem`.
+Then, export the Bridge-local TLS certificate (from Advanced Settings), and store the certificate at
+`$XDG_CONFIG_HOME/proton/bridge/cert.pem` (delete the private key).
 
 Store the Bridge-local IMAP/SMTP credentials in the keyring, once for each Proton account (this is for retrieval through `mbsync`):
 
@@ -412,14 +407,14 @@ And once per email address associated with a Proton account (this is for sending
 # Enter password reported in Bridge when asked
 secret-tool store \
     --label='Proton Bridge IMAP (example@proton.me)' \
-    service proton-bridge
+    service proton-bridge \
     host 127.0.0.1 \
     port 1143 \
     user example@proton.me
 
 secret-tool store \
     --label='Proton Bridge SMTP (example@proton.me)' \
-    service proton-bridge
+    service proton-bridge \
     host 127.0.0.1 \
     port 1025 \
     user example@proton.me
