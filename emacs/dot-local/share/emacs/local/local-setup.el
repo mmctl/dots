@@ -20,7 +20,7 @@
   "Setup GUI frame."
   ;; Faces
   ;; Default/Fixed-pitch
-  (when-let* ((ffl (font-family-list)))
+  (when-let* ((ffl (font-family-list frame)))
     (cond
      ((member "Iosevka" ffl)
       (set-face-attribute 'default frame :family "Iosevka" :height 140 :weight 'medium)
@@ -63,21 +63,20 @@
       (local-setup-gui-frame frame)
     (local-setup-tty-frame frame)))
 
-
 (defun local-setup-frame-after (&optional frame)
   "Setup any (TTY or GUI) frame. Assumes global/default setup.")
 
 ;; Client
 (defun local-setup-client-frame ()
-  "Setup inital client frame created by daemon/server. Assumes no global/default
+  "Setup initial client frame created by daemon/server. Assumes no global/default
 setup."
-  (local-setup-frame (selected-frame))
-  ;; Fixes bug of server not properly applying custom themes for first frame
-  (local-reenable-custom-themes))
+  (local-setup-frame (selected-frame)))
 
 (defun local-setup-client-frame-after ()
-  "Setup inital client frame created by daemon/server. Assumes global/default
-  setup.")
+  "Setup initial client frame created by daemon/server. Assumes global/default
+  setup."
+  ;; Fixes bug of server not properly applying custom themes for first frame
+  (local-reenable-custom-themes))
 
 ;; Global/Default
 (defun local-setup-global-frame ()

@@ -283,8 +283,8 @@
 
 (if (daemonp)
     (progn
-      (add-hook 'server-after-make-frame-hook #'local-setup-client-frame)
-      (add-hook 'after-make-frame-functions #'local-setup-frame))
+      (add-hook 'after-make-frame-functions #'local-setup-frame)
+      (add-hook 'server-after-make-frame-hook #'local-setup-client-frame-after))
   (add-hook 'after-init-hook #'local-setup-global-frame))
 
 ;; Modes
