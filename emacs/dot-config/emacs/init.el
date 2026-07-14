@@ -1781,8 +1781,8 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  (setopt forge-owned-accounts '(("MM45" . nil)
-                                 ("mmctl" . nil)))
+  (setopt forge-owned-accounts '(("mmctl" . nil)
+                                 ("MM45" . nil)))
 
   (defconst FORGE_DIR (file-name-as-directory
                        (expand-file-name "forge/" EMACS_DATA_DIR))
@@ -2318,7 +2318,6 @@ that allows to include other templates by their name."
   (setopt mu4e-change-filenames-when-moving t)
 
   (setopt mu4e-main-hide-personal-addresses t) ; Hide personal addresses because we use many
-  (setopt mu4e-use-fancy-chars t)
 
   (setopt mu4e-compose-format-flowed t)
 
@@ -2329,7 +2328,33 @@ that allows to include other templates by their name."
   ;; Consider following if indexing is slow
   ;; (setopt mu4e-index-cleanup nil)
   ;; (setopt mu4e-index-lazy-check nil)
-  (setq-default mu4e-headers-attach-mark '("a" . "∀"))
+
+  (setopt mu4e-headers-fields
+          '((:human-date    .   16)
+            (:flags         .   12)
+            (:mailing-list  .   12)
+            (:from          .   24)
+            (:subject       .   nil)))
+
+  (with-eval-after-load 'nerd-icons
+    (let ((mark (lambda (ascii icon width)
+                  (a-set-character-width icon width)
+                  (cons ascii icon))))
+      (setq-default mu4e-headers-draft-mark (funcall mark "D" (nerd-icons-mdicon "nf-md-pencil") 2)
+                    mu4e-headers-flagged-mark (funcall mark "F" (nerd-icons-mdicon "nf-md-flag") 2)
+                    mu4e-headers-new-mark (funcall mark "N" (nerd-icons-mdicon "nf-md-email_plus") 2)
+                    mu4e-headers-passed-mark (funcall mark "P" (nerd-icons-mdicon "nf-md-forward") 2)
+                    mu4e-headers-replied-mark (funcall mark "R" (nerd-icons-mdicon "nf-md-reply") 2)
+                    mu4e-headers-seen-mark (funcall mark "S" (nerd-icons-mdicon "nf-md-email_open") 2)
+                    mu4e-headers-trashed-mark (funcall mark "T" (nerd-icons-mdicon "nf-md-delete") 2)
+                    mu4e-headers-attach-mark (funcall mark "a" (nerd-icons-mdicon "nf-md-paperclip") 2)
+                    mu4e-headers-encrypted-mark (funcall mark "x" (nerd-icons-mdicon "nf-md-lock") 2)
+                    mu4e-headers-signed-mark (funcall mark "s" (nerd-icons-mdicon "nf-md-shield_check") 2)
+                    mu4e-headers-unread-mark (funcall mark "u" (nerd-icons-mdicon "nf-md-email") 2)
+                    mu4e-headers-list-mark (funcall mark "l" (nerd-icons-mdicon "nf-md-format_list_bulleted") 2)
+                    mu4e-headers-personal-mark (funcall mark "p" (nerd-icons-mdicon "nf-md-account") 2)
+                    mu4e-headers-calendar-mark (funcall mark "c" (nerd-icons-mdicon "nf-md-calendar") 2)))
+    (setopt mu4e-use-fancy-chars t))
 
   :config
   (require 'local-mu4e)
@@ -2401,7 +2426,7 @@ that allows to include other templates by their name."
   (defconst ORG_CALENDAR_FILE (expand-file-name "calendar.org" ORG_DIR)
     "Default file for calendar events created with org.")
   (unless (file-regular-p ORG_CALENDAR_FILE)
-    (let ((org-base-calendar (expand-file-name "org/base/calendar.org" EMACS_DATA_DIR)))
+    (let ((org-base-calendar (expand-file-name "templates/org/calendar.org" EMACS_DATA_DIR)))
       (if (file-regular-p org-base-calendar)
           (copy-file org-base-calendar ORG_CALENDAR_FILE)
         (make-empty-file ORG_CALENDAR_FILE t))))
@@ -2410,7 +2435,7 @@ that allows to include other templates by their name."
   (defconst ORG_NOTES_FILE (expand-file-name "notes.org" ORG_DIR)
     "Default file for notes (org).")
   (unless (file-regular-p ORG_NOTES_FILE)
-    (let ((org-base-notes (expand-file-name "org/base/notes.org" EMACS_DATA_DIR)))
+    (let ((org-base-notes (expand-file-name "templates/org/notes.org" EMACS_DATA_DIR)))
       (if (file-regular-p org-base-notes)
           (copy-file org-base-notes ORG_NOTES_FILE)
         (make-empty-file ORG_NOTES_FILE t))))
@@ -2419,7 +2444,7 @@ that allows to include other templates by their name."
   (defconst ORG_TODOS_FILE (expand-file-name "todos.org" ORG_DIR)
     "Default file for storing todos (org).")
   (unless (file-regular-p ORG_TODOS_FILE)
-    (let ((org-base-todos (expand-file-name "org/base/todos.org" EMACS_DATA_DIR)))
+    (let ((org-base-todos (expand-file-name "templates/org/todos.org" EMACS_DATA_DIR)))
       (if (file-regular-p org-base-todos)
           (copy-file org-base-todos ORG_TODOS_FILE)
         (make-empty-file ORG_TODOS_FILE t))))
@@ -2428,7 +2453,7 @@ that allows to include other templates by their name."
   (defconst ORG_MEETINGS_FILE (expand-file-name "meetings.org" ORG_DIR)
     "Default file for meetings (org).")
   (unless (file-regular-p ORG_MEETINGS_FILE)
-    (let ((org-base-meetings (expand-file-name "org/base/meetings.org" EMACS_DATA_DIR)))
+    (let ((org-base-meetings (expand-file-name "templates/org/meetings.org" EMACS_DATA_DIR)))
       (if (file-regular-p org-base-meetings)
           (copy-file org-base-meetings ORG_MEETINGS_FILE)
         (make-empty-file ORG_MEETINGS_FILE t))))
@@ -2438,7 +2463,7 @@ that allows to include other templates by their name."
   (defconst ORG_PROJECTS_FILE (expand-file-name "projects.org" ORG_DIR)
     "Default file for projects (org).")
   (unless (file-regular-p ORG_PROJECTS_FILE)
-    (let ((org-base-projects (expand-file-name "org/base/projects.org" EMACS_DATA_DIR)))
+    (let ((org-base-projects (expand-file-name "templates/org/projects.org" EMACS_DATA_DIR)))
       (if (file-regular-p org-base-projects)
           (copy-file org-base-projects ORG_PROJECTS_FILE)
         (make-empty-file ORG_PROJECTS_FILE t))))
@@ -2447,7 +2472,7 @@ that allows to include other templates by their name."
   (defconst ORG_AREAS_FILE (expand-file-name "areas.org" ORG_DIR)
     "Default file for areas (org).")
   (unless (file-regular-p ORG_AREAS_FILE)
-    (let ((org-base-areas (expand-file-name "org/base/areas.org" EMACS_DATA_DIR)))
+    (let ((org-base-areas (expand-file-name "templates/org/areas.org" EMACS_DATA_DIR)))
       (if (file-regular-p org-base-areas)
           (copy-file org-base-areas ORG_AREAS_FILE)
         (make-empty-file ORG_AREAS_FILE t))))

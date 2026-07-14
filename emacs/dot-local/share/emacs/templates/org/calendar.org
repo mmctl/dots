@@ -1,0 +1,8 @@
+* Events                                                     :event:rftarget:
+:PROPERTIES:
+:CATEGORY: Events
+:END:
+* Appointments                                               :event:rftarget:
+:PROPERTIES:
+:CATEGORY: Appointments
+:END:

@@ -52,6 +52,15 @@ determined by dividing the frame height by `MAX_HEIGHT_DIV_WINDOW_BT_SIDE'
                         (floor (frame-height) MAX_HEIGHT_DIV_WINDOW_BT_SIDE)
                         (floor (frame-height) MIN_HEIGHT_DIV_WINDOW_BT_SIDE)))
 
+;; Rendering/Fonts
+;;;###autoload
+(defun a-set-character-width (string width)
+  "Treat every character in STRING as occupying WIDTH columns."
+  (mapc (lambda (char)
+          (set-char-table-range char-width-table char width))
+        string))
+
+
 ;;; Help
 (defun a-which-key-repeated-prefix-help-command ()
   "Prefix help command that makes the current prefix map
