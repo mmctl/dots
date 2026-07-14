@@ -388,7 +388,8 @@ proton-drive auth login
 Launch Proton Bridge, log in, and [enable "Split
 addresses"](https://proton.me/support/difference-combined-addresses-mode-split-addresses-mode).
 Then, export the Bridge-local TLS certificate (from Advanced Settings), and store the certificate at
-`$XDG_CONFIG_HOME/proton/bridge/cert.pem` (delete the private key).
+`$XDG_CONFIG_HOME/proton/bridge/cert.pem` (delete the private key). Preferably make the `bridge`
+directory user accessible only: `install -m 700-d $XDG_CONFIG_HOME/proton/bridge`.
 
 Store the Bridge-local IMAP/SMTP credentials in the keyring, once for each Proton account (this is for retrieval through `mbsync`):
 

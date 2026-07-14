@@ -174,7 +174,7 @@
         create-lockfiles t)
 
 ;; Authentication
-(setopt auth-sources `(,AUTHINFO_FILE default))
+(setopt auth-sources `(default ,AUTHINFO_FILE))
 
 ;; Shell
 (setopt eshell-directory-name (file-name-as-directory
@@ -2329,7 +2329,6 @@ that allows to include other templates by their name."
   ;; Consider following if indexing is slow
   ;; (setopt mu4e-index-cleanup nil)
   ;; (setopt mu4e-index-lazy-check nil)
-
   (setq-default mu4e-headers-attach-mark '("a" . "∀"))
 
   :config
@@ -2343,12 +2342,22 @@ that allows to include other templates by their name."
           mu4e-trash-folder #'a-determine-mu4e-trash-folder
           mu4e-refile-folder #'a-determine-mu4e-refile-folder)
 
-  (setopt mu4e-contexts
-          (list PERSONAL_MU4E_CONTEXT WORK_MU4E_CONTEXT))
+  (setopt mu4e-contexts (list
+                         PERSONAL_MU4E_CONTEXT
+                         RESEARCH_MU4E_CONTEXT
+                         ;; BUSINESS_MU4E_CONTEXT
+                         ))
 
   (setopt mu4e-context-policy 'ask-if-none)
   (setopt mu4e-compose-context-policy nil)
   (setopt message-send-mail-function #'an-smtpmail-configure-and-send-it)
+
+  (let ((bridge-cert (if-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                         (expand-file-name "proton/bridge/cert.pem" xdgcnf)
+                       (expand-file-name "~/.config/proton/bridge/cert.pem"))))
+    (when (file-regular-p bridge-cert)
+      (with-eval-after-load 'gnutls
+        (add-to-list 'gnutls-trustfiles bridge-cert))))
 
   (advice-add #'mu4e--draft :around #'an-around-advice-draft-configure))
 
@@ -2363,7 +2372,7 @@ that allows to include other templates by their name."
   (defconst ORG_DIR (file-name-as-directory
                      (if (getenv "XDG_DATA_HOME")
                          (expand-file-name "org/" (getenv "XDG_DATA_HOME"))
-                       "~/org/"))
+                       (expand-file-name "~/org/")))
     "Directory used as default location for org files.")
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
@@ -2392,38 +2401,56 @@ that allows to include other templates by their name."
   (defconst ORG_CALENDAR_FILE (expand-file-name "calendar.org" ORG_DIR)
     "Default file for calendar events created with org.")
   (unless (file-regular-p ORG_CALENDAR_FILE)
-    (make-empty-file ORG_CALENDAR_FILE t))
+    (let ((org-base-calendar (expand-file-name "org/base/calendar.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-calendar)
+          (copy-file org-base-calendar ORG_CALENDAR_FILE)
+        (make-empty-file ORG_CALENDAR_FILE t))))
 
   ;; Create and store org (default) notes file
   (defconst ORG_NOTES_FILE (expand-file-name "notes.org" ORG_DIR)
     "Default file for notes (org).")
   (unless (file-regular-p ORG_NOTES_FILE)
-    (make-empty-file ORG_NOTES_FILE t))
+    (let ((org-base-notes (expand-file-name "org/base/notes.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-notes)
+          (copy-file org-base-notes ORG_NOTES_FILE)
+        (make-empty-file ORG_NOTES_FILE t))))
 
   ;; Create and store org (default) todos file
   (defconst ORG_TODOS_FILE (expand-file-name "todos.org" ORG_DIR)
     "Default file for storing todos (org).")
   (unless (file-regular-p ORG_TODOS_FILE)
-    (make-empty-file ORG_TODOS_FILE t))
+    (let ((org-base-todos (expand-file-name "org/base/todos.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-todos)
+          (copy-file org-base-todos ORG_TODOS_FILE)
+        (make-empty-file ORG_TODOS_FILE t))))
 
   ;; Create and store org (default) meetings file
   (defconst ORG_MEETINGS_FILE (expand-file-name "meetings.org" ORG_DIR)
     "Default file for meetings (org).")
   (unless (file-regular-p ORG_MEETINGS_FILE)
-    (make-empty-file ORG_MEETINGS_FILE t))
+    (let ((org-base-meetings (expand-file-name "org/base/meetings.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-meetings)
+          (copy-file org-base-meetings ORG_MEETINGS_FILE)
+        (make-empty-file ORG_MEETINGS_FILE t))))
 
   ;; PARA
   ;; Create and store org (default) projects file
   (defconst ORG_PROJECTS_FILE (expand-file-name "projects.org" ORG_DIR)
     "Default file for projects (org).")
   (unless (file-regular-p ORG_PROJECTS_FILE)
-    (make-empty-file ORG_PROJECTS_FILE t))
+    (let ((org-base-projects (expand-file-name "org/base/projects.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-projects)
+          (copy-file org-base-projects ORG_PROJECTS_FILE)
+        (make-empty-file ORG_PROJECTS_FILE t))))
 
   ;; Create and store org (default) projects file
   (defconst ORG_AREAS_FILE (expand-file-name "areas.org" ORG_DIR)
     "Default file for areas (org).")
   (unless (file-regular-p ORG_AREAS_FILE)
-    (make-empty-file ORG_AREAS_FILE t))
+    (let ((org-base-areas (expand-file-name "org/base/areas.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-areas)
+          (copy-file org-base-areas ORG_AREAS_FILE)
+        (make-empty-file ORG_AREAS_FILE t))))
 
   ;; Auxiliary
   ;; Create and store org (default) ID file
@@ -2435,7 +2462,7 @@ that allows to include other templates by their name."
   (setopt org-default-notes-file ORG_NOTES_FILE)
 
   (setopt org-return-follows-link t)
-  (setopt org-support-shift-select t)
+  (setopt org-support-shift-select nil)
 
   (setopt org-startup-folded 'content
           org-startup-indented t)
@@ -2484,16 +2511,19 @@ that allows to include other templates by their name."
           '(("n" "Note"
              entry (file+headline ORG_NOTES_FILE "General Notes")
              "* %?\n:PROPERTIES:\n:Created: %U\n:END:"
-             :empty-lines 0)
+             :empty-lines 0
+             :kill-buffer t)
             ("t" "Todo"
              entry (file+headline ORG_TODOS_FILE "General Tasks")
              "* TODO [#B] %?\n:PROPERTIES:\n:Created: %U\n:END:"
-             :empty-lines 0)
+             :empty-lines 0
+             :kill-buffer t)
             ("e" "Calendar event"
              entry (file+headline ORG_CALENDAR_FILE "Events")
              "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i :noshow:"
              :empty-lines-before 0
-             :empty-lines-after 1)
+             :empty-lines-after 1
+             :kill-buffer t)
             ("m" "Meeting"
              entry (file+olp+datetree ORG_MEETINGS_FILE)
              "* %? :meeting:%^g\n:PROPERTIES:\n:Created: %U\n:END:\n** Notes:%i :noshow:\n** Action Items: :noshow:\n*** TODO [#B] "
@@ -2501,7 +2531,17 @@ that allows to include other templates by their name."
              :clock-in t
              :clock-resume t
              :empty-lines-before 0
-             :empty-lines-after 1)))
+             :empty-lines-after 1)
+            ("A" "Area"
+             entry (file ORG_AREAS_FILE)
+             "* %? %^g\n** Tasks :rftarget:\n** Notes :rftarget:"
+             :empty-lines 0
+             :kill-buffer t)
+            ("P" "Project"
+             entry (file ORG_PROJECTS_FILE)
+             "* %? %^g\n** Tasks :rftarget:\n** Notes :rftarget:"
+             :empty-lines 0
+             :kill-buffer t)))
 
   (setopt org-read-date-popup-calendar t
           org-read-date-display-live t)

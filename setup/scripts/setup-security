@@ -48,9 +48,34 @@ setup_log_info "Added admin user ($ADMIN_USER) to wheel group."
 setup_log_info "Checking availability fingerprint authentication..."
 if sudo pam-config --query --fprintd >/dev/null 2>&1; then
     setup_log_info "Fingerprint authentication available."
-    setup_log_info "Enabling fingerprint for authentication..."
-    sudo pam-config --add --fprintd
-    setup_log_info "Enabled fingerprint for authentication."
+    # setup_log_info "Enabling fingerprint for authentication..."
+    # sudo pam-config --add --fprintd
+    # setup_log_info "Enabled fingerprint for authentication."
+    setup_log_info "Enabling fingerprint for non-login authentication (sudo)..."
+
+    tmp_common="$(mktemp)"
+    tmp_sudo="$(mktemp)"
+    trap 'rm -f "$tmp_common" "$tmp_sudo"' EXIT
+
+    cat > "$tmp_common" <<'EOF'
+#%PAM-1.0
+auth sufficient pam_fprintd.so
+auth include common-auth
+EOF
+
+    cat > "$tmp_sudo" <<'EOF'
+#%PAM-1.0
+auth     include        common-auth-nonlogin
+account  include        common-account
+password include        common-password
+session  optional       pam_keyinit.so revoke
+session  include        common-session-nonlogin
+EOF
+
+    sudo install -o root -g root -m 0644 "$tmp_common" /etc/pam.d/common-auth-nonlogin
+    sudo install -o root -g root -m 0644 "$tmp_sudo" /etc/pam.d/sudo
+
+    setup_log_info "Enabled fingerprint for non-login authentication (sudo)."
 else
     setup_log_info "Fingerprint authentication not available."
 fi

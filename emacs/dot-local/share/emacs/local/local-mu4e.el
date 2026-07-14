@@ -16,6 +16,14 @@
              :sent "/Sent"
              :drafts "/Drafts"
              :trash "/Trash"
+             :refile ask)
+    (:domain "protonmail-bridge"
+             :smtpserver "127.0.0.1"
+             :smtpport 1025
+             :smtptype starttls
+             :sent "/Sent"
+             :drafts "/Drafts"
+             :trash "/Trash"
              :refile ask))
   "Default configuration for addresses per domain.")
 
@@ -37,9 +45,11 @@ OVERRIDES."
 ;; Email address configurations
 (defconst PERSONAL_ADDRESS_CONFIGS
   (list
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "personal@mmeijers.com" "/personal-mmeijers")
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "kernel@mmeijers.com" "/kernel-mmeijers")
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "kem@mmeijers.com" "/kem-mmeijers"))
+   (an-address-configuration-with-domain-defaults "protonmail-bridge" "matthiasmeijers@proton.me" "/matthiasmeijers-proton")
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "personal@mmeijers.com" "/personal-mmeijers")
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "kernel@mmeijers.com" "/kernel-mmeijers")
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "kem@mmeijers.com" "/kem-mmeijers")
+   )
   "List of (property lists representing) personal email addresses and
 corresponding configuration.")
 
@@ -51,21 +61,38 @@ corresponding configuration.")
   (mapcar (lambda (adrspl) (plist-get adrspl :maildir)) PERSONAL_ADDRESS_CONFIGS)
   "List of maildir roots corresponding to personal email addresses.")
 
-(defconst WORK_ADDRESS_CONFIGS
+(defconst RESEARCH_ADDRESS_CONFIGS
   (list
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "research@mmeijers.com" "/research-mmeijers")
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "contracting@mmeijers.com" "/contracting-mmeijers")
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "teaching@mmeijers.com" "/teaching-mmeijers"))
-  "List of (property lists representing) work email addresses and
+   (an-address-configuration-with-domain-defaults "protonmail-bridge" "mmeijersres@protonmail.com" "/mmeijersres-protonmail")
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "research@mmeijers.com" "/research-mmeijers")
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "teaching@mmeijers.com" "/teaching-mmeijers")
+   )
+  "List of (property lists representing) research email addresses and
 corresponding configuration.")
 
-(defconst WORK_ADDRESSES
-  (mapcar (lambda (adrspl) (plist-get adrspl :address)) WORK_ADDRESS_CONFIGS)
-  "List of work email addresses.")
+(defconst RESEARCH_ADDRESSES
+  (mapcar (lambda (adrspl) (plist-get adrspl :address)) RESEARCH_ADDRESS_CONFIGS)
+  "List of research email addresses.")
 
-(defconst WORK_MAILROOTS
-  (mapcar (lambda (adrspl) (plist-get adrspl :maildir)) WORK_ADDRESS_CONFIGS)
-  "List of maildir roots corresponding to work email addresses.")
+(defconst RESEARCH_MAILROOTS
+  (mapcar (lambda (adrspl) (plist-get adrspl :maildir)) RESEARCH_ADDRESS_CONFIGS)
+  "List of maildir roots corresponding to research email addresses.")
+
+(defconst BUSINESS_ADDRESS_CONFIGS
+  (list
+   (an-address-configuration-with-domain-defaults "protonmail-bridge" "mmeijersbus@protonmail.com" "/mmeijersbus-protonmail")
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "contracting@mmeijers.com" "/contracting-mmeijers")
+   )
+  "List of (property lists representing) business email addresses and
+corresponding configuration.")
+
+(defconst BUSINESS_ADDRESSES
+  (mapcar (lambda (adrspl) (plist-get adrspl :address)) BUSINESS_ADDRESS_CONFIGS)
+  "List of business email addresses.")
+
+(defconst BUSINESS_MAILROOTS
+  (mapcar (lambda (adrspl) (plist-get adrspl :maildir)) BUSINESS_ADDRESS_CONFIGS)
+  "List of maildir roots corresponding to business email addresses.")
 
 (defconst MISCELLANEOUS_ADDRESS_CONFIGS
   (list
@@ -83,16 +110,19 @@ corresponding configuration.")
   "List of maildir roots corresponding to miscellaneous email addresses.")
 
 (defconst ALL_ADDRESS_CONFIGS
-  (append PERSONAL_ADDRESS_CONFIGS WORK_ADDRESS_CONFIGS MISCELLANEOUS_ADDRESS_CONFIGS)
+  (append PERSONAL_ADDRESS_CONFIGS RESEARCH_ADDRESS_CONFIGS
+          BUSINESS_ADDRESS_CONFIGS MISCELLANEOUS_ADDRESS_CONFIGS)
   "List of (property lists representing) all email addresses and
 corresponding configuration.")
 
 (defconst ALL_ADDRESSES
-  (append PERSONAL_ADDRESSES WORK_ADDRESSES MISCELLANEOUS_ADDRESSES)
+  (append PERSONAL_ADDRESSES RESEARCH_ADDRESSES
+          BUSINESS_ADDRESSES MISCELLANEOUS_ADDRESSES)
   "List of all email addresses.")
 
 (defconst ALL_MAILROOTS
-  (append PERSONAL_MAILROOTS WORK_MAILROOTS MISCELLANEOUS_MAILROOTS)
+  (append PERSONAL_MAILROOTS RESEARCH_MAILROOTS
+          BUSINESS_MAILROOTS MISCELLANEOUS_MAILROOTS)
   "List of all maildir roots corresponding to email addresses.")
 
 (defconst ALL_ADDRESS_CONFIGS_ADRS_ASSOC
@@ -156,7 +186,7 @@ back to all addresses if no context is current."
          (ctxname (and ctx (mu4e-context-name ctx))))
     (pcase ctxname
       ("Personal" PERSONAL_ADDRESSES)
-      ("Work" WORK_ADDRESSES)
+      ("Research" RESEARCH_ADDRESSES)
       ("Miscellaneous" MISCELLANEOUS_ADDRESSES)
       (_ ALL_ADDRESSES))))
 
@@ -275,13 +305,15 @@ Meant as replacement for `smtpmail-send-it', e.g., in
                    (member (a-mailroot-from-mu4e-message msg)
                            PERSONAL_MAILROOTS)))
    :vars
-   `((mu4e-maildir-shortcuts . ((:maildir "/personal-mmeijers/INBOX" :key ?p)
+   `((mu4e-maildir-shortcuts . ((:maildir "/matthiasmeijers-proton/INBOX" :key ?m)
+                                (:maildir "/personal-mmeijers/INBOX" :key ?p)
                                 (:maildir "/kernel-mmeijers/INBOX" :key ?k)
                                 (:maildir "/kem-mmeijers/INBOX" :key ?r)))
      (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query PERSONAL_MAILROOTS))
                         (:name "All unread" :key ?u :query ,(concat "("
                                                                     (a-mu4e-inbox-roots-query PERSONAL_MAILROOTS)
                                                                     ") AND flag:unread"))
+                        (:name "Main unread" :key ?m :query "maildir:/matthiasmeijers-proton/INBOX AND flag:unread")
                         (:name "Personal unread" :key ?p :query "maildir:/personal-mmeijers/INBOX AND flag:unread")
                         (:name "Kernel unread" :key ?k :query "maildir:/kernel-mmeijers/INBOX AND flag:unread")
                         (:name "KeM unread" :key ?r :query "maildir:/kem-mmeijers/INBOX AND flag:unread")))
@@ -291,31 +323,55 @@ Meant as replacement for `smtpmail-send-it', e.g., in
                                        " personal"))))
   "Mu4e context for personal addresses.")
 
-(defconst WORK_MU4E_CONTEXT
+(defconst RESEARCH_MU4E_CONTEXT
   (make-mu4e-context
-   :name "Work"
-   :enter-func (lambda () (mu4e-message "Entering context: Work"))
-   :leave-func (lambda () (mu4e-message "Leaving context: Work"))
+   :name "Research"
+   :enter-func (lambda () (mu4e-message "Entering context: Research"))
+   :leave-func (lambda () (mu4e-message "Leaving context: Research"))
    :match-func (lambda (msg)
                  (when msg
                    (member (a-mailroot-from-mu4e-message msg)
-                           PERSONAL_MAILROOTS)))
+                           RESEARCH_MAILROOTS)))
    :vars
-   `((mu4e-maildir-shortcuts . ((:maildir "/research-mmeijers/INBOX" :key ?r)
-                                (:maildir "/contracting-mmeijers/INBOX" :key ?c)
+   `((mu4e-maildir-shortcuts . ((:maildir "/mmeijersres-protonmail/INBOX" :key ?m)
+                                (:maildir "/research-mmeijers/INBOX" :key ?r)
                                 (:maildir "/teaching-mmeijers/INBOX" :key ?t)))
-     (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query WORK_MAILROOTS))
+     (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query RESEARCH_MAILROOTS))
                         (:name "All unread" :key ?u :query ,(concat "("
-                                                                    (a-mu4e-inbox-roots-query WORK_MAILROOTS)
+                                                                    (a-mu4e-inbox-roots-query RESEARCH_MAILROOTS)
                                                                     ") AND flag:unread"))
+                        (:name "Main unread" :key ?m :query "maildir:/mmeijersres-protonmail/INBOX AND flag:unread")
                         (:name "Research unread" :key ?r :query "maildir:/research-mmeijers/INBOX AND flag:unread")
-                        (:name "Contracting unread" :key ?c :query "maildir:/contracting-mmeijers/INBOX AND flag:unread")
-                        (:name "Teaching unread" :key ?t :query "maildir:/reaching-mmeijers/INBOX AND flag:unread")))
+                        (:name "Teaching unread" :key ?t :query "maildir:/teaching-mmeijers/INBOX AND flag:unread")))
      (mu4e-get-mail-command . ,(concat "mbsync"
                                        (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
                                          (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
-                                       " work"))))
-  "Mu4e context for work addresses.")
+                                       " research"))))
+  "Mu4e context for research addresses.")
+
+(defconst BUSINESS_MU4E_CONTEXT
+  (make-mu4e-context
+   :name "Research"
+   :enter-func (lambda () (mu4e-message "Entering context: Business"))
+   :leave-func (lambda () (mu4e-message "Leaving context: Business"))
+   :match-func (lambda (msg)
+                 (when msg
+                   (member (a-mailroot-from-mu4e-message msg)
+                           BUSINESS_MAILROOTS)))
+   :vars
+   `((mu4e-maildir-shortcuts . ((:maildir "/mmeijersbus-protonmail/INBOX" :key ?m)
+                                (:maildir "/contracting-mmeijers/INBOX" :key ?c)))
+     (mu4e-bookmarks . ((:name "All" :key ?a :query ,(a-mu4e-inbox-roots-query RESEARCH_MAILROOTS))
+                        (:name "All unread" :key ?u :query ,(concat "("
+                                                                    (a-mu4e-inbox-roots-query RESEARCH_MAILROOTS)
+                                                                    ") AND flag:unread"))
+                        (:name "Main unread" :key ?m :query "maildir:/mmeijersbus-protonmail/INBOX AND flag:unread")
+                        (:name "Contracting unread" :key ?c :query "maildir:/contracting-mmeijers/INBOX AND flag:unread")))
+     (mu4e-get-mail-command . ,(concat "mbsync"
+                                       (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                                         (concat " -c " (shell-quote-argument (expand-file-name "isyncrc" xdgcnf))))
+                                       " business"))))
+  "Mu4e context for business addresses.")
 
 (provide 'local-mu4e)
 ;;; local-mu4e.el ends here
