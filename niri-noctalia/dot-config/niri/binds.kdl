@@ -107,7 +107,8 @@ binds {
     //// Programs
     Mod+T repeat=false hotkey-overlay-title="Open Terminal (Kitty)" { spawn "kitty"; }
     Mod+B repeat=false hotkey-overlay-title="Open Browser (Zen)" { spawn "flatpak" "run" "app.zen_browser.zen" "-P" "mm"; }
-    Mod+E repeat=false hotkey-overlay-title="Open Editor (Emacs)" { spawn "emacsclient-x11" "-c" "-n" "--alternate-editor="; }
+    // Mod+E repeat=false hotkey-overlay-title="Open Editor (Emacs)" { spawn "emacsclient-x11" "-c" "-n" "--alternate-editor="; }
+    Mod+E repeat=false hotkey-overlay-title="Open Editor (Emacs)" { spawn "emacsclient-x11" "-c" "-n"; }
     Mod+D repeat=false hotkey-overlay-title="Open File Manager (Nautilus)" { spawn "nautilus"; }
     Mod+Z repeat=false hotkey-overlay-title="Open Zotero" { spawn "flatpak" "run" "org.zotero.Zotero"; }
     Mod+Comma repeat=false hotkey-overlay-title="Open Signal" { spawn "flatpak" "run" "org.signal.Signal"; }

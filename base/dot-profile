@@ -78,10 +78,12 @@ export ELAN_HOME="$XDG_DATA_HOME/elan"
 export PAGER='less'
 export MANPAGER='less'
 export SUDO_EDITOR='nano'
-export EDITOR='emacsclient -t --alternate-editor='
-export VISUAL='emacsclient -c --alternate-editor='
-export ALTERNATE_EDITOR='' # This will spawn an emacs daemon upon running emacsclient (if no daemon is running yet)
-
+# Don't use empty alternate-editor when daemon is managed by systemd 
+# export EDITOR='emacsclient -t --alternate-editor='
+# export VISUAL='emacsclient -c --alternate-editor='
+# export ALTERNATE_EDITOR='' # This will spawn an emacs daemon upon running emacsclient (if no daemon is running yet)
+export EDITOR='emacsclient -t'
+export VISUAL='emacsclient -c'
 
 ## Options
 export LESS='-g -i -J -N -Q -R -W --incsearch --tabs=4 --line-num-width=5 --mouse --use-color --wheel-lines=3'

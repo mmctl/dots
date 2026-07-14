@@ -284,7 +284,7 @@
 (if (daemonp)
     (progn
       (add-hook 'after-make-frame-functions #'local-setup-frame)
-      (add-hook 'server-after-make-frame-hook #'local-setup-client-frame-after))
+      (add-hook 'server-after-make-frame-hook #'local-setup-client-frame))
   (add-hook 'after-init-hook #'local-setup-global-frame))
 
 ;; Modes
@@ -1421,9 +1421,10 @@ that allows to include other templates by their name."
   :init
   (setopt nerd-icons-font-family "Symbols Nerd Font Mono")
 
-  :config
-  (require 'local-nerd-icons)
-  (advice-add 'local-setup-gui-frame :after #'an-after-advice-local-setup-gui-nerd-icons-font))
+  ;; :config
+  ;; (require 'local-nerd-icons)
+  ;; (advice-add 'local-setup-gui-frame :after #'an-after-advice-local-setup-gui-nerd-icons-font)
+  )
 
 (use-package ultra-scroll
   :demand t

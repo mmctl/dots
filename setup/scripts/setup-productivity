@@ -201,6 +201,8 @@ cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service" <<EOF
 Description=Emacs text editor
 Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
 
+Conflicts=emacs-niri.service
+
 [Service]
 Type=notify
 ExecStart=$XDG_BIN_HOME/emacs --fg-daemon
@@ -221,14 +223,57 @@ Environment="MANPATH=$MANPATH"
 Environment="INFOPATH=$INFOPATH"
 Environment="MAILDIR=$MAILDIR"
 Environment="AUTHINFO_FILE=$AUTHINFO_FILE"
-Environment="SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+Environment="SSH_AUTH_SOCKET=$SSH_AUTH_SOCKET"
 
 [Install]
 WantedBy=default.target
 EOF
 
+cat > "$XDG_CONFIG_HOME/systemd/user/emacs-niri.service" <<EOF
+[Unit]
+Description=Emacs text editor (under graphical Niri session)
+Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
+
+Conflicts=emacs.service
+
+PartOf=graphical-session.target
+After=graphical-session.target
+Requisite=graphical-session.target
+
+
+[Service]
+Type=notify
+ExecStart=$XDG_BIN_HOME/emacs --fg-daemon
+
+# Emacs will exit with status 15 after having received SIGTERM, which
+# is the default "KillSignal" value systemd uses to stop services.
+SuccessExitStatus=15
+Restart=on-failure
+
+# Environment
+Environment="XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
+Environment="XDG_DATA_HOME=$XDG_DATA_HOME"
+Environment="XDG_CACHE_HOME=$XDG_CACHE_HOME"
+Environment="XDG_STATE_HOME=$XDG_STATE_HOME"
+Environment="XDG_BIN_HOME=$XDG_BIN_HOME"
+Environment="PATH=$PATH"
+Environment="MANPATH=$MANPATH"
+Environment="INFOPATH=$INFOPATH"
+Environment="MAILDIR=$MAILDIR"
+Environment="AUTHINFO_FILE=$AUTHINFO_FILE"
+Environment="SSH_AUTH_SOCKET=$SSH_AUTH_SOCKET"
+
+[Install]
+WantedBy=niri.service
+EOF
+
 systemctl --user daemon-reload
-systemctl --user enable emacs.service
+
+if systemctl --user cat niri.service >/dev/null 2>&1; then
+    systemctl --user enable emacs-niri.service
+else
+    systemctl --user enable emacs.service
+fi
 
 # setup_log_info "Installing/initializing Emacs packages..."
 
@@ -265,7 +310,7 @@ if command -v xdg-mime >/dev/null 2>&1; then
 [Desktop Entry]
 Name=Emacsclient
 Comment=Run Emacsclient, starting a server if none is currently running
-Exec=emacsclient --alternate-editor= --create-frame %F
+Exec=emacsclient --create-frame %F
 Icon=emacs
 Categories=Development;TextEditor;Utility;
 MimeType=text/plain;text/english;text/x-c;text/x-csrc;text/x-chdr;text/x-c++src;text/x-c++hdr;text/x-python;text/x-shellscript;text/x-tex;text/markdown;application/x-shellscript;application/json;application/xml;
@@ -279,7 +324,7 @@ EOF
 Name=Emacsclient Mail
 Comment=Compose mail with Emacsclient
 Categories=Network;Email;
-Exec=emacsclient --alternate-editor= --create-frame --eval '(message-mailto "%u")'
+Exec=emacsclient --create-frame --eval '(message-mailto "%u")'
 Icon=emacs
 MimeType=x-scheme-handler/mailto;
 NoDisplay=true

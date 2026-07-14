@@ -52,7 +52,10 @@
      ((member "Open Sans" ffl)
       (set-face-attribute 'variable-pitch frame :family "Open Sans" :height 1.0))
      (t
-      (set-face-attribute 'variable-pitch frame :family "Sans Serif" :height 1.0))))
+      (set-face-attribute 'variable-pitch frame :family "Sans Serif" :height 1.0)))
+    ;; Symbols
+    (when (featurep 'nerd-icons)
+      (nerd-icons-set-font nil frame)))
   ;; Miscellaneous
   (setopt display-line-numbers-width 3))
 
