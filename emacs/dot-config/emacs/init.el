@@ -1416,8 +1416,14 @@ that allows to include other templates by their name."
   (keymap-set minibuffer-local-map "M-A" #'marginalia-cycle))
 
 (use-package nerd-icons
+  :demand t
+
   :init
-  (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
+  (setopt nerd-icons-font-family "Symbols Nerd Font Mono")
+
+  :config
+  (require 'local-nerd-icons)
+  (advice-add 'local-setup-gui-frame :after #'an-after-advice-local-setup-gui-nerd-icons-font))
 
 (use-package ultra-scroll
   :demand t
@@ -1705,19 +1711,7 @@ that allows to include other templates by their name."
           ediff-split-window-function #'split-window-horizontally)
 
   :config
-  ;; Hooks
-  ;; Save/restore window configuration when starting/quitting ediff
-  (defvar an-ediff-preceding-window-configuration
-    "Window configuration before starting ediff.")
-  (defun an-ediff-store-window-configuration ()
-    "Stores window configuration in `an-ediff-preceding-window-configuration'"
-    (setq an-ediff-preceding-window-configuration (current-window-configuration)))
-  (defun an-ediff-restore-window-configuration ()
-    "Restores window configuration stored in
-`an-ediff-preceding-window-configuration', if any, and resets it."
-    (when an-ediff-preceding-window-configuration
-      (set-window-configuration an-ediff-preceding-window-configuration)
-      (setq an-ediff-preceding-window-configuration nil)))
+  (require 'local-ediff)
 
   (add-hook #'ediff-before-setup-hook #'an-ediff-store-window-configuration)
   (add-hook #'ediff-quit-hook #'an-ediff-restore-window-configuration 90))
@@ -2594,25 +2588,37 @@ that allows to include other templates by their name."
   (setopt org-agenda-compact-blocks t)
 
   (with-eval-after-load 'nerd-icons
+    (defun an-org-agenda-mdicon (name color-face)
+      "Return Material Design icon NAME for `org-agenda-category-icon-alist',
+with the color by COLOR-FACE."
+      (let ((icon (nerd-icons-mdicon name :face color-face)))
+        (add-face-text-property 0 (length icon)
+                                `(:family ,nerd-icons-font-family
+                                          :weight normal
+                                          :slant normal
+                                          :width normal)
+                                nil icon)
+        (list icon)))
+
     (setq-default org-agenda-category-icon-alist
-                  `(("Notes" ,(list (nerd-icons-faicon "nf-fa-note_sticky" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
-                    ("Tasks" ,(list (nerd-icons-faicon "nf-fa-tasks" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
-                    ("Events" ,(list (nerd-icons-faicon "nf-fa-calendar_day" :face 'nerd-icons-lblue :v-adjust 0.05)) nil nil :ascent center)
-                    ("Appointments" ,(list (nerd-icons-faicon "nf-fa-user_clock" :face 'nerd-icons-lred :v-adjust 0.05)) nil nil :ascent center)
-                    ("Meetings" ,(list (nerd-icons-faicon "nf-fa-users" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
-                    ("Projects" ,(list (nerd-icons-faicon "nf-fa-folder_open" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
-                    ("Study" ,(list (nerd-icons-faicon "nf-fa-book_open" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
-                    ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center)
-                    ("Development" ,(list (nerd-icons-faicon "nf-fa-code" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center)
-                    ("Areas" ,(list (nerd-icons-faicon "nf-fa-layer_group" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
-                    ("Administration" ,(list (nerd-icons-faicon "nf-fa-briefcase" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
-                    ("FriendsAndFamily" ,(list (nerd-icons-faicon "nf-fa-user_group" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center)
-                    ("Home" ,(list (nerd-icons-faicon "nf-fa-home" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
-                    ("Relationship" ,(list (nerd-icons-faicon "nf-fa-heart" :face 'nerd-icons-lred :v-adjust 0.05)) nil nil :ascent center)
-                    ("Tinker" ,(list (nerd-icons-faicon "nf-fa-screwdriver_wrench" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
-                    ("Leisure" ,(list (nerd-icons-faicon "nf-fa-play" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
-                    ("Travel" ,(list (nerd-icons-faicon "nf-fa-plane_departure" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
-                    ("Work" ,(list (nerd-icons-faicon "nf-fa-user_tie" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center))))
+                  `(("Notes" ,(an-org-agenda-mdicon "nf-md-note_text" 'nerd-icons-lyellow) nil nil :ascent center)
+                    ("Tasks" ,(an-org-agenda-mdicon "nf-md-format_list_checks" 'nerd-icons-lgreen) nil nil :ascent center)
+                    ("Events" ,(an-org-agenda-mdicon "nf-md-calendar_month" 'nerd-icons-lblue) nil nil :ascent center)
+                    ("Appointments" ,(an-org-agenda-mdicon "nf-md-calendar_clock" 'nerd-icons-lred) nil nil :ascent center)
+                    ("Meetings" ,(an-org-agenda-mdicon "nf-md-account_group" 'nerd-icons-lorange) nil nil :ascent center)
+                    ("Projects" ,(an-org-agenda-mdicon "nf-md-folder_open" 'nerd-icons-lmaroon) nil nil :ascent center)
+                    ("Study" ,(an-org-agenda-mdicon "nf-md-book_open_page_variant" 'nerd-icons-lcyan) nil nil :ascent center)
+                    ("Research" ,(an-org-agenda-mdicon "nf-md-flask" 'nerd-icons-lpurple) nil nil :ascent center)
+                    ("Development" ,(an-org-agenda-mdicon "nf-md-code_tags" 'nerd-icons-lpink) nil nil :ascent center)
+                    ("Areas" ,(an-org-agenda-mdicon "nf-md-layers_triple" 'nerd-icons-lyellow) nil nil :ascent center)
+                    ("Administration" ,(an-org-agenda-mdicon "nf-md-briefcase_account" 'nerd-icons-lmaroon) nil nil :ascent center)
+                    ("FriendsAndFamily" ,(an-org-agenda-mdicon "nf-md-account_heart" 'nerd-icons-lpink) nil nil :ascent center)
+                    ("Home" ,(an-org-agenda-mdicon "nf-md-home" 'nerd-icons-lgreen) nil nil :ascent center)
+                    ("Relationship" ,(an-org-agenda-mdicon "nf-md-heart" 'nerd-icons-lred) nil nil :ascent center)
+                    ("Tinker" ,(an-org-agenda-mdicon "nf-md-tools" 'nerd-icons-lorange) nil nil :ascent center)
+                    ("Leisure" ,(an-org-agenda-mdicon "nf-md-play_circle" 'nerd-icons-lorange) nil nil :ascent center)
+                    ("Travel" ,(an-org-agenda-mdicon "nf-md-airplane_takeoff" 'nerd-icons-lcyan) nil nil :ascent center)
+                    ("Work" ,(an-org-agenda-mdicon "nf-md-account_tie" 'nerd-icons-lpurple) nil nil :ascent center))))
 
   (setopt org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
           org-id-locations-file ORG_ID_FILE
@@ -2648,23 +2654,23 @@ that allows to include other templates by their name."
   (setopt org-super-agenda-final-group-separator "\n")
 
   (setq-default org-super-agenda-groups
-                '((:name "  Today"
+                `((:name "󰖙  Today"
                          :time-grid t
                          :date today
                          :scheduled today
                          :deadline today
                          :order 1)
-                  (:name "  Overdue (Deadline/Schedule)"
+                  (:name "󰀦  Overdue (Deadline/Schedule)"
                          :scheduled past
                          :deadline past
                          :order 2
                          :face org-warning)
-                  (:name "  Upcoming (Deadline/Schedule)"
+                  (:name "󱄵  Upcoming (Deadline/Schedule)"
                          :scheduled future
                          :deadline future
                          :order 3
                          :face org-upcoming-deadline)
-                  (:name "  Miscellaneous"
+                  (:name "󰉹  Miscellaneous"
                          :date t
                          :order 4)))
 
@@ -2672,12 +2678,12 @@ that allows to include other templates by their name."
                '("g" "Project/Area view (projects, areas; todos, notes)"
                  ((tags "+{^proj@.*}-noshow-rftarget-TODO=\"DONE\""
                         ((org-agenda-files `(,ORG_PROJECTS_FILE))
-                         (org-agenda-overriding-header " Projects")
+                         (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-folder_open" 2 "Projects"))
                          (org-super-agenda-groups
                           '((:auto-outline-path t)))))
                   (tags "+{^area@.*}-noshow-rftarget-TODO=\"DONE\""
                         ((org-agenda-files `(,ORG_AREAS_FILE))
-                         (org-agenda-overriding-header " Areas")
+                         (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-layers_triple" 2 "Areas"))
                          (org-super-agenda-groups
                           '((:auto-outline-path t))))))
                  ((org-agenda-compact-blocks nil))))
@@ -2685,37 +2691,39 @@ that allows to include other templates by their name."
                '("c" "Comprehensive todo view (projects, areas, misc)"
                  ((alltodo ""
                            ((org-agenda-files `(,ORG_PROJECTS_FILE))
-                            (org-agenda-overriding-header " Projects")
+                            (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-folder_open" 2 "Projects"))
                             (org-super-agenda-groups
                              '((:auto-outline-path t)))))
                   (alltodo ""
                            ((org-agenda-files `(,ORG_AREAS_FILE))
-                            (org-agenda-overriding-header " Areas")
+                            (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-layers_triple" 2 "Areas"))
                             (org-super-agenda-groups
                              '((:auto-outline-path t)))))
                   (alltodo ""
                            ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
-                            (org-agenda-overriding-header "Miscellaneous")
+                            (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-format_list_bulleted" 2 "Miscellaneous"))
                             (org-super-agenda-groups
                              '((:auto-outline-path t))))))
                  ((org-agenda-compact-blocks nil))))
+
   (add-to-list 'org-agenda-custom-commands
                '("p" "Priority view (TODOs)"
                  alltodo ""
                  ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_PROJECTS_FILE ,ORG_AREAS_FILE ,ORG_MEETINGS_FILE))
                   (org-agenda-overriding-header "TODOs, Prioritized")
                   (org-super-agenda-groups
-                   '((:name "  Overdue"
+                   `((:name ,(an-org-agenda-md-label "nf-md-alert" 2 "Overdue")
                             :scheduled past
                             :deadline past
                             :order 1
                             :face 'org-warning)
-                     (:name "  Critical (#A)"
+                     (:name ,(an-org-agenda-md-label "nf-md-bell_alert" 2 "Critical (#A)")
                             :priority "A"
                             :order 2)
-                     (:name "  Non-Critical (< #A)"
+                     (:name ,(an-org-agenda-md-label "nf-md-timer_sand" 2 "Non-Critical (< #A)")
                             :priority< "A"
                             :order 3))))))
+
   (add-to-list 'org-agenda-custom-commands
                '("o" "Organize view (TODOs)"
                  ((alltodo ""
