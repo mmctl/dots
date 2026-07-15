@@ -25,14 +25,14 @@ Host github-personal
     IdentityAgent none
     AddKeysToAgent no
 
-## Professional
+## Research
 ### Forges
-Host github-professional
+Host github-research
     HostName github.com
     User git
-    IdentityFile "%d/.ssh/%u_ed25519_sk_professional_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_professional_forges_secondary"
-    # IdentityFile "%d/.ssh/%u_ed25519_professional"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_research_forges_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_research_forges_secondary"
+    # IdentityFile "%d/.ssh/%u_ed25519_research"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
     IdentityAgent none

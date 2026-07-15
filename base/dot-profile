@@ -42,7 +42,7 @@ export MAILDIR="$XDG_DATA_HOME/mail"
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
 ### Authinfo
-export AUTHINFO_FILE="$XDG_DATA_HOME/.authinfo.gpg"
+export AUTHINFO_FILE="$XDG_DATA_HOME/.authinfo.age"
 
 ### Sources
 export SRCS_DIR="$XDG_DATA_HOME/srcs"
@@ -62,13 +62,13 @@ export RIPGREP_CONFIG_PATH="$XDG_CONFIG_HOME/ripgrep/rg.conf"
 ### OPAM
 export OPAMROOT="$XDG_DATA_HOME/opam"
 
-### Rust/Cargo
-export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
-export CARGO_HOME="$XDG_DATA_HOME/cargo"
-
 ### GO
 export GOPATH="$XDG_DATA_HOME/go"
 export GOBIN="$GOPATH/bin"
+
+### Rust/Cargo
+export RUSTUP_HOME="$XDG_DATA_HOME/rustup"
+export CARGO_HOME="$XDG_DATA_HOME/cargo"
 
 ### LEAN
 export ELAN_HOME="$XDG_DATA_HOME/elan"
@@ -92,8 +92,8 @@ export LESSUTFCHARDEF='E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p'
 
 ## Paths
 ### Executables
+PATH="$GOBIN:/usr/local/go/bin:$PATH"
 PATH="$CARGO_HOME/bin:$PATH"
-PATH="$GOBIN:$PATH:/usr/local/go/bin"
 PATH="$ELAN_HOME/bin:$PATH"
 PATH="$XDG_BIN_HOME:$PATH"
 export PATH

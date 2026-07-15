@@ -42,15 +42,6 @@ DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 MAILDIR="${MAILDIR:-$XDG_DATA_HOME/mail}"
 # AUTHINFO_FILE="${AUTHINFO_FILE:-$XDG_DATA_HOME/.authinfo.gpg}"
 
-MANPATH="${MANPATH:-}"
-INFOPATH="${INFOPATH:-}"
-
-if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
-    SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-$XDG_RUNTIME_DIR/ssh-agent.socket}"
-else
-    SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-}"
-fi
-
 if [ ! -d "$DOTS_DIR" ]; then
     setup_log_die "dotfiles directory not found: $DOTS_DIR"
 fi
@@ -70,6 +61,12 @@ if ! pass-cli test >/dev/null 2>&1; then
     setup_log_die "Cannot authenticate to password manager, please ensure you are logged in (pass-cli login)."
 fi
 
+mkdir -p -- "$XDG_CONFIG_HOME/systemd/user/environment"
+
+cat > "$XDG_CONFIG_HOME/systemd/user/environment/authinfo.conf" <<EOF
+AUTHINFO_FILE="$AUTHINFO_FILE"
+EOF
+
 if [ -e "$AUTHINFO_FILE" ]; then
     setup_log_info "Authinfo file already exists; skipping creation: $AUTHINFO_FILE."
 else
@@ -88,12 +85,12 @@ else
 
         github_pers_user="$(pass-cli item view --vault-name Personal --item-name github-personal --field username)"
         github_pers_pat="$(pass-cli item view --vault-name Personal --item-name github-personal --field personal-access-token)"
-        github_prof_user="$(pass-cli item view --vault-name Personal --item-name github-professional --field username)"
-        github_prof_pat="$(pass-cli item view --vault-name Personal --item-name github-professional --field personal-access-token)"
+        github_res_user="$(pass-cli item view --vault-name Personal --item-name github-research --field username)"
+        github_res_pat="$(pass-cli item view --vault-name Personal --item-name github-research --field personal-access-token)"
 
         cat > "$authinfo_tmp" <<EOF
 machine api.github.com login ${github_pers_user}^forge password $github_pers_pat
-machine api.github.com login ${github_prof_user}^forge password $github_prof_pat
+machine api.github.com login ${github_res_user}^forge password $github_res_pat
 EOF
 
         age --encrypt \
@@ -161,17 +158,30 @@ setup_log_info "Setting up Proton Bridge headless autostart..."
 mkdir -p -- "$XDG_CONFIG_HOME/autostart"
 rm -f -- "$XDG_CONFIG_HOME/autostart/Proton Mail Bridge.desktop"
 
+protonmail-bridge-exec="$(which protonmail-bridge)"
 cat > "$XDG_CONFIG_HOME/autostart/protonmail-bridge-headless.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Proton Mail Bridge (Headless)
 Comment=Run Proton Mail Bridge without its graphical interface
-Exec="$(which protonmail-bridge)" "--noninteractive"
+Exec= "$protonmail-bridge-exec" "--noninteractive"
 Terminal=false
 StartupNotify=false
 EOF
 
 setup_log_info "Set up Proton Bridge headless autostart."
+
+
+setup_log_info "Initializing mail environment (mu)..."
+
+cat > "$XDG_CONFIG_HOME/systemd/user/environment/mail.conf" <<EOF
+MAILDIR="$MAILDIR"
+EOF
+
+mu init --maildir="$MAILDIR"
+mu index
+
+setup_log_info "Initializing mail environment (mu)."
 
 
 setup_log_info "Installing spellchecker and dictionaries..."
@@ -194,7 +204,6 @@ ln -sf -- "$(which emacs-x11)" "$XDG_BIN_HOME/emacs"
 
 (cd -- "$DOTS_DIR" && stow emacs)
 
-mkdir -p -- "$XDG_CONFIG_HOME/systemd/user"
 
 cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service" <<EOF
 [Unit]
@@ -207,23 +216,11 @@ Conflicts=emacs-niri.service
 Type=notify
 ExecStart=$XDG_BIN_HOME/emacs --fg-daemon
 
-# Emacs will exit with status 15 after having received SIGTERM, which
-# is the default "KillSignal" value systemd uses to stop services.
 SuccessExitStatus=15
 Restart=on-failure
 
-# Environment
-Environment="XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
-Environment="XDG_DATA_HOME=$XDG_DATA_HOME"
-Environment="XDG_CACHE_HOME=$XDG_CACHE_HOME"
-Environment="XDG_STATE_HOME=$XDG_STATE_HOME"
-Environment="XDG_BIN_HOME=$XDG_BIN_HOME"
-Environment="PATH=$PATH"
-Environment="MANPATH=$MANPATH"
-Environment="INFOPATH=$INFOPATH"
-Environment="MAILDIR=$MAILDIR"
-Environment="AUTHINFO_FILE=$AUTHINFO_FILE"
-Environment="SSH_AUTH_SOCKET=$SSH_AUTH_SOCKET"
+EnvironmentFile="$XDG_CONFIG_HOME/systemd/user/environment/authinfo.conf"
+EnvironmentFile="$XDG_CONFIG_HOME/systemd/user/environment/mail.conf"
 
 [Install]
 WantedBy=default.target
@@ -240,28 +237,15 @@ PartOf=graphical-session.target
 After=graphical-session.target
 Requisite=graphical-session.target
 
-
 [Service]
 Type=notify
 ExecStart=$XDG_BIN_HOME/emacs --fg-daemon
 
-# Emacs will exit with status 15 after having received SIGTERM, which
-# is the default "KillSignal" value systemd uses to stop services.
 SuccessExitStatus=15
 Restart=on-failure
 
-# Environment
-Environment="XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
-Environment="XDG_DATA_HOME=$XDG_DATA_HOME"
-Environment="XDG_CACHE_HOME=$XDG_CACHE_HOME"
-Environment="XDG_STATE_HOME=$XDG_STATE_HOME"
-Environment="XDG_BIN_HOME=$XDG_BIN_HOME"
-Environment="PATH=$PATH"
-Environment="MANPATH=$MANPATH"
-Environment="INFOPATH=$INFOPATH"
-Environment="MAILDIR=$MAILDIR"
-Environment="AUTHINFO_FILE=$AUTHINFO_FILE"
-Environment="SSH_AUTH_SOCKET=$SSH_AUTH_SOCKET"
+EnvironmentFile="$XDG_CONFIG_HOME/systemd/user/environment/authinfo.conf"
+EnvironmentFile="$XDG_CONFIG_HOME/systemd/user/environment/mail.conf"
 
 [Install]
 WantedBy=niri.service
@@ -290,14 +274,6 @@ fi
 setup_log_info "Fetching Emacs ORG data..."
 clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
 setup_log_info "Fetched Emacs ORG data."
-
-
-setup_log_info "Initializing mu/mu4e (mail)..."
-
-mu init --maildir="$MAILDIR"
-mu index
-
-setup_log_info "Initialized mu/mu4e."
 
 
 setup_log_info "Setting default file associations..."

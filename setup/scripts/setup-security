@@ -110,7 +110,7 @@ setup_log_info "Enter a passphrase for each new key when prompted."
 
 setup_log_info "Setting up ssh-agent integration with systemd..."
 
-install -d -m 700 "$XDG_CONFIG_HOME/systemd/user"
+mkdir -p -- "$HOME/.config/environment.d" "$XDG_CONFIG_HOME/systemd/user"
 
 cat > "$XDG_CONFIG_HOME/systemd/user/ssh-agent.service" <<'EOF'
 [Unit]
@@ -123,6 +123,10 @@ ExecStart=/usr/bin/ssh-agent -D -a %t/ssh-agent.socket
 
 [Install]
 WantedBy=default.target
+EOF
+
+cat > "$HOME/.config/environment.d/60-ssh-agent.conf" <<'EOF'
+SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/ssh-agent.socket
 EOF
 
 systemctl --user daemon-reload
