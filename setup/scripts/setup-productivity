@@ -213,6 +213,8 @@ Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
 
 Conflicts=emacs.service
 
+PartOf=graphical-session.target
+
 [Service]
 Type=notify
 ExecStart="$emacs_x11_exec" --fg-daemon
@@ -224,7 +226,7 @@ EnvironmentFile=$XDG_CONFIG_HOME/systemd/user/environment/authinfo.conf
 EnvironmentFile=$XDG_CONFIG_HOME/systemd/user/environment/mail.conf
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
 EOF
 
 emacsclient_exec="$(command -v emacsclient)"
@@ -240,7 +242,7 @@ Requisite=graphical-session.target
 Type=oneshot
 
 ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet  --suppress-output --eval t
-ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet  --suppress-output --eval '(delete-frame (selected-frame) t)'
+ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet  --suppress-output --create-frame --eval '(delete-frame (selected-frame) t)'
 EOF
 
 systemctl --user daemon-reload

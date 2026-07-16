@@ -3,7 +3,7 @@
 output "Lenovo Group Limited P27QD-40 VNACN8TB" {
     mode "2560x1440"
     scale 1.25
-    position x=1280 y=0
+    position x=1536 y=0
     focus-at-startup
 }
 
