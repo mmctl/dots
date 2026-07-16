@@ -5,7 +5,7 @@ BufferLimit 100m
 # Personal
 ## matthiasmeijers@proton.me
 IMAPAccount matthiasmeijers-proton
-Host 127.0.0.1 
+Host 127.0.0.1
 Port 1143
 User matthiasmeijers@proton.me
 PassCmd "secret-tool lookup service proton-bridge account personal"
@@ -38,3 +38,40 @@ Channel matthiasmeijers-proton
 #Channel personal-mmeijers
 #Channel kernel-mmeijers
 #Channel kem-mmeijers
+
+
+# Research
+## mmeijersres@protonmail.com
+IMAPAccount mmeijersres-protonmail
+Host 127.0.0.1
+Port 1143
+User mmeijersres@protonmail.com
+PassCmd "secret-tool lookup service proton-bridge account research"
+TLSType STARTTLS
+SystemCertificates no
+CertificateFile ${XDG_CONFIG_HOME}/proton/bridge/cert.pem
+
+IMAPStore mmeijersres-protonmail-remote
+Account mmeijersres-protonmail
+
+MaildirStore mmeijersres-protonmail-local
+Path ${MAILDIR}/mmeijersres-protonmail/
+Inbox ${MAILDIR}/mmeijersres-protonmail/INBOX/
+MaxSize 50m
+SubFolders Verbatim
+
+Channel mmeijersres-protonmail
+Far :mmeijersres-protonmail-remote:
+Near :mmeijersres-protonmail-local:
+Sync New Gone Flags
+Patterns * "!All Mail"
+Create Both
+# Expunge Both
+CopyArrivalDate yes
+SyncState *
+
+## Group
+Group research
+Channel mmeijersres-protonmail
+#Channel research-mmeijers
+#Channel teaching-mmeijers
