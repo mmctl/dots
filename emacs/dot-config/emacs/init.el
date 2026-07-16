@@ -1380,12 +1380,14 @@ that allows to include other templates by their name."
   :demand t
 
   :config
+  (require 'local-circadian)
+
   (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
                              (:sunset . modus-vivendi-tinted)))
-  ;; (if (daemonp)
-      ;; (add-hook 'server-after-make-frame-hook #'circadian-setup)
-    ;; (circadian-setup))
-  )
+
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'a-circadian-setup-first-client-frame-hook)
+    (circadian-setup)))
 
 (use-package keycast
   :defer t
@@ -1430,10 +1432,11 @@ that allows to include other templates by their name."
   :init
   (setopt nerd-icons-font-family "Symbols Nerd Font Mono")
 
-  ;; :config
-  ;; (require 'local-nerd-icons)
-  ;; (advice-add 'local-setup-gui-frame :after #'an-after-advice-local-setup-gui-nerd-icons-font)
-  )
+  :config
+  (require 'local-nerd-icons)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'a-nerd-icons-set-font-client-frame-hook 90)
+    (add-hook 'after-init-hook #'nerd-icons-set-font 90)))
 
 (use-package ultra-scroll
   :demand t

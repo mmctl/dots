@@ -200,19 +200,22 @@ setup_log_info "Installed spellchecker and dictionaries."
 setup_log_info "Installing editor (Emacs)..."
 
 sudo zypper --non-interactive --no-color install emacs emacs-x11 mu4e pinentry-emacs
-ln -sf -- "$(command -v emacs-x11)" "$XDG_BIN_HOME/emacs"
+
+emacs_x11_exec="$(command -v emacs-x11)"
+ln -sf -- "$emacs_x11_exec" "$XDG_BIN_HOME/emacs"
 
 (cd -- "$DOTS_DIR" && stow emacs)
 
-
-cat > "$XDG_CONFIG_HOME/systemd/user/emacs.service" <<EOF
+cat > "$XDG_CONFIG_HOME/systemd/user/emacs-x11.service" <<EOF
 [Unit]
 Description=Emacs text editor
 Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
 
+Conflicts=emacs.service
+
 [Service]
 Type=notify
-ExecStart="$XDG_BIN_HOME/emacs" --fg-daemon
+ExecStart="$emacs_x11_exec" --fg-daemon
 
 SuccessExitStatus=15
 Restart=on-failure
@@ -224,82 +227,32 @@ EnvironmentFile=$XDG_CONFIG_HOME/systemd/user/environment/mail.conf
 WantedBy=default.target
 EOF
 
-cat > "$XDG_CONFIG_HOME/systemd/user/emacs-x11-primer-niri.service" <<'EOF'
+emacsclient_exec="$(command -v emacsclient)"
+cat > "$XDG_CONFIG_HOME/systemd/user/emacs-x11-primer.service" <<EOF
 [Unit]
-Description=Prime Emacs X11 graphical initialization (under Niri session)
+Description=Prime Emacs X11 graphical initialization
 
-Requires=emacs.service
-After=emacs.service graphical-session.target
+Requires=emacs-x11.service
+After=emacs-x11.service graphical-session.target
 Requisite=graphical-session.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/emacsclient \
-    --alternate-editor=false \
-    --display "${DISPLAY}" \
-    --create-frame \
-    --suppress-output \
-    --eval '(delete-frame (selected-frame) t)'
 
-[Install]
-WantedBy=niri.service
+ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet  --suppress-output --eval t
+ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet  --suppress-output --eval '(delete-frame (selected-frame) t)'
 EOF
 
-# cat > "$XDG_CONFIG_HOME/systemd/user/emacs-niri.service" <<EOF
-# [Unit]
-# Description=Emacs text editor (under graphical Niri session)
-# Documentation=info:emacs man:emacs(1) https://gnu.org/software/emacs/
-
-# Conflicts=emacs.service
-
-# PartOf=graphical-session.target
-# After=graphical-session.target
-# Requisite=graphical-session.target
-
-# [Service]
-# Type=notify
-# ExecStart="$XDG_BIN_HOME/emacs" --fg-daemon
-# ExecStartPost="$XDG_BIN_HOME/emacsclient-x11" --quiet --suppress-output --alternate-editor=false --eval t
-
-# SuccessExitStatus=15
-# Restart=on-failure
-
-# EnvironmentFile=$XDG_CONFIG_HOME/systemd/user/environment/authinfo.conf
-# EnvironmentFile=$XDG_CONFIG_HOME/systemd/user/environment/mail.conf
-
-# [Install]
-# WantedBy=niri.service
-# EOF
-
-# systemctl --user daemon-reload
-
-# if systemctl --user cat niri.service >/dev/null 2>&1; then
-#     systemctl --user enable emacs-niri.service
-# else
-#     systemctl --user enable emacs.service
-# fi
-
 systemctl --user daemon-reload
+systemctl --user enable emacs-x11.service
 
-systemctl --user enable emacs.service
-systemctl --user enable emacs-x11-primer-niri.service
-
-# setup_log_info "Installing/initializing Emacs packages..."
-
-# clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
-
-# emacs --batch \
-#       --load "$XDG_CONFIG_HOME/emacs/early-init.el" \
-#       --load "$XDG_CONFIG_HOME/emacs/init.el" \
-#       --load "$XDG_DATA_HOME/emacs/install/install-treesit.el"
-#       --load "$XDG_DATA_HOME/emacs/install/wait-native-comp.el"
-
-# setup_log_info "Installed Emacs packages."
+if systemctl --user cat niri.service >/dev/null 2>&1; then
+    systemctl --user add-wants niri.service emacs-x11-primer.service
+fi
 
 setup_log_info "Fetching Emacs ORG data..."
 clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
 setup_log_info "Fetched Emacs ORG data."
-
 
 setup_log_info "Setting default file associations..."
 

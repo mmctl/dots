@@ -4,15 +4,16 @@
 (require 'nerd-icons)
 
 
-(defun an-after-advice-local-setup-gui-nerd-icons-font (frame &rest _)
-  "Configure the Nerd Icons font mapping for FRAME.
+(defun a-nerd-icons-set-font-client-frame-hook ()
+  "Configure the Nerd Icons font mapping for client frame FRAME.
 
-Meant as after advice for `local-setup-gui-frame' (and also only makes
-sense for GUI frames)."
-  (when (display-graphic-p frame)
-    (nerd-icons-set-font nil frame)))
+Meant as hook for `server-after-make-frame-hook'."
+  (let ((frame (selected-frame)))
+    (when (and (display-graphic-p frame)
+               (frame-parameter frame 'client))
+      (nerd-icons-set-font nil frame))))
 
 
 (provide 'local-nerd-icons)
 
-;;; local-nerd-icons ends here
+;;; local-nerd-icons.el ends here

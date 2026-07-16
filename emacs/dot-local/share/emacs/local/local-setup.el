@@ -51,11 +51,7 @@
      ((member "Open Sans" ffl)
       (set-face-attribute 'variable-pitch frame :family "Open Sans" :height 1.0))
      (t
-      (set-face-attribute 'variable-pitch frame :family "Sans Serif" :height 1.0)))
-    ;; Symbols
-    (when (and (featurep 'nerd-icons)
-               (fboundp 'nerd-icons-set-font))
-      (nerd-icons-set-font nil frame))))
+      (set-face-attribute 'variable-pitch frame :family "Sans Serif" :height 1.0)))))
 
 ;; (defvar local-gui-bootstrapped-p nil
 ;;   "Non-nil after session-wide graphical setup has completed.")

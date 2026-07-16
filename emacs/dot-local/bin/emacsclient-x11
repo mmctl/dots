@@ -6,4 +6,4 @@ if [ -z "${DISPLAY:-}" ]; then
     exit 1
 fi
 
-exec /usr/bin/emacsclient --display="$DISPLAY" "$@"
+exec emacsclient --display="$DISPLAY" "$@"
