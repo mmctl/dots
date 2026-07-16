@@ -201,3 +201,25 @@ download_and_import_rpm_key() (
 
     setup_log_info "Downloaded and imported RPM key from '$key_url' with expected fingerprint '$fpr_exp'."
 )
+
+
+# Packages
+ensure_command_from_package() {
+    required_command=$1
+    required_package=$2
+
+    if command -v "$required_command" >/dev/null 2>&1; then
+        return
+    fi
+
+    setup_log_info "$required_command is not installed. Installing package $required_package..."
+
+    sudo zypper --non-interactive --no-color install "$required_package"
+
+    if ! command -v "$required_command" >/dev/null 2>&1; then
+        setup_log_die "Installed package $required_package, but $required_command is still unavailable."
+    fi
+
+    setup_log_info "Installed package $required_package."
+}
+

@@ -1,0 +1,53 @@
+#!/usr/bin/env sh
+set -eu
+
+# Setup utilities
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/utils"
+
+
+if [ "$(id -u)" -eq 0 ]; then
+    setup_log_die "Run this script as the target regular user, not as root."
+fi
+
+if ! command -v zypper >/dev/null 2>&1; then
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
+fi
+
+
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
+
+# Input processing
+setup_log_info "Processing input..."
+if [ "$#" -ne 1 ]; then
+    cat <<EOF
+Usage:
+  $(basename "$0") FILESYSTEM_UUID
+
+Example:
+  $(basename "$0") 01234567-89ab-cdef-0123-456789abcdef
+EOF
+    setup_log_die "Expected exactly one argument: the filesystem UUID of the backup media."
+fi
+
+backup_fs_uuid=$1
+backup_device="/dev/disk/by-uuid/$backup_fs_uuid"
+
+if [ ! -e "$backup_device" ]; then
+    setup_log_die "No block device found for filesystem UUID: $backup_fs_uuid"
+fi
+
+if ! backup_fs_type="$(sudo blkid -o value -s TYPE "$backup_device")"; then
+    setup_log_die "Could not determine filesystem type for UUID: $backup_fs_uuid"
+fi
+
+if [ -z "$backup_fs_type" ]; then
+    setup_log_die "No filesystem found for UUID: $backup_fs_uuid"
+fi
+
+setup_log_info "Backup filesystem UUID (device): $backup_fs_uuid ($backup_device)"
+setup_log_info "Backup filesystem type: $backup_fs_type"
+setup_log_info "Processed input."
+

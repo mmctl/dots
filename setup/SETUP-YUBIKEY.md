@@ -7,7 +7,7 @@ This guide configures a YubiKey for:
 - FIDO2 disk unlocking;
 - hardware-backed SSH keys.
 
-Repeat the steps for every physical YubiKey. Keep only the key being configured connected.
+Repeat the procedure for every physical YubiKey. Keep only the key being configured connected.
 
 ## 1. Configure enabled applications
 
@@ -55,10 +55,16 @@ Only FIDO2, U2F, and PIV should remain enabled.
 
 ## 2. Configure FIDO2
 
-Set the FIDO2 PIN and store it safely:
+Set the FIDO2 PIN:
 
 ```sh
 ykman fido access change-pin
+```
+
+Check the FIDO2 configuration:
+
+```sh
+ykman fido info
 ```
 
 Enroll the YubiKey for disk unlocking:
@@ -74,19 +80,29 @@ Generate a resident SSH key:
 ```sh
 ssh-keygen -t ed25519-sk \
     -O resident \
-    -O application=ssh:personal-forges \
-    -O user=mm-personal-forges-primary \
-    -C 'Personal: forges -- Primary YubiKey' \
-    -f ~/.ssh/mm_ed25519_sk_personal_forges_primary
+    -O application=ssh:<application> \
+    -O user=<user-name> \
+    -C '<comment>' \
+    -f ~/.ssh/<key-file>
 ```
 
-Add this option when every signature should require the FIDO2 PIN:
+Add the following option when every signature should require the FIDO2 PIN:
 
 ```sh
 -O verify-required
 ```
 
-Change `application`, `user`, comment, filename, and `primary` or `secondary` according to the key and its purpose.
+Inspect the generated public key:
+
+```sh
+ssh-keygen -lf ~/.ssh/<key-file>.pub
+```
+
+Recover resident key handles from the connected YubiKey when needed:
+
+```sh
+ssh-keygen -K
+```
 
 ## 3. Configure PIV
 
@@ -96,7 +112,7 @@ Change the PIV PIN:
 ykman piv access change-pin
 ```
 
-Change the PIV PUK and store it safely:
+Change the PIV PUK:
 
 ```sh
 ykman piv access change-puk
@@ -110,55 +126,87 @@ ykman piv access change-management-key \
     --protect
 ```
 
-## 4. Generate `age` identities
+Check the PIV configuration:
 
-Create a protected directory for the local identity files:
+```sh
+ykman piv info
+```
+
+## 4. Generate an `age` identity
+
+Create a protected directory for local identity files:
 
 ```sh
 AGE_IDENTITY_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/age/identities"
 
 install -d -m 700 "$AGE_IDENTITY_DIR"
-umask 077
 ```
 
-Generate the personal file-encryption identity:
+Generate an identity:
 
 ```sh
 age-plugin-yubikey --generate \
-    --name age_mm_personal_file_enc_primary \
+    --name <identity-name> \
     --pin-policy once \
     --touch-policy always \
-    > "$AGE_IDENTITY_DIR/age_mm_personal_file_enc_primary.txt"
+    > "$AGE_IDENTITY_DIR/<identity-file>.txt"
 ```
 
-Generate the research file-encryption identity:
-
-```sh
-age-plugin-yubikey --generate \
-    --name age_mm_research_file_enc_primary \
-    --pin-policy once \
-    --touch-policy always \
-    > "$AGE_IDENTITY_DIR/age_mm_research_file_enc_primary.txt"
-```
-
-For another YubiKey, replace `primary` with `secondary`, `tertiary`, or another consistent role name.
-
-List the configured identities:
+List identities available on connected YubiKeys:
 
 ```sh
 age-plugin-yubikey --list-all
 ```
 
-Record the printed `age1...` recipients. Each physical YubiKey has its own recipient.
+Check the local identity files:
 
-## 5. Final checks
+```sh
+ls -l "$AGE_IDENTITY_DIR"
+```
 
-For every YubiKey, verify that:
+The files should normally have mode `600`. Correct the permissions if necessary:
 
-- FIDO2, U2F, and PIV are enabled;
-- unused applications are disabled;
-- the FIDO2 PIN, PIV PIN, and PIV PUK are stored safely;
-- disk unlocking works;
-- the SSH public key is registered where needed;
-- the personal and research `age` identities are recorded;
-- a separate recovery method remains available.
+```sh
+chmod 600 "$AGE_IDENTITY_DIR"/*.txt
+```
+
+Record the printed `age1...` recipient for each identity.
+
+## 5. Validate encryption
+
+Encrypt a test file using the recorded recipient:
+
+```sh
+age \
+    -r 'age1...' \
+    -o test.txt.age \
+    test.txt
+```
+
+Decrypt it using the local identity file:
+
+```sh
+age \
+    --decrypt \
+    -i "$AGE_IDENTITY_DIR/<identity-file>.txt" \
+    -o test.decrypted.txt \
+    test.txt.age
+```
+
+Compare the original and decrypted files:
+
+```sh
+cmp test.txt test.decrypted.txt
+```
+
+A zero exit status indicates success.
+
+## Repeating the setup
+
+The SSH and `age` generation steps can be repeated for:
+
+- different physical YubiKeys;
+- different services or applications;
+- different security domains or use cases.
+
+Use distinct application strings, usernames, comments, filenames, and identity names where appropriate. Each physical YubiKey generates separate credentials and recipients.

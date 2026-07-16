@@ -262,11 +262,11 @@ if command -v xdg-mime >/dev/null 2>&1; then
 
     mkdir -p "$XDG_DATA_HOME/applications"
 
-        cat > "$XDG_DATA_HOME/applications/emacsclient.desktop" <<'EOF'
+        cat > "$XDG_DATA_HOME/applications/emacsclient-x11.desktop" <<'EOF'
 [Desktop Entry]
 Name=Emacsclient
 Comment=Run Emacsclient, starting a server if none is currently running
-Exec=emacsclient --create-frame %F
+Exec=emacsclient-x11 --create-frame %F
 Icon=emacs
 Categories=Development;TextEditor;Utility;
 MimeType=text/plain;text/english;text/x-c;text/x-csrc;text/x-chdr;text/x-c++src;text/x-c++hdr;text/x-python;text/x-shellscript;text/x-tex;text/markdown;application/x-shellscript;application/json;application/xml;
@@ -275,12 +275,12 @@ Terminal=false
 Type=Application
 EOF
 
-    cat > "$XDG_DATA_HOME/applications/emacsclient-mail.desktop" <<'EOF'
+    cat > "$XDG_DATA_HOME/applications/emacsclient-x11-mail.desktop" <<'EOF'
 [Desktop Entry]
 Name=Emacsclient Mail
 Comment=Compose mail with Emacsclient
 Categories=Network;Email;
-Exec=emacsclient --create-frame --eval '(message-mailto "%u")'
+Exec=emacsclient-x11 --create-frame --eval '(message-mailto "%u")'
 Icon=emacs
 MimeType=x-scheme-handler/mailto;
 NoDisplay=true
@@ -290,8 +290,8 @@ EOF
 
     update-desktop-database "$XDG_DATA_HOME/applications"
 
-    xdg-mime default emacsclient.desktop text/plain
-    xdg-mime default emacsclient-mail.desktop x-scheme-handler/mailto
+    xdg-mime default emacsclient-x11.desktop text/plain
+    xdg-mime default emacsclient-x11-mail.desktop x-scheme-handler/mailto
 
     setup_log_info "Set default file associations."
 else
