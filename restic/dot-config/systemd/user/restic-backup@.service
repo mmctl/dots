@@ -1,0 +1,18 @@
+[Unit]
+Description=Restic backup: %i
+
+[Service]
+Type=oneshot
+
+UMask=0077
+TimeoutStartSec=infinity
+
+LoadCredentialEncrypted=restic-backup-%i-password
+Environment="RESTIC_PASSWORD_FILE=%d/restic-backup-%i-password"
+EnvironmentFile=%E/restic/backup-%i.conf
+
+ExecStart=/usr/bin/systemd-inhibit --what=shutdown:sleep --mode=block --who="Restic %i backup" --why="Restic %i backup is running" "${LIBEXEC_DIR}/restic-backup"
+
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

@@ -282,16 +282,10 @@
 (setopt display-time-default-load-average nil)
 (display-time-mode 1)
 
-;; (if (daemonp)
-;;     (progn
-;;       (add-hook 'after-make-frame-functions #'local-setup-frame)
-;;       (add-hook 'server-after-make-frame-hook #'local-setup-client-frame))
-;;   (add-hook 'after-init-hook #'local-setup-global-frame))
 (if (daemonp)
-    (progn
-      (add-hook 'after-make-frame-functions #'local-setup-nonserver-frame)
-      (add-hook 'server-after-make-frame-hook #'local-setup-client-frame))
-  (add-hook 'after-init-hook #'local-setup-frame))
+    (add-hook 'after-make-frame-functions #'local-setup-frame-defaults-from-given)
+  (add-hook 'after-init-hook #'local-setup-frame-defaults-from-selected))
+
 
 ;; Modes
 (add-hook 'text-mode-hook #'local-setup-text-mode)
@@ -1386,8 +1380,8 @@ that allows to include other templates by their name."
                              (:sunset . modus-vivendi-tinted)))
 
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'a-circadian-setup-first-client-frame-hook)
-    (circadian-setup)))
+      (add-hook 'after-make-frame-functions #'a-circadian-setup-first-graphical-frame)
+    (add-hook 'after-init-hook #'circadian-setup)))
 
 (use-package keycast
   :defer t
@@ -1435,7 +1429,7 @@ that allows to include other templates by their name."
   :config
   (require 'local-nerd-icons)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'a-nerd-icons-set-font-client-frame-hook 90)
+      (add-hook 'after-make-frame-functions #'a-nerd-icons-set-font-frame 90)
     (add-hook 'after-init-hook #'nerd-icons-set-font 90)))
 
 (use-package ultra-scroll

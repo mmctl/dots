@@ -3,17 +3,25 @@
 
 (require 'circadian)
 
+(defun a-circadian-setup-first-graphical-frame (frame)
+  "Set up circadian on the first graphical client frame FRAME.
 
-(defun a-circadian-setup-first-client-frame-hook ()
+Meant as hook for `after-make-frame-functions'."
+  (with-selected-frame frame
+    (when (display-graphic-p frame)
+      (circadian-setup)
+      (remove-hook 'after-make-frame-functions
+                   #'a-circadian-setup-first-graphical-frame))))
+
+(defun a-circadian-setup-first-client-frame ()
   "Set up circadian on the first graphical client frame FRAME.
 
 Meant as hook for `server-after-make-frame-hook'."
   (let ((frame (selected-frame)))
-    (when (and (display-graphic-p frame)
-               (frame-parameter frame 'client))
+    (when (display-graphic-p frame)
       (circadian-setup)
       (remove-hook 'server-after-make-frame-hook
-                   #'a-circadian-setup-first-client-frame-hook))))
+                   #'a-circadian-setup-first-client-frame))))
 
 
 (provide 'local-circadian)
