@@ -70,10 +70,21 @@ ensure_command_from_package restic restic
 
 # Configuration paths
 ## Local paths
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
+
+if [ ! -d "$DOTS_DIR" ]; then
+    setup_log_die "dotfiles directory not found: $DOTS_DIR"
+fi
+
+REPLACE_PLACEHOLDER="${REPLACE_PLACEHOLDER:-$DOTS_DIR/setup/scripts/replace-placeholder}"
+
+if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
+    setup_log_die "replace-placeholder script not found or not executable: $REPLACE_PLACEHOLDER"
+fi
 
 ## Backup-medium paths
 MACHINE_LABEL="${MACHINE_LABEL:-laptop-lenovo-thinkpad-t14-gen2}"
@@ -90,6 +101,7 @@ RESTIC_UNIT_INSTANCE="restic-backup@$RESTIC_BACKUP_NAME"
 RESTIC_CONFIG_DIR="${RESTIC_CONFIG_DIR:-$XDG_CONFIG_HOME/restic}"
 RESTIC_CONFIG_FILE="${RESTIC_CONFIG_FILE:-$RESTIC_CONFIG_DIR/backup-$RESTIC_BACKUP_NAME.conf}"
 RESTIC_EXCLUDE_FILE="${RESTIC_EXCLUDE_FILE:-$RESTIC_CONFIG_DIR/excludes-backup-$RESTIC_BACKUP_NAME.conf}"
+RESTIC_EXCLUDE_TEMPLATE="${RESTIC_EXCLUDE_TEMPLATE:-$RESTIC_EXCLUDE_FILE-temp}"
 
 RESTIC_KEEP_DAILY="${RESTIC_KEEP_DAILY:-7}"
 RESTIC_KEEP_WEEKLY="${RESTIC_KEEP_WEEKLY:-4}"
@@ -116,10 +128,20 @@ setup_log_info "Prevented potential interruption of or from another backup."
 
 
 setup_log_info "Stowing portable Restic configuration and assets..."
-
 (cd -- "$DOTS_DIR" && stow restic)
-
 setup_log_info "Stowed portable Restic configuration and assets."
+
+setup_log_info "Generating Restic exclude file..."
+
+"$REPLACE_PLACEHOLDER" XDG_CACHE_HOME "$XDG_CACHE_HOME" \
+                       "$RESTIC_EXCLUDE_TEMPLATE" \
+                       "$RESTIC_EXCLUDE_FILE"
+"$REPLACE_PLACEHOLDER" XDG_DATA_HOME "$XDG_DATA_HOME" \
+                       "$RESTIC_EXCLUDE_FILE"
+"$REPLACE_PLACEHOLDER" HOME "$HOME" \
+                       "$RESTIC_EXCLUDE_FILE"
+
+setup_log_info "Generated Restic exclude file."
 
 
 mounted_here=0
@@ -173,10 +195,10 @@ else
     setup_log_info "Mounting backup filesystem..."
 
     sudo mount \
-        -t "$backup_fs_type" \
-        -o nosuid,nodev,noexec \
-        "$backup_device" \
-        "$BACKUP_MOUNTPOINT"
+         -t "$backup_fs_type" \
+         -o nosuid,nodev,noexec \
+         "$backup_device" \
+         "$BACKUP_MOUNTPOINT"
 
     mounted_here=1
 

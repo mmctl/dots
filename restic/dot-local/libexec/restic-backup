@@ -1,15 +1,6 @@
 #!/usr/bin/env sh
 set -eu
 
-config_file="${XDG_CONFIG_HOME:-$HOME/.config}/restic/backup-home.conf"
-
-if [ ! -r "$config_file" ]; then
-    printf 'Missing restic home backup configuration: %s\n' "$config_file" >&2
-    exit 1
-fi
-
-. "$config_file"
-
 
 notify() {
     urgency=$1
@@ -17,7 +8,7 @@ notify() {
     body=$3
 
     notify-send \
-        --app-name="Backup: Home" \
+        --app-name="Backup: $RESTIC_BACKUP_NAME" \
         --icon=drive-harddisk \
         --urgency="$urgency" \
         "$title" \
@@ -46,30 +37,25 @@ cleanup() {
 
     if [ "$attempted" -eq 1 ]; then
         if [ "$backup_ok" -ne 1 ]; then
-            notify \
-                critical \
-                "Backup failed" \
-                "Backup did not complete. Inspect: journalctl --user -u restic-backup-home.service"
+            notify critical \
+                   "Backup failed" \
+                   "Backup did not complete. Inspect: journalctl --user -u restic-backup@$RESTIC_BACKUP_NAME.service"
         elif [ "$maintenance_ok" -ne 1 ]; then
-            notify \
-                critical \
-                "Backup succeeded; maintenance failed" \
-                "Backup completed successfully, but retention or pruning failed."
+            notify critical \
+                   "Backup succeeded; maintenance failed" \
+                   "Backup completed successfully, but retention or pruning failed."
         elif [ "$unmount_ok" -ne 1 ]; then
-            notify \
-                critical \
-                "Backup and maintenance succeeded; drive still mounted" \
-                "Backup and maintenance completed successfully, but backup drive could not be unmounted."
+            notify critical \
+                   "Backup and maintenance succeeded; drive still mounted" \
+                   "Backup and maintenance completed successfully, but backup drive could not be unmounted."
         elif [ "$mounted_here" -eq 1 ]; then
-            notify \
-                normal \
-                "Backup and maintanance succeeded; drive unmounted" \
-                "Backup and maintainance completed successfully and backup drive has been unmounted."
+            notify normal \
+                   "Backup and maintenance succeeded; drive unmounted" \
+                   "Backup and maintenance completed successfully and backup drive has been unmounted."
         else
-            notify \
-                normal \
-                "Backup and maintanance succeeded; drive remains mounted" \
-                "Backup and maintainance completed successfully. The backup drive was already mounted before and remains mounted."
+            notify normal \
+                   "Backup and maintenance succeeded; drive remains mounted" \
+                   "Backup and maintenance completed successfully. The backup drive was already mounted before and remains mounted."
         fi
     fi
 
@@ -84,6 +70,11 @@ trap 'exit 143' TERM
 
 if [ ! -e "/dev/disk/by-uuid/$BACKUP_FS_UUID" ]; then
     printf 'Backup drive (UUID: %s) is not connected; skipping backup.\n' "$BACKUP_FS_UUID"
+
+    notify low \
+           "Backup skipped" \
+           "The $RESTIC_BACKUP_NAME backup drive is not connected (UUID: $BACKUP_FS_UUID)."
+
     exit 0
 fi
 
@@ -96,10 +87,10 @@ if mountpoint -q "$BACKUP_MOUNTPOINT"; then
         exit 1
     fi
 
-    if [ "$actual_uuid" != "$expected_uuid" ]; then
+    if [ "$actual_uuid" != "$BACKUP_FS_UUID" ]; then
         printf 'Backup mountpoint is occupied by a different filesystem.\n' >&2
         printf '  Mountpoint: %s\n' "$BACKUP_MOUNTPOINT" >&2
-        printf '  Expected:   %s\n' "$expected_uuid" >&2
+        printf '  Expected:   %s\n' "$BACKUP_FS_UUID" >&2
         printf '  Actual:     %s\n' "$actual_uuid" >&2
         exit 1
     fi
@@ -115,16 +106,23 @@ fi
 attempted=1
 
 
-notify \
-    normal \
-    "Backup started" \
-    "Backing up $RESTIC_BACKUP_SOURCE to $RESTIC_REPOSITORY..."
+actual_repository_id="$(restic --quiet cat config | jq -er '.id')"
 
-restic \
-    --repo "$RESTIC_REPOSITORY" \
-    --password-command "$RESTIC_PASSWORD_COMMAND" \
-    backup \
-    --tag home \
+if [ "$actual_repository_id" != "$RESTIC_EXPECTED_REPOSITORY_ID" ]; then
+    printf 'Configured Restic repository has an unexpected ID.\n' >&2
+    printf '  Repository: %s\n' "$RESTIC_REPOSITORY" >&2
+    printf '  Expected:   %s\n' "$RESTIC_EXPECTED_REPOSITORY_ID" >&2
+    printf '  Actual:     %s\n' "$actual_repository_id" >&2
+    exit 1
+fi
+
+
+notify normal \
+       "Backup started" \
+       "Backing up $RESTIC_BACKUP_SOURCE to $RESTIC_REPOSITORY..."
+
+restic backup \
+    --tag "$RESTIC_BACKUP_NAME" \
     --tag automatic \
     --one-file-system \
     --exclude-caches \
@@ -133,11 +131,8 @@ restic \
 
 backup_ok=1
 
-restic \
-    --repo "$RESTIC_REPOSITORY" \
-    --password-command "$RESTIC_PASSWORD_COMMAND" \
-    forget \
-    --tag home \
+restic forget \
+    --tag "$RESTIC_BACKUP_NAME" \
     --keep-last 1 \
     --keep-daily "$RESTIC_KEEP_DAILY" \
     --keep-weekly "$RESTIC_KEEP_WEEKLY" \
