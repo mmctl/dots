@@ -15,22 +15,25 @@ if ! command -v zypper >/dev/null 2>&1; then
 fi
 
 for pcmd in age pass-cli proton-drive protonmail-bridge; do
-    if ! command -v proton-drive >/dev/null 2>&1; then
-        setup_log_die "$pcmd is not available; please follow installation instructions in order."
+    if ! command -v "$pcmd" >/dev/null 2>&1; then
+        setup_log_die "$pcmd is not available; please make sure it is installed."
     fi
 done
+
 
 setup_log_info "This script needs sudo for system configuration."
 sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 
 for bcmd in git stow; do
-    if ! command -v "$bcmd" >/dev/null 2>&1; then
-        setup_log_info "$bcmd is not installed. Installing..."
-        sudo zypper --non-interactive --no-color install "$bcmd"
-        setup_log_info "Installed $bcmd."
-    fi
+    # if ! command -v "$bcmd" >/dev/null 2>&1; then
+    #     setup_log_info "$bcmd is not installed. Installing..."
+    #     sudo zypper --non-interactive --no-color install "$bcmd"
+    #     setup_log_info "Installed $bcmd."
+    # fi
+    ensure_command_from_package "$bcmd" "$bcmd"
 done
+
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
@@ -85,12 +88,9 @@ else
 
         github_pers_user="$(pass-cli item view --vault-name Personal --item-title github-personal --field username)"
         github_pers_pat="$(pass-cli item view --vault-name Personal --item-title github-personal --field personal-access-token)"
-        github_res_user="$(pass-cli item view --vault-name Personal --item-title github-research --field username)"
-        github_res_pat="$(pass-cli item view --vault-name Personal --item-title github-research --field personal-access-token)"
 
         cat > "$authinfo_tmp" <<EOF
 machine api.github.com login ${github_pers_user}^forge password $github_pers_pat
-machine api.github.com login ${github_res_user}^forge password $github_res_pat
 EOF
 
         age --encrypt \
@@ -310,4 +310,5 @@ setup_log_info "Cleaned up."
 setup_log_action "Manual checkpoint:"
 setup_log_action "  Run non-daemon Emacs (emacs), load the install script, and wait for native compilation to finish:"
 setup_log_action "    (load \"$XDG_DATA_HOME/emacs/install/install-entry.el\")"
+setup_log_action "  Add any additional credential entries in $AUTHINFO_FILE, e.g., access tokens for other forge accounts."
 setup_log_action "  Reboot."

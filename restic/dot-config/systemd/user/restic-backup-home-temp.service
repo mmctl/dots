@@ -3,8 +3,12 @@ Description=Restic backup of home directory
 
 [Service]
 Type=oneshot
+
 UMask=0077
 TimeoutStartSec=infinity
+
+LoadCredentialEncrypted=restic-backup-home-password
+Environment=RESTIC_PASSWORD_FILE=%d/restic-backup-home-password
 
 ExecStart=/usr/bin/systemd-inhibit --what=shutdown:sleep --mode=block "--who=Restic home backup" "--why=Restic home backup is running" ${LIBEXEC_DIR}/restic-backup-home
 
