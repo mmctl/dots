@@ -36,7 +36,6 @@
           goggles
           jinx
           scratch
-          ;; undo-tree
           undo-fu
           undo-fu-session
           ;; vundo
@@ -81,10 +80,10 @@
           ;; Proof assistants
           proof-general
           nael
-          ;; Writing
+          ;; Reading and writing
           auctex
           cdlatex
-          ;; Documents
+          elfeed
           pdf-tools
           ;; Org
           org
@@ -2230,6 +2229,27 @@ that allows to include other templates by their name."
   ;; Hooks
   (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-math-delimiters)
   (add-hook 'latex-mode-hook #'a-setup-latex-mode-math-delimiters))
+
+(use-package elfeed
+  :defer t
+
+  :init
+  (defconst ELFEED_DIR (file-name-as-directory
+                        (expand-file-name "elfeed/" EMACS_DATA_DIR))
+    "Directory used to store data from Elfeed, e.g., enclosures.")
+  (unless (file-directory-p ELFEED_DIR)
+    (make-directory ELFEED_DIR t))
+  (setopt elfeed-db-directory (file-name-as-directory
+                               (expand-file-name "database/" ELFEED_DIR)))
+  (setopt elfeed-enclosure-default-dir (file-name-as-directory
+                                        (expand-file-name "enclosures/" ELFEED_DIR)))
+
+  :config
+  (require 'local-elfeed)
+
+  (add-to-list 'elfeed-feeds `(,IACR_EPRINT_FEED_ATOM iacr eprint))
+
+  (add-hook 'elfeed-new-entry-hook #'an-elfeed-tag-iacr-eprint-entry))
 
 (use-package pdf-tools
   :defer t

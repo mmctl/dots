@@ -96,8 +96,9 @@ corresponding configuration.")
 
 (defconst MISCELLANEOUS_ADDRESS_CONFIGS
   (list
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "host@mmeijers.com" "/host-mmeijers")
-   (an-address-configuration-with-domain-defaults "mmeijers.com" "dump@mmeijers.com" "/dump-mmeijers"))
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "host@mmeijers.com" "/host-mmeijers")
+   ;; (an-address-configuration-with-domain-defaults "mmeijers.com" "dump@mmeijers.com" "/dump-mmeijers")
+   )
   "List of (property lists representing) miscellaneous email addresses and
 corresponding configuration.")
 
