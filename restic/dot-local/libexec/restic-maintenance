@@ -37,23 +37,23 @@ cleanup() {
         if [ "$prune_ok" -ne 1 ]; then
             notify critical \
                    "Maintenance failed" \
-                   "Prune did not start or complete, and subsequent check not performed."
+                   "Prune did not complete, and subsequent check not performed. Inspect: journalctl --user -u restic-maintenance@$RESTIC_BACKUP_NAME.service"
         elif [ "$check_ok" -ne 1 ]; then
             notify critical \
                    "Prune succeeded; check failed" \
-                   "Prune completed successfully, but subsequent check failed."
+                   "Prune completed successfully, but subsequent check failed. Inspect: journalctl --user -u restic-maintenance@$RESTIC_BACKUP_NAME.service"
         elif [ "$unmount_ok" -ne 1 ]; then
             notify critical \
                    "Maintenance succeeded; drive still mounted" \
-                   "Maintenance (prune and check) completed successfully, but backup drive could not be unmounted."
+                   "Maintenance (prune and partial check) completed successfully, but backup drive could not be unmounted. Periodically perform a full scrub/data check with: systemctl --user start restic-scrub@$RESTIC_BACKUP_NAME.service"
         elif [ "$mounted_here" -eq 1 ]; then
             notify normal \
                    "Maintenance succeeded; drive unmounted" \
-                   "Maintenance (prune and check) completed successfully and backup drive has been unmounted."
+                   "Maintenance (prune and partial check) completed successfully and backup drive has been unmounted. Periodically perform a full scrub/data check with: systemctl --user start restic-scrub@$RESTIC_BACKUP_NAME.service"
         else
             notify normal \
                    "Maintenance succeeded; drive remains mounted" \
-                   "Maintenance (prune and check) completed successfully. The backup drive was already mounted before and remains mounted."
+                   "Maintenance (prune and partial check) completed successfully. The backup drive was already mounted before and remains mounted. Periodically perform a full scrub/data check with: systemctl --user start restic-scrub@$RESTIC_BACKUP_NAME.service"
         fi
     fi
 
@@ -117,7 +117,7 @@ fi
 
 notify normal \
        "Maintenance started" \
-       "Pruning and checking $RESTIC_REPOSITORY..."
+       "Pruning and (partially) checking $RESTIC_REPOSITORY..."
 
 restic forget \
        --tag "$RESTIC_BACKUP_NAME" \

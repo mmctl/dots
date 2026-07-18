@@ -96,7 +96,6 @@ EOF
         age --encrypt \
             --recipients-file "$XDG_CONFIG_HOME/age/recipients/mm_personal_file_enc_primary.recipient" \
             --recipients-file "$XDG_CONFIG_HOME/age/recipients/mm_personal_file_enc_secondary.recipient" \
-            --recipients-file "$XDG_CONFIG_HOME/age/recipients/mm_personal_file_enc_tertiary.recipient" \
             --output "$authinfo_age_tmp" \
             "$authinfo_tmp"
 
@@ -110,22 +109,13 @@ fi
 
 setup_log_info "Creating mail directories..."
 
-# install -d -m 700 -- \
-#         "$MAILDIR" \
-#         "$MAILDIR/personal-mmeijers" \
-#         "$MAILDIR/kernel-mmeijers" \
-#         "$MAILDIR/kem-mmeijers" \
-#         "$MAILDIR/research-mmeijers" \
-#         "$MAILDIR/teaching-mmeijers" \
-#         "$MAILDIR/host-mmeijers" \
-#         "$MAILDIR/contracting-mmeijers" \
-#         "$MAILDIR/dump-mmeijers"
 install -d -m 700 -- \
         "$MAILDIR" \
         "$MAILDIR/matthiasmeijers-proton" \
         "$MAILDIR/personal-mmeijers" \
         "$MAILDIR/kernel-mmeijers" \
         "$MAILDIR/kem-mmeijers" \
+        "$MAILDIR/mmeijersres-protonmail" \
         "$MAILDIR/research-mmeijers" \
         "$MAILDIR/teaching-mmeijers"
 
