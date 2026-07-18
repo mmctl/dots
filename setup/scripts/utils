@@ -144,22 +144,22 @@ verify_key_file() {
 # Mounting
 confirm_mounted() {
     expected_uuid=$1
-    backup_mountpoint=$2
+    target_mountpoint=$2
 
-    actual_uuid="$(findmnt -rn --mountpoint "$backup_mountpoint" --output UUID || true)"
+    actual_uuid="$(findmnt -rn --mountpoint "$target_mountpoint" --output UUID || true)"
 
     if [ -z "$actual_uuid" ]; then
-        setup_log_die "Could not determine mounted filesystem UUID for $backup_mountpoint."
+        setup_log_die "Could not determine mounted filesystem UUID for $target_mountpoint."
     fi
 
     if [ "$actual_uuid" != "$expected_uuid" ]; then
-        setup_log_error "Backup mountpoint is occupied by a different filesystem."
-        setup_log_error "  Mountpoint: $backup_mountpoint"
+        setup_log_error "Mountpoint is occupied by a different filesystem."
+        setup_log_error "  Mountpoint: $target_mountpoint"
         setup_log_error "  Expected:   $expected_uuid"
         setup_log_die   "  Actual:     $actual_uuid"
     fi
 
-    setup_log_info "Backup filesystem already mounted at $backup_mountpoint."
+    setup_log_info "Filesystem with UUID $expected_uuid mounted at $target_mountpoint."
 }
 
 

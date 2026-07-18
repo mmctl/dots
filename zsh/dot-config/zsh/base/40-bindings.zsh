@@ -1,5 +1,7 @@
 # 40-bindings.zsh
 
+WORDCHARS=${WORDCHARS//\//} # Exclude path separators from word characters
+
 bindkey -e
 
 # Word movement
