@@ -2612,6 +2612,8 @@ with the color by COLOR-FACE."
                     ("Tasks" ,(an-org-agenda-mdicon "nf-md-format_list_checks" 'nerd-icons-lgreen) nil nil :ascent center)
                     ("Events" ,(an-org-agenda-mdicon "nf-md-calendar_month" 'nerd-icons-lblue) nil nil :ascent center)
                     ("Appointments" ,(an-org-agenda-mdicon "nf-md-calendar_clock" 'nerd-icons-lred) nil nil :ascent center)
+                    ("Birthdays" ,(an-org-agenda-mdicon "nf-md-cake" 'nerd-icons-lpink) nil nil :ascent center)
+                    ("Deathdays" ,(an-org-agenda-mdicon "nf-md-weather_sunset" 'nerd-icons-lsilver) nil nil :ascent center)
                     ("Meetings" ,(an-org-agenda-mdicon "nf-md-account_group" 'nerd-icons-lorange) nil nil :ascent center)
                     ("Projects" ,(an-org-agenda-mdicon "nf-md-folder_open" 'nerd-icons-lmaroon) nil nil :ascent center)
                     ("Study" ,(an-org-agenda-mdicon "nf-md-book_open_page_variant" 'nerd-icons-lcyan) nil nil :ascent center)
