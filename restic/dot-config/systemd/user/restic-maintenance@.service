@@ -11,7 +11,7 @@ LoadCredentialEncrypted=restic-backup-%i-password
 Environment="RESTIC_PASSWORD_FILE=%d/restic-backup-%i-password"
 EnvironmentFile=%E/restic/backup-%i.conf
 
-ExecStart=/usr/bin/flock --exclusive %t/restic-${RESTIC_BACKUP_NAME}.lock /usr/bin/systemd-inhibit --what=shutdown:sleep --mode=block --who="Restic %i maintenance" --why="Restic maintenance is running" "${LIBEXEC_DIR}/restic-maintenance"
+ExecStart=/usr/bin/flock --exclusive %t/restic-%i.lock /usr/bin/systemd-inhibit --what=shutdown:sleep --mode=block --who="Restic %i maintenance" --why="Restic maintenance is running" "${LIBEXEC_DIR}/restic-maintenance"
 
 Nice=10
 IOSchedulingClass=best-effort

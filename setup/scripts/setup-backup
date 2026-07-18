@@ -127,6 +127,7 @@ RESTIC_REPOSITORY_NAME="${RESTIC_REPOSITORY_NAME:-$RESTIC_BACKUP_NAME}"
 RESTIC_BACKUP_INSTANCE="$RESTIC_BACKUP_NAME-$BACKUP_TARGET_NAME"
 RESTIC_BACKUP_UNIT_INSTANCE="restic-backup@$RESTIC_BACKUP_INSTANCE"
 RESTIC_MAINTENANCE_UNIT_INSTANCE="restic-maintenance@$RESTIC_BACKUP_INSTANCE"
+RESTIC_SCRUB_UNIT_INSTANCE="restic-scrub@$RESTIC_BACKUP_INSTANCE"
 
 RESTIC_CONFIG_DIR="${RESTIC_CONFIG_DIR:-$XDG_CONFIG_HOME/restic}"
 RESTIC_CONFIG_FILE="${RESTIC_CONFIG_FILE:-$RESTIC_CONFIG_DIR/backup-$RESTIC_BACKUP_INSTANCE.conf}"
@@ -150,11 +151,15 @@ systemctl --user disable --now "$RESTIC_BACKUP_UNIT_INSTANCE.timer" >/dev/null 2
 systemctl --user disable --now "$RESTIC_MAINTENANCE_UNIT_INSTANCE.timer" >/dev/null 2>&1 || true
 
 if systemctl --user is-active --quiet "$RESTIC_BACKUP_UNIT_INSTANCE.service"; then
-    setup_log_die "The $RESTIC_BACKUP_NAME backup is currently running; aborting."
+    setup_log_die "The $RESTIC_BACKUP_NAME backup is currently running; aborting setup."
 fi
 
 if systemctl --user is-active --quiet "$RESTIC_MAINTENANCE_UNIT_INSTANCE.service"; then
-    setup_log_die "The $RESTIC_BACKUP_NAME backup maintenance is currently running; aborting."
+    setup_log_die "The $RESTIC_BACKUP_NAME backup maintenance is currently running; aborting setup."
+fi
+
+if systemctl --user is-active --quiet "$RESTIC_SCRUB_UNIT_INSTANCE.service"; then
+    setup_log_die "The $RESTIC_BACKUP_NAME scrub is currently running; aborting setup."
 fi
 
 setup_log_info "Prevented potential interruption of or from another backup."
