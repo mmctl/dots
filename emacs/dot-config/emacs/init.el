@@ -1,4 +1,4 @@
-;; ;; -*- lexical-binding: t; -*-
+;; -*- lexical-binding: t; -*-
 ;; init.el
 (setopt custom-file CUSTOM_FILE)
 
@@ -1330,7 +1330,6 @@ that allows to include other templates by their name."
   :after vertico
 
   :init
-  ;; Setup and settings (before load)
   (setopt vertico-quick1 "asdfjkl;")
   (setopt vertico-quick2 "gwerhuio")
 
@@ -1342,16 +1341,21 @@ that allows to include other templates by their name."
 
 ;; User interface and feel
 (use-package doom-modeline
-  :hook after-init
+  :demand t
 
   :init
-  (setopt doom-modeline-buffer-encoding nil
+  (setopt doom-modeline-height 1
+          doom-modeline-buffer-encoding nil
           doom-modeline-default-coding-system 'utf-8
+          doom-modeline-icon t
           doom-modeline-time-icon nil
           doom-modeline-time-live-icon nil
           doom-modeline-time-analogue-clock nil
           doom-modeline-percent-position nil
-          doom-modeline-vcs-max-length 20))
+          doom-modeline-vcs-max-length 20)
+
+  :config
+  (doom-modeline-mode 1))
 
 (use-package ef-themes
   :demand t
@@ -1359,6 +1363,9 @@ that allows to include other templates by their name."
   :init
   (setopt modus-themes-italic-constructs t
           modus-themes-bold-constructs nil)
+
+  :custom-face
+  (minibuffer-prompt ((t (:weight medium :slant italic))))
 
   :config
   (modus-themes-include-derivatives-mode 1)
@@ -2241,11 +2248,23 @@ that allows to include other templates by their name."
     (make-directory ELFEED_DIR t))
   (setopt elfeed-db-directory (file-name-as-directory
                                (expand-file-name "database/" ELFEED_DIR)))
+  (unless (file-directory-p elfeed-db-directory)
+    (make-directory elfeed-enclosure-default-dir t))
   (setopt elfeed-enclosure-default-dir (file-name-as-directory
                                         (expand-file-name "enclosures/" ELFEED_DIR)))
+  (unless (file-directory-p elfeed-enclosure-default-dir)
+    (make-directory elfeed-enclosure-default-dir t))
+
+  (setopt elfeed-show-entry-switch 'pop-to-buffer)
 
   :config
   (require 'local-elfeed)
+
+  (setopt elfeed-show-enclosure-filename-function
+          #'(lambda (_entry url) (a-local-filename-for-url url)))
+
+  (keymap-set elfeed-show-mode-map "l" #'an-elfeed-handle-link)
+  (keymap-set elfeed-show-mode-map "e" #'an-elfeed-handle-enclosure)
 
   (add-to-list 'elfeed-feeds `(,IACR_EPRINT_FEED_ATOM iacr eprint))
 
@@ -2255,10 +2274,11 @@ that allows to include other templates by their name."
   :defer t
 
   :init
-  ;; Setup and settings (before load)
   (setopt pdf-tools-handle-upgrades nil)
   (setopt pdf-view-display-size 'fit-page)
   (setopt pdf-view-use-unicode-ligther t)
+
+  (pdf-loader-install)
 
   :config
   (require 'local-pdf-tools)
