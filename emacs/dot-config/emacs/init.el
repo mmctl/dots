@@ -2220,17 +2220,25 @@ that allows to include other templates by their name."
 
   :bind
   (:prefix-map a-denote-map :prefix "C-c n" :prefix-docstring "Keymap for denote (global)"
-               ("n" . denote)
-               ("t" . denote-template)
-               ("r" . denote-region)
-               ("o" . denote-open-or-create)
-               ("R" . denote-rename-file)
+               ("b" . denote-backlinks)
+               ("d" . denote-dired)
+               ("g" . denote-grep)
                ("l" . denote-link-or-create)
+               ("L" . denote-add-links)
+               ("n" . denote)
+               ("o" . denote-open-or-create)
+               ("q" . denote-query-contents-link)
+               ("Q" . denote-query-filenames-link)
+               ("r" . denote-rename-file)
+               ("R" . denote-rename-file-using-front-matter)
+               ("t" . denote-template)
                ("f" . denote-find-link)
                ("F" . denote-find-backlink)
-               ("g" . denote-grep)
-               ("G" . denote-query-contents-link)
-               ("b" . denote-backlinks))
+               ("C-r" . denote-region))
+  (:map dired-mode-map
+        ("C-d l" . denote-dired-link-markded-notes)
+        ("C-d r" . denote-dired-rename-files)
+        ("C-d R" . denote-dired-rename-marked-files-using-front-matter))
 
   :init
   (defconst DENOTE_DIR (file-name-as-directory
@@ -2244,15 +2252,20 @@ that allows to include other templates by their name."
   (setopt denote-directory DENOTE_DIR)
 
   (setopt denote-known-keywords
-          '("projects" "areas" "resources" "archives"
+          '("fleeting" "literature" "permanent" "index"
+            "projects" "areas" "resources" "archives"
             "personal" "research" "business" "development"
             "study" "finance" "travel" "products"
             "house" "relation" "tinker"
             "emacs" "cryptography" "formalmethods"))
+  (setopt denote-infer-keywords t)
+  (setopt denote-sort-keywords t)
 
   (setopt denote-file-type 'org)
   (setopt denote-date-prompt-use-org-read-date t)
-  (setopt denote-buffer-name-prefix ""))
+
+  :config
+  (denote-rename-buffer-mode 1))
 
 (use-package elfeed
   :defer t
