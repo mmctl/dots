@@ -8,6 +8,8 @@
 (require 'url-parse)
 (require 'url-util)
 
+(require 'cl-lib)
+
 
 ;;; Utilities
 (defun a-local-filename-for-url (url)
@@ -22,9 +24,8 @@
 (defun a-maybe-download-url-to-directory (url directory filename &optional redownload)
   "Download (synchronously) URL to DIRECTORY as FILENAME.
 
-If a file with the name derived from URL already exists in DIRECTORY,
-only redownloads if REDOWNLOAD is non-nil. Returns the resulting path in
-any case (barring a potential error)."
+If the target already exists, reuses it unless REDOWNLOAD is non-nil.
+Returns the resulting absolute path in any case."
   (unless (file-directory-p directory)
     (user-error "Chosen download directory does not exist: %s" directory))
   (let ((path (expand-file-name filename directory)))
@@ -37,6 +38,8 @@ any case (barring a potential error)."
       (url-copy-file url path t))
     path))
 
+
+;;; Helpers
 (defun an-elfeed-select-enclosure (entry)
   "Return an enclosure selected from those associated with ENTRY."
   (let ((enclosures (elfeed-entry-enclosures entry)))
@@ -45,41 +48,39 @@ any case (barring a potential error)."
       (1 (elt enclosures 0))
       (count
        (let ((index (read-number (format "Enclosure to open (1-%d): " count))))
-         (unless (<= 1 index count)
+         (unless (and (integerp index) (<= 1 index count))
            (user-error "Enclosure number must be between 1 and %d" count))
          (elt enclosures (1- index)))))))
 
+(defun an-elfeed-apply-tag-map (entry tag-map)
+  "Apply TAG-MAP to ENTRY based on its Elfeed metadata.
 
-;;; Feeds
-;; IACR ePrint
-(defconst IACR_EPRINT_FEED_ATOM "https://eprint.iacr.org/rss/atom.xml?order=recent"
-  "Atom feed for IACR Cryptology ePrint Archive.")
-
-(defconst IACR_EPRINT_CATEGORY_TAGS
-  '(("Applications" . iacr-applications)
-    ("Foundations" . iacr-foundations)
-    ("Implementation" . iacr-implementation)
-    ("Public-key cryptography" . iacr-public-key)
-    ("Secret-key cryptography" . iacr-secret-key)
-    ("Cryptographic protocols" . iacr-protocols)
-    ("Attacks and cryptanalysis" . iacr-attacks-cryptanalysis))
-  "Mapping from IACR ePrint categories to Elfeed tags.")
-
-(defun an-iacr-eprint-entry-url-to-pdf-url (url)
-  "Return the PDF URL corresponding to an IACR ePrint entry URL."
-  (concat url ".pdf"))
-
-(defun an-elfeed-tag-iacr-eprint-entry (entry)
-  "Tag IACR ePrint ENTRY according to its upstream category, as per
-`IACR_EPRINT_CATEGORY_TAGS'."
-  (when (equal (elfeed-feed-url (elfeed-entry-feed entry)) IACR_EPRINT_FEED_ATOM)
-    (dolist (category (elfeed-meta entry :categories))
-      (when-let* ((tag (cdr (assoc-string category IACR_EPRINT_CATEGORY_TAGS t))))
-        (elfeed-tag entry tag)))))
+TAG-MAP maps Elfeed metadata keys to alists whose string keys are
+members of the corresponding list-valued entry metadata and whose
+values are Elfeed tag symbols."
+  (cl-loop for (key . sub-tag-map) in tag-map
+           do
+           (dolist (value (elfeed-meta entry key))
+             (when-let* ((tag (alist-get value sub-tag-map
+                                         nil nil #'string=)))
+               (elfeed-tag entry tag)))))
 
 
-;;; Handlers
-(defun an-elfeed-download-and-visit-url (url &optional filename redownload mime-type)
+;;; Transformers and handlers (general/default)
+;; Transformers
+(defun an-elfeed-transformer-identity (url)
+  "Apply no transformation and return URL."
+  url)
+
+(defalias 'an-elfeed-transformer-default #'an-elfeed-transformer-identity
+  "Default transformer: `an-elfeed-transformer-identity'")
+
+;; Handlers
+(defun an-elfeed-handler-browse-url (url &optional _filename _redownload _mime-type)
+  "Open URL using `browse-url'."
+  (browse-url url))
+
+(defun an-elfeed-handler-download-and-visit-url (url &optional filename redownload mime-type)
   "Download URL if necessary and visit the resulting local file.
 
 Use FILENAME as the local filename. If FILENAME is nil, ask for one,
@@ -97,50 +98,104 @@ local copy unless REDOWNLOAD is non-nil."
            (path (a-maybe-download-url-to-directory url directory filename redownload)))
       (find-file path))))
 
-(defun an-elfeed-browse-url (url &optional _filename _redownload _mime-type)
-  "Open URL using `browse-url'."
-  (browse-url url))
+(defalias 'an-elfeed-handler-default #'an-elfeed-handler-browse-url
+  "Default handler: `an-elfeed-handler-browse-url'")
 
-(defconst ELFEED_URL_HANDLING_SPECIFICATIONS
-  `(((feed . ,IACR_EPRINT_FEED_ATOM)
-     :transformer an-iacr-eprint-entry-url-to-pdf-url
-     :handler an-elfeed-browse-url))
-  "Mapping from Elfeed sources to transformed-url handling specifications.
 
-Each key has the form (TYPE . VALUE), where TYPE is either `feed'
-or `host'. Each corresponding value is a property list containing
-`:transformer' and `:handler'.
+;;; Data structures
+;; Feed configurations
+(cl-defstruct an-elfeed-feed-config
+  "Configuration for an Elfeed feed."
+  (url nil
+       :documentation
+       "URL of the feed.")
+  (default-tags nil
+                :documentation
+                "Tags applied by default to every entry from the feed.")
+  (tag-map nil
+           :documentation
+           "Alist with mappings from feed metadata keys/values to Elfeed tags.")
+  (link-transformer #'an-elfeed-transformer-default
+                    :documentation
+                    "Function used to transform entry links.")
+  (link-handler #'an-elfeed-handler-default
+                :documentation
+                "Function used to handle transformed entry links.")
+  (enclosure-handler #'an-elfeed-handler-default
+                     :documentation
+                     "Function used to handle enclosure URLs."))
 
-Feed-specific rules take precedence over host-wide rules.")
 
-(defun an-elfeed-url-handling-spec-for-entry (entry &optional default)
-  "Return a registered url-handling specification for ENTRY.
+;;; Feeds
+;; IACR ePrint
+;; Transformers
+(defun an-elfeed-transformer-iacr-eprint-entry-to-pdf (url)
+  "Return the PDF URL corresponding to an IACR ePrint entry URL."
+  (concat url ".pdf"))
 
-Prefers an exact feed rule over a host-wide rule. Return DEFAULT when
-there is no matching rule, or signal a user error when additionally
-DEFAULT is nil."
-  (let* ((feed (elfeed-entry-feed entry))
-         (feed-url (and feed (elfeed-feed-url feed)))
-         (host (and feed-url (url-host (url-generic-parse-url feed-url))))
-         (host (and host (downcase host))))
-    (or (and feed-url
-             (alist-get (cons 'feed feed-url)
-                        ELFEED_URL_HANDLING_SPECIFICATIONS
-                        nil nil #'equal))
-        (and host
-             (alist-get (cons 'host host)
-                        ELFEED_URL_HANDLING_SPECIFICATIONS
-                        nil nil #'equal))
-        default
-        (user-error "No url-handling specification for feed %s or host %s"
-                    feed-url host))))
+;; Configuration
+(defconst IACR_EPRINT_FEED_CONFIG
+  (make-an-elfeed-feed-config
+   :url "https://eprint.iacr.org/rss/atom.xml?order=recent"
+   :default-tags '(research cryptography iacr eprint)
+   :tag-map '((:categories
+               . (("Applications" . iacr-applications)
+                  ("Foundations" . iacr-foundations)
+                  ("Implementation" . iacr-implementation)
+                  ("Public-key cryptography" . iacr-public-key)
+                  ("Secret-key cryptography" . iacr-secret-key)
+                  ("Cryptographic protocols" . iacr-protocols)
+                  ("Attacks and cryptanalysis" . iacr-attacks-cryptanalysis))))
+   :link-transformer #'an-elfeed-transformer-iacr-eprint-entry-to-pdf)
+  "Feed configuration for IACR Cryptology ePrint Archive.")
 
+;; Shtetl Optimized (Scott Aaronson)
+(defconst SHTETL_OPTIMIZED_FEED_CONFIG
+  (make-an-elfeed-feed-config
+   :url "https://scottaaronson.blog/?feed=rss2"
+   :default-tags '(blog quantum shtetl))
+  "Feed configuration for Shtetl Optimized.")
+
+;; Machine Logic (Lawrence C Paulson)
+(defconst MACHINE_LOGIC_FEED_CONFIG
+  (make-an-elfeed-feed-config
+   :url "https://lawrencecpaulson.github.io/feed.xml"
+   :default-tags '(blog formal-methods machine-logic))
+  "Feed configuration for Machine Logic.")
+
+;; All feed configurations
+(defconst ALL_FEED_CONFIGS (list IACR_EPRINT_FEED_CONFIG
+                                 SHTETL_OPTIMIZED_FEED_CONFIG
+                                 MACHINE_LOGIC_FEED_CONFIG)
+  "List of all feed configurations.")
+
+
+;;; Helpers
+(defun an-elfeed-feed-config-from-entry (entry)
+  "Return a feed configuration for (the feed of) ENTRY, as per `ALL_FEED_CONFIGS'.
+
+Signal a user error when no such specification exists."
+  (let* ((feed-url (elfeed-feed-url (elfeed-entry-feed entry)))
+         (feed-config (cl-find feed-url ALL_FEED_CONFIGS
+                               :key #'an-elfeed-feed-config-url
+                               :test #'string=)))
+    (or feed-config
+        (user-error "No feed configuration for feed %s" feed-url))))
+
+(defun an-elfeed-tag-entry-from-feed (entry)
+  "Tag ENTRY according to its feed-related metadata, as per the tag map
+defined in the feed's configuration."
+  (when-let* ((feed-config (an-elfeed-feed-config-from-entry entry))
+              (feed-tag-map (an-elfeed-feed-config-tag-map feed-config)))
+    (an-elfeed-apply-tag-map entry feed-tag-map)))
+
+
+;;; Commands
 (defun an-elfeed-handle-link (&optional redownload)
   "Handle link associated with the shown/visited Elfeed entry.
 
-Selects a url transformer and handler and from
-`ELFEED_URL_HANDLING_SPECIFICATIONS' as per
-`an-elfeed-url-handling-spec-for-entry', which see.
+Obtains the transformer and handler from the relevant feed's
+configuration in `ALL_FEED_CONFIGS', which see.
 
 Interactively, pass the prefix argument as REDOWNLOAD. Download
 handlers may use it to replace an existing local copy; handlers for
@@ -149,25 +204,23 @@ which it is irrelevant may ignore it."
   (let* ((entry elfeed-show-entry)
          (link (or (elfeed-entry-link entry)
                    (user-error "No link to this entry")))
-         (spec (an-elfeed-url-handling-spec-for-entry entry))
-         (transformer (plist-get spec :transformer))
-         (handler (plist-get spec :handler)))
-    (unless (functionp transformer)
-      (user-error "Registry entry has no valid transformer"))
-    (unless (functionp handler)
-      (user-error "Registry entry has no valid handler"))
-    (let ((url (funcall transformer link)))
+         (feed-config (an-elfeed-feed-config-from-entry entry))
+         (link-transformer (an-elfeed-feed-config-link-transformer feed-config))
+         (link-handler (an-elfeed-feed-config-link-handler feed-config)))
+    (unless (functionp link-transformer)
+      (user-error "Feed configuration has no valid link transformer"))
+    (unless (functionp link-handler)
+      (user-error "Feed configuration has no valid link handler"))
+    (let ((url (funcall link-transformer link)))
       (unless (and (stringp url) (not (string-empty-p url)))
-        (user-error "Transformer returned an invalid URL"))
-      (funcall handler url (a-local-filename-for-url url) redownload))))
+        (user-error "Link transformer returned an invalid URL"))
+      (funcall link-handler url (a-local-filename-for-url url) redownload))))
 
 (defun an-elfeed-handle-enclosure (&optional redownload)
   "Handle enclosure associated with the shown/visited Elfeed entry.
 
-Selects a url transformer and handler and from
-`ELFEED_URL_HANDLING_SPECIFICATIONS' as per
-`an-elfeed-url-handling-spec-for-entry', which see. When no source-specific
-specification exists, download and visit the enclosure directly.
+Obtains the transformer and handler from the relevant feed's
+configuration in `ALL_FEED_CONFIGS', which see.
 
 Interactively, pass the prefix argument as REDOWNLOAD. Download
 handlers may use it to replace an existing local copy; handlers for
@@ -179,13 +232,11 @@ which it is irrelevant may ignore it."
          (mime-type (cadr enclosure))
          (filename (funcall elfeed-show-enclosure-filename-function
                             entry url))
-         (spec (an-elfeed-url-handling-spec-for-entry
-                entry
-                '(:handler an-elfeed-download-and-visit-url)))
-         (handler (plist-get spec :handler)))
-    (unless (functionp handler)
-      (user-error "Registry entry has no valid handler"))
-    (funcall handler url filename redownload mime-type)))
+         (feed-config (an-elfeed-feed-config-from-entry entry))
+         (enclosure-handler (an-elfeed-feed-config-enclosure-handler feed-config)))
+    (unless (functionp enclosure-handler)
+      (user-error "Feed configuration has no valid enclosure handler"))
+    (funcall enclosure-handler url filename redownload mime-type)))
 
 
 (provide 'local-elfeed)

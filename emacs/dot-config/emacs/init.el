@@ -1355,7 +1355,9 @@ that allows to include other templates by their name."
           doom-modeline-vcs-max-length 20)
 
   :config
-  (doom-modeline-mode 1))
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions #'a-doom-modeline-init-first-graphical-frame 90)
+    (add-hook 'after-init-hook #'(lambda () (doom-modeline-mode 1)) 90)))
 
 (use-package ef-themes
   :demand t
@@ -1435,8 +1437,8 @@ that allows to include other templates by their name."
   :config
   (require 'local-nerd-icons)
   (if (daemonp)
-      (add-hook 'after-make-frame-functions #'a-nerd-icons-set-font-frame 90)
-    (add-hook 'after-init-hook #'nerd-icons-set-font 90)))
+      (add-hook 'after-make-frame-functions #'a-nerd-icons-set-font-frame 80)
+    (add-hook 'after-init-hook #'nerd-icons-set-font 80)))
 
 (use-package ultra-scroll
   :demand t
@@ -2240,6 +2242,10 @@ that allows to include other templates by their name."
 (use-package elfeed
   :defer t
 
+  :bind
+  ("C-c r" . elfeed)
+  ("C-c R" . elfeed-tree)
+
   :init
   (defconst ELFEED_DIR (file-name-as-directory
                         (expand-file-name "elfeed/" EMACS_DATA_DIR))
@@ -2255,6 +2261,12 @@ that allows to include other templates by their name."
   (unless (file-directory-p elfeed-enclosure-default-dir)
     (make-directory elfeed-enclosure-default-dir t))
 
+  (setopt elfeed-search-title-min-width 20
+          elfeed-search-title-max-width 80)
+
+  (setopt elfeed-search-filter "+unread"
+          elfeed-tree-filter "")
+
   (setopt elfeed-show-entry-switch 'pop-to-buffer)
 
   :config
@@ -2266,9 +2278,14 @@ that allows to include other templates by their name."
   (keymap-set elfeed-show-mode-map "l" #'an-elfeed-handle-link)
   (keymap-set elfeed-show-mode-map "e" #'an-elfeed-handle-enclosure)
 
-  (add-to-list 'elfeed-feeds `(,IACR_EPRINT_FEED_ATOM iacr eprint))
+  (setopt elfeed-feeds
+        (mapcar
+         (lambda (config)
+           (cons (an-elfeed-feed-config-url config)
+                 (an-elfeed-feed-config-default-tags config)))
+         ALL_FEED_CONFIGS))
 
-  (add-hook 'elfeed-new-entry-hook #'an-elfeed-tag-iacr-eprint-entry))
+  (add-hook 'elfeed-new-entry-hook #'an-elfeed-tag-entry-from-feed))
 
 (use-package pdf-tools
   :defer t
@@ -2346,15 +2363,13 @@ that allows to include other templates by their name."
 ;; Dependencies: mbsync, mu, mu4e
 ;; see: https://www.djcbsoftware.nl/code/mu/mu4e/
 (use-package mu4e
-  :init
+  :defer t
 
-  ;; Sysvar: with recent versions of mbsync, the config file explicitly given
-  ;; here is the first default checked (so not needed to provide explicitly)
-  (setopt mu4e-get-mail-command
-          (concat "mbsync -a"
-                  (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
-                    (concat " -c " (shell-quote-argument
-                                    (expand-file-name "isyncrc" xdgcnf))))))
+  :bind
+  ("C-c m" . mu4e)
+  ("C-c M" . mu4e-compose-mail)
+
+  :init
   (setopt mu4e-update-interval 300)
   (setopt mu4e-change-filenames-when-moving t)
 
@@ -2400,6 +2415,10 @@ that allows to include other templates by their name."
   :config
   (require 'local-mu4e)
 
+  ;; Sysvar: with recent versions of mbsync, the config file explicitly given
+  ;; here is the first default checked (so not needed to provide explicitly)
+  (setopt mu4e-get-mail-command (a-mu4e-get-mail-command))
+
   (setopt mail-user-agent (mu4e-user-agent)
           message-mail-user-agent t)
 
@@ -2411,7 +2430,7 @@ that allows to include other templates by their name."
   (setopt mu4e-contexts (list
                          PERSONAL_MU4E_CONTEXT
                          RESEARCH_MU4E_CONTEXT
-                         ;; BUSINESS_MU4E_CONTEXT
+                         BUSINESS_MU4E_CONTEXT
                          ))
 
   (setopt mu4e-context-policy 'ask-if-none)
