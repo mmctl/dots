@@ -12,6 +12,6 @@
     (remove-hook 'after-make-frame-functions #'a-doom-modeline-init-first-graphical-frame)))
 
 
-(provide 'doom-modeline)
+(provide 'local-doom-modeline)
 
-;;; local-nerd-icons.el ends here
+;;; local-doom-modeline.el ends here

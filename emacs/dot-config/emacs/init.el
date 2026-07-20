@@ -11,7 +11,6 @@
 (setopt calendar-longitude 5.469722)
 
 
-
 ;;; Package system and packages
 (require 'package)
 (require 'package-vc)
@@ -1355,6 +1354,8 @@ that allows to include other templates by their name."
           doom-modeline-vcs-max-length 20)
 
   :config
+  (require 'local-doom-modeline)
+
   (if (daemonp)
       (add-hook 'after-make-frame-functions #'a-doom-modeline-init-first-graphical-frame 90)
     (add-hook 'after-init-hook #'(lambda () (doom-modeline-mode 1)) 90)))
