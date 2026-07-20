@@ -82,6 +82,7 @@
           ;; Reading and writing
           auctex
           cdlatex
+          denote
           elfeed
           pdf-tools
           ;; Org
@@ -2214,31 +2215,44 @@ that allows to include other templates by their name."
   (add-hook 'latex-mode-hook #'a-setup-latex-mode-not-use-dollar)
   (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-not-use-dollar))
 
-(use-package math-delimiters
+(use-package denote
   :defer t
 
+  :bind
+  (:prefix-map a-denote-map :prefix "C-c n" :prefix-docstring "Keymap for denote (global)"
+               ("n" . denote)
+               ("t" . denote-template)
+               ("r" . denote-region)
+               ("o" . denote-open-or-create)
+               ("R" . denote-rename-file)
+               ("l" . denote-link-or-create)
+               ("f" . denote-find-link)
+               ("F" . denote-find-backlink)
+               ("g" . denote-grep)
+               ("G" . denote-query-contents-link)
+               ("b" . denote-backlinks))
+
   :init
-  (require 'local-math-delimiters-pre)
+  (defconst DENOTE_DIR (file-name-as-directory
+                     (if (getenv "XDG_DATA_HOME")
+                         (expand-file-name "denote/" (getenv "XDG_DATA_HOME"))
+                       (expand-file-name "~/denote/")))
+    "Directory used as default location for denote notes.")
+  (unless (file-directory-p DENOTE_DIR)
+    (make-directory DENOTE_DIR t))
 
-  (setopt math-delimiters-inline '("$" . "$")) ; Supported by both TeX and LaTeX
-  (setopt math-delimiters-compressed-display-math nil)
+  (setopt denote-directory DENOTE_DIR)
 
-  ;; Set and unset appropriate keybinding upon loading relevant features
-  (with-eval-after-load 'org
-    (keymap-set org-mode-map "$" #'math-delimiters-insert))
+  (setopt denote-known-keywords
+          '("projects" "areas" "resources" "archives"
+            "personal" "research" "business" "development"
+            "study" "finance" "travel" "products"
+            "house" "relation" "tinker"
+            "emacs" "cryptography" "formalmethods"))
 
-  (with-eval-after-load 'tex ; AUCTeX
-    (keymap-set TeX-mode-map "$" #'math-delimiters-insert))
-
-  (with-eval-after-load 'tex-mode ; Built-in
-    (keymap-set tex-mode-map "$" #'math-delimiters-insert))
-
-  (with-eval-after-load 'cdlatex
-    (keymap-unset cdlatex-mode-map "$" t))
-
-  ;; Hooks
-  (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-math-delimiters)
-  (add-hook 'latex-mode-hook #'a-setup-latex-mode-math-delimiters))
+  (setopt denote-file-type 'org)
+  (setopt denote-date-prompt-use-org-read-date t)
+  (setopt denote-buffer-name-prefix ""))
 
 (use-package elfeed
   :defer t
@@ -2287,6 +2301,32 @@ that allows to include other templates by their name."
          ALL_FEED_CONFIGS))
 
   (add-hook 'elfeed-new-entry-hook #'an-elfeed-tag-entry-from-feed))
+
+(use-package math-delimiters
+  :defer t
+
+  :init
+  (require 'local-math-delimiters-pre)
+
+  (setopt math-delimiters-inline '("$" . "$")) ; Supported by both TeX and LaTeX
+  (setopt math-delimiters-compressed-display-math nil)
+
+  ;; Set and unset appropriate keybinding upon loading relevant features
+  (with-eval-after-load 'org
+    (keymap-set org-mode-map "$" #'math-delimiters-insert))
+
+  (with-eval-after-load 'tex ; AUCTeX
+    (keymap-set TeX-mode-map "$" #'math-delimiters-insert))
+
+  (with-eval-after-load 'tex-mode ; Built-in
+    (keymap-set tex-mode-map "$" #'math-delimiters-insert))
+
+  (with-eval-after-load 'cdlatex
+    (keymap-unset cdlatex-mode-map "$" t))
+
+  ;; Hooks
+  (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-math-delimiters)
+  (add-hook 'latex-mode-hook #'a-setup-latex-mode-math-delimiters))
 
 (use-package pdf-tools
   :defer t
