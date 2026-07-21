@@ -1493,18 +1493,21 @@ that allows to include other templates by their name."
 
   (setopt dirvish-quick-access-entries
           `(("h" ,(file-name-as-directory (expand-file-name "~/")) "Home")
-            ("p" ,(file-name-as-directory (expand-file-name "projects/" "~/")) "Projects")
-            ("a" ,(file-name-as-directory (expand-file-name "areas/" "~/")) "Areas")
-            ("r" ,(file-name-as-directory (expand-file-name "resources/" "~/")) "Resources")
-            ("A" ,(file-name-as-directory (expand-file-name "archive/" "~/")) "Archive")
-            ("c" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_CONFIG_HOME")
-                                                                "~/.config/")))
+            ("p" ,(file-name-as-directory (expand-file-name (or (getenv "PROJECTS_DIR") "~/projects/")))
+             "Projects")
+            ("a" ,(file-name-as-directory (expand-file-name (or (getenv "AREAS_DIR") "~/areas/")))
+             "Areas")
+            ("r" ,(file-name-as-directory (expand-file-name (or (getenv "RESOURCES_DIR") "~/resources/")))
+             "Resources")
+            ("A" ,(file-name-as-directory (expand-file-name (or (getenv "ARCHIVES_DIR") "~/archives/")))
+             "Archive")
+            ("c" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_CONFIG_HOME") "~/.config/")))
              "User config")
             ("C" "/etc/" "System config")
-            ("d" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_DATA_HOME")
-                                                                "~/.local/share/")))
+            ("d" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_DATA_HOME") "~/.local/share/")))
              "User data")
-            ("D" "/usr/share/" "System data")))
+            ("D" "/usr/share/" "System data")
+            ("M" "/mnt" "System mount point")))
 
   (setopt dirvish-side-mode-line-format '(:left (sort vc-info)))
   (setopt dirvish-side-attributes '(vc-state subtree-state nerd-icons))
@@ -2241,7 +2244,8 @@ that allows to include other templates by their name."
 
   :init
   (defconst DENOTE_DIR (file-name-as-directory
-                        (or (getenv "PARA_ROOT_DIR")
+                        (or (when (getenv "PARA_ROOT_DIR")
+                              (expand-file-name (getenv "PARA_ROOT_DIR")))
                             (when (getenv "XDG_DATA_HOME")
                               (expand-file-name "denote/" (getenv "XDG_DATA_HOME")))
                             (expand-file-name "~/denote/")))
@@ -2251,13 +2255,21 @@ that allows to include other templates by their name."
 
   (setopt denote-directory DENOTE_DIR)
 
+  (setopt denote-prompts '(title keywords subdirectory))
+  (setopt denote-excluded-directories-regexp (rx string-start "workspace" string-end))
+
   (setopt denote-known-keywords
-          '("project" "area" "resource" "archive"
-            "personal" "research" "business" "development"
-            "fleeting" "literature" "permanent" "index"
-            "study" "finance" "travel" "product"
-            "tinker" "home" "relation" "friendsandfamily"
-            "emacs" "cryptography" "formalmethods"))
+        '(;; Domains
+          "administration" "cryptography" "emacs" "finance"
+          "formalmethods" "home" "relationships" "software"
+          "travel"
+          ;; Types and roles
+          "area" "concept" "contract" "index"
+          "invoice" "literature" "policy" "project"
+          "receipt" "reference" "statement"
+          ;; Contexts
+          "business" "family" "friends" "partner"
+          "personal" "research"))
 
   (setopt denote-infer-keywords t)
   (setopt denote-sort-keywords t)
