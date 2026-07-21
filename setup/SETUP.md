@@ -325,16 +325,16 @@ run_setup devel-base
 ```
 
 This script installs the basic development toolchain required by later scripts.
-It also installs or updates the stable Rust toolchain through `rustup`.
+It also installs or updates the stable Rust toolchain and its standard
+development components through `rustup`.
 
 Manual checkpoint:
 
 ```text
-Ensure ~/.cargo/bin is on PATH.
+Ensure $CARGO_HOME/bin is on PATH.
 ```
 
-The base profile normally handles this after reloading the shell or rebooting.
-Confirm with:
+The base profile should already place this directory on `PATH`. Confirm with:
 
 ```sh
 command -v cargo
@@ -347,26 +347,33 @@ command -v rustup
 run_setup security
 ```
 
-This script prepares SSH, GPG, age, the password-manager command-line client,
-and the VPN client.
+This script configures the wheel-based sudo policy and, when available,
+fingerprint authentication for sudo. It installs and configures SSH, GPG,
+age, and YubiKey support; sets up the systemd SSH agent; imports the Proton
+Bridge package-signing key; and installs the Proton Pass and Proton VPN
+command-line clients.
 
-Manual checkpoint: enroll fingerprints and extract any relevant SSH/age identities
-from hardware keys. Reboot.
+Manual checkpoint: if fingerprint authentication was enabled, enroll and verify
+the desired fingerprints. Extract and store the relevant SSH and age identities
+from each hardware key using the names expected by the stowed configuration.
+
+Reboot so that the new wheel-group membership and user-session environment
+configuration take effect.
 
 ### 4.5 Install the desktop environment
 
 ```sh
-run_setup de-base-noct
+run_setup de-base
 ```
 
-This script installs the Wayland desktop stack. Specifically, it installs Niri,
-Noctalia (Quickshell), greetd, Kitty, fonts, desktop integration tools,
-and related utilities. It also enables the DMS user service and the greetd
-system service.
+This script installs and configures the Wayland desktop stack. Specifically, it
+installs Niri, Noctalia Shell, greetd, Kitty, graphical toolkits and fonts,
+desktop integration tools, and shell enhancements. It configures greetd to
+start a Niri session and enables the greetd system service.
 
-Manual checkpoint: reboot after this step so that the greeter, user services,
-shell configuration, and desktop stack are started cleanly. Login with your password
-to initialize the keyring.
+Manual checkpoint: reboot after this step so that greetd and the newly configured
+desktop environment start cleanly. Log in with your password to initialize and
+unlock the login keyring.
 
 After reboot, install additional graphical applications/extensions for the
 desktop environment:
@@ -375,10 +382,10 @@ desktop environment:
 run_setup de-ext
 ```
 
-This installs Nautilus (graphical file management), Flatpak (with
-Flathub), Zen browser, Signal, and Zotero.
+This installs Nautilus for graphical file management, Flatpak with the Flathub
+user remote, Zen Browser, Signal, and Zotero.
 
-Manual checkpoint: Open Zen browser and log in to Proton, checking "Keep me
+Manual checkpoint: open Zen browser and log in to Proton, checking "Keep me
 signed in" on a trusted device. Then, install the following extensions (still in
 Zen browser):
 
@@ -386,7 +393,7 @@ Zen browser):
 - uBlock Origin, including the desired filter lists.
 - Zotero Connector.
 
-Also, connect Signal, and log in to Zotero. Reboot after this step.
+Also, link Signal, and log in to Zotero.
 
 
 ### 4.6 Install productivity tools

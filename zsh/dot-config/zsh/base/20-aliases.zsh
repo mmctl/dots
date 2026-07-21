@@ -13,7 +13,8 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 
 if (( $+commands[emacsclient] )); then
-    alias ecc='emacsclient -c -n --alternate-editor='
+    # alias ecc='emacsclient -c -n --alternate-editor='
+    alias ecc='emacsclient-x11 -c -n'
 fi
 
 if (( $+commands[flatpak] )); then

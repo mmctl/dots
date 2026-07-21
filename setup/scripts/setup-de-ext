@@ -67,7 +67,7 @@ setup_log_info "Installed research tools (Zotero)."
 
 
 setup_log_action "Manual checkpoint:"
-setup_log_action "  Log in to Signal."
+setup_log_action "  Link to Signal."
 setup_log_action "  Log in to Zotero."
 setup_log_action "  Open Zen browser:"
 setup_log_action "    Log in to Proton and check \"Keep me signed in\" on a trusted device:"

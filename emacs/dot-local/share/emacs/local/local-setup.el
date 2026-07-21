@@ -12,9 +12,11 @@
 
 ;;; Frames
 (defun local-setup-frame-defaults-from-given (frame)
-  "test"
+  "Set up default frame settings for current (FRAME) and future frames,
+based on current (non-dummy) graphical frame FRAME."
   ;; Faces
-  (when (display-graphic-p frame)
+  (when (and (display-graphic-p frame)
+             (not (frame-parameter frame 'server-dummy-buffer)))
     (let ((ffl (font-family-list frame)))
       ;; Default/Fixed-pitch
       (cond

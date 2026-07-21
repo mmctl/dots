@@ -19,11 +19,6 @@ sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 
 for bcmd in git curl gpg2 stow; do
-    # if ! command -v "$bcmd" >/dev/null 2>&1; then
-    #     setup_log_info "$bcmd is not installed. Installing..."
-    #     sudo zypper --non-interactive --no-color install "$bcmd"
-    #     setup_log_info "Installed $bcmd."
-    # fi
     ensure_command_from_package "$bcmd" "$bcmd"
 done
 

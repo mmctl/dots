@@ -5,8 +5,11 @@
 
 
 (defun a-doom-modeline-init-first-graphical-frame (frame)
-  "Initialize Doom Modeline using (first) graphical FRAME."
-  (when (display-graphic-p frame)
+  "Initialize Doom Modeline using first (non-dummy) graphical FRAME.
+
+Meant as hook for `after-make-frame-functions'."
+  (when (and (display-graphic-p frame)
+             (not (frame-parameter frame 'server-dummy-buffer)))
     (with-selected-frame frame
       (doom-modeline-mode 1))
     (remove-hook 'after-make-frame-functions #'a-doom-modeline-init-first-graphical-frame)))
