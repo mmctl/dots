@@ -1359,7 +1359,7 @@ that allows to include other templates by their name."
 
   (if (daemonp)
       (add-hook 'after-make-frame-functions #'a-doom-modeline-init-first-graphical-frame 90)
-      ;; (add-hook 'server-after-make-frame-hook #'a-doom-modeline-init-first-client-frame 90)
+      ;; (add-hook 'server-after-make-frame-hook #'a-doom-modeline-init-first-graphical-client-frame 90)
     (add-hook 'after-init-hook #'(lambda () (doom-modeline-mode 1)) 90)))
 
 (use-package ef-themes
@@ -2251,12 +2251,13 @@ that allows to include other templates by their name."
   (setopt denote-directory DENOTE_DIR)
 
   (setopt denote-known-keywords
-          '("fleeting" "literature" "permanent" "index"
-            "projects" "areas" "resources" "archives"
+          '("project" "area" "resource" "archive"
             "personal" "research" "business" "development"
-            "study" "finance" "travel" "products"
-            "house" "relation" "tinker"
+            "fleeting" "literature" "permanent" "index"
+            "study" "finance" "travel" "product"
+            "tinker" "home" "relation" "friendsandfamily"
             "emacs" "cryptography" "formalmethods"))
+
   (setopt denote-infer-keywords t)
   (setopt denote-sort-keywords t)
 
@@ -2361,7 +2362,7 @@ that allows to include other templates by their name."
   (setopt pdf-view-display-size 'fit-page)
   (setopt pdf-view-use-unicode-ligther t)
 
-  (pdf-loader-install)
+  (pdf-loader-install t)
 
   :config
   (require 'local-pdf-tools)
@@ -2521,9 +2522,10 @@ that allows to include other templates by their name."
   ;; Setup (preface)
   ;; Create and store org root directory
   (defconst ORG_DIR (file-name-as-directory
-                     (if (getenv "XDG_DATA_HOME")
-                         (expand-file-name "org/" (getenv "XDG_DATA_HOME"))
-                       (expand-file-name "~/org/")))
+                     (or (getenv "ORG_DIR")
+                         (when (getenv "XDG_DATA_HOME")
+                             (expand-file-name "org/" (getenv "XDG_DATA_HOME")))
+                         (expand-file-name "~/org/")))
     "Directory used as default location for org files.")
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))

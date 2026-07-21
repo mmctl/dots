@@ -75,12 +75,29 @@ else
 
     (
         set +x
-        umask 077
-        authinfo_tmpdir="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/authinfo.XXXXXX")"
-        chmod 700 "$authinfo_tmpdir"
 
+        recipient_dir="$XDG_CONFIG_HOME/age/recipients"
+
+        set --
+        recipient_count=0
+
+        for recipient_file in "$recipient_dir"/*.recipient; do
+            [ -f "$recipient_file" ] || continue
+
+            set -- "$@" --recipients-file "$recipient_file"
+            recipient_count=$((recipient_count + 1))
+        done
+
+        if [ "$recipient_count" -eq 0 ]; then
+            setup_log_die "No age recipient files found in: $recipient_dir"
+        fi
+
+        umask 077
+
+        authinfo_tmpdir="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/authinfo.XXXXXX")"
         authinfo_tmp="$authinfo_tmpdir/authinfo"
-        authinfo_age_tmp="$authinfo_dir/.authinfo.age.XXXXXX"
+
+        authinfo_age_tmp="$(mktemp authinfo_dir/.authinfo.age.XXXXXX)"
 
         trap 'rm -rf -- "$authinfo_tmpdir"; rm -f -- "$authinfo_age_tmp"' EXIT HUP INT TERM
 
@@ -94,8 +111,7 @@ machine api.github.com login ${github_pers_user}^forge password $github_pers_pat
 EOF
 
         age --encrypt \
-            --recipients-file "$XDG_CONFIG_HOME/age/recipients/mm_personal_file_enc_primary.recipient" \
-            --recipients-file "$XDG_CONFIG_HOME/age/recipients/mm_personal_file_enc_secondary.recipient" \
+            "$@" \
             --output "$authinfo_age_tmp" \
             "$authinfo_tmp"
 

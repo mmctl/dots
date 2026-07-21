@@ -412,7 +412,8 @@ Log in to Proton Pass CLI:
 pass-cli login
 ```
 
-Log in to Proton Drive:
+Log in to Proton Drive (and make sure the relevant data is available at the
+expected paths therein, see script):
 
 ```sh
 proton-drive auth login
@@ -420,11 +421,17 @@ proton-drive auth login
 
 Launch Proton Bridge, log in, and [enable "Split
 addresses"](https://proton.me/support/difference-combined-addresses-mode-split-addresses-mode).
-Then, export the Bridge-local TLS certificate (from Advanced Settings), and store the certificate at
-`$XDG_CONFIG_HOME/proton/bridge/cert.pem` (delete the private key). Preferably make the `bridge`
-directory user accessible only: `install -m 700-d $XDG_CONFIG_HOME/proton/bridge`.
+Then export the Bridge-local TLS certificate from Advanced Settings and store
+the certificate at `$XDG_CONFIG_HOME/proton/bridge/cert.pem`. Delete the private
+key from the exported file, if it is included. Make the Bridge directory
+accessible only to the current user:
 
-Store the Bridge-local IMAP/SMTP credentials in the keyring, once for each Proton account (this is for retrieval through `mbsync`):
+```sh
+install -d -m 700 -- $XDG_CONFIG_HOME/proton/bridge`.
+```
+
+Store the Bridge-local IMAP/SMTP credentials in the keyring, once for each
+Proton account (this is for retrieval through `mbsync`):
 
 ```sh
 # Enter password reported in Bridge when asked
@@ -434,7 +441,8 @@ secret-tool store \
     account personal
 ```
 
-And once per email address associated with a Proton account (this is for sending and receiving through Emacs):
+Also store address-specific IMAP and SMTP credentials once per email address
+associated with a Proton account (for use by the Emacs mail configuration):
 
 ```sh
 # Replace values with actual host, port, and user reported in Bridge
@@ -457,14 +465,14 @@ secret-tool store \
 # Enter password reported in Bridge when asked
 secret-tool store \
     --label='Proton Bridge IMAP (example@mmeijers.com)' \
-    service proton-bridge
+    service proton-bridge \
     host 127.0.0.1 \
     port 1143 \
     user example@mmeijers.com
 
 secret-tool store \
     --label='Proton Bridge SMTP (example@mmeijers.com)' \
-    service proton-bridge
+    service proton-bridge \
     host 127.0.0.1 \
     port 1025 \
     user example@mmeijers.com
@@ -476,11 +484,30 @@ At this point, run the actual productivity setup:
 run_setup productivity
 ```
 
-This script installs and prepares the main productivity applications. It sets up
-Emacs and its user service, installs mail tooling such as isync and mu, and
-Myspell dictionaries, prepares the Maildir layout, and configures desktop entries
-and MIME handlers for Emacsclient.
+This script creates the encrypted authinfo file using credentials retrieved from
+Proton Pass and the age recipients created during the security setup. It creates
+and synchronizes the Maildir layout, configures headless Proton Bridge autostart,
+initializes the mu database, and installs the spellchecker and dictionaries.
 
+It also installs and configures Emacs, its graphical user service and primer
+service, downloads data from Proton Drive, and configures desktop
+entries and MIME handlers for Emacsclient.
+
+Manual checkpoint: start a non-daemon Emacs instance:
+
+```sh
+emacs-x11
+```
+
+Load the installation entry point and wait for native compilation to finish:
+
+```elisp
+(load (expand-file-name "emacs/install/install-entry.el"
+                        (getenv "XDG_DATA_HOME")))
+```
+
+Add any additional required credential entries to `$AUTHINFO_FILE`, such as
+access tokens for other forge accounts. Reboot after completing these steps.
 
 ### 4.7 Install the full development environment
 
