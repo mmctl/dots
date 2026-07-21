@@ -547,7 +547,6 @@ accounts, and that the SSH host aliases from the stowed SSH configuration are
 active.
 
 ### 4.9 Set up automated backups
-
 ### 4.8 Set up automated backups
 
 Ensure that the backup medium is connected and that you are logged in to Proton
@@ -570,24 +569,66 @@ backed up:
 sudo cryptsetup luksUUID /dev/nvme0n1p2 # Replace with actual device
 ```
 
-Before running the setup, ensure that the expected machine directory already
-exists on the backup medium. With the default configuration, this is:
+The backup location is determined by the following main configuration values:
 
 ```text
-personal/laptop-lenovo-thinkpad-t14-gen2
+BACKUP_TARGET_NAME    Name of the backup medium, e.g. primary or secondary
+BACKUP_PATH_TO_LABEL  Path below the mountpoint, e.g. personal or professional
+MACHINE_LABEL         Stable label identifying the machine
 ```
 
-Run the backup setup with the filesystem UUID of the backup medium, followed by
-any LUKS UUIDs:
+By default, these produce the following machine backup root:
+
+```text
+/mnt/backup-primary/personal/laptop-lenovo-thinkpad-t14-gen2
+```
+
+The corresponding directory must already exist on the backup medium before
+running the setup.
+
+Run the setup with the filesystem UUID of the backup medium, followed by any
+LUKS UUIDs:
 
 ```sh
 "$DOTS_DIR/setup/scripts/run-setup-script" \
     "$DOTS_DIR/setup/scripts/setup-backup" \
     FILESYSTEM_UUID \
-    LUKS_UUID1 ... LUKS_UUIDn
+    LUKS_UUID_1 ... LUKS_UUIDn
 ```
 
 Omit the LUKS UUID arguments if no LUKS headers should be backed up.
+
+Override the backup labels by setting environment variables for the setup
+command. For example, to configure a professional backup on a secondary medium:
+
+```sh
+BACKUP_TARGET_NAME=secondary \
+BACKUP_PATH_TO_LABEL=professional \
+MACHINE_LABEL=laptop-lenovo-thinkpad-p15s-gen5 \
+"$DOTS_DIR/setup/scripts/run-setup-script" \
+    "$DOTS_DIR/setup/scripts/setup-backup" \
+    FILESYSTEM_UUID \
+    LUKS_UUID
+```
+
+Changing `BACKUP_TARGET_NAME` also changes the default mountpoint. For example,
+`secondary` uses `/mnt/backup-secondary`. Set `BACKUP_MOUNTPOINT` explicitly
+only when a different mountpoint is desired:
+
+```sh
+BACKUP_TARGET_NAME=secondary \
+BACKUP_MOUNTPOINT=/mnt/external-backup \
+BACKUP_PATH_TO_LABEL=professional \
+MACHINE_LABEL=laptop-lenovo-thinkpad-p15s-gen5 \
+"$DOTS_DIR/setup/scripts/run-setup-script" \
+    "$DOTS_DIR/setup/scripts/setup-backup" \
+    FILESYSTEM_UUID \
+    LUKS_UUID_1 ... LUKS_UUIDn
+```
+
+Run the setup separately for each backup medium, using its own filesystem UUID
+and a distinct `BACKUP_TARGET_NAME`. The same `BACKUP_PATH_TO_LABEL` and
+`MACHINE_LABEL` can be reused across media when they contain equivalent backups.
 
 This script installs and stows the Restic backup tooling, creates a new
 installation-specific backup directory and Restic repository, and optionally
@@ -596,37 +637,21 @@ generates a repository password, stores it in Proton Pass, and encrypts it as a
 systemd credential for the backup services.
 
 It also creates the repository-specific Restic configuration and prepares the
-backup, maintenance, and manual scrub services. The backup medium is mounted
-only during setup and backup operations.
+backup, maintenance, and manual scrub services.
 
-Manual checkpoint: add the printed mount entry to `/etc/fstab`, if it is not
-already present, and reload the system configuration:
+Manual checkpoint: add the `/etc/fstab` entry printed by the script, if it is
+not already present, and reload the system configuration:
 
 ```sh
 sudo systemctl daemon-reload
 ```
 
-Test that the backup medium can be mounted and unmounted as the regular user:
+Test the mount and unmount commands printed by the script as the regular user.
+Then enable the backup and maintenance timers using the unit names printed by
+the script.
 
-```sh
-mount /mnt/backup-primary
-umount /mnt/backup-primary
-```
-
-Then enable the backup and maintenance timers printed by the script, e.g.:
-
-```sh
-systemctl --user enable --now restic-backup@home-primary.timer
-systemctl --user enable --now restic-maintenance@home-primary.timer
-```
-
-Optionally run and inspect an initial backup immediately:
-
-```sh
-systemctl --user start restic-backup@home-primary.service
-systemctl --user status restic-backup@home-primary.service
-```
-
+Optionally start the printed backup service immediately and inspect its status
+to verify the initial backup.
 
 ## 5. Manual network configuration
 
@@ -692,8 +717,8 @@ Boot from a Linux live or rescue medium and set the encrypted device and corresp
 header-backup file:
 
 ```sh
-LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of encrypted device
-LUKS_BACKUP_FILE=/path/to/backup-header-file-<luksUUID>.img # Replace with actual path to backup header file for LUKS_DEVICE
+LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of device
+LUKS_BACKUP_FILE=/path/to/backup-header-file # Replace with actual path to backup header file for LUKS_DEVICE
 LUKS_MAPPING_NAME=luks-recovery # Arbitrary temporary mapping name
 ```
 
@@ -736,43 +761,4 @@ a new header backup.
 latest_log=$(ls -t "${XDG_STATE_HOME:-$HOME/.local/state}/setup"/*.log | head -n 1)
 printf '%s\n' "$latest_log"
 tail -n 100 "$latest_log"
-```
-
-### Re-run an idempotent setup script
-
-Most scripts are written to skip existing repositories, keys, and configurations where possible. Re-run through the wrapper:
-
-```sh
-run_setup name
-```
-
-Check the corresponding log after re-running.
-
-### Confirm user services
-
-```sh
-systemctl --user status ssh-agent.service
-systemctl --user status emacs.service
-systemctl --user status dms.service
-```
-
-### Confirm Docker access after reboot
-
-```sh
-groups
-systemctl status docker
-```
-
-The current user should be listed in the `docker` group after logging in again.
-
-### Confirm key development tools
-
-```sh
-command -v cargo
-command -v rustup
-command -v easycrypt
-command -v cvc5
-command -v z3
-command -v elan
-command -v docker
 ```
