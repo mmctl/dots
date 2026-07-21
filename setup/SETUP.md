@@ -518,11 +518,17 @@ run_setup devel
 This script installs the larger development environment for writing,
 programming, formal methods, proof engineering, and container work. In
 particular, it installs TeX Live, Rust components, Go, C/C++, Python tooling,
-opam and OCaml tooling, EasyCrypt, Lean, Docker, and
-QMK-related tools.
+opam and OCaml tooling, EasyCrypt without SMT provers, Lean, and Docker.
 
-Manual checkpoint: reboot after this step so that group membership changes,
-especially Docker group membership, take effect.
+Manual checkpoint: install compatible SMT provers (e.g., Z3 and CVC5), and
+configure EasyCrypt/Why3:
+
+```sh
+easycrypt why3config
+```
+
+Then reboot so that the development environment variables and group membership
+changes, especially Docker group membership, take effect.
 
 ### 4.8 Create the PARA workspace and project checkouts
 
@@ -532,24 +538,6 @@ run_setup para
 
 This script creates the personal PARA directory structure and checks out project
 repositories.
-
-It creates private directories with mode `700`:
-
-```text
-~/projects
-~/areas
-~/resources
-~/archives
-```
-
-The paths can be overridden with:
-
-```sh
-PROJECTS_DIR=...
-AREAS_DIR=...
-RESOURCES_DIR=...
-ARCHIVES_DIR=...
-```
 
 The script then clones the configured project/area repositories and creates
 selected symlinks.
@@ -614,50 +602,7 @@ The intended priority order is therefore:
 2. Private WiFi: route metric `300`.
 3. Guest WiFi: route metric `500`.
 
-## 6. Optional fingerprint authentication
-
-For machines with a supported fingerprint reader, install the fingerprint
-packages and enroll the current user.
-
-```sh
-sudo zypper install fprintd fprintd-pam
-sudo fprintd-enroll -f right-index-finger "$USER"
-sudo fprintd-enroll -f left-index-finger "$USER"
-```
-
-If fingerprint authentication remains buggy in the lock screen or greeter,
-try disabling the general fingerprint feature and enable fingerprint authentication
-only for `sudo`.
-
-## 7. Important generated files and directories
-
-The setup creates and uses the following locations:
-
-| Location                                               | Purpose                                                                             |
-|--------------------------------------------------------|-------------------------------------------------------------------------------------|
-| `~/.local/share/dots`                                  | Dotfiles repository and setup scripts.                                              |
-| `~/.local/state/setup`                                 | Timestamped setup logs created by `run-setup-script`.                               |
-| `~/.cache`                                             | XDG cache directory.                                                                |
-| `~/.config`                                            | XDG configuration directory.                                                        |
-| `~/.local/share`                                       | XDG data directory.                                                                 |
-| `~/.local/state`                                       | XDG state directory.                                                                |
-| `~/.local/bin`                                         | User-local executables and symlinks.                                                |
-| `~/.ssh/${USER}_ed25519_personal`                      | Personal SSH private key.                                                           |
-| `~/.ssh/${USER}_ed25519_professional`                          | Professional SSH private key.                                                               |
-| `~/.config/systemd/user/ssh-agent.service`             | User-level SSH agent service.                                                       |
-| `~/.local/share/.authinfo.gpg`                         | Encrypted Authinfo file for mail and forge credentials.                             |
-| `~/.local/share/mail`                                  | Maildir root used by isync, mu, and mu4e.                                           |
-| `~/.config/systemd/user/emacs.service`                 | User-level Emacs daemon service.                                                    |
-| `~/.local/share/applications/emacsclient.desktop`      | Desktop entry for opening files in Emacsclient.                                     |
-| `~/.local/share/applications/emacsclient-mail.desktop` | Desktop entry for composing `mailto:` URLs in Emacsclient.                          |
-| `~/.local/share/srcs`                                  | Source checkouts and downloaded tool trees such as EasyCrypt, cvc5, Z3, and ble.sh. |
-| `~/.local/share/qmk_firmware`                          | QMK firmware checkout.                                                              |
-| `~/projects`                                           | PARA projects directory.                                                            |
-| `~/areas`                                              | PARA areas directory.                                                               |
-| `~/resources`                                          | PARA resources directory.                                                           |
-| `~/archives`                                           | PARA archives directory.                                                            |
-
-## 8. Testing and Troubleshooting
+## 6. Testing and Troubleshooting
 
 ### Testing recovery of LUKS headers
 
