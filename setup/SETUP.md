@@ -155,7 +155,7 @@ header backup with the correct encrypted device.
 Store the header backup somewhere safe and externally, that is, not on the same
 physical drive as the encrypted volume. An automated backup-setup script is
 included that can do this for you, alongside setting up general backups; this is
-covered [in a later section](#4.8-set-up-automated-backups) Preferably, also
+covered [in a later section](#4.9-set-up-automated-backups) Preferably, also
 test that each backed-up header can successfully unlock its corresponding
 volume. This process is described [at the end of these setup
 instructions](#testing-recovery-of-luks-headers).
@@ -496,7 +496,7 @@ entries and MIME handlers for Emacsclient.
 Manual checkpoint: start a non-daemon Emacs instance:
 
 ```sh
-emacs-x11
+emacs
 ```
 
 Load the installation entry point and wait for native compilation to finish:
@@ -536,15 +536,97 @@ changes, especially Docker group membership, take effect.
 run_setup para
 ```
 
-This script creates the personal PARA directory structure and checks out project
-repositories.
+This script creates the personal PARA directory structure, installs QMK and
+Hugo, and checks out the configured project and area repositories. It also
+initializes the QMK firmware checkout and creates the configured QMK keymap
+symlinks.
 
-The script then clones the configured project/area repositories and creates
-selected symlinks.
+This step assumes that the SSH identities configured during setup-security
+are available, that their public keys have been added to the relevant forge
+accounts, and that the SSH host aliases from the stowed SSH configuration are
+active.
 
-This step assumes that the SSH keys created by `setup-security` have already
-been added to the relevant forge accounts (e.g., GitHub) and that the SSH host
-aliases from the stowed SSH configuration are available.
+### 4.9 Set up automated backups
+
+### 4.8 Set up automated backups
+
+Ensure that the backup medium is connected and that you are logged in to Proton
+Pass CLI:
+
+```sh
+pass-cli login
+```
+
+Determine the filesystem UUID of the backup medium:
+
+```sh
+lsblk --fs
+```
+
+Also determine the LUKS UUID of each encrypted device whose header should be
+backed up:
+
+```sh
+sudo cryptsetup luksUUID /dev/nvme0n1p2 # Replace with actual device
+```
+
+Before running the setup, ensure that the expected machine directory already
+exists on the backup medium. With the default configuration, this is:
+
+```text
+personal/laptop-lenovo-thinkpad-t14-gen2
+```
+
+Run the backup setup with the filesystem UUID of the backup medium, followed by
+any LUKS UUIDs:
+
+```sh
+"$DOTS_DIR/setup/scripts/run-setup-script" \
+    "$DOTS_DIR/setup/scripts/setup-backup" \
+    FILESYSTEM_UUID \
+    LUKS_UUID1 ... LUKS_UUIDn
+```
+
+Omit the LUKS UUID arguments if no LUKS headers should be backed up.
+
+This script installs and stows the Restic backup tooling, creates a new
+installation-specific backup directory and Restic repository, and optionally
+backs up the LUKS headers and metadata of the specified encrypted devices. It
+generates a repository password, stores it in Proton Pass, and encrypts it as a
+systemd credential for the backup services.
+
+It also creates the repository-specific Restic configuration and prepares the
+backup, maintenance, and manual scrub services. The backup medium is mounted
+only during setup and backup operations.
+
+Manual checkpoint: add the printed mount entry to `/etc/fstab`, if it is not
+already present, and reload the system configuration:
+
+```sh
+sudo systemctl daemon-reload
+```
+
+Test that the backup medium can be mounted and unmounted as the regular user:
+
+```sh
+mount /mnt/backup-primary
+umount /mnt/backup-primary
+```
+
+Then enable the backup and maintenance timers printed by the script, e.g.:
+
+```sh
+systemctl --user enable --now restic-backup@home-primary.timer
+systemctl --user enable --now restic-maintenance@home-primary.timer
+```
+
+Optionally run and inspect an initial backup immediately:
+
+```sh
+systemctl --user start restic-backup@home-primary.service
+systemctl --user status restic-backup@home-primary.service
+```
+
 
 ## 5. Manual network configuration
 
