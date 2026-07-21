@@ -26,11 +26,6 @@ sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 
 for bcmd in git stow; do
-    # if ! command -v "$bcmd" >/dev/null 2>&1; then
-    #     setup_log_info "$bcmd is not installed. Installing..."
-    #     sudo zypper --non-interactive --no-color install "$bcmd"
-    #     setup_log_info "Installed $bcmd."
-    # fi
     ensure_command_from_package "$bcmd" "$bcmd"
 done
 
@@ -40,10 +35,8 @@ XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
-DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
-MAILDIR="${MAILDIR:-$XDG_DATA_HOME/mail}"
-# AUTHINFO_FILE="${AUTHINFO_FILE:-$XDG_DATA_HOME/.authinfo.gpg}"
+DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
 
 if [ ! -d "$DOTS_DIR" ]; then
     setup_log_die "dotfiles directory not found: $DOTS_DIR"
@@ -53,6 +46,13 @@ REPLACE_PLACEHOLDER="${REPLACE_PLACEHOLDER:-$DOTS_DIR/setup/scripts/replace-plac
 
 if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
     setup_log_die "replace-placeholder script not found or not executable: $REPLACE_PLACEHOLDER"
+fi
+
+ORG_PARENT_DIR_LOCAL="${ORG_PARENT_DIR_LOCAL:-$XDG_DATA_HOME}"
+ORG_DIR_REMOTE="${ORG_DIR_REMOTE:-/my-files/sync/org}"
+
+if ! proton-drive filesystem list "$ORG_DIR_REMOTE" >/dev/null 2>&1; then
+   setup_log_die "Cannot access ORG data on remote ($ORG_DIR_REMOTE), please ensure you are logged in (proton-drive auth login)."
 fi
 
 
@@ -108,6 +108,8 @@ fi
 
 
 setup_log_info "Creating mail directories..."
+
+MAILDIR="${MAILDIR:-$XDG_DATA_HOME/mail}"
 
 install -d -m 700 -- \
         "$MAILDIR" \
@@ -231,8 +233,8 @@ Requisite=graphical-session.target
 [Service]
 Type=oneshot
 
-ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet  --suppress-output --eval t
-ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet  --suppress-output --create-frame --eval '(delete-frame (selected-frame) t)'
+ExecStart="$emacsclient_exec" --alternate-editor=false --display "\$DISPLAY" --quiet --suppress-output --no-wait --create-frame --frame-parameters '((name . "emacs-x11-primer") (visibility . nil) (a-primer . t))'
+ExecStart="$emacsclient_exec" --alternate-editor=false --quiet --suppress-output --eval '(when-let ((frame (seq-find (lambda (frame) (frame-parameter frame (quote a-primer))) (frame-list)))) (delete-frame frame t))'
 EOF
 
 systemctl --user daemon-reload
@@ -242,9 +244,10 @@ if systemctl --user cat niri.service >/dev/null 2>&1; then
     systemctl --user add-wants niri.service emacs-x11-primer.service
 fi
 
-setup_log_info "Fetching Emacs ORG data..."
-clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
-setup_log_info "Fetched Emacs ORG data."
+setup_log_info "Syncing ORG data..."
+# clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
+proton-drive filesystem download -c -skip "$ORG_DIR_REMOTE" "$ORG_PARENT_DIR_LOCAL"
+setup_log_info "Synced ORG data."
 
 setup_log_info "Setting default file associations..."
 

@@ -35,6 +35,9 @@ export ARCHIVES_DIR="$HOME/archives"
 ### Dotfiles
 export DOTS_DIR="$XDG_DATA_HOME/dots"
 
+### ORG
+export ORG_DIR="$XDG_DATA_HOME/org"
+
 ### Maildir
 export MAILDIR="$XDG_DATA_HOME/mail"
 
