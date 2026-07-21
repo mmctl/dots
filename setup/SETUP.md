@@ -3,9 +3,7 @@
 This guide documents the setup flow for a personal openSUSE Tumbleweed machine.
 It starts from a minimal desktop-oriented installation, fetches the dotfiles
 repository, and then applies the setup scripts in the intended order. The
-scripts do most of the system configuration, but a few manual steps remain for
-network profiles, browser extensions, SSH keys, and optional fingerprint
-authentication.
+scripts do most of the system configuration, but a few manual steps remain.
 
 The setup is intended to be run as the target regular user, not as `root`. The
 scripts will request `sudo` only for the system-level changes that require it.
@@ -33,14 +31,12 @@ During installation, use the following baseline:
 - Installation Settings/Overview:
   - Booting ->
     - Boot loader type:
-      - [If disk encryption] Systemd boot
-      - [Else] Anything (GRUB2 for EFI gives nicer menu)
+      - Systemd boot
   - Software ->
     - Patterns (select manually):
       - Graphical Environments:
         - Fonts
       - Base Technologies:
-        - Kernel dump tooling
         - Base System
         - Enhanced Base System
         - SELinux Support
@@ -48,7 +44,6 @@ During installation, use the following baseline:
         - [If laptop] Mobile
         - YaST Base Utilities
         - YaST Desktop Utilities
-        - Minimal Appliance Base
       - Documentation:
         - Help and Support Documentation
         - Documentation
@@ -58,17 +53,17 @@ After the first boot, continue with the steps below.
 ## 0. [If disk encryption] Set up recovery and authentication methods for disk encryption
 
 Before proceeding, ensure that the LUKS password or recovery key is available.
-This credential remains the fallback if TPM unlocking fails.
+This credential remains the fallback if TPM2 or FIDO2 unlocking fails.
 
-Inspect the encrypted devices and their existing enrollment slots:
+Inspect the encrypted devices tracked by `sdbootutil` and their existing enrollment slots:
 
 ```bash
 sudo sdbootutil list-devices
 sudo systemd-cryptenroll /dev/nvme0n1p2 # Replace with actual name of device
 ```
 
-Each device should have an independent `password` and/or `recovery` enrollment.
-If it does not have a `recovery` enrollment, create one:
+Each device should have at least one `password` and/or `recovery` enrollment.
+If there is no `recovery` enrollment, create one:
 
 ```sh
 sudo sdbootutil enroll --method=recovery-key
@@ -85,8 +80,12 @@ For a TPM2 enrollment with PIN (remove the `+pin` if you prefer without PIN):
 sudo sdbootutil enroll --method=tpm2+pin
 ```
 
-For a FIDO2 enrollment with PIN and touch, ensure a PIN has been set on the key (for its FIDO2 application) before enrolling;
-otherwise, a touch-only enrollment is created, and re-enrollment is necessary to utilize a PIN (if set at a later point).
+For a FIDO2 enrollment with PIN and touch, ensure a PIN has been set on the key
+(for its FIDO2 application) before enrolling; otherwise, a touch-only enrollment
+is created, and re-enrollment is necessary to utilize a PIN (if set at a later
+point). For YubiKeys, setup instructions can be found in
+[SETUP-YUBIKEY.md](./SETUP-YUBIKEY.md) (but goes beyond what is strictly needed
+here, also covering what is expected in the remainder of the setup).
 
 For both types of FIDO2 enrollment, however, the enrollment process is the same.
 First insert your hardware key to check whether it is detected:
@@ -95,15 +94,36 @@ First insert your hardware key to check whether it is detected:
 sudo systemd-cryptenroll --fido2-device=list
 ```
 
-If your key is detected, create the enrollment:
+If your key is detected, create the enrollment for each LUKS device tracked by
+`sdbootutil` (i.e., each device shown by `sudo sdbootutil list-devices`).
+Ensure that only the hardware key currently being enrolled is inserted:
 
 ```sh
-sudo sdbootutil enroll --method=fido2
+sudo systemd-cryptenroll \
+    --fido2-device=auto \
+    --fido2-with-client-pin=yes \
+    --fido2-with-user-presence=yes \
+    /dev/nvme0n1p2 # Replace with actual name of device
 ```
 
-Repeat the FIDO2 enrollment process for each (backup) key, if you have any.
+Repeat this command for each tracked LUKS device. Then repeat the complete
+FIDO2 enrollment process for each backup key, if you have any.
 
-After completing your enrollments, regenerate/update the PCR 15 predictions:
+After all FIDO2 enrollments, ensure that every applicable `/etc/crypttab` entry
+contains `fido2-device=auto`, e.g.:
+
+```sh
+cr_swap UUID=X none fido2-device=auto
+cr_root UUID=Y none x-initrd.attach,fido2-device=auto
+```
+
+After validating `/etc/crypttab`, regenerate the initrd and boot entries:
+
+```
+sudo sdbootutil mkinitrd
+```
+
+If TPM2 unlocking was enrolled, regenerate/update the PCR 15 predictions:
 
 ```sh
 sudo sdbootutil update-predictions --measure-pcr
@@ -112,17 +132,18 @@ sudo sdbootutil update-predictions --measure-pcr
 If no error occurs during any of these commands, reboot and test out every enrollment at least once, including the recovery key.
 Do not reboot if any of these commands report an error.
 
-If everything works as expected, you may remove the password if you wish:
+If all tracked devices have a tested recovery enrollment, you may remove all password enrollments if you wish:
 
 ```sh
 sudo sdbootutil unenroll --method=password
 ```
 
-Last, but definitely not least, backup the LUKS header of each encrypted device:
+Last, but definitely not least, backup the LUKS header of each tracked device:
 
 ```sh
-LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of encrypted device
+LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of device
 LUKS_UUID="$(sudo cryptsetup luksUUID "$LUKS_DEVICE")"
+LUKS_BACKUP_DIR=/path/to/secure/external/location # Replace with actual path to external location
 LUKS_BACKUP_NAME="luks-header-${LUKS_UUID}.img"
 sudo cryptsetup luksHeaderBackup --header-backup-file="$LUKS_BACKUP_NAME" "$LUKS_DEVICE"
 ```
@@ -132,13 +153,19 @@ the backup belongs to. During recovery, you are responsible for pairing the
 header backup with the correct encrypted device.
 
 Store the header backup somewhere safe and externally, that is, not on the same
-physical drive as the encrypted volume. Preferably, also test that each
-backed-up header can successfully unlock its corresponding volume. This process
-is described [at the end of these setup instructions](#testing-recovery-of-luks-headers).
+physical drive as the encrypted volume. An automated backup-setup script is
+included that can do this for you, alongside setting up general backups; this is
+covered [in a later section](#4.8-set-up-automated-backups) Preferably, also
+test that each backed-up header can successfully unlock its corresponding
+volume. This process is described [at the end of these setup
+instructions](#testing-recovery-of-luks-headers).
+
+Create a new header backup whenever enrollment slots are changed, and securely
+remove obsolete backups that should no longer remain usable.
 
 ## 1. [If not automatically connected to network] Connect to the network
 
-Ensure that NetworkManager is enabled.
+Enable and start NetworkManager:
 
 ```sh
 sudo systemctl enable --now NetworkManager.service
@@ -155,16 +182,16 @@ nmcli device wifi list
 Connect to a network interactively:
 
 ```sh
-nmcli device wifi connect "WiFiNetworkID" --ask
+nmcli  --ask device wifi connect "WiFiSSID"
 ```
 
-The later manual networking section explains how to store guest and private
-Wi-Fi profiles with the desired autoconnect priorities and route metrics.
+This creates a persistent NetworkManager connection profile. The later manual
+networking section adjusts or removes this profile as appropriate.
 
 ## 2. Fetch the dotfiles and setup scripts
 
 Create the expected XDG data and state directories, install the bootstrap tools
-needed to clone the repository and verify repository keys, and clone the
+needed to clone the repository and run the initial setup scripts, and clone the
 dotfiles repository.
 
 ```sh
@@ -329,12 +356,11 @@ from hardware keys. Reboot.
 ### 4.5 Install the desktop environment
 
 ```sh
-run_setup de-base-dms  # DankMaterialShell
-run_setup de-base-noct # Noctalia
+run_setup de-base-noct
 ```
 
 This script installs the Wayland desktop stack. Specifically, it installs Niri,
-DMS or Noctalia (Quickshell), greetd, Kitty, fonts, desktop integration tools,
+Noctalia (Quickshell), greetd, Kitty, fonts, desktop integration tools,
 and related utilities. It also enables the DMS user service and the greetd
 system service.
 
