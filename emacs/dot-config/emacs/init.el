@@ -35,20 +35,15 @@
           goggles
           jinx
           scratch
-          undo-fu
-          undo-fu-session
-          ;; vundo
+          undo-fu undo-fu-session
           wgrep
           ;; Completion and actions
           ace-window
-          avy
-          avy-embark-collect
+          avy avy-embark-collect
           cape
-          consult
-          consult-dir
+          consult consult-dir
           corfu
-          embark
-          embark-consult
+          embark embark-consult
           orderless
           tempel
           transient
@@ -80,9 +75,8 @@
           proof-general
           nael
           ;; Reading and writing
-          auctex
-          cdlatex
-          denote
+          auctex cdlatex
+          denote consult-denote
           elfeed
           pdf-tools
           ;; Org
@@ -827,6 +821,8 @@
 
 ;; Completion and actions
 (use-package ace-window
+  :demand t
+
   :bind
   ("<remap> <other-window>" . ace-window)
 
@@ -856,6 +852,8 @@
   (keymap-set a-window-map "o" #'an-ace-window-prefix))
 
 (use-package avy
+  :demand t
+
   :bind
   (:prefix-map an-avy-map :prefix "C-c j" :prefix-docstring "Keymap for avy (global)"
                ("c" . avy-goto-char)
@@ -942,6 +940,8 @@
   (add-hook 'minibuffer-setup-hook #'a-setup-cape-minibuffer))
 
 (use-package consult
+  :demand t
+
   :bind
   ("M-l" . consult-line) ; from: downcase-word
   ("M-m" . consult-mark) ; from: back-to-indentation
@@ -1359,6 +1359,7 @@ that allows to include other templates by their name."
 
   (if (daemonp)
       (add-hook 'after-make-frame-functions #'a-doom-modeline-init-first-graphical-frame 90)
+      ;; (add-hook 'server-after-make-frame-hook #'a-doom-modeline-init-first-client-frame 90)
     (add-hook 'after-init-hook #'(lambda () (doom-modeline-mode 1)) 90)))
 
 (use-package ef-themes
@@ -2232,8 +2233,6 @@ that allows to include other templates by their name."
                ("r" . denote-rename-file)
                ("R" . denote-rename-file-using-front-matter)
                ("t" . denote-template)
-               ("f" . denote-find-link)
-               ("F" . denote-find-backlink)
                ("C-r" . denote-region))
   (:map dired-mode-map
         ("C-d l" . denote-dired-link-markded-notes)
@@ -2266,6 +2265,19 @@ that allows to include other templates by their name."
 
   :config
   (denote-rename-buffer-mode 1))
+
+(use-package consult-denote
+  :defer t
+
+  :bind
+  (:map a-denote-map
+        ("<remap> <denote-grep>" . consult-denote-grep)
+        ("f" . consult-denote-find)
+        ("g" . consult-denote-grep))
+
+  :init
+  (setopt consult-denote-grep-command #'consult-ripgrep)
+  (setopt consult-denote-find-command #'consult-fd))
 
 (use-package elfeed
   :defer t
