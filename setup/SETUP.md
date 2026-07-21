@@ -50,7 +50,34 @@ During installation, use the following baseline:
 
 After the first boot, continue with the steps below.
 
-## 0. [If disk encryption] Set up recovery and authentication methods for disk encryption
+
+## 0. Fundamental system setup and security
+
+## 0.1 Configure access control for random-seed file
+
+The random-seed file on the EFI System Partition should not be accessible to
+unprivileged users. Check whether it is:
+
+```sh
+sudo bootctl random-seed
+```
+
+If this reports that the file is world-accessible,
+add `fmask=0177,dmask=0077` to the existing `/boot/efi` VFAT mount
+options in `/etc/fstab`. Then, remount the file system:
+
+```sh
+sudo umount /boot/efi
+sudo mount /boot/efi
+```
+
+Recheck:
+
+```sh
+bootctl random-seed
+```
+
+## 0.2 [If disk encryption] Set up recovery and authentication methods for disk encryption
 
 Before proceeding, ensure that the LUKS password or recovery key is available.
 This credential remains the fallback if TPM2 or FIDO2 unlocking fails.
@@ -69,7 +96,8 @@ If there is no `recovery` enrollment, create one:
 sudo sdbootutil enroll --method=recovery-key
 ```
 
-*Write the printed recovery key down on a piece of paper, and store it securely.*
+*Write the printed recovery key down and store it securely, either physically on
+a piece of paper, digitally in a password manager, or both.*
 
 Then, depending on your preferences, you can create a (1) TPM2 enrollment, preferably with PIN, and/or
 (2) FIDO2 enrollment, preferably two (one for a primary key, and one for a backup key).
@@ -163,7 +191,7 @@ instructions](#testing-recovery-of-luks-headers).
 Create a new header backup whenever enrollment slots are changed, and securely
 remove obsolete backups that should no longer remain usable.
 
-## 1. [If not automatically connected to network] Connect to the network
+## 0.2. [If not automatically connected to network] Connect to the network
 
 Enable and start NetworkManager:
 
@@ -188,7 +216,7 @@ nmcli  --ask device wifi connect "WiFiSSID"
 This creates a persistent NetworkManager connection profile. The later manual
 networking section adjusts or removes this profile as appropriate.
 
-## 2. Fetch the dotfiles and setup scripts
+## 1. Fetch the dotfiles and setup scripts
 
 Create the expected XDG data and state directories, install the bootstrap tools
 needed to clone the repository and run the initial setup scripts, and clone the
@@ -223,7 +251,7 @@ With the default values above, that resolves to:
 ~/.local/share/dots
 ```
 
-## 3. Understand the setup runner and logs
+## 2. Understand the setup runner and logs
 
 Run each setup script through the wrapper:
 
@@ -278,13 +306,13 @@ run_setup() {
 ```
 
 
-## 4. Run the automated setup steps
+## 3. Run the automated setup steps
 
 Run the scripts in the order shown here. Several scripts print `ACTION` lines at
 the end; treat those as manual checkpoints before relying on the affected
 subsystem.
 
-### 4.1 Configure Snapper for `/home`
+### 3.1 Configure Snapper for `/home`
 
 ```sh
 run_setup snapper
@@ -303,7 +331,7 @@ Snapper config: home
 Target path:    /home
 ```
 
-### 4.2 Install the base profile and system structure
+### 3.2 Install the base profile and system structure
 
 ```sh
 run_setup base
@@ -318,7 +346,7 @@ Packman, and performs a full Tumbleweed distribution upgrade.
 Reboot before continuing so that the upgraded base system and profile changes
 are active.
 
-### 4.3 Install development and build essentials
+### 3.3 Install development and build essentials
 
 ```sh
 run_setup devel-base
@@ -341,7 +369,7 @@ command -v cargo
 command -v rustup
 ```
 
-### 4.4 Configure security, SSH, GPG, and secrets
+### 3.4 Configure security, SSH, GPG, and secrets
 
 ```sh
 run_setup security
@@ -360,7 +388,7 @@ from each hardware key using the names expected by the stowed configuration.
 Reboot so that the new wheel-group membership and user-session environment
 configuration take effect.
 
-### 4.5 Install the desktop environment
+### 3.5 Install the desktop environment
 
 ```sh
 run_setup de-base
@@ -396,7 +424,7 @@ Zen browser):
 Also, link Signal, and log in to Zotero.
 
 
-### 4.6 Install productivity tools
+### 3.6 Install productivity tools
 
 Before running the productivity script, a few manual steps are required (which
 we opt for due to current lack of upstream programmatic/unattended installation
@@ -509,7 +537,7 @@ Load the installation entry point and wait for native compilation to finish:
 Add any additional required credential entries to `$AUTHINFO_FILE`, such as
 access tokens for other forge accounts. Reboot after completing these steps.
 
-### 4.7 Install the full development environment
+### 3.7 Install the full development environment
 
 ```sh
 run_setup devel
@@ -530,7 +558,7 @@ easycrypt why3config
 Then reboot so that the development environment variables and group membership
 changes, especially Docker group membership, take effect.
 
-### 4.8 Create the PARA workspace and project checkouts
+### 3.8 Create the PARA workspace and project checkouts
 
 ```sh
 run_setup para
@@ -546,8 +574,7 @@ are available, that their public keys have been added to the relevant forge
 accounts, and that the SSH host aliases from the stowed SSH configuration are
 active.
 
-### 4.9 Set up automated backups
-### 4.8 Set up automated backups
+### 3.9 Set up automated backups
 
 Ensure that the backup medium is connected and that you are logged in to Proton
 Pass CLI:
@@ -653,7 +680,7 @@ the script.
 Optionally start the printed backup service immediately and inspect its status
 to verify the initial backup.
 
-## 5. Manual network configuration
+## 4. Manual network configuration
 
 After the main setup, configure persistent network profiles.
 
@@ -662,8 +689,8 @@ After the main setup, configure persistent network profiles.
 Use this for a shared or lower-priority WiFi network where the password may be stored system-wide and the connection is available to everyone.
 
 ```sh
-nmcli device wifi connect "GuestWiFiID" --ask
-nmcli connection modify "GuestWiFiID" \
+nmcli device wifi connect "GuestWiFiSSID" --ask
+nmcli connection modify "GuestWiFiSSID" \
   connection.autoconnect yes \
   connection.autoconnect-priority 50 \
   ipv4.route-metric 500 ipv6.route-metric 500
@@ -677,8 +704,8 @@ Use this for the main private WiFi network. The password is stored in the user
 keyring and the connection is restricted to the current user.
 
 ```sh
-nmcli device wifi connect "PrivateWiFiID" --ask
-nmcli connection modify "PrivateWiFiID" \
+nmcli device wifi connect "PrivateWiFiSSID" --ask
+nmcli connection modify "PrivateWiFiSSID" \
   connection.autoconnect yes \
   connection.autoconnect-priority 100 \
   ipv4.route-metric 300 ipv6.route-metric 300 \
@@ -709,7 +736,7 @@ The intended priority order is therefore:
 2. Private WiFi: route metric `300`.
 3. Guest WiFi: route metric `500`.
 
-## 6. Testing and Troubleshooting
+## 5. Testing and Troubleshooting
 
 ### Testing recovery of LUKS headers
 

@@ -16,7 +16,8 @@
 based on current (non-dummy) graphical frame FRAME."
   ;; Faces
   (when (and (display-graphic-p frame)
-             (not (frame-parameter frame 'server-dummy-buffer)))
+             (not (frame-parameter frame 'server-dummy-buffer))
+             (not (frame-parameter frame 'a-primer)))
     (let ((ffl (font-family-list frame)))
       ;; Default/Fixed-pitch
       (cond
