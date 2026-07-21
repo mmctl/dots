@@ -2255,7 +2255,7 @@ that allows to include other templates by their name."
 
   (setopt denote-directory DENOTE_DIR)
 
-  (setopt denote-prompts '(title keywords subdirectory))
+  (setopt denote-prompts '(subdirectory title keywords))
   (setopt denote-excluded-directories-regexp (rx string-start "workspace" string-end))
 
   (setopt denote-known-keywords
@@ -2764,7 +2764,7 @@ with the color by COLOR-FACE."
                     ("FriendsAndFamily" ,(an-org-agenda-mdicon "nf-md-account_heart" 'nerd-icons-lpink) nil nil :ascent center)
                     ("Home" ,(an-org-agenda-mdicon "nf-md-home" 'nerd-icons-lgreen) nil nil :ascent center)
                     ("Relationship" ,(an-org-agenda-mdicon "nf-md-heart" 'nerd-icons-lred) nil nil :ascent center)
-                    ("Tinker" ,(an-org-agenda-mdicon "nf-md-tools" 'nerd-icons-lorange) nil nil :ascent center)
+                    ("Tinkering" ,(an-org-agenda-mdicon "nf-md-tools" 'nerd-icons-lorange) nil nil :ascent center)
                     ("Leisure" ,(an-org-agenda-mdicon "nf-md-play_circle" 'nerd-icons-lorange) nil nil :ascent center)
                     ("Travel" ,(an-org-agenda-mdicon "nf-md-airplane_takeoff" 'nerd-icons-lcyan) nil nil :ascent center)
                     ("Work" ,(an-org-agenda-mdicon "nf-md-account_tie" 'nerd-icons-lpurple) nil nil :ascent center))))
