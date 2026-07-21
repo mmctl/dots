@@ -2241,9 +2241,10 @@ that allows to include other templates by their name."
 
   :init
   (defconst DENOTE_DIR (file-name-as-directory
-                     (if (getenv "XDG_DATA_HOME")
-                         (expand-file-name "denote/" (getenv "XDG_DATA_HOME"))
-                       (expand-file-name "~/denote/")))
+                        (or (getenv "PARA_ROOT_DIR")
+                            (when (getenv "XDG_DATA_HOME")
+                              (expand-file-name "denote/" (getenv "XDG_DATA_HOME")))
+                            (expand-file-name "~/denote/")))
     "Directory used as default location for denote notes.")
   (unless (file-directory-p DENOTE_DIR)
     (make-directory DENOTE_DIR t))

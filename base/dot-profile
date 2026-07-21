@@ -27,10 +27,11 @@ export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 export ZPLUGDIR="$XDG_DATA_HOME/zsh/plugins"
 
 ### PARA
-export PROJECTS_DIR="$HOME/projects"
-export AREAS_DIR="$HOME/areas"
-export RESOURCES_DIR="$HOME/resources"
-export ARCHIVES_DIR="$HOME/archives"
+export PARA_ROOT_DIR="$HOME/para"
+export PROJECTS_DIR="$PARA_ROOT_DIR/projects"
+export AREAS_DIR="$PARA_ROOT_DIR/areas"
+export RESOURCES_DIR="$PARA_ROOT_DIR/resources"
+export ARCHIVES_DIR="$PARA_ROOT_DIR/archives"
 
 ### Dotfiles
 export DOTS_DIR="$XDG_DATA_HOME/dots"
