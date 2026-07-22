@@ -173,7 +173,7 @@ LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of device
 LUKS_UUID="$(sudo cryptsetup luksUUID "$LUKS_DEVICE")"
 LUKS_BACKUP_DIR=/path/to/secure/external/location # Replace with actual path to external location
 LUKS_BACKUP_NAME="luks-header-${LUKS_UUID}.img"
-sudo cryptsetup luksHeaderBackup --header-backup-file="$LUKS_BACKUP_NAME" "$LUKS_DEVICE"
+sudo cryptsetup luksHeaderBackup --header-backup-file="$LUKS_BACKUP_DIR/$LUKS_BACKUP_NAME" "$LUKS_DEVICE"
 ```
 
 Including the LUKS UUID in the filename makes it clear which encrypted volume
