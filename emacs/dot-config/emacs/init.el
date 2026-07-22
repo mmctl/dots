@@ -2464,33 +2464,62 @@ that allows to include other templates by their name."
   ;; Consider following if indexing is slow
   ;; (setopt mu4e-index-cleanup nil)
   ;; (setopt mu4e-index-lazy-check nil)
+  (setopt mu4e-date-format-long "%Y/%m/%d (%A) | %H:%M:%S")
+  (setopt mu4e-headers-time-format "%H:%M:%S")
+  (setopt mu4e-headers-long-date-format-long mu4e-date-format-long)
+  (setopt mu4e-headers-date-format "%a, %d %b | %H:%M")
 
   (setopt mu4e-headers-fields
-          '((:human-date    .   16)
-            (:flags         .   12)
-            (:mailing-list  .   12)
+          '((:human-date    .   24)
+            (:flags         .   18)
+            (:mailing-list  .   18)
             (:from          .   24)
             (:subject       .   nil)))
 
   (with-eval-after-load 'nerd-icons
-    (let ((mark (lambda (ascii icon width)
-                  (a-set-character-width icon width)
-                  (cons ascii icon))))
-      (setq-default mu4e-headers-draft-mark (funcall mark "D" (nerd-icons-mdicon "nf-md-pencil") 2)
-                    mu4e-headers-flagged-mark (funcall mark "F" (nerd-icons-mdicon "nf-md-flag") 2)
-                    mu4e-headers-new-mark (funcall mark "N" (nerd-icons-mdicon "nf-md-email_plus") 2)
-                    mu4e-headers-passed-mark (funcall mark "P" (nerd-icons-mdicon "nf-md-forward") 2)
-                    mu4e-headers-replied-mark (funcall mark "R" (nerd-icons-mdicon "nf-md-reply") 2)
-                    mu4e-headers-seen-mark (funcall mark "S" (nerd-icons-mdicon "nf-md-email_open") 2)
-                    mu4e-headers-trashed-mark (funcall mark "T" (nerd-icons-mdicon "nf-md-delete") 2)
-                    mu4e-headers-attach-mark (funcall mark "a" (nerd-icons-mdicon "nf-md-paperclip") 2)
-                    mu4e-headers-encrypted-mark (funcall mark "x" (nerd-icons-mdicon "nf-md-lock") 2)
-                    mu4e-headers-signed-mark (funcall mark "s" (nerd-icons-mdicon "nf-md-shield_check") 2)
-                    mu4e-headers-unread-mark (funcall mark "u" (nerd-icons-mdicon "nf-md-email") 2)
-                    mu4e-headers-list-mark (funcall mark "l" (nerd-icons-mdicon "nf-md-format_list_bulleted") 2)
-                    mu4e-headers-personal-mark (funcall mark "p" (nerd-icons-mdicon "nf-md-account") 2)
-                    mu4e-headers-calendar-mark (funcall mark "c" (nerd-icons-mdicon "nf-md-calendar") 2)))
-    (setopt mu4e-use-fancy-chars t))
+    (let* ((separator (propertize " " 'display '(space :width 0.5) 'rear-nonsticky t))
+           (mark (lambda (ascii icon)
+                   (cons ascii (concat separator icon separator)))))
+      (setq-default mu4e-headers-draft-mark
+                    (funcall mark "D" (nerd-icons-mdicon "nf-md-pencil"))
+                    mu4e-headers-flagged-mark
+                    (funcall mark "F" (nerd-icons-mdicon "nf-md-flag"))
+                    mu4e-headers-new-mark
+                    (funcall mark "N" (nerd-icons-mdicon "nf-md-email_plus"))
+                    mu4e-headers-passed-mark
+                    (funcall mark "P" (nerd-icons-mdicon "nf-md-forward"))
+                    mu4e-headers-replied-mark
+                    (funcall mark "R" (nerd-icons-mdicon "nf-md-reply"))
+                    mu4e-headers-seen-mark
+                    (funcall mark "S" (nerd-icons-mdicon "nf-md-email_open"))
+                    mu4e-headers-trashed-mark
+                    (funcall mark "T" (nerd-icons-mdicon "nf-md-delete"))
+                    mu4e-headers-attach-mark
+                    (funcall mark "a" (nerd-icons-mdicon "nf-md-paperclip"))
+                    mu4e-headers-encrypted-mark
+                    (funcall mark "x" (nerd-icons-mdicon "nf-md-lock"))
+                    mu4e-headers-signed-mark
+                    (funcall mark "s" (nerd-icons-mdicon "nf-md-shield_check"))
+                    mu4e-headers-unread-mark
+                    (funcall mark "u" (nerd-icons-mdicon "nf-md-email"))
+                    mu4e-headers-list-mark
+                    (funcall mark "l" (nerd-icons-mdicon "nf-md-format_list_bulleted"))
+                    mu4e-headers-personal-mark
+                    (funcall mark "p" (nerd-icons-mdicon "nf-md-account"))
+                    mu4e-headers-calendar-mark
+                    (funcall mark "c" (nerd-icons-mdicon "nf-md-calendar")))
+      (setq-default mu4e-modeline-all-clear
+                    (funcall mark "C:" (nerd-icons-mdicon "nf-md-inbox_outline"))
+                    mu4e-modeline-all-read
+                    (funcall mark "R:" (nerd-icons-mdicon "nf-md-email_open_outline"))
+                    mu4e-modeline-unread-items
+                    (funcall mark "U:" (nerd-icons-mdicon "nf-md-email_outline"))
+                    mu4e-modeline-new-items
+                    (funcall mark "N:" (nerd-icons-mdicon "nf-md-email_alert_outline"))))
+    (setopt mu4e-use-fancy-chars t)
+    (setopt mu4e-headers-precise-alignment t)
+    (add-hook 'mu4e-headers-mode-hook #'a-mu4e-headers-set-truncate-string-ellipsis)
+    (add-hook 'mu4e-headers-found-hook #'a-mu4e-align-header-line))
 
   :config
   (require 'local-mu4e)
@@ -2510,7 +2539,7 @@ that allows to include other templates by their name."
   (setopt mu4e-contexts (list
                          PERSONAL_MU4E_CONTEXT
                          RESEARCH_MU4E_CONTEXT
-                         BUSINESS_MU4E_CONTEXT
+                         ;; BUSINESS_MU4E_CONTEXT
                          ))
 
   (setopt mu4e-context-policy 'ask-if-none)

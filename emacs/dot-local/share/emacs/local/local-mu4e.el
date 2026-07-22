@@ -183,23 +183,23 @@ defaults when explicitly supplied."
          :maildir "/matthiasmeijers-proton"
          :backend-id :protonmail-bridge)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :personal
-        ;;  :address "personal@mmeijers.com"
-        ;;  :maildir "/personal-mmeijers"
-        ;;  :backend-id :mmeijers.com)
+        (make-a-mail-address-config
+         :group :personal
+         :address "personal@mmeijers.com"
+         :maildir "/personal-mmeijers"
+         :backend-id :mmeijers.com)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :personal
-        ;;  :address "kernel@mmeijers.com"
-        ;;  :maildir "/kernel-mmeijers"
-        ;;  :backend-id :mmeijers.com)
+        (make-a-mail-address-config
+         :group :personal
+         :address "kernel@mmeijers.com"
+         :maildir "/kernel-mmeijers"
+         :backend-id :mmeijers.com)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :personal
-        ;;  :address "kem@mmeijers.com"
-        ;;  :maildir "/kem-mmeijers"
-        ;;  :backend-id :mmeijers.com)
+        (make-a-mail-address-config
+         :group :personal
+         :address "kem@mmeijers.com"
+         :maildir "/kem-mmeijers"
+         :backend-id :mmeijers.com)
 
         (make-a-mail-address-config
          :group :research
@@ -207,17 +207,17 @@ defaults when explicitly supplied."
          :maildir "/mmeijersres-protonmail"
          :backend-id :protonmail-bridge)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :research
-        ;;  :address "research@mmeijers.com"
-        ;;  :maildir "/research-mmeijers"
-        ;;  :backend-id :mmeijers.com)
+        (make-a-mail-address-config
+         :group :research
+         :address "research@mmeijers.com"
+         :maildir "/research-mmeijers"
+         :backend-id :mmeijers.com)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :research
-        ;;  :address "teaching@mmeijers.com"
-        ;;  :maildir "/teaching-mmeijers"
-        ;;  :backend-id :mmeijers.com)
+        (make-a-mail-address-config
+         :group :research
+         :address "teaching@mmeijers.com"
+         :maildir "/teaching-mmeijers"
+         :backend-id :mmeijers.com)
 
         (make-a-mail-address-config
          :group :business
@@ -658,6 +658,37 @@ sync command if SYNC-GROUP is nil."
 (defconst BUSINESS_MU4E_CONTEXT (a-make-mu4e-context BUSINESS_MU4E_CONTEXT_CONFIG)
   "Mu4e context for business addresses.")
 
+
+;;; Miscellaneous
+(defun a-mu4e-align-header-line ()
+  "Precisely align mu4e column headings with message fields.
+
+Meant for `mu4e-headers-found-hook'."
+  (when mu4e-headers-precise-alignment
+    (setq header-line-format
+          (cons (car header-line-format)
+                (cl-mapcar (lambda (heading field-spec)
+                             (pcase-let ((`(,field . ,width) field-spec))
+                               (if (null width)
+                                   heading
+                                 (let* ((heading (substring heading 0 -1)) ; Remove the separator appended by `mu4e~header-line-format'.
+                                        (properties (text-properties-at 0 heading))
+                                        (heading (mu4e~headers-truncate-field-precise field heading width))
+                                        (padding-position (1- (length heading))))
+                                   ;; Keep the heading's keymap, mouse highlighting,
+                                   ;; help text, face and field identity on the
+                                   ;; precisely aligned padding space.
+                                   (add-text-properties padding-position (1+ padding-position) properties heading)
+                                   ;; Restore the ordinary inter-field separator.
+                                   (concat heading " ")))))
+                           (cdr header-line-format)
+                           mu4e-headers-fields)))))
+
+(defun a-mu4e-headers-set-truncate-string-ellipsis ()
+  "Use a reliably measured ellipsis in mu4e headers.
+
+Meant for `mu4e-headers-mode-hook'"
+  (setq-local truncate-string-ellipsis ".."))
 
 (provide 'local-mu4e)
 

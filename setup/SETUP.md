@@ -470,21 +470,19 @@ secret-tool store \
 ```
 
 Also store address-specific IMAP and SMTP credentials once per email address
-associated with a Proton account (for use by the Emacs mail configuration):
+(for use by the Emacs mail configuration):
 
 ```sh
 # Replace values with actual host, port, and user reported in Bridge
 # Enter password reported in Bridge when asked
 secret-tool store \
     --label='Proton Bridge IMAP (example@proton.me)' \
-    service proton-bridge \
     host 127.0.0.1 \
     port 1143 \
     user example@proton.me
 
 secret-tool store \
     --label='Proton Bridge SMTP (example@proton.me)' \
-    service proton-bridge \
     host 127.0.0.1 \
     port 1025 \
     user example@proton.me
@@ -493,14 +491,12 @@ secret-tool store \
 # Enter password reported in Bridge when asked
 secret-tool store \
     --label='Proton Bridge IMAP (example@mmeijers.com)' \
-    service proton-bridge \
     host 127.0.0.1 \
     port 1143 \
     user example@mmeijers.com
 
 secret-tool store \
     --label='Proton Bridge SMTP (example@mmeijers.com)' \
-    service proton-bridge \
     host 127.0.0.1 \
     port 1025 \
     user example@mmeijers.com

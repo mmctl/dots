@@ -77,8 +77,8 @@ setup_log_info "Installing hugo..."
 sudo zypper --non-interactive --no-color install hugo
 setup_log_info "Installed hugo."
 
-install -d -m 700 -- "$AREAS_DIR/website/workspace"
-clone_or_update --recurse-submodules 'git@github-personal:mmctl/website-personal.git' "$AREAS_DIR/website/workspace/source"
+install -d -m 700 -- "$AREAS_DIR/website"
+# clone_or_update --recurse-submodules 'git@github-personal:mmctl/website-personal.git' "$AREAS_DIR/website/workspace/source"
 
 setup_log_info "Set up area 'website'."
 
@@ -88,21 +88,21 @@ development_area_dir="$AREAS_DIR/development"
 install -d -m 700 -- "$development_area_dir"
 
 setup_log_info "Setting up development subarea 'easycrypt'..."
-install -d -m 700 -- "$development_area_dir/easycrypt/workspace"
-clone_or_update 'git@github-research:EasyCrypt/easycrypt.git' "$development_area_dir/easycrypt/workspace/source"
+install -d -m 700 -- "$development_area_dir/easycrypt"
+# clone_or_update 'git@github-research:EasyCrypt/easycrypt.git' "$development_area_dir/easycrypt/workspace/source"
 setup_log_info "Set up development subarea 'easycrypt'."
 
 setup_log_info "Setting up development subarea 'emacs'..."
-install -d -m 700 -- "$development_area_dir/emacs/workspace/source"
-clone_or_update 'git@github-personal:mmctl/easycrypt-ext.git' "$development_area_dir/emacs/workspace/source/easycrypt-ext"
-clone_or_update 'git@github-personal:mmctl/move-it.git' "$development_area_dir/emacs/workspace/source/move-it"
+install -d -m 700 -- "$development_area_dir/emacs"
+# clone_or_update 'git@github-personal:mmctl/easycrypt-ext.git' "$development_area_dir/emacs/workspace/source/easycrypt-ext"
+# clone_or_update 'git@github-personal:mmctl/move-it.git' "$development_area_dir/emacs/workspace/source/move-it"
 setup_log_info "Set up development subarea 'emacs'."
 
 setup_log_info "Set up area 'development'."
 
 setup_log_info "Setting up area 'work'..."
-install -d -m 700 -- "$AREAS_DIR/work/workspace/source"
-clone_or_update 'git@github-personal:mmctl/cvcl.git' "$AREAS_DIR/work/workspace/source/cvcl"
+install -d -m 700 -- "$AREAS_DIR/work"
+# clone_or_update 'git@github-personal:mmctl/cvcl.git' "$AREAS_DIR/work/workspace/source/cvcl"
 setup_log_info "Set up area 'work'."
 
 
