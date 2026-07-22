@@ -736,37 +736,96 @@ The intended priority order is therefore:
 
 ### Testing recovery of LUKS headers
 
-Boot from a Linux live or rescue medium and set the encrypted device and corresponding
-header-backup file:
+For FIDO2 credentials and recovery keys, preferably boot from a Linux live or
+rescue medium. A TPM2 enrollment may depend on the normal boot state and should
+therefore generally be tested from the installed system.
+
+Set the encrypted device, corresponding header backup, and an arbitrary temporary
+mapping name:
 
 ```sh
-LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual name of device
-LUKS_BACKUP_FILE=/path/to/backup-header-file # Replace with actual path to backup header file for LUKS_DEVICE
-LUKS_MAPPING_NAME=luks-recovery # Arbitrary temporary mapping name
+LUKS_DEVICE=/dev/nvme0n1p2 # Replace with actual encrypted device
+LUKS_BACKUP_FILE=/path/to/backup-header-file # Replace with corresponding header backup
+LUKS_MAPPING_NAME=luks-recovery
 ```
 
-Test the backup by using it as a detached header:
+Inspect the enrollments stored in the backup:
 
 ```sh
+sudo cryptsetup luksDump "$LUKS_BACKUP_FILE"
+```
+
+Under `Tokens`, hardware enrollments such as `systemd-fido2` and `systemd-tpm2`
+are listed with a token identifier and associated keyslot.
+
+To test a specific hardware enrollment:
+
+```sh
+TOKEN_ID=0 # Replace with actual token identifier
+
 sudo cryptsetup open \
+    --type luks2 \
     --readonly \
     --header "$LUKS_BACKUP_FILE" \
+    --token-only \
+    --token-id "$TOKEN_ID" \
+    --tries 1 \
+    --verbose \
     "$LUKS_DEVICE" \
     "$LUKS_MAPPING_NAME"
-
-sudo blkid "/dev/mapper/$LUKS_MAPPING_NAME"
 ```
 
-Enter a recovery key or other credential that was valid when the header backup was
-created. The test succeeds if the mapping opens and `blkid` recognizes the expected
-filesystem or storage layout.
+When testing multiple FIDO2 enrollments, connect only the corresponding hardware
+key and repeat the command for each token identifier.
 
-Close the temporary LUKS mapping:
+For a TPM2 enrollment, run the command in a boot environment that satisfies its
+PCR or policy constraints. It should request the TPM2 PIN if one was configured.
+
+For a recovery key, find the keyslot associated with the `systemd-recovery`
+token and test it explicitly:
+
+```sh
+KEYSLOT=3 # Replace with actual keyslot
+
+sudo cryptsetup open \
+    --type luks2 \
+    --readonly \
+    --header "$LUKS_BACKUP_FILE" \
+    --disable-external-tokens \
+    --key-slot "$KEYSLOT" \
+    --tries 1 \
+    --verbose \
+    "$LUKS_DEVICE" \
+    "$LUKS_MAPPING_NAME"
 ```
+
+After opening the mapping, verify that it uses the expected device and is
+read-only:
+
+```sh
+sudo cryptsetup status "$LUKS_MAPPING_NAME"
+```
+
+Then check that the decrypted payload has the expected filesystem or storage
+container type and UUID:
+
+```sh
+sudo blkid -p "/dev/mapper/$LUKS_MAPPING_NAME"
+```
+
+The test succeeds when the selected credential opens the mapping and `blkid`
+reports the expected payload type and UUID.
+
+Close the mapping after each test:
+
+```sh
 sudo cryptsetup close "$LUKS_MAPPING_NAME"
 ```
 
-If the recovery test succeeds, you can perform the actual recovery if needed:
+Repeat the procedure for every credential that should remain usable.
+
+If the recovery test succeeds and the on-device header needs recovery, close the
+temporary mapping and restore the backup:
 
 ```sh
 sudo cryptsetup luksHeaderRestore \
@@ -775,8 +834,8 @@ sudo cryptsetup luksHeaderRestore \
 ```
 
 This replaces the current LUKS header, keyslots, and token enrollments with those
-contained in the backup. After restoring the header, review the enrollments and create
-a new header backup.
+contained in the backup. After restoring it, review the enrollments and create a
+new header backup.
 
 ### Find the latest setup log
 
