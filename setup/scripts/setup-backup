@@ -1,0 +1,498 @@
+#!/usr/bin/env sh
+set -eu
+
+# Setup utilities
+script_dir="$(dirname -- "$(realpath "$0")")"
+. "$script_dir/utils"
+
+
+if [ "$(id -u)" -eq 0 ]; then
+    setup_log_die "Run this script as the target regular user, not as root."
+fi
+
+if ! command -v zypper >/dev/null 2>&1; then
+    setup_log_die "zypper is not available; this script is intended for openSUSE."
+fi
+
+for pcmd in pass-cli systemd-creds; do
+    if ! command -v "$pcmd" >/dev/null 2>&1; then
+        setup_log_die "$pcmd is not available; please make sure it is installed."
+    fi
+done
+
+if ! pass-cli test >/dev/null 2>&1; then
+    setup_log_die "Cannot authenticate to password manager, please ensure you are logged in (pass-cli login)."
+fi
+
+setup_log_info "This script needs sudo for system configuration."
+sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
+
+
+# Input
+setup_log_info "Processing input..."
+if [ "$#" -lt 1 ]; then
+    cat <<EOF
+Usage:
+  $(basename "$0") FILESYSTEM_UUID [LUKS_UUID...]
+
+Examples:
+  $(basename "$0") 01234567-89ab-cdef-0123-456789abcdef
+
+  $(basename "$0") \
+    01234567-89ab-cdef-0123-456789abcdef \
+    aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+EOF
+    setup_log_die "Expected at least the filesystem UUID of the backup media."
+fi
+
+backup_fs_uuid=$1
+shift
+
+backup_device="/dev/disk/by-uuid/$backup_fs_uuid"
+
+if [ ! -e "$backup_device" ]; then
+    setup_log_die "No block device found for filesystem UUID: $backup_fs_uuid"
+fi
+
+if ! backup_fs_type="$(sudo blkid -o value -s TYPE "$backup_device")"; then
+    setup_log_die "Could not determine filesystem type for UUID: $backup_fs_uuid"
+fi
+
+if [ -z "$backup_fs_type" ]; then
+    setup_log_die "No filesystem found for UUID: $backup_fs_uuid"
+fi
+
+setup_log_info "Backup filesystem UUID (device): $backup_fs_uuid ($backup_device)"
+setup_log_info "Backup filesystem type: $backup_fs_type"
+
+for luks_uuid in "$@"; do
+    luks_device="/dev/disk/by-uuid/$luks_uuid"
+
+    if [ ! -e "$luks_device" ]; then
+        setup_log_die "No block device found for LUKS UUID: $luks_uuid"
+    fi
+
+    if ! sudo cryptsetup isLuks "$luks_device"; then
+        setup_log_die "Device identified by UUID $luks_uuid is not a LUKS device."
+    fi
+
+    actual_luks_uuid="$(sudo cryptsetup luksUUID "$luks_device")"
+
+    if [ "$actual_luks_uuid" != "$luks_uuid" ]; then
+        setup_log_die "Unexpected LUKS UUID for $luks_device: $actual_luks_uuid"
+    fi
+
+    setup_log_info "LUKS UUID (device): $luks_uuid ($luks_device)"
+done
+
+setup_log_info "Processed input."
+
+
+# Dependencies
+ensure_command_from_package jq jq
+ensure_command_from_package notify-send libnotify-tools
+ensure_command_from_package stow stow
+ensure_command_from_package restic restic
+
+
+# Configuration paths
+## Local paths
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+DOTS_DIR="${DOTS_DIR:-$XDG_DATA_HOME/dots}"
+
+if [ ! -d "$DOTS_DIR" ]; then
+    setup_log_die "dotfiles directory not found: $DOTS_DIR"
+fi
+
+REPLACE_PLACEHOLDER="${REPLACE_PLACEHOLDER:-$DOTS_DIR/setup/scripts/replace-placeholder}"
+
+if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
+    setup_log_die "replace-placeholder script not found or not executable: $REPLACE_PLACEHOLDER"
+fi
+
+## Backup-medium paths
+MACHINE_LABEL="${MACHINE_LABEL:-laptop-lenovo-thinkpad-t14-gen2}"
+BACKUP_TARGET_NAME="${BACKUP_TARGET_NAME:-primary}"
+BACKUP_MOUNTPOINT="${BACKUP_MOUNTPOINT:-/mnt/backup-$BACKUP_TARGET_NAME}"
+BACKUP_PATH_TO_LABEL="${BACKUP_PATH_TO_LABEL:-personal}"
+BACKUP_ROOT="${BACKUP_ROOT:-$BACKUP_MOUNTPOINT/$BACKUP_PATH_TO_LABEL/$MACHINE_LABEL}"
+
+## Restic configuration
+RESTIC_BACKUP_NAME="${RESTIC_BACKUP_NAME:-home}"
+RESTIC_BACKUP_SOURCE="${RESTIC_BACKUP_SOURCE:-$HOME}"
+RESTIC_REPOSITORY_NAME="${RESTIC_REPOSITORY_NAME:-$RESTIC_BACKUP_NAME}"
+
+RESTIC_BACKUP_INSTANCE="$RESTIC_BACKUP_NAME-$BACKUP_TARGET_NAME"
+RESTIC_BACKUP_UNIT_INSTANCE="restic-backup@$RESTIC_BACKUP_INSTANCE"
+RESTIC_MAINTENANCE_UNIT_INSTANCE="restic-maintenance@$RESTIC_BACKUP_INSTANCE"
+RESTIC_SCRUB_UNIT_INSTANCE="restic-scrub@$RESTIC_BACKUP_INSTANCE"
+
+RESTIC_CONFIG_DIR="${RESTIC_CONFIG_DIR:-$XDG_CONFIG_HOME/restic}"
+RESTIC_CONFIG_FILE="${RESTIC_CONFIG_FILE:-$RESTIC_CONFIG_DIR/backup-$RESTIC_BACKUP_INSTANCE.conf}"
+RESTIC_EXCLUDE_FILE="${RESTIC_EXCLUDE_FILE:-$RESTIC_CONFIG_DIR/excludes-backup-$RESTIC_BACKUP_NAME.conf}"
+RESTIC_EXCLUDE_TEMPLATE="${RESTIC_EXCLUDE_TEMPLATE:-$RESTIC_EXCLUDE_FILE-temp}"
+
+RESTIC_KEEP_DAILY="${RESTIC_KEEP_DAILY:-7}"
+RESTIC_KEEP_WEEKLY="${RESTIC_KEEP_WEEKLY:-4}"
+RESTIC_KEEP_MONTHLY="${RESTIC_KEEP_MONTHLY:-12}"
+RESTIC_KEEP_YEARLY="${RESTIC_KEEP_YEARLY:-5}"
+
+## Credential configuration
+SYSTEMD_CREDENTIAL_DIR="${SYSTEMD_CREDENTIAL_DIR:-$XDG_CONFIG_HOME/credstore.encrypted}"
+SYSTEMD_CREDENTIAL_NAME="${SYSTEMD_CREDENTIAL_NAME:-restic-backup-$RESTIC_BACKUP_INSTANCE-password}"
+SYSTEMD_CREDENTIAL_FILE="$SYSTEMD_CREDENTIAL_DIR/$SYSTEMD_CREDENTIAL_NAME"
+
+
+setup_log_info "Preventing potential interruption of or from another backup..."
+
+systemctl --user disable --now "$RESTIC_BACKUP_UNIT_INSTANCE.timer" >/dev/null 2>&1 || true
+systemctl --user disable --now "$RESTIC_MAINTENANCE_UNIT_INSTANCE.timer" >/dev/null 2>&1 || true
+
+if systemctl --user is-active --quiet "$RESTIC_BACKUP_UNIT_INSTANCE.service"; then
+    setup_log_die "The $RESTIC_BACKUP_NAME backup is currently running; aborting setup."
+fi
+
+if systemctl --user is-active --quiet "$RESTIC_MAINTENANCE_UNIT_INSTANCE.service"; then
+    setup_log_die "The $RESTIC_BACKUP_NAME backup maintenance is currently running; aborting setup."
+fi
+
+if systemctl --user is-active --quiet "$RESTIC_SCRUB_UNIT_INSTANCE.service"; then
+    setup_log_die "The $RESTIC_BACKUP_NAME scrub is currently running; aborting setup."
+fi
+
+setup_log_info "Prevented potential interruption of or from another backup."
+
+
+setup_log_info "Stowing portable Restic configuration and assets..."
+(cd -- "$DOTS_DIR" && stow restic)
+setup_log_info "Stowed portable Restic configuration and assets."
+
+setup_log_info "Generating Restic exclude file..."
+
+"$REPLACE_PLACEHOLDER" XDG_CACHE_HOME "$XDG_CACHE_HOME" \
+                       "$RESTIC_EXCLUDE_TEMPLATE" \
+                       "$RESTIC_EXCLUDE_FILE"
+"$REPLACE_PLACEHOLDER" XDG_DATA_HOME "$XDG_DATA_HOME" \
+                       "$RESTIC_EXCLUDE_FILE"
+"$REPLACE_PLACEHOLDER" HOME "$HOME" \
+                       "$RESTIC_EXCLUDE_FILE"
+
+setup_log_info "Generated Restic exclude file."
+
+
+mounted_here=0
+setup_committed=0
+
+installation_root=
+staging_root=
+created_path=
+tmp_config=
+tmp_credential=
+restic_repository_password=
+
+cleanup()
+{
+    status=$?
+    trap - EXIT HUP INT TERM
+
+    if [ -n "$tmp_config" ] && [ -e "$tmp_config" ]; then
+        rm -f -- "$tmp_config"
+    fi
+
+    if [ -n "$tmp_credential" ] && [ -e "$tmp_credential" ]; then
+        rm -f -- "$tmp_credential"
+    fi
+
+    if [ "$setup_committed" -eq 0 ] && [ -n "$created_path" ] && [ -d "$created_path" ]; then
+        rm -rf -- "$created_path"
+    fi
+
+    if [ "$mounted_here" -eq 1 ] && mountpoint -q "$BACKUP_MOUNTPOINT"; then
+        sudo umount "$BACKUP_MOUNTPOINT" || status=1
+    fi
+
+    exit "$status"
+}
+
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+
+sudo install -d -m 755 -- "$BACKUP_MOUNTPOINT"
+
+if mountpoint -q "$BACKUP_MOUNTPOINT"; then
+    setup_log_info "Backup mountpoint is already mounted."
+else
+    setup_log_info "Mounting backup filesystem..."
+
+    sudo mount \
+         -t "$backup_fs_type" \
+         -o nosuid,nodev,noexec \
+         "$backup_device" \
+         "$BACKUP_MOUNTPOINT"
+
+    mounted_here=1
+
+    setup_log_info "Mounted backup filesystem."
+fi
+
+confirm_mounted "$backup_fs_uuid" "$BACKUP_MOUNTPOINT"
+
+
+
+setup_log_info "Checking expected root on backup medium..."
+if [ ! -d "$BACKUP_ROOT" ]; then
+    setup_log_die "Expected machine backup root does not exist: $BACKUP_ROOT"
+fi
+setup_log_info "Checked expected root on backup medium."
+
+
+setup_log_info "Creating installation configuration..."
+
+installation_id="$(systemd-id128 new)"
+installation_timestamp="$(date -u '+%Y%m%dT%H%M%SZ')"
+installation_dirname="$installation_timestamp-$installation_id"
+
+installation_root="$BACKUP_ROOT/$installation_dirname"
+staging_root="$BACKUP_ROOT/.$installation_dirname.setup"
+
+RESTIC_REPOSITORY="$installation_root/$RESTIC_REPOSITORY_NAME"
+LUKS_BACKUP_DIR=
+
+if [ "$#" -gt 0 ]; then
+    LUKS_BACKUP_DIR="$installation_root/luks"
+fi
+
+
+PROTON_PASS_VAULT="${PROTON_PASS_VAULT:-Backups-and-Recovery}"
+PROTON_PASS_ITEM_TITLE="${PROTON_PASS_ITEM_TITLE:-restic-$RESTIC_BACKUP_INSTANCE-$MACHINE_LABEL-$installation_dirname}"
+
+setup_log_info "Created installation configuration."
+setup_log_info "Installation root: $installation_root"
+
+
+setup_log_info "Generating Restic repository password..."
+
+restic_repository_password="$(pass-cli password generate random --length 32 --numbers true --uppercase true --symbols true)"
+
+setup_log_info "Generated Restic repository password."
+
+
+setup_log_info "Creating installation staging area..."
+
+umask 077
+
+install -d -m 700 -- "$staging_root/$RESTIC_REPOSITORY_NAME"
+created_path="$staging_root"
+
+if [ "$#" -gt 0 ]; then
+    install -d -m 700 -- "$staging_root/luks"
+fi
+
+setup_log_info "Created installation staging area."
+
+
+if [ "$#" -gt 0 ]; then
+    setup_log_info "Backing up LUKS information..."
+
+    for luks_uuid in "$@"; do
+        luks_device="/dev/disk/by-uuid/$luks_uuid"
+        luks_backup_dir="$staging_root/luks/$luks_uuid"
+
+        setup_log_info "Backing up LUKS device $luks_device..."
+
+        install -d -m 700 -- "$luks_backup_dir"
+
+        sudo cryptsetup luksHeaderBackup "$luks_device" --header-backup-file "$luks_backup_dir/header"
+
+        sudo chown "$(id -u):$(id -g)" "$luks_backup_dir/header"
+        chmod 600 -- "$luks_backup_dir/header"
+
+        sudo cryptsetup luksDump "$luks_device" > "$luks_backup_dir/luks-dump.txt"
+
+        setup_log_info "Backed up LUKS device $luks_device."
+    done
+
+    setup_log_info "Backed up LUKS information."
+fi
+
+
+setup_log_info "Initializing Restic $RESTIC_BACKUP_NAME repository..."
+
+restic_repository_init_json="$(
+    printf '%s' "$restic_repository_password" |
+      restic --repo "$staging_root/$RESTIC_REPOSITORY_NAME" --password-file /dev/stdin init --json
+)"
+
+restic_repository_id="$(
+    printf '%s\n' "$restic_repository_init_json" |
+      jq -er 'select(.message_type == "initialized") | .id'
+)"
+
+setup_log_info "Initialized Restic $RESTIC_BACKUP_NAME repository."
+setup_log_info "Restic repository ID: $restic_repository_id."
+
+
+setup_log_info "Encrypting Restic password for user service..."
+
+install -d -m 700 -- "$SYSTEMD_CREDENTIAL_DIR"
+
+tmp_credential="$(mktemp "$SYSTEMD_CREDENTIAL_FILE.tmp.XXXXXX")"
+
+printf '%s' "$restic_repository_password" |
+    systemd-creds encrypt --user --name="$SYSTEMD_CREDENTIAL_NAME" - - > "$tmp_credential"
+
+chmod 600 -- "$tmp_credential"
+
+setup_log_info "Encrypted Restic password for user service."
+
+
+setup_log_info "Storing Restic password in Proton Pass ($PROTON_PASS_VAULT/$PROTON_PASS_ITEM_TITLE)..."
+
+printf '%s' "$restic_repository_password" |
+    jq -Rs --arg title "$PROTON_PASS_ITEM_TITLE" --arg username "$restic_repository_id" \
+       '{title: $title, username: $username, password: ., urls: []}' |
+    pass-cli item create login --vault-name "$PROTON_PASS_VAULT" --from-template -
+
+unset restic_repository_password
+
+setup_log_info "Stored Restic password in Proton Pass ($PROTON_PASS_VAULT/$PROTON_PASS_ITEM_TITLE)."
+
+
+setup_log_info "Extracting and writing metadata..."
+
+host_status_json="$(hostnamectl --json=short status)"
+
+hostname_at_setup="$(printf '%s\n' "$host_status_json" | jq -r '.Hostname')"
+
+operating_system_at_setup="$(printf '%s\n' "$host_status_json" | jq -r '.OperatingSystemPrettyName')"
+
+cat >"$staging_root/metadata" <<EOF
+Machine label: $MACHINE_LABEL
+Installation ID: $installation_id
+Created at (UTC): $installation_timestamp
+Hostname: $hostname_at_setup
+Operating system: $operating_system_at_setup
+Architecture: $(uname -m)
+Backup filesystem UUID: $backup_fs_uuid
+LUKS backup directory: ${LUKS_BACKUP_DIR:-none}
+EOF
+
+cat >> "$staging_root/metadata" <<EOF
+
+Restic repository ($RESTIC_BACKUP_NAME-$BACKUP_TARGET_NAME):
+  Source: $RESTIC_BACKUP_SOURCE
+  Repository: $RESTIC_REPOSITORY
+  Repository ID: $restic_repository_id
+  Proton Pass vault: $PROTON_PASS_VAULT
+  Proton Pass item: $PROTON_PASS_ITEM_TITLE
+  Systemd credential: $SYSTEMD_CREDENTIAL_NAME
+EOF
+
+setup_log_info "Extracted and wrote metadata."
+
+
+setup_log_info "Creating repository-specific Restic configuration..."
+
+install -d -m 700 -- "$RESTIC_CONFIG_DIR"
+
+tmp_config="$(mktemp "$RESTIC_CONFIG_FILE.tmp.XXXXXX")"
+
+cat >"$tmp_config" <<EOF
+BACKUP_FS_UUID='$backup_fs_uuid'
+BACKUP_MOUNTPOINT='$BACKUP_MOUNTPOINT'
+BACKUP_MACHINE_LABEL='$MACHINE_LABEL'
+BACKUP_TARGET_NAME='$BACKUP_TARGET_NAME'
+BACKUP_INSTALLATION_ID='$installation_id'
+BACKUP_INSTALLATION_TIMESTAMP='$installation_timestamp'
+BACKUP_INSTALLATION_ROOT='$installation_root'
+
+RESTIC_BACKUP_NAME='$RESTIC_BACKUP_NAME'
+RESTIC_BACKUP_SOURCE='$RESTIC_BACKUP_SOURCE'
+RESTIC_EXCLUDE_FILE='$RESTIC_EXCLUDE_FILE'
+RESTIC_EXPECTED_REPOSITORY_ID='$restic_repository_id'
+RESTIC_HOST='$installation_dirname'
+RESTIC_REPOSITORY='$RESTIC_REPOSITORY'
+
+RESTIC_KEEP_DAILY='$RESTIC_KEEP_DAILY'
+RESTIC_KEEP_WEEKLY='$RESTIC_KEEP_WEEKLY'
+RESTIC_KEEP_MONTHLY='$RESTIC_KEEP_MONTHLY'
+RESTIC_KEEP_YEARLY='$RESTIC_KEEP_YEARLY'
+EOF
+
+chmod 600 -- "$tmp_config"
+
+setup_log_info "Created repository-specific Restic configuration."
+
+
+setup_log_info "Publishing installation backup structure..."
+
+mv -- "$staging_root" "$installation_root"
+created_path="$installation_root"
+
+mv -f -- "$tmp_credential" "$SYSTEMD_CREDENTIAL_FILE"
+tmp_credential=
+
+mv -f -- "$tmp_config" "$RESTIC_CONFIG_FILE"
+tmp_config=
+
+setup_committed=1
+created_path=
+
+setup_log_info "Published installation backup structure."
+
+
+setup_log_info "Registering user system changes..."
+
+systemctl --user daemon-reload
+
+setup_log_info "Registered user system changes."
+
+
+if [ "$mounted_here" -eq 1 ]; then
+    setup_log_info "Unmounting backup filesystem..."
+
+    sudo umount "$BACKUP_MOUNTPOINT"
+    mounted_here=0
+
+    setup_log_info "Unmounted backup filesystem."
+fi
+
+
+case "$backup_fs_type" in
+    btrfs|xfs)
+        fstab_passno=0
+        ;;
+    *)
+        fstab_passno=2
+        ;;
+esac
+
+fstab_line="UUID=$backup_fs_uuid $BACKUP_MOUNTPOINT $backup_fs_type noauto,user,nofail,nosuid,nodev,noexec 0 $fstab_passno"
+
+
+setup_log_info "  Installation backup root (under $BACKUP_ROOT when medium is mounted):"
+setup_log_info "    $installation_root"
+
+setup_log_action "Manual checkpoint:"
+setup_log_action "  Add the following entry to /etc/fstab if needed:"
+setup_log_action "    $fstab_line"
+setup_log_action ""
+setup_log_action "  Register changes with systemd:"
+setup_log_action "    sudo systemctl daemon-reload"
+setup_log_action ""
+setup_log_action "  Test mounting as the regular user:"
+setup_log_action "    mount '$BACKUP_MOUNTPOINT'"
+setup_log_action "    umount '$BACKUP_MOUNTPOINT'"
+setup_log_action ""
+setup_log_action "  Enable and start the backup and maintenance timers:"
+setup_log_action "    systemctl --user enable --now '$RESTIC_BACKUP_UNIT_INSTANCE.timer'"
+setup_log_action "    systemctl --user enable --now '$RESTIC_MAINTENANCE_UNIT_INSTANCE.timer'"
+setup_log_action ""
+setup_log_action "  Optionally run a backup immediately:"
+setup_log_action "    systemctl --user start '$RESTIC_BACKUP_UNIT_INSTANCE.service'"

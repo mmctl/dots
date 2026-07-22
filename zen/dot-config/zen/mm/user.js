@@ -4,7 +4,6 @@ user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
 // Find behavior
 user_pref("accessibility.typeaheadfind", true);
 user_pref("accessibility.typeaheadfind.flashBar", 0);
-user_pref("findbar.entireword", true);
 
 // UI choices
 user_pref("browser.toolbars.bookmarks.visibility", "always");

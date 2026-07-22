@@ -1,0 +1,135 @@
+#!/usr/bin/env sh
+set -eu
+
+notify() {
+    urgency=$1
+    title=$2
+    body=$3
+
+    notify-send \
+        --app-name="Backup maintenance: $RESTIC_BACKUP_NAME ($BACKUP_TARGET_NAME)" \
+        --icon=drive-harddisk \
+        --urgency="$urgency" \
+        "$title" \
+        "$body" \
+        >/dev/null 2>&1 || true
+}
+
+mounted_here=0
+attempted=0
+prune_ok=0
+check_ok=0
+unmount_ok=1
+
+cleanup() {
+    status=$?
+
+    trap - EXIT HUP INT TERM
+
+    if [ "$mounted_here" -eq 1 ]; then
+        if ! umount "$BACKUP_MOUNTPOINT"; then
+            unmount_ok=0
+            status=1
+        fi
+    fi
+
+    if [ "$attempted" -eq 1 ]; then
+        if [ "$prune_ok" -ne 1 ]; then
+            notify critical \
+                   "Maintenance failed" \
+                   "Prune did not complete, and subsequent check not performed. Inspect: journalctl --user -u restic-maintenance@$RESTIC_BACKUP_NAME.service"
+        elif [ "$check_ok" -ne 1 ]; then
+            notify critical \
+                   "Prune succeeded; check failed" \
+                   "Prune completed successfully, but subsequent check failed. Inspect: journalctl --user -u restic-maintenance@$RESTIC_BACKUP_NAME.service"
+        elif [ "$unmount_ok" -ne 1 ]; then
+            notify critical \
+                   "Maintenance succeeded; drive still mounted" \
+                   "Maintenance (prune and partial check) completed successfully, but backup drive could not be unmounted. Periodically perform a full scrub/data check with: systemctl --user start restic-scrub@$RESTIC_BACKUP_NAME.service"
+        elif [ "$mounted_here" -eq 1 ]; then
+            notify normal \
+                   "Maintenance succeeded; drive unmounted" \
+                   "Maintenance (prune and partial check) completed successfully and backup drive has been unmounted. Periodically perform a full scrub/data check with: systemctl --user start restic-scrub@$RESTIC_BACKUP_NAME.service"
+        else
+            notify normal \
+                   "Maintenance succeeded; drive remains mounted" \
+                   "Maintenance (prune and partial check) completed successfully. The backup drive was already mounted before and remains mounted. Periodically perform a full scrub/data check with: systemctl --user start restic-scrub@$RESTIC_BACKUP_NAME.service"
+        fi
+    fi
+
+    exit "$status"
+}
+
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+
+if [ ! -e "/dev/disk/by-uuid/$BACKUP_FS_UUID" ]; then
+    printf 'Backup drive (UUID: %s) is not connected; skipping maintenance.\n' "$BACKUP_FS_UUID"
+
+    notify low \
+           "Maintenance skipped" \
+           "The $RESTIC_BACKUP_NAME ($BACKUP_TARGET_NAME) backup drive is not connected (UUID: $BACKUP_FS_UUID)."
+
+    exit 0
+fi
+
+
+if mountpoint -q "$BACKUP_MOUNTPOINT"; then
+    actual_uuid="$(findmnt -rn --mountpoint "$BACKUP_MOUNTPOINT" --output UUID || true)"
+
+    if [ -z "$actual_uuid" ]; then
+        printf 'Could not determine mounted filesystem UUID for %s.\n' "$BACKUP_MOUNTPOINT" >&2
+        exit 1
+    fi
+
+    if [ "$actual_uuid" != "$BACKUP_FS_UUID" ]; then
+        printf 'Backup mountpoint is occupied by a different filesystem.\n' >&2
+        printf '  Mountpoint: %s\n' "$BACKUP_MOUNTPOINT" >&2
+        printf '  Expected:   %s\n' "$BACKUP_FS_UUID" >&2
+        printf '  Actual:     %s\n' "$actual_uuid" >&2
+        exit 1
+    fi
+
+    printf 'Backup filesystem already mounted at %s.\n' "$BACKUP_MOUNTPOINT"
+    mounted_here=0
+else
+    mount "$BACKUP_MOUNTPOINT"
+    mounted_here=1
+fi
+
+
+attempted=1
+
+
+actual_repository_id="$(restic --quiet cat config | jq -er '.id')"
+
+if [ "$actual_repository_id" != "$RESTIC_EXPECTED_REPOSITORY_ID" ]; then
+    printf 'Configured Restic repository has an unexpected ID.\n' >&2
+    printf '  Repository: %s\n' "$RESTIC_REPOSITORY" >&2
+    printf '  Expected:   %s\n' "$RESTIC_EXPECTED_REPOSITORY_ID" >&2
+    printf '  Actual:     %s\n' "$actual_repository_id" >&2
+    exit 1
+fi
+
+
+notify normal \
+       "Maintenance started" \
+       "Pruning and (partially) checking $RESTIC_REPOSITORY..."
+
+restic forget \
+       --tag "$RESTIC_BACKUP_NAME" \
+       --keep-last 1 \
+       --keep-daily "$RESTIC_KEEP_DAILY" \
+       --keep-weekly "$RESTIC_KEEP_WEEKLY" \
+       --keep-monthly "$RESTIC_KEEP_MONTHLY" \
+       --keep-yearly "$RESTIC_KEEP_YEARLY" \
+       --prune
+
+prune_ok=1
+
+restic check --read-data-subset=10%
+
+check_ok=1

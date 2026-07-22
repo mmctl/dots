@@ -1,5 +1,5 @@
 [Unit]
-Description=Timer for restic backup of home directory
+Description=Timer for Restic backup: %i
 
 [Timer]
 OnCalendar=*-*-* 00/4:00:00
@@ -7,7 +7,6 @@ Persistent=true
 RandomizedDelaySec=5m
 AccuracySec=1m
 DeferReactivation=true
-Unit=restic-backup-home.service
 
 [Install]
 WantedBy=timers.target

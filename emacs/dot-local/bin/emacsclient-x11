@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+
+if [ -z "${DISPLAY:-}" ]; then
+    printf '%s\n' 'emacsclient-x11: DISPLAY is unset; cannot create an X11 frame' >&2
+    exit 1
+fi
+
+exec emacsclient --display="$DISPLAY" "$@"

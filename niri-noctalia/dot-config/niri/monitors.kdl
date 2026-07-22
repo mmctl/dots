@@ -1,9 +1,9 @@
+
 // External (center)
-output "HDMI-A-1" {
-    mode "1920x1080"
-    scale 1.0
+output "Lenovo Group Limited P27QD-40 VNACN8TB" {
+    mode "2560x1440"
+    scale 1.25
     position x=1536 y=0
-    
     focus-at-startup
 }
 
@@ -11,5 +11,5 @@ output "HDMI-A-1" {
 output "eDP-1" {
     mode "1920x1080"
     scale 1.25
-    position x=0 y=216
+    position x=0 y=100
 }

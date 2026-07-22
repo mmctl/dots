@@ -1,4 +1,4 @@
-;; ;; -*- lexical-binding: t; -*-
+;; -*- lexical-binding: t; -*-
 ;; init.el
 (setopt custom-file CUSTOM_FILE)
 
@@ -9,7 +9,6 @@
 ;; Location (approximate)
 (setopt calendar-latitude 51.441643)
 (setopt calendar-longitude 5.469722)
-
 
 
 ;;; Package system and packages
@@ -36,21 +35,15 @@
           goggles
           jinx
           scratch
-          ;; undo-tree
-          undo-fu
-          undo-fu-session
-          ;; vundo
+          undo-fu undo-fu-session
           wgrep
           ;; Completion and actions
           ace-window
-          avy
-          avy-embark-collect
+          avy avy-embark-collect
           cape
-          consult
-          consult-dir
+          consult consult-dir
           corfu
-          embark
-          embark-consult
+          embark embark-consult
           orderless
           tempel
           transient
@@ -81,10 +74,10 @@
           ;; Proof assistants
           proof-general
           nael
-          ;; Writing
-          auctex
-          cdlatex
-          ;; Documents
+          ;; Reading and writing
+          auctex cdlatex
+          denote consult-denote
+          elfeed
           pdf-tools
           ;; Org
           org
@@ -174,7 +167,7 @@
         create-lockfiles t)
 
 ;; Authentication
-(setopt auth-sources (list AUTHINFO_FILE))
+(setopt auth-sources `(default ,AUTHINFO_FILE))
 
 ;; Shell
 (setopt eshell-directory-name (file-name-as-directory
@@ -197,6 +190,7 @@
 
 ;;; Local functionalities (setup and utilities)
 (require 'local-setup)
+;; (require 'local-setup-debug)
 (require 'local-utils)
 
 
@@ -282,10 +276,9 @@
 (display-time-mode 1)
 
 (if (daemonp)
-    (progn
-      (add-hook 'server-after-make-frame-hook #'local-setup-client-frame)
-      (add-hook 'after-make-frame-functions #'local-setup-frame))
-  (add-hook 'after-init-hook #'local-setup-global-frame))
+    (add-hook 'after-make-frame-functions #'local-setup-frame-defaults-from-given)
+  (add-hook 'after-init-hook #'local-setup-frame-defaults-from-selected))
+
 
 ;; Modes
 (add-hook 'text-mode-hook #'local-setup-text-mode)
@@ -694,9 +687,26 @@
   (setopt age-program (or (executable-find "rage")
                           (executable-find "age")))
 
+  (defconst AGE_IDENTITIES (let ((age-id-dir (file-name-as-directory
+                                              (expand-file-name "age/identities/"
+                                                                (or (getenv "XDG_CONFIG_HOME") "~/.config/")))))
+                             (when (file-directory-p age-id-dir)
+                               (directory-files age-id-dir t directory-files-no-dot-files-regexp)))
+    "List containing age identity files (available at launch).")
+  (defconst AGE_RECIPIENTS (let ((age-rec-dir (file-name-as-directory
+                                              (expand-file-name "age/recipients/"
+                                                                (or (getenv "XDG_CONFIG_HOME") "~/.config/")))))
+                             (when (file-directory-p age-rec-dir)
+                               (directory-files age-rec-dir t directory-files-no-dot-files-regexp)))
+    "List containing age recipient files (available at launch).")
 
-  ;; (setopt age-default-identity "default-skey-stub")
-  ;; (setopt age-default-recipients '("default-pkey" "backup-pkey"))
+  (setopt age-default-identity (or (seq-find
+                                    (lambda (idfile)
+                                      (string-match-p "primary\\.identity\\'"
+                                                      (file-name-nondirectory idfile)))
+                                    AGE_IDENTITIES)
+                                   (car-safe AGE_IDENTITIES)))
+  (setopt age-default-recipient AGE_RECIPIENTS)
 
   :config
   (setenv "PINENTRY_PROGRAM" "pinentry-emacs")
@@ -811,6 +821,8 @@
 
 ;; Completion and actions
 (use-package ace-window
+  :demand t
+
   :bind
   ("<remap> <other-window>" . ace-window)
 
@@ -840,6 +852,8 @@
   (keymap-set a-window-map "o" #'an-ace-window-prefix))
 
 (use-package avy
+  :demand t
+
   :bind
   (:prefix-map an-avy-map :prefix "C-c j" :prefix-docstring "Keymap for avy (global)"
                ("c" . avy-goto-char)
@@ -926,6 +940,8 @@
   (add-hook 'minibuffer-setup-hook #'a-setup-cape-minibuffer))
 
 (use-package consult
+  :demand t
+
   :bind
   ("M-l" . consult-line) ; from: downcase-word
   ("M-m" . consult-mark) ; from: back-to-indentation
@@ -1314,7 +1330,6 @@ that allows to include other templates by their name."
   :after vertico
 
   :init
-  ;; Setup and settings (before load)
   (setopt vertico-quick1 "asdfjkl;")
   (setopt vertico-quick2 "gwerhuio")
 
@@ -1326,16 +1341,26 @@ that allows to include other templates by their name."
 
 ;; User interface and feel
 (use-package doom-modeline
-  :hook after-init
+  :demand t
 
   :init
-  (setopt doom-modeline-buffer-encoding nil
+  (setopt doom-modeline-height 1
+          doom-modeline-buffer-encoding nil
           doom-modeline-default-coding-system 'utf-8
+          doom-modeline-icon t
           doom-modeline-time-icon nil
           doom-modeline-time-live-icon nil
           doom-modeline-time-analogue-clock nil
           doom-modeline-percent-position nil
-          doom-modeline-vcs-max-length 20))
+          doom-modeline-vcs-max-length 20)
+
+  :config
+  (require 'local-doom-modeline)
+
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions #'a-doom-modeline-init-first-graphical-frame 90)
+      ;; (add-hook 'server-after-make-frame-hook #'a-doom-modeline-init-first-graphical-client-frame 90)
+    (add-hook 'after-init-hook #'(lambda () (doom-modeline-mode 1)) 90)))
 
 (use-package ef-themes
   :demand t
@@ -1343,6 +1368,9 @@ that allows to include other templates by their name."
   :init
   (setopt modus-themes-italic-constructs t
           modus-themes-bold-constructs nil)
+
+  :custom-face
+  (minibuffer-prompt ((t (:weight medium :slant italic))))
 
   :config
   (modus-themes-include-derivatives-mode 1)
@@ -1357,9 +1385,14 @@ that allows to include other templates by their name."
   :demand t
 
   :config
+  (require 'local-circadian)
+
   (setopt circadian-themes '((:sunrise . modus-operandi-tinted)
                              (:sunset . modus-vivendi-tinted)))
-  (circadian-setup))
+
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions #'a-circadian-setup-first-graphical-frame)
+    (add-hook 'after-init-hook #'circadian-setup)))
 
 (use-package keycast
   :defer t
@@ -1399,8 +1432,16 @@ that allows to include other templates by their name."
   (keymap-set minibuffer-local-map "M-A" #'marginalia-cycle))
 
 (use-package nerd-icons
+  :demand t
+
   :init
-  (setopt nerd-icons-font-family "Symbols Nerd Font Mono"))
+  (setopt nerd-icons-font-family "Symbols Nerd Font Mono")
+
+  :config
+  (require 'local-nerd-icons)
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions #'a-nerd-icons-set-font-frame 80)
+    (add-hook 'after-init-hook #'nerd-icons-set-font 80)))
 
 (use-package ultra-scroll
   :demand t
@@ -1452,18 +1493,21 @@ that allows to include other templates by their name."
 
   (setopt dirvish-quick-access-entries
           `(("h" ,(file-name-as-directory (expand-file-name "~/")) "Home")
-            ("p" ,(file-name-as-directory (expand-file-name "projects/" "~/")) "Projects")
-            ("a" ,(file-name-as-directory (expand-file-name "areas/" "~/")) "Areas")
-            ("r" ,(file-name-as-directory (expand-file-name "resources/" "~/")) "Resources")
-            ("A" ,(file-name-as-directory (expand-file-name "archive/" "~/")) "Archive")
-            ("c" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_CONFIG_HOME")
-                                                                "~/.config/")))
+            ("p" ,(file-name-as-directory (expand-file-name (or (getenv "PROJECTS_DIR") "~/projects/")))
+             "Projects")
+            ("a" ,(file-name-as-directory (expand-file-name (or (getenv "AREAS_DIR") "~/areas/")))
+             "Areas")
+            ("r" ,(file-name-as-directory (expand-file-name (or (getenv "RESOURCES_DIR") "~/resources/")))
+             "Resources")
+            ("A" ,(file-name-as-directory (expand-file-name (or (getenv "ARCHIVES_DIR") "~/archives/")))
+             "Archive")
+            ("c" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_CONFIG_HOME") "~/.config/")))
              "User config")
             ("C" "/etc/" "System config")
-            ("d" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_DATA_HOME")
-                                                                "~/.local/share/")))
+            ("d" ,(file-name-as-directory (expand-file-name (or (getenv "XDG_DATA_HOME") "~/.local/share/")))
              "User data")
-            ("D" "/usr/share/" "System data")))
+            ("D" "/usr/share/" "System data")
+            ("M" "/mnt" "System mount point")))
 
   (setopt dirvish-side-mode-line-format '(:left (sort vc-info)))
   (setopt dirvish-side-attributes '(vc-state subtree-state nerd-icons))
@@ -1688,19 +1732,7 @@ that allows to include other templates by their name."
           ediff-split-window-function #'split-window-horizontally)
 
   :config
-  ;; Hooks
-  ;; Save/restore window configuration when starting/quitting ediff
-  (defvar an-ediff-preceding-window-configuration
-    "Window configuration before starting ediff.")
-  (defun an-ediff-store-window-configuration ()
-    "Stores window configuration in `an-ediff-preceding-window-configuration'"
-    (setq an-ediff-preceding-window-configuration (current-window-configuration)))
-  (defun an-ediff-restore-window-configuration ()
-    "Restores window configuration stored in
-`an-ediff-preceding-window-configuration', if any, and resets it."
-    (when an-ediff-preceding-window-configuration
-      (set-window-configuration an-ediff-preceding-window-configuration)
-      (setq an-ediff-preceding-window-configuration nil)))
+  (require 'local-ediff)
 
   (add-hook #'ediff-before-setup-hook #'an-ediff-store-window-configuration)
   (add-hook #'ediff-quit-hook #'an-ediff-restore-window-configuration 90))
@@ -1764,8 +1796,8 @@ that allows to include other templates by their name."
 
   :init
   ;; Setup and settings (before load)
-  (setopt forge-owned-accounts '(("MM45" . nil)
-                                 ("mmctl" . nil)))
+  (setopt forge-owned-accounts '(("mmctl" . nil)
+                                 ("MM45" . nil)))
 
   (defconst FORGE_DIR (file-name-as-directory
                        (expand-file-name "forge/" EMACS_DATA_DIR))
@@ -2187,6 +2219,128 @@ that allows to include other templates by their name."
   (add-hook 'latex-mode-hook #'a-setup-latex-mode-not-use-dollar)
   (add-hook 'LaTeX-mode-hook #'a-setup-latex-mode-not-use-dollar))
 
+(use-package denote
+  :defer t
+
+  :bind
+  (:prefix-map a-denote-map :prefix "C-c n" :prefix-docstring "Keymap for denote (global)"
+               ("b" . denote-backlinks)
+               ("d" . denote-dired)
+               ("g" . denote-grep)
+               ("l" . denote-link-or-create)
+               ("L" . denote-add-links)
+               ("n" . denote)
+               ("o" . denote-open-or-create)
+               ("q" . denote-query-contents-link)
+               ("Q" . denote-query-filenames-link)
+               ("r" . denote-rename-file)
+               ("R" . denote-rename-file-using-front-matter)
+               ("t" . denote-template)
+               ("C-r" . denote-region))
+  (:map dired-mode-map
+        ("C-d l" . denote-dired-link-markded-notes)
+        ("C-d r" . denote-dired-rename-files)
+        ("C-d R" . denote-dired-rename-marked-files-using-front-matter))
+
+  :init
+  (defconst DENOTE_DIR (file-name-as-directory
+                        (or (when (getenv "PARA_ROOT_DIR")
+                              (expand-file-name (getenv "PARA_ROOT_DIR")))
+                            (when (getenv "XDG_DATA_HOME")
+                              (expand-file-name "denote/" (getenv "XDG_DATA_HOME")))
+                            (expand-file-name "~/denote/")))
+    "Directory used as default location for denote notes.")
+  (unless (file-directory-p DENOTE_DIR)
+    (make-directory DENOTE_DIR t))
+
+  (setopt denote-directory DENOTE_DIR)
+
+  (setopt denote-prompts '(subdirectory title keywords))
+  (setopt denote-excluded-directories-regexp (rx string-start "workspace" string-end))
+
+  (setopt denote-known-keywords
+        '(;; Domains
+          "administration" "cryptography" "emacs" "finance"
+          "formalmethods" "home" "relationships" "software"
+          "travel"
+          ;; Types and roles
+          "area" "concept" "contract" "index"
+          "invoice" "literature" "policy" "project"
+          "receipt" "reference" "statement"
+          ;; Contexts
+          "business" "family" "friends" "partner"
+          "personal" "research"))
+
+  (setopt denote-infer-keywords t)
+  (setopt denote-sort-keywords t)
+
+  (setopt denote-file-type 'org)
+  (setopt denote-date-prompt-use-org-read-date t)
+
+  :config
+  (denote-rename-buffer-mode 1))
+
+(use-package consult-denote
+  :defer t
+
+  :bind
+  (:map a-denote-map
+        ("<remap> <denote-grep>" . consult-denote-grep)
+        ("f" . consult-denote-find)
+        ("g" . consult-denote-grep))
+
+  :init
+  (setopt consult-denote-grep-command #'consult-ripgrep)
+  (setopt consult-denote-find-command #'consult-fd))
+
+(use-package elfeed
+  :defer t
+
+  :bind
+  ("C-c r" . elfeed)
+  ("C-c R" . elfeed-tree)
+
+  :init
+  (defconst ELFEED_DIR (file-name-as-directory
+                        (expand-file-name "elfeed/" EMACS_DATA_DIR))
+    "Directory used to store data from Elfeed, e.g., enclosures.")
+  (unless (file-directory-p ELFEED_DIR)
+    (make-directory ELFEED_DIR t))
+  (setopt elfeed-db-directory (file-name-as-directory
+                               (expand-file-name "database/" ELFEED_DIR)))
+  (unless (file-directory-p elfeed-db-directory)
+    (make-directory elfeed-enclosure-default-dir t))
+  (setopt elfeed-enclosure-default-dir (file-name-as-directory
+                                        (expand-file-name "enclosures/" ELFEED_DIR)))
+  (unless (file-directory-p elfeed-enclosure-default-dir)
+    (make-directory elfeed-enclosure-default-dir t))
+
+  (setopt elfeed-search-title-min-width 20
+          elfeed-search-title-max-width 80)
+
+  (setopt elfeed-search-filter "+unread"
+          elfeed-tree-filter "")
+
+  (setopt elfeed-show-entry-switch 'pop-to-buffer)
+
+  :config
+  (require 'local-elfeed)
+
+  (setopt elfeed-show-enclosure-filename-function
+          #'(lambda (_entry url) (a-local-filename-for-url url)))
+
+  (keymap-set elfeed-show-mode-map "l" #'an-elfeed-handle-link)
+  (keymap-set elfeed-show-mode-map "e" #'an-elfeed-handle-enclosure)
+
+  (setopt elfeed-feeds
+        (mapcar
+         (lambda (config)
+           (cons (an-elfeed-feed-config-url config)
+                 (an-elfeed-feed-config-default-tags config)))
+         ALL_FEED_CONFIGS))
+
+  (add-hook 'elfeed-new-entry-hook #'an-elfeed-tag-entry-from-feed))
+
 (use-package math-delimiters
   :defer t
 
@@ -2217,10 +2371,11 @@ that allows to include other templates by their name."
   :defer t
 
   :init
-  ;; Setup and settings (before load)
   (setopt pdf-tools-handle-upgrades nil)
   (setopt pdf-view-display-size 'fit-page)
   (setopt pdf-view-use-unicode-ligther t)
+
+  (pdf-loader-install t)
 
   :config
   (require 'local-pdf-tools)
@@ -2288,20 +2443,17 @@ that allows to include other templates by their name."
 ;; Dependencies: mbsync, mu, mu4e
 ;; see: https://www.djcbsoftware.nl/code/mu/mu4e/
 (use-package mu4e
-  :init
+  :defer t
 
-  ;; Sysvar: with recent versions of mbsync, the config file explicitly given
-  ;; here is the first default checked (so not needed to provide explicitly)
-  (setopt mu4e-get-mail-command
-          (concat "mbsync -a"
-                  (when-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
-                    (concat " -c " (shell-quote-argument
-                                    (expand-file-name "isyncrc" xdgcnf))))))
+  :bind
+  ("C-c m" . mu4e)
+  ("C-c M" . mu4e-compose-mail)
+
+  :init
   (setopt mu4e-update-interval 300)
   (setopt mu4e-change-filenames-when-moving t)
 
   (setopt mu4e-main-hide-personal-addresses t) ; Hide personal addresses because we use many
-  (setopt mu4e-use-fancy-chars t)
 
   (setopt mu4e-compose-format-flowed t)
 
@@ -2312,11 +2464,69 @@ that allows to include other templates by their name."
   ;; Consider following if indexing is slow
   ;; (setopt mu4e-index-cleanup nil)
   ;; (setopt mu4e-index-lazy-check nil)
+  (setopt mu4e-date-format-long "%Y/%m/%d (%A) | %H:%M:%S")
+  (setopt mu4e-headers-time-format "%H:%M:%S")
+  (setopt mu4e-headers-long-date-format-long mu4e-date-format-long)
+  (setopt mu4e-headers-date-format "%a, %d %b | %H:%M")
 
-  (setq-default mu4e-headers-attach-mark '("a" . "∀"))
+  (setopt mu4e-headers-fields
+          '((:human-date    .   24)
+            (:flags         .   18)
+            (:mailing-list  .   18)
+            (:from          .   24)
+            (:subject       .   nil)))
+
+  (with-eval-after-load 'nerd-icons
+    (let* ((separator (propertize " " 'display '(space :width 0.5) 'rear-nonsticky t))
+           (mark (lambda (ascii icon)
+                   (cons ascii (concat separator icon separator)))))
+      (setq-default mu4e-headers-draft-mark
+                    (funcall mark "D" (nerd-icons-mdicon "nf-md-pencil"))
+                    mu4e-headers-flagged-mark
+                    (funcall mark "F" (nerd-icons-mdicon "nf-md-flag"))
+                    mu4e-headers-new-mark
+                    (funcall mark "N" (nerd-icons-mdicon "nf-md-email_plus"))
+                    mu4e-headers-passed-mark
+                    (funcall mark "P" (nerd-icons-mdicon "nf-md-forward"))
+                    mu4e-headers-replied-mark
+                    (funcall mark "R" (nerd-icons-mdicon "nf-md-reply"))
+                    mu4e-headers-seen-mark
+                    (funcall mark "S" (nerd-icons-mdicon "nf-md-email_open"))
+                    mu4e-headers-trashed-mark
+                    (funcall mark "T" (nerd-icons-mdicon "nf-md-delete"))
+                    mu4e-headers-attach-mark
+                    (funcall mark "a" (nerd-icons-mdicon "nf-md-paperclip"))
+                    mu4e-headers-encrypted-mark
+                    (funcall mark "x" (nerd-icons-mdicon "nf-md-lock"))
+                    mu4e-headers-signed-mark
+                    (funcall mark "s" (nerd-icons-mdicon "nf-md-shield_check"))
+                    mu4e-headers-unread-mark
+                    (funcall mark "u" (nerd-icons-mdicon "nf-md-email"))
+                    mu4e-headers-list-mark
+                    (funcall mark "l" (nerd-icons-mdicon "nf-md-format_list_bulleted"))
+                    mu4e-headers-personal-mark
+                    (funcall mark "p" (nerd-icons-mdicon "nf-md-account"))
+                    mu4e-headers-calendar-mark
+                    (funcall mark "c" (nerd-icons-mdicon "nf-md-calendar")))
+      (setq-default mu4e-modeline-all-clear
+                    (funcall mark "C:" (nerd-icons-mdicon "nf-md-inbox_outline"))
+                    mu4e-modeline-all-read
+                    (funcall mark "R:" (nerd-icons-mdicon "nf-md-email_open_outline"))
+                    mu4e-modeline-unread-items
+                    (funcall mark "U:" (nerd-icons-mdicon "nf-md-email_outline"))
+                    mu4e-modeline-new-items
+                    (funcall mark "N:" (nerd-icons-mdicon "nf-md-email_alert_outline"))))
+    (setopt mu4e-use-fancy-chars t)
+    (setopt mu4e-headers-precise-alignment t)
+    (add-hook 'mu4e-headers-mode-hook #'a-mu4e-headers-set-truncate-string-ellipsis)
+    (add-hook 'mu4e-headers-found-hook #'a-mu4e-align-header-line))
 
   :config
   (require 'local-mu4e)
+
+  ;; Sysvar: with recent versions of mbsync, the config file explicitly given
+  ;; here is the first default checked (so not needed to provide explicitly)
+  (setopt mu4e-get-mail-command (a-mu4e-get-mail-command))
 
   (setopt mail-user-agent (mu4e-user-agent)
           message-mail-user-agent t)
@@ -2326,12 +2536,22 @@ that allows to include other templates by their name."
           mu4e-trash-folder #'a-determine-mu4e-trash-folder
           mu4e-refile-folder #'a-determine-mu4e-refile-folder)
 
-  (setopt mu4e-contexts
-          (list PERSONAL_MU4E_CONTEXT WORK_MU4E_CONTEXT))
+  (setopt mu4e-contexts (list
+                         PERSONAL_MU4E_CONTEXT
+                         RESEARCH_MU4E_CONTEXT
+                         ;; BUSINESS_MU4E_CONTEXT
+                         ))
 
   (setopt mu4e-context-policy 'ask-if-none)
   (setopt mu4e-compose-context-policy nil)
   (setopt message-send-mail-function #'an-smtpmail-configure-and-send-it)
+
+  (let ((bridge-cert (if-let* ((xdgcnf (getenv "XDG_CONFIG_HOME")))
+                         (expand-file-name "proton/bridge/cert.pem" xdgcnf)
+                       (expand-file-name "~/.config/proton/bridge/cert.pem"))))
+    (when (file-regular-p bridge-cert)
+      (with-eval-after-load 'gnutls
+        (add-to-list 'gnutls-trustfiles bridge-cert))))
 
   (advice-add #'mu4e--draft :around #'an-around-advice-draft-configure))
 
@@ -2344,9 +2564,10 @@ that allows to include other templates by their name."
   ;; Setup (preface)
   ;; Create and store org root directory
   (defconst ORG_DIR (file-name-as-directory
-                     (if (getenv "XDG_DATA_HOME")
-                         (expand-file-name "org/" (getenv "XDG_DATA_HOME"))
-                       "~/org/"))
+                     (or (getenv "ORG_DIR")
+                         (when (getenv "XDG_DATA_HOME")
+                             (expand-file-name "org/" (getenv "XDG_DATA_HOME")))
+                         (expand-file-name "~/org/")))
     "Directory used as default location for org files.")
   (unless (file-directory-p ORG_DIR)
     (make-directory ORG_DIR t))
@@ -2375,38 +2596,56 @@ that allows to include other templates by their name."
   (defconst ORG_CALENDAR_FILE (expand-file-name "calendar.org" ORG_DIR)
     "Default file for calendar events created with org.")
   (unless (file-regular-p ORG_CALENDAR_FILE)
-    (make-empty-file ORG_CALENDAR_FILE t))
+    (let ((org-base-calendar (expand-file-name "templates/org/calendar.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-calendar)
+          (copy-file org-base-calendar ORG_CALENDAR_FILE)
+        (make-empty-file ORG_CALENDAR_FILE t))))
 
   ;; Create and store org (default) notes file
   (defconst ORG_NOTES_FILE (expand-file-name "notes.org" ORG_DIR)
     "Default file for notes (org).")
   (unless (file-regular-p ORG_NOTES_FILE)
-    (make-empty-file ORG_NOTES_FILE t))
+    (let ((org-base-notes (expand-file-name "templates/org/notes.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-notes)
+          (copy-file org-base-notes ORG_NOTES_FILE)
+        (make-empty-file ORG_NOTES_FILE t))))
 
   ;; Create and store org (default) todos file
   (defconst ORG_TODOS_FILE (expand-file-name "todos.org" ORG_DIR)
     "Default file for storing todos (org).")
   (unless (file-regular-p ORG_TODOS_FILE)
-    (make-empty-file ORG_TODOS_FILE t))
+    (let ((org-base-todos (expand-file-name "templates/org/todos.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-todos)
+          (copy-file org-base-todos ORG_TODOS_FILE)
+        (make-empty-file ORG_TODOS_FILE t))))
 
   ;; Create and store org (default) meetings file
   (defconst ORG_MEETINGS_FILE (expand-file-name "meetings.org" ORG_DIR)
     "Default file for meetings (org).")
   (unless (file-regular-p ORG_MEETINGS_FILE)
-    (make-empty-file ORG_MEETINGS_FILE t))
+    (let ((org-base-meetings (expand-file-name "templates/org/meetings.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-meetings)
+          (copy-file org-base-meetings ORG_MEETINGS_FILE)
+        (make-empty-file ORG_MEETINGS_FILE t))))
 
   ;; PARA
   ;; Create and store org (default) projects file
   (defconst ORG_PROJECTS_FILE (expand-file-name "projects.org" ORG_DIR)
     "Default file for projects (org).")
   (unless (file-regular-p ORG_PROJECTS_FILE)
-    (make-empty-file ORG_PROJECTS_FILE t))
+    (let ((org-base-projects (expand-file-name "templates/org/projects.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-projects)
+          (copy-file org-base-projects ORG_PROJECTS_FILE)
+        (make-empty-file ORG_PROJECTS_FILE t))))
 
   ;; Create and store org (default) projects file
   (defconst ORG_AREAS_FILE (expand-file-name "areas.org" ORG_DIR)
     "Default file for areas (org).")
   (unless (file-regular-p ORG_AREAS_FILE)
-    (make-empty-file ORG_AREAS_FILE t))
+    (let ((org-base-areas (expand-file-name "templates/org/areas.org" EMACS_DATA_DIR)))
+      (if (file-regular-p org-base-areas)
+          (copy-file org-base-areas ORG_AREAS_FILE)
+        (make-empty-file ORG_AREAS_FILE t))))
 
   ;; Auxiliary
   ;; Create and store org (default) ID file
@@ -2418,7 +2657,7 @@ that allows to include other templates by their name."
   (setopt org-default-notes-file ORG_NOTES_FILE)
 
   (setopt org-return-follows-link t)
-  (setopt org-support-shift-select t)
+  (setopt org-support-shift-select nil)
 
   (setopt org-startup-folded 'content
           org-startup-indented t)
@@ -2467,16 +2706,19 @@ that allows to include other templates by their name."
           '(("n" "Note"
              entry (file+headline ORG_NOTES_FILE "General Notes")
              "* %?\n:PROPERTIES:\n:Created: %U\n:END:"
-             :empty-lines 0)
+             :empty-lines 0
+             :kill-buffer t)
             ("t" "Todo"
              entry (file+headline ORG_TODOS_FILE "General Tasks")
              "* TODO [#B] %?\n:PROPERTIES:\n:Created: %U\n:END:"
-             :empty-lines 0)
+             :empty-lines 0
+             :kill-buffer t)
             ("e" "Calendar event"
              entry (file+headline ORG_CALENDAR_FILE "Events")
              "* %?\n:PROPERTIES:\n:Created: %U\n:END:\nTime: %^T\n** Notes:%i :noshow:"
              :empty-lines-before 0
-             :empty-lines-after 1)
+             :empty-lines-after 1
+             :kill-buffer t)
             ("m" "Meeting"
              entry (file+olp+datetree ORG_MEETINGS_FILE)
              "* %? :meeting:%^g\n:PROPERTIES:\n:Created: %U\n:END:\n** Notes:%i :noshow:\n** Action Items: :noshow:\n*** TODO [#B] "
@@ -2484,7 +2726,17 @@ that allows to include other templates by their name."
              :clock-in t
              :clock-resume t
              :empty-lines-before 0
-             :empty-lines-after 1)))
+             :empty-lines-after 1)
+            ("A" "Area"
+             entry (file ORG_AREAS_FILE)
+             "* %? %^g\n** Tasks :rftarget:\n** Notes :rftarget:"
+             :empty-lines 0
+             :kill-buffer t)
+            ("P" "Project"
+             entry (file ORG_PROJECTS_FILE)
+             "* %? %^g\n** Tasks :rftarget:\n** Notes :rftarget:"
+             :empty-lines 0
+             :kill-buffer t)))
 
   (setopt org-read-date-popup-calendar t
           org-read-date-display-live t)
@@ -2512,25 +2764,39 @@ that allows to include other templates by their name."
   (setopt org-agenda-compact-blocks t)
 
   (with-eval-after-load 'nerd-icons
+    (defun an-org-agenda-mdicon (name color-face)
+      "Return Material Design icon NAME for `org-agenda-category-icon-alist',
+with the color by COLOR-FACE."
+      (let ((icon (nerd-icons-mdicon name :face color-face)))
+        (add-face-text-property 0 (length icon)
+                                `(:family ,nerd-icons-font-family
+                                          :weight normal
+                                          :slant normal
+                                          :width normal)
+                                nil icon)
+        (list icon)))
+
     (setq-default org-agenda-category-icon-alist
-                  `(("Notes" ,(list (nerd-icons-faicon "nf-fa-note_sticky" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
-                    ("Tasks" ,(list (nerd-icons-faicon "nf-fa-tasks" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
-                    ("Events" ,(list (nerd-icons-faicon "nf-fa-calendar_day" :face 'nerd-icons-lblue :v-adjust 0.05)) nil nil :ascent center)
-                    ("Appointments" ,(list (nerd-icons-faicon "nf-fa-user_clock" :face 'nerd-icons-lred :v-adjust 0.05)) nil nil :ascent center)
-                    ("Meetings" ,(list (nerd-icons-faicon "nf-fa-users" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
-                    ("Projects" ,(list (nerd-icons-faicon "nf-fa-folder_open" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
-                    ("Study" ,(list (nerd-icons-faicon "nf-fa-book_open" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
-                    ("Research" ,(list (nerd-icons-faicon "nf-fa-flask" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center)
-                    ("Development" ,(list (nerd-icons-faicon "nf-fa-code" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center)
-                    ("Areas" ,(list (nerd-icons-faicon "nf-fa-layer_group" :face 'nerd-icons-lyellow :v-adjust 0.05)) nil nil :ascent center)
-                    ("Administration" ,(list (nerd-icons-faicon "nf-fa-briefcase" :face 'nerd-icons-lmaroon :v-adjust 0.05)) nil nil :ascent center)
-                    ("FriendsAndFamily" ,(list (nerd-icons-faicon "nf-fa-user_group" :face 'nerd-icons-lpink :v-adjust 0.05)) nil nil :ascent center)
-                    ("Home" ,(list (nerd-icons-faicon "nf-fa-home" :face 'nerd-icons-lgreen :v-adjust 0.05)) nil nil :ascent center)
-                    ("Relationship" ,(list (nerd-icons-faicon "nf-fa-heart" :face 'nerd-icons-lred :v-adjust 0.05)) nil nil :ascent center)
-                    ("Tinker" ,(list (nerd-icons-faicon "nf-fa-screwdriver_wrench" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
-                    ("Leisure" ,(list (nerd-icons-faicon "nf-fa-play" :face 'nerd-icons-lorange :v-adjust 0.05)) nil nil :ascent center)
-                    ("Travel" ,(list (nerd-icons-faicon "nf-fa-plane_departure" :face 'nerd-icons-lcyan :v-adjust 0.05)) nil nil :ascent center)
-                    ("Work" ,(list (nerd-icons-faicon "nf-fa-user_tie" :face 'nerd-icons-lpurple :v-adjust 0.05)) nil nil :ascent center))))
+                  `(("Notes" ,(an-org-agenda-mdicon "nf-md-note_text" 'nerd-icons-lyellow) nil nil :ascent center)
+                    ("Tasks" ,(an-org-agenda-mdicon "nf-md-format_list_checks" 'nerd-icons-lgreen) nil nil :ascent center)
+                    ("Events" ,(an-org-agenda-mdicon "nf-md-calendar_month" 'nerd-icons-lblue) nil nil :ascent center)
+                    ("Appointments" ,(an-org-agenda-mdicon "nf-md-calendar_clock" 'nerd-icons-lred) nil nil :ascent center)
+                    ("Birthdays" ,(an-org-agenda-mdicon "nf-md-cake" 'nerd-icons-lpink) nil nil :ascent center)
+                    ("Deathdays" ,(an-org-agenda-mdicon "nf-md-weather_sunset" 'nerd-icons-lsilver) nil nil :ascent center)
+                    ("Meetings" ,(an-org-agenda-mdicon "nf-md-account_group" 'nerd-icons-lorange) nil nil :ascent center)
+                    ("Projects" ,(an-org-agenda-mdicon "nf-md-folder_open" 'nerd-icons-lmaroon) nil nil :ascent center)
+                    ("Study" ,(an-org-agenda-mdicon "nf-md-book_open_page_variant" 'nerd-icons-lcyan) nil nil :ascent center)
+                    ("Research" ,(an-org-agenda-mdicon "nf-md-flask" 'nerd-icons-lpurple) nil nil :ascent center)
+                    ("Development" ,(an-org-agenda-mdicon "nf-md-code_tags" 'nerd-icons-lpink) nil nil :ascent center)
+                    ("Areas" ,(an-org-agenda-mdicon "nf-md-layers_triple" 'nerd-icons-lyellow) nil nil :ascent center)
+                    ("Administration" ,(an-org-agenda-mdicon "nf-md-briefcase_account" 'nerd-icons-lmaroon) nil nil :ascent center)
+                    ("FriendsAndFamily" ,(an-org-agenda-mdicon "nf-md-account_heart" 'nerd-icons-lpink) nil nil :ascent center)
+                    ("Home" ,(an-org-agenda-mdicon "nf-md-home" 'nerd-icons-lgreen) nil nil :ascent center)
+                    ("Relationship" ,(an-org-agenda-mdicon "nf-md-heart" 'nerd-icons-lred) nil nil :ascent center)
+                    ("Tinkering" ,(an-org-agenda-mdicon "nf-md-tools" 'nerd-icons-lorange) nil nil :ascent center)
+                    ("Leisure" ,(an-org-agenda-mdicon "nf-md-play_circle" 'nerd-icons-lorange) nil nil :ascent center)
+                    ("Travel" ,(an-org-agenda-mdicon "nf-md-airplane_takeoff" 'nerd-icons-lcyan) nil nil :ascent center)
+                    ("Work" ,(an-org-agenda-mdicon "nf-md-account_tie" 'nerd-icons-lpurple) nil nil :ascent center))))
 
   (setopt org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
           org-id-locations-file ORG_ID_FILE
@@ -2566,23 +2832,23 @@ that allows to include other templates by their name."
   (setopt org-super-agenda-final-group-separator "\n")
 
   (setq-default org-super-agenda-groups
-                '((:name "  Today"
+                `((:name "󰖙  Today"
                          :time-grid t
                          :date today
                          :scheduled today
                          :deadline today
                          :order 1)
-                  (:name "  Overdue (Deadline/Schedule)"
+                  (:name "󰀦  Overdue (Deadline/Schedule)"
                          :scheduled past
                          :deadline past
                          :order 2
                          :face org-warning)
-                  (:name "  Upcoming (Deadline/Schedule)"
+                  (:name "󱄵  Upcoming (Deadline/Schedule)"
                          :scheduled future
                          :deadline future
                          :order 3
                          :face org-upcoming-deadline)
-                  (:name "  Miscellaneous"
+                  (:name "󰉹  Miscellaneous"
                          :date t
                          :order 4)))
 
@@ -2590,12 +2856,12 @@ that allows to include other templates by their name."
                '("g" "Project/Area view (projects, areas; todos, notes)"
                  ((tags "+{^proj@.*}-noshow-rftarget-TODO=\"DONE\""
                         ((org-agenda-files `(,ORG_PROJECTS_FILE))
-                         (org-agenda-overriding-header " Projects")
+                         (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-folder_open" 2 "Projects"))
                          (org-super-agenda-groups
                           '((:auto-outline-path t)))))
                   (tags "+{^area@.*}-noshow-rftarget-TODO=\"DONE\""
                         ((org-agenda-files `(,ORG_AREAS_FILE))
-                         (org-agenda-overriding-header " Areas")
+                         (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-layers_triple" 2 "Areas"))
                          (org-super-agenda-groups
                           '((:auto-outline-path t))))))
                  ((org-agenda-compact-blocks nil))))
@@ -2603,37 +2869,39 @@ that allows to include other templates by their name."
                '("c" "Comprehensive todo view (projects, areas, misc)"
                  ((alltodo ""
                            ((org-agenda-files `(,ORG_PROJECTS_FILE))
-                            (org-agenda-overriding-header " Projects")
+                            (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-folder_open" 2 "Projects"))
                             (org-super-agenda-groups
                              '((:auto-outline-path t)))))
                   (alltodo ""
                            ((org-agenda-files `(,ORG_AREAS_FILE))
-                            (org-agenda-overriding-header " Areas")
+                            (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-layers_triple" 2 "Areas"))
                             (org-super-agenda-groups
                              '((:auto-outline-path t)))))
                   (alltodo ""
                            ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_MEETINGS_FILE))
-                            (org-agenda-overriding-header "Miscellaneous")
+                            (org-agenda-overriding-header (an-org-agenda-md-label "nf-md-format_list_bulleted" 2 "Miscellaneous"))
                             (org-super-agenda-groups
                              '((:auto-outline-path t))))))
                  ((org-agenda-compact-blocks nil))))
+
   (add-to-list 'org-agenda-custom-commands
                '("p" "Priority view (TODOs)"
                  alltodo ""
                  ((org-agenda-files `(,ORG_TODOS_FILE ,ORG_PROJECTS_FILE ,ORG_AREAS_FILE ,ORG_MEETINGS_FILE))
                   (org-agenda-overriding-header "TODOs, Prioritized")
                   (org-super-agenda-groups
-                   '((:name "  Overdue"
+                   `((:name ,(an-org-agenda-md-label "nf-md-alert" 2 "Overdue")
                             :scheduled past
                             :deadline past
                             :order 1
                             :face 'org-warning)
-                     (:name "  Critical (#A)"
+                     (:name ,(an-org-agenda-md-label "nf-md-bell_alert" 2 "Critical (#A)")
                             :priority "A"
                             :order 2)
-                     (:name "  Non-Critical (< #A)"
+                     (:name ,(an-org-agenda-md-label "nf-md-timer_sand" 2 "Non-Critical (< #A)")
                             :priority< "A"
                             :order 3))))))
+
   (add-to-list 'org-agenda-custom-commands
                '("o" "Organize view (TODOs)"
                  ((alltodo ""

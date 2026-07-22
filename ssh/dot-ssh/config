@@ -1,31 +1,58 @@
 # SSH Configuration (User-specific)
-## Website
+## Personal
+### Website
 Host website
     HostName 188.40.3.216
     User mmeije
-    IdentityFile "%d/.ssh/%u_ed25519_personal"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_secondary"
+    # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
 
-## Git
-Host github.com gitlab.com
-    HostName %h
-    User mmctl
-    IdentityFile "%d/.ssh/%u_ed25519_personal"
-    IdentitiesOnly yes
-
+### Forges
 Host github-personal
     HostName github.com
-    User MM45
-    IdentityFile "%d/.ssh/%u_ed25519_personal"
+    User git
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_secondary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_tertiary"
+    # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
 
-Host github-professional
+## Research
+### Forges
+Host github-research
     HostName github.com
-    User MM45
-    IdentityFile "%d/.ssh/%u_ed25519_professional"
+    User git
+    IdentityFile "%d/.ssh/%u_ed25519_sk_research_forges_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_research_forges_secondary"
+    # IdentityFile "%d/.ssh/%u_ed25519_research"
     IdentitiesOnly yes
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
 
-## General
+
+## General/Fallback
+### Forges
+Host github.com gitlab.com
+    HostName %h
+    User git
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
+    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_secondary"
+    # IdentityFile "%d/.ssh/%u_ed25519_personal"
+    IdentitiesOnly yes
+    # Do not use an agent with FIDO2 keys (for consistent PIN entry)
+    IdentityAgent none
+    AddKeysToAgent no
+
+### Defaults
 ## Each of these can be overwritten for specific hosts
 ## by simply specifying the option in a preceding
 ## stanza/section that matches that host

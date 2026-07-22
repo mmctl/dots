@@ -1,0 +1,16 @@
+* Events                                                     :event:rftarget:
+:PROPERTIES:
+:CATEGORY: Events
+:END:
+* Appointments                                               :event:rftarget:
+:PROPERTIES:
+:CATEGORY: Appointments
+:END:
+* Birthdays                                                  :event:rftarget:
+:PROPERTIES:
+:CATEGORY: Birthdays
+:END:
+* Deathdays                                                  :event:rftarget:
+:PROPERTIES:
+:CATEGORY: Deathdays
+:END:

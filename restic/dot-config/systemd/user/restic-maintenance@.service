@@ -1,0 +1,18 @@
+[Unit]
+Description=Restic maintenance: %i
+
+[Service]
+Type=oneshot
+
+UMask=0077
+TimeoutStartSec=infinity
+
+LoadCredentialEncrypted=restic-backup-%i-password
+Environment="RESTIC_PASSWORD_FILE=%d/restic-backup-%i-password"
+EnvironmentFile=%E/restic/backup-%i.conf
+
+ExecStart=/usr/bin/flock --exclusive %t/restic-%i.lock /usr/bin/systemd-inhibit --what=shutdown:sleep --mode=block --who="Restic %i maintenance" --why="Restic maintenance is running" "${LIBEXEC_DIR}/restic-maintenance"
+
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

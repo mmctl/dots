@@ -13,7 +13,8 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 
 if command -v emacsclient >/dev/null; then
-  alias ecc='emacsclient -c --alternate-editor='
+  # alias ecc='emacsclient -c -n --alternate-editor='
+  alias ecc='emacsclient-x11 -c -n'
 fi
 
 if command -v flatpak >/dev/null; then

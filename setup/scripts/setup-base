@@ -19,11 +19,7 @@ sudo -v || setup_log_die "Failed to obtain valid sudo credentials."
 
 
 for bcmd in git curl gpg2 stow; do
-    if ! command -v "$bcmd" >/dev/null 2>&1; then
-        setup_log_info "$bcmd is not installed. Installing..."
-        sudo zypper --non-interactive --no-color install "$bcmd"
-        setup_log_info "Installed $bcmd."
-    fi
+    ensure_command_from_package "$bcmd" "$bcmd"
 done
 
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -63,7 +59,28 @@ mkdir -p -- \
 rm -f -- "$XDG_CONFIG_HOME/user-dirs.dirs"
 (cd -- "$DOTS_DIR" && stow xdg)
 
-setup_log_info "Created XDG directories and set user-dirs."
+setup_log_info "Created base (XDG) directories and set user-dirs."
+
+
+setup_log_info "Creating base user-wide (systemd) environment files..."
+
+mkdir -p -- "$HOME/.config/environment.d"
+
+cat > "$HOME/.config/environment.d/10-base-dirs.conf" <<EOF
+XDG_CONFIG_HOME="$XDG_CONFIG_HOME"
+XDG_DATA_HOME="$XDG_DATA_HOME"
+XDG_CACHE_HOME="$XDG_CACHE_HOME"
+XDG_STATE_HOME="$XDG_STATE_HOME"
+
+XDG_BIN_HOME="$XDG_BIN_HOME"
+LIBEXEC_DIR="$LIBEXEC_DIR"
+EOF
+
+cat > "$HOME/.config/environment.d/25-paths.conf" <<EOF
+PATH="$PATH"
+EOF
+
+setup_log_info "Created base user-wide (systemd) environment files."
 
 
 setup_log_info "Adding Packman Essentials repository..."

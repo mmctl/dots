@@ -1,0 +1,12 @@
+[Unit]
+Description=Timer for Restic maintenance: %i
+
+[Timer]
+OnCalendar=monthly
+Persistent=true
+RandomizedDelaySec=1h
+AccuracySec=1h
+DeferReactivation=true
+
+[Install]
+WantedBy=timers.target

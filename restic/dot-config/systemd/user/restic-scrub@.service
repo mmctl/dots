@@ -1,0 +1,18 @@
+[Unit]
+Description=Full Restic data check: %i
+
+[Service]
+Type=oneshot
+
+UMask=0077
+TimeoutStartSec=infinity
+
+LoadCredentialEncrypted=restic-backup-%i-password
+Environment="RESTIC_PASSWORD_FILE=%d/restic-backup-%i-password"
+EnvironmentFile=%E/restic/backup-%i.conf
+
+ExecStart=/usr/bin/flock --exclusive %t/restic-%i.lock /usr/bin/systemd-inhibit --what=shutdown:sleep --mode=block --who="Restic %i scrub" --why="Full Restic data check is running" "${LIBEXEC_DIR}/restic-scrub"
+
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
