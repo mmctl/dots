@@ -40,9 +40,10 @@ if [ ! -x "$REPLACE_PLACEHOLDER" ]; then
 fi
 
 
-setup_log_info "Installing basic desktop runtime tools..."
+setup_log_info "Installing basic (Wayland) desktop runtime tools..."
 
 sudo zypper --non-interactive --no-color install \
+     libwayland-client0 libwayland-server0 \
      polkit \
      gnome-keyring gnome-keyring-pam secret-tool \
      pipewire wireplumber \
@@ -52,9 +53,9 @@ sudo zypper --non-interactive --no-color install \
      bluez \
      ddcutil ddcutil-i2c-udev-rules
 
-sudo pam-config --add gnome-keyring gnome-keyring_auto-start
+sudo pam-config --add --gnome_keyring --gnome_keyring-auto_start
 
-setup_log_info "Installed basic desktop runtime tools."
+setup_log_info "Installed basic (Wayland) desktop runtime tools."
 
 
 setup_log_info "Installing graphical toolkits, themes, and fonts..."

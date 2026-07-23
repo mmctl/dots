@@ -4,8 +4,8 @@
 Host website
     HostName 188.40.3.216
     User mmeije
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_infra_secondary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_infra_primary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_infra_secondary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
@@ -16,9 +16,9 @@ Host website
 Host github-personal
     HostName github.com
     User git
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_secondary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_tertiary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_primary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_secondary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_tertiary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
@@ -30,8 +30,8 @@ Host github-personal
 Host github-research
     HostName github.com
     User git
-    IdentityFile "%d/.ssh/%u_ed25519_sk_research_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_research_forges_secondary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_research_forges_primary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_research_forges_secondary"
     # IdentityFile "%d/.ssh/%u_ed25519_research"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
@@ -44,8 +44,8 @@ Host github-research
 Host github.com gitlab.com
     HostName %h
     User git
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_primary"
-    IdentityFile "%d/.ssh/%u_ed25519_sk_personal_forges_secondary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_primary"
+    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_secondary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)

@@ -17,17 +17,17 @@ During installation, use the following baseline:
 - System role: Generic Desktop.
 - Disk:
   - Guided Setup ->
-        - Choose what to do with Linux/other partitions:
-          [IF WANT SINGLE FRESH INSTALL] Remove even if not needed
-        - Enable Disk Encryption:
-          - Authentication:
-            Password only (for now, will set up after first boot)
-        - Settings for the root partition:
-          - File system type: Btrfs
-            Enable snapshots
-          (No "Propose separate home partition")
-          - Propose separate swap partition
-            (No "Enlarge to RAM size for suspend", unless need/want hibernation)
+    - Choose what to do with Linux/other partitions:
+      [IF WANT SINGLE FRESH INSTALL] Remove even if not needed
+    - Enable Disk Encryption:
+    - Authentication:
+      Password only (for now, will set up after first boot)
+    - Settings for the root partition:
+      - File system type: Btrfs
+        Enable snapshots
+        (No "Propose separate home partition")
+      - Propose separate swap partition
+        (No "Enlarge to RAM size for suspend", unless need/want hibernation)
 - Installation Settings/Overview:
   - Booting ->
     - Boot loader type:
@@ -44,6 +44,7 @@ During installation, use the following baseline:
         - [If laptop] Mobile
         - YaST Base Utilities
         - YaST Desktop Utilities
+        - Minimal Applicance Base
       - Documentation:
         - Help and Support Documentation
         - Documentation
@@ -223,6 +224,8 @@ needed to clone the repository and run the initial setup scripts, and clone the
 dotfiles repository.
 
 ```sh
+sudo zypper dup
+
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
 mkdir -p -- "$XDG_DATA_HOME" "$XDG_STATE_HOME"
@@ -365,8 +368,7 @@ Ensure $CARGO_HOME/bin is on PATH.
 The base profile should already place this directory on `PATH`. Confirm with:
 
 ```sh
-command -v cargo
-command -v rustup
+echo $PATH
 ```
 
 ### 3.4 Configure security, SSH, GPG, and secrets
