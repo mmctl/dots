@@ -14,7 +14,7 @@ if ! command -v zypper >/dev/null 2>&1; then
     setup_log_die "zypper is not available; this script is intended for openSUSE."
 fi
 
-for pcmd in age pass-cli proton-drive protonmail-bridge; do
+for pcmd in rage pass-cli proton-drive protonmail-bridge; do
     if ! command -v "$pcmd" >/dev/null 2>&1; then
         setup_log_die "$pcmd is not available; please make sure it is installed."
     fi
@@ -97,7 +97,7 @@ else
         authinfo_tmpdir="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/authinfo.XXXXXX")"
         authinfo_tmp="$authinfo_tmpdir/authinfo"
 
-        authinfo_age_tmp="$(mktemp authinfo_dir/.authinfo.age.XXXXXX)"
+        authinfo_age_tmp="$(mktemp $authinfo_dir/.authinfo.age.XXXXXX)"
 
         trap 'rm -rf -- "$authinfo_tmpdir"; rm -f -- "$authinfo_age_tmp"' EXIT HUP INT TERM
 
@@ -110,10 +110,10 @@ else
 machine api.github.com login ${github_pers_user}^forge password $github_pers_pat
 EOF
 
-        age --encrypt \
-            "$@" \
-            --output "$authinfo_age_tmp" \
-            "$authinfo_tmp"
+        rage --encrypt \
+             "$@" \
+             --output "$authinfo_age_tmp" \
+             "$authinfo_tmp"
 
         chmod 600 "$authinfo_age_tmp"
         mv -- "$authinfo_age_tmp" "$AUTHINFO_FILE"
@@ -135,8 +135,9 @@ install -d -m 700 -- \
         "$MAILDIR/kem-mmeijers" \
         "$MAILDIR/mmeijersres-protonmail" \
         "$MAILDIR/research-mmeijers" \
-        "$MAILDIR/teaching-mmeijers"
-
+        "$MAILDIR/teaching-mmeijers" \
+        "$MAILDIR/host-mmeijers" \
+        "$MAILDIR/dump-mmeijers"
 
 setup_log_info "Created mail directories."
 
@@ -262,16 +263,14 @@ fi
 
 setup_log_info "Syncing ORG data..."
 # clone_or_update 'git@github-personal:mmctl/org.git' "$XDG_DATA_HOME/org"
-proton-drive filesystem download -c -skip "$ORG_DIR_REMOTE" "$ORG_PARENT_DIR_LOCAL"
+proton-drive filesystem download -c skip "$ORG_DIR_REMOTE" "$ORG_PARENT_DIR_LOCAL"
 setup_log_info "Synced ORG data."
 
 setup_log_info "Setting default file associations..."
 
-if command -v xdg-mime >/dev/null 2>&1; then
+mkdir -p -- "$XDG_DATA_HOME/applications"
 
-    mkdir -p "$XDG_DATA_HOME/applications"
-
-        cat > "$XDG_DATA_HOME/applications/emacsclient-x11.desktop" <<'EOF'
+cat > "$XDG_DATA_HOME/applications/emacsclient-x11.desktop" <<'EOF'
 [Desktop Entry]
 Name=Emacsclient
 Comment=Run Emacsclient, starting a server if none is currently running
@@ -284,7 +283,7 @@ Terminal=false
 Type=Application
 EOF
 
-    cat > "$XDG_DATA_HOME/applications/emacsclient-x11-mail.desktop" <<'EOF'
+cat > "$XDG_DATA_HOME/applications/emacsclient-x11-mail.desktop" <<'EOF'
 [Desktop Entry]
 Name=Emacsclient Mail
 Comment=Compose mail with Emacsclient
@@ -297,15 +296,12 @@ Terminal=false
 Type=Application
 EOF
 
-    update-desktop-database "$XDG_DATA_HOME/applications"
+update-desktop-database "$XDG_DATA_HOME/applications"
 
-    xdg-mime default emacsclient-x11.desktop text/plain
-    xdg-mime default emacsclient-x11-mail.desktop x-scheme-handler/mailto
+xdg-mime default emacsclient-x11.desktop text/plain
+xdg-mime default emacsclient-x11-mail.desktop x-scheme-handler/mailto
 
-    setup_log_info "Set default file associations."
-else
-    setup_log_warn "xdg-mime not installed; skipping file associations."
-fi
+setup_log_info "Set default file associations."
 
 setup_log_info "Installed editor (Emacs)."
 

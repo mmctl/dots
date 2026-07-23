@@ -415,13 +415,15 @@ run_setup de-ext
 This installs Nautilus for graphical file management, Flatpak with the Flathub
 user remote, Zen Browser, Signal, and Zotero.
 
-Manual checkpoint: open Zen browser and log in to Proton, checking "Keep me
-signed in" on a trusted device. Then, install the following extensions (still in
-Zen browser):
-
-- Proton Pass.
-- uBlock Origin, including the desired filter lists.
-- Zotero Connector.
+Manual checkpoint: open Zen browser and complete its setup to 
+preference, e.g.:
+- Set it as default browser
+- Add exceptions for frequently used services to remember logins
+  - Log in to these frequently used services (e.g., GitHub, Proton).
+- Install extensions:
+  - Proton Pass
+  - uBlock Origin, including the desired filter lists
+  - Zotero Connector
 
 Also, link Signal, and log in to Zotero.
 
@@ -457,7 +459,7 @@ key from the exported file, if it is included. Make the Bridge directory
 accessible only to the current user:
 
 ```sh
-install -d -m 700 -- $XDG_CONFIG_HOME/proton/bridge`.
+install -d -m 700 -- $XDG_CONFIG_HOME/proton/bridge
 ```
 
 Store the Bridge-local IMAP/SMTP credentials in the keyring, once for each

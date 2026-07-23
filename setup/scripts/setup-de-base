@@ -51,9 +51,13 @@ sudo zypper --non-interactive --no-color install \
      libnotify-tools \
      xwayland-satellite \
      bluez \
-     ddcutil ddcutil-i2c-udev-rules
+     ddcutil ddcutil-i2c-udev-rules \
+     xdg-utils desktop-file-utils
 
-sudo pam-config --add --gnome_keyring --gnome_keyring-auto_start
+sudo pam-config --add \
+     --gnome_keyring \
+     --gnome_keyring-auto_start \
+     --gnome_keyring-only_if=gdm,gdm-password,lxdm,lightdm,mdm,sddm,greetd
 
 setup_log_info "Installed basic (Wayland) desktop runtime tools."
 

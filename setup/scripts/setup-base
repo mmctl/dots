@@ -59,6 +59,28 @@ mkdir -p -- \
 rm -f -- "$XDG_CONFIG_HOME/user-dirs.dirs"
 (cd -- "$DOTS_DIR" && stow xdg)
 
+. "$XDG_CONFIG_HOME/user-dirs.dirs"
+
+XDG_DESKTOP_DIR="${XDG_DESKTOP_DIR:-$HOME/.local/share/desktop}"
+XDG_DOCUMENTS_DIR="${XDG_DOCUMENTS_DIR:-$HOME/.local/share/documents}"
+XDG_DOWNLOAD_DIR="${XDG_DOWNLOAD_DIR:-$HOME/.local/share/downloads}"
+XDG_MUSIC_DIR="${XDG_MUSIC_DIR:-$HOME/.local/share/media/music}"
+XDG_PICTURES_DIR="${XDG_PICTURES_DIR:-$HOME/.local/share/media/pictures}"
+XDG_PUBLICSHARE_DIR="${XDG_PUBLICSHARE_DIR:-$HOME/.local/share/public}"
+XDG_TEMPLATES_DIR="${XDG_TEMPLATES_DIR:-$HOME/.local/share/templates}"
+XDG_VIDEOS_DIR="${XDG_VIDEOS_DIR:-$HOME/.local/share/media/videos}"
+
+mkdir -p -- \
+    "$XDG_DESKTOP_DIR" \
+    "$XDG_DOCUMENTS_DIR" \
+    "$XDG_DOWNLOAD_DIR" \
+    "$XDG_MUSIC_DIR" \
+    "$XDG_PICTURES_DIR" \
+    "$XDG_PUBLICSHARE_DIR" \
+    "$XDG_TEMPLATES_DIR" \
+    "$XDG_VIDEOS_DIR"
+
+
 setup_log_info "Created base (XDG) directories and set user-dirs."
 
 
