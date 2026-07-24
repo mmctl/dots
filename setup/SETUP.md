@@ -631,11 +631,11 @@ command. For example, to configure a professional backup on a secondary medium:
 ```sh
 BACKUP_TARGET_NAME=secondary \
 BACKUP_PATH_TO_LABEL=professional \
-MACHINE_LABEL=laptop-lenovo-thinkpad-p15s-gen5 \
+MACHINE_LABEL=laptop-lenovo-thinkpad-p14s-gen5 \
 "$DOTS_DIR/setup/scripts/run-setup-script" \
     "$DOTS_DIR/setup/scripts/setup-backup" \
     FILESYSTEM_UUID \
-    LUKS_UUID
+    LUKS_UUID_1 ... LUKS_UUIDn
 ```
 
 Changing `BACKUP_TARGET_NAME` also changes the default mountpoint. For example,
@@ -646,7 +646,7 @@ only when a different mountpoint is desired:
 BACKUP_TARGET_NAME=secondary \
 BACKUP_MOUNTPOINT=/mnt/external-backup \
 BACKUP_PATH_TO_LABEL=professional \
-MACHINE_LABEL=laptop-lenovo-thinkpad-p15s-gen5 \
+MACHINE_LABEL=laptop-lenovo-thinkpad-p14s-gen5 \
 "$DOTS_DIR/setup/scripts/run-setup-script" \
     "$DOTS_DIR/setup/scripts/setup-backup" \
     FILESYSTEM_UUID \

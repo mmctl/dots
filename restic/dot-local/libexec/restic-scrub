@@ -38,7 +38,7 @@ cleanup() {
         if [ "$scrub_ok" -ne 1 ]; then
             notify critical \
                    "Scrub failed" \
-                   "The full data check did not complete. Inspect: journalctl --user -u restic-scrub@$RESTIC_BACKUP_NAME.service"
+                   "The full data check did not complete. Inspect: journalctl --user -u restic-scrub@$RESTIC_BACKUP_NAME-$BACKUP_TARGET_NAME.service"
         elif [ "$unmount_ok" -ne 1 ]; then
             notify critical \
                    "Scrub succeeded; drive still mounted" \

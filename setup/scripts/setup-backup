@@ -322,7 +322,7 @@ if [ "$#" -gt 0 ]; then
             chmod 600 -- header.sha256
         )
 
-        sudo cryptsetup luksDump "$luks_device" > "$luks_backup_dir/luks-dump.txt"
+        sudo cryptsetup luksDump "$luks_device" > "$luks_backup_dir/luks-dump.txt" 2>&1
 
         setup_log_info "Backed up LUKS device $luks_device."
     done
@@ -366,7 +366,7 @@ setup_log_info "Storing Restic password in Proton Pass ($PROTON_PASS_VAULT/$PROT
 printf '%s' "$restic_repository_password" |
     jq -Rs --arg title "$PROTON_PASS_ITEM_TITLE" --arg username "$restic_repository_id" \
        '{title: $title, username: $username, password: ., urls: []}' |
-    pass-cli item create login --vault-name "$PROTON_PASS_VAULT" --from-template -
+    pass-cli item create login --vault-name "$PROTON_PASS_VAULT" --from-template - >/dev/null
 
 unset restic_repository_password
 
