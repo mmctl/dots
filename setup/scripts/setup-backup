@@ -269,7 +269,7 @@ if [ "$#" -gt 0 ]; then
 fi
 
 
-PROTON_PASS_VAULT="${PROTON_PASS_VAULT:-Backups-and-Recovery}"
+PROTON_PASS_VAULT="${PROTON_PASS_VAULT:-Auto-Backups}"
 PROTON_PASS_ITEM_TITLE="${PROTON_PASS_ITEM_TITLE:-restic-$RESTIC_BACKUP_INSTANCE-$MACHINE_LABEL-$installation_dirname}"
 
 setup_log_info "Created installation configuration."
@@ -308,10 +308,19 @@ if [ "$#" -gt 0 ]; then
 
         install -d -m 700 -- "$luks_backup_dir"
 
-        sudo cryptsetup luksHeaderBackup "$luks_device" --header-backup-file "$luks_backup_dir/header"
+        sudo cryptsetup luksHeaderBackup \
+             --header-backup-file "$luks_backup_dir/header" \
+             "$luks_device"
 
-        sudo chown "$(id -u):$(id -g)" "$luks_backup_dir/header"
+        sudo chown -- "$(id -u):$(id -g)" "$luks_backup_dir/header"
         chmod 600 -- "$luks_backup_dir/header"
+
+        (
+            umask 077
+            cd -- "$luks_backup_dir"
+            sha256sum -- header > header.sha256
+            chmod 600 -- header.sha256
+        )
 
         sudo cryptsetup luksDump "$luks_device" > "$luks_backup_dir/luks-dump.txt"
 
