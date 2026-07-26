@@ -177,72 +177,73 @@ defaults when explicitly supplied."
        refile-folder))))
 
 (defconst ALL_MAIL_ADDRESS_CONFIGS
-  (list (make-a-mail-address-config
+  (list
+   (make-a-mail-address-config
          :group :personal
          :address "matthiasmeijers@proton.me"
          :maildir "/matthiasmeijers-proton"
          :backend-id :protonmail-bridge)
 
-        (make-a-mail-address-config
-         :group :personal
-         :address "personal@mmeijers.com"
-         :maildir "/personal-mmeijers"
-         :backend-id :mmeijers.com)
+   (make-a-mail-address-config
+    :group :personal
+    :address "personal@mmeijers.com"
+    :maildir "/personal-mmeijers"
+    :backend-id :mmeijers.com)
 
-        (make-a-mail-address-config
-         :group :personal
-         :address "kernel@mmeijers.com"
-         :maildir "/kernel-mmeijers"
-         :backend-id :mmeijers.com)
+   (make-a-mail-address-config
+    :group :personal
+    :address "kernel@mmeijers.com"
+    :maildir "/kernel-mmeijers"
+    :backend-id :mmeijers.com)
 
-        (make-a-mail-address-config
-         :group :personal
-         :address "kem@mmeijers.com"
-         :maildir "/kem-mmeijers"
-         :backend-id :mmeijers.com)
+   (make-a-mail-address-config
+    :group :personal
+    :address "kem@mmeijers.com"
+    :maildir "/kem-mmeijers"
+    :backend-id :mmeijers.com)
 
-        (make-a-mail-address-config
-         :group :research
-         :address "mmeijersres@protonmail.com"
-         :maildir "/mmeijersres-protonmail"
-         :backend-id :protonmail-bridge)
+   (make-a-mail-address-config
+    :group :research
+    :address "mmeijersres@protonmail.com"
+    :maildir "/mmeijersres-protonmail"
+    :backend-id :protonmail-bridge)
 
-        (make-a-mail-address-config
-         :group :research
-         :address "research@mmeijers.com"
-         :maildir "/research-mmeijers"
-         :backend-id :mmeijers.com)
+   (make-a-mail-address-config
+    :group :research
+    :address "research@mmeijers.com"
+    :maildir "/research-mmeijers"
+    :backend-id :mmeijers.com)
 
-        (make-a-mail-address-config
-         :group :research
-         :address "teaching@mmeijers.com"
-         :maildir "/teaching-mmeijers"
-         :backend-id :mmeijers.com)
+   (make-a-mail-address-config
+    :group :research
+    :address "teaching@mmeijers.com"
+    :maildir "/teaching-mmeijers"
+    :backend-id :mmeijers.com)
 
-        (make-a-mail-address-config
-         :group :business
-         :address "mmeijersbsn@protonmail.com"
-         :maildir "/mmeijersbsn-protonmail"
-         :backend-id :protonmail-bridge)
+   ;; (make-a-mail-address-config
+   ;;  :group :business
+   ;;  :address "mmeijersbsn@protonmail.com"
+   ;;  :maildir "/mmeijersbsn-protonmail"
+   ;;  :backend-id :protonmail-bridge)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :business
-        ;;  :address "contracting@mmeijers.com"
-        ;;  :maildir "/contracting-mmeijers"
-        ;;  :backend-id :mmeijers.com)
+   ;; (make-a-mail-address-config
+   ;;  :group :business
+   ;;  :address "contracting@mmeijers.com"
+   ;;  :maildir "/contracting-mmeijers"
+   ;;  :backend-id :mmeijers.com)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :miscellaneous
-        ;;  :address "host@mmeijers.com"
-        ;;  :maildir "/host-mmeijers"
-        ;;  :backend-id :mmeijers.com)
+   (make-a-mail-address-config
+    :group :miscellaneous
+    :address "host@mmeijers.com"
+    :maildir "/host-mmeijers"
+    :backend-id :mmeijers.com)
 
-        ;; (make-a-mail-address-config
-        ;;  :group :miscellaneous
-        ;;  :address "dump@mmeijers.com"
-        ;;  :maildir "/dump-mmeijers"
-        ;;  :backend-id :mmeijers.com)
-        )
+   (make-a-mail-address-config
+    :group :miscellaneous
+    :address "dump@mmeijers.com"
+    :maildir "/dump-mmeijers"
+    :backend-id :mmeijers.com)
+   )
   "Configurations for all active email addresses.")
 
 ;; Mu4e configurations
@@ -336,7 +337,17 @@ defaults when explicitly supplied."
 (defconst MISCELLANEOUS_MU4E_CONTEXT_CONFIG
   (make-a-mu4e-context-config
    :group :miscellaneous
-   :name "Miscellaneous")
+   :name "Miscellaneous"
+   :sync-group "business"
+   :mailboxes
+   (list (make-a-mu4e-mailbox-config
+          :label "Host"
+          :key ?h
+          :mailroot "/host-mmeijers")
+         (make-a-mu4e-mailbox-config
+          :label "Dump/Catchall"
+          :key ?d
+          :mailroot "/dump-mmeijers")))
   "Configuration for miscellaneous mu4e context.")
 
 (defconst ALL_MU4E_CONTEXT_CONFIGS
@@ -657,6 +668,9 @@ sync command if SYNC-GROUP is nil."
 
 (defconst BUSINESS_MU4E_CONTEXT (a-make-mu4e-context BUSINESS_MU4E_CONTEXT_CONFIG)
   "Mu4e context for business addresses.")
+
+(defconst MISCELLANEOUS_MU4E_CONTEXT (a-make-mu4e-context MISCELLANEOUS_MU4E_CONTEXT_CONFIG)
+  "Mu4e context for miscellaneous addresses.")
 
 
 ;;; Miscellaneous

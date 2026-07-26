@@ -184,7 +184,7 @@ header backup with the correct encrypted device.
 Store the header backup somewhere safe and externally, that is, not on the same
 physical drive as the encrypted volume. An automated backup-setup script is
 included that can do this for you, alongside setting up general backups; this is
-covered [in a later section](#4.9-set-up-automated-backups) Preferably, also
+covered [in a later section](#3.9-set-up-automated-backups) Preferably, also
 test that each backed-up header can successfully unlock its corresponding
 volume. This process is described [at the end of these setup
 instructions](#testing-recovery-of-luks-headers).
@@ -415,7 +415,7 @@ run_setup de-ext
 This installs Nautilus for graphical file management, Flatpak with the Flathub
 user remote, Zen Browser, Signal, and Zotero.
 
-Manual checkpoint: open Zen browser and complete its setup to 
+Manual checkpoint: open Zen browser and complete its setup to
 preference, e.g.:
 - Set it as default browser
 - Add exceptions for frequently used services to remember logins
@@ -626,12 +626,10 @@ LUKS UUIDs:
 Omit the LUKS UUID arguments if no LUKS headers should be backed up.
 
 Override the backup labels by setting environment variables for the setup
-command. For example, to configure a professional backup on a secondary medium:
+command. For example, to configure a backup on a secondary medium:
 
 ```sh
 BACKUP_TARGET_NAME=secondary \
-BACKUP_PATH_TO_LABEL=professional \
-MACHINE_LABEL=laptop-lenovo-thinkpad-p14s-gen5 \
 "$DOTS_DIR/setup/scripts/run-setup-script" \
     "$DOTS_DIR/setup/scripts/setup-backup" \
     FILESYSTEM_UUID \
@@ -645,8 +643,6 @@ only when a different mountpoint is desired:
 ```sh
 BACKUP_TARGET_NAME=secondary \
 BACKUP_MOUNTPOINT=/mnt/external-backup \
-BACKUP_PATH_TO_LABEL=professional \
-MACHINE_LABEL=laptop-lenovo-thinkpad-p14s-gen5 \
 "$DOTS_DIR/setup/scripts/run-setup-script" \
     "$DOTS_DIR/setup/scripts/setup-backup" \
     FILESYSTEM_UUID \

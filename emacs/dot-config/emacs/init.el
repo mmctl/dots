@@ -2538,8 +2538,9 @@ that allows to include other templates by their name."
 
   (setopt mu4e-contexts (list
                          PERSONAL_MU4E_CONTEXT
-                         RESEARCH_MU4E_CONTEXT
                          ;; BUSINESS_MU4E_CONTEXT
+                         RESEARCH_MU4E_CONTEXT
+                         MISCELLANEOUS_MU4E_CONTEXT
                          ))
 
   (setopt mu4e-context-policy 'ask-if-none)
