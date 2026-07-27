@@ -18,7 +18,6 @@ Host github-personal
     User git
     IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_primary"
     IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_secondary"
-    IdentityFile "%d/.ssh/mm_ed25519_sk_personal_forges_tertiary"
     # IdentityFile "%d/.ssh/%u_ed25519_personal"
     IdentitiesOnly yes
     # Do not use an agent with FIDO2 keys (for consistent PIN entry)
