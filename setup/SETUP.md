@@ -415,7 +415,7 @@ run_setup de-ext
 This installs Nautilus for graphical file management, Flatpak with the Flathub
 user remote, Zen Browser, Signal, and Zotero.
 
-Manual checkpoint: open Zen browser and complete its setup to
+Manual checkpoint: Relog. Then, open Zen browser and complete its setup to
 preference, e.g.:
 - Set it as default browser
 - Add exceptions for frequently used services to remember logins

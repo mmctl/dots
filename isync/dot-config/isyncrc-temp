@@ -345,31 +345,31 @@ Create Both
 CopyArrivalDate yes
 SyncState *
 
-## host@mmeijers.com
-IMAPAccount host-mmeijers
+## dump@mmeijers.com
+IMAPAccount dump-mmeijers
 # Host 127.0.0.1
 # Port 1143
 Host mail.your-server.de
-User host@mmeijers.com
+User dump@mmeijers.com
 # PassCmd "secret-tool lookup service proton-bridge account personal"
-PassCmd "secret-tool lookup host mail.your-server.de user host@mmeijers.com"
+PassCmd "secret-tool lookup host mail.your-server.de user dump@mmeijers.com"
 # TLSType STARTTLS
 TLSType IMAPS
 # SystemCertificates no
 # CertificateFile ${XDG_CONFIG_HOME}/proton/bridge/cert.pem
 
-IMAPStore host-mmeijers-remote
-Account host-mmeijers
+IMAPStore dump-mmeijers-remote
+Account dump-mmeijers
 
-MaildirStore host-mmeijers-local
-Path ${MAILDIR}/host-mmeijers/
-Inbox ${MAILDIR}/host-mmeijers/INBOX/
+MaildirStore dump-mmeijers-local
+Path ${MAILDIR}/dump-mmeijers/
+Inbox ${MAILDIR}/dump-mmeijers/INBOX/
 MaxSize 50m
 SubFolders Verbatim
 
-Channel host-mmeijers
-Far :host-mmeijers-remote:
-Near :host-mmeijers-local:
+Channel dump-mmeijers
+Far :dump-mmeijers-remote:
+Near :dump-mmeijers-local:
 Sync New Gone Flags
 # Patterns * "!All Mail"
 Patterns *
