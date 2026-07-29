@@ -2450,6 +2450,17 @@ that allows to include other templates by their name."
   ("C-c M" . mu4e-compose-mail)
 
   :init
+  ;; Create and store attachment directory
+  (defconst ATTACHMENT_DIR (file-name-as-directory
+                            (if (getenv "XDG_DATA_HOME")
+                                  (expand-file-name "mail-attachments/" (getenv "XDG_DATA_HOME"))
+                                (expand-file-name "~/.local/share/mail-attachments/")))
+    "Directory used as default location for mail attachments.")
+  (unless (file-directory-p ATTACHMENT_DIR)
+    (make-directory ATTACHMENT_DIR t))
+
+  (setopt mu4e-attachment-dir ATTACHMENT_DIR)
+
   (setopt mu4e-update-interval 300)
   (setopt mu4e-change-filenames-when-moving t)
 
@@ -2472,7 +2483,7 @@ that allows to include other templates by their name."
   (setopt mu4e-headers-fields
           '((:human-date    .   24)
             (:flags         .   18)
-            (:mailing-list  .   18)
+            ;; (:mailing-list  .   18)
             (:from          .   24)
             (:subject       .   nil)))
 

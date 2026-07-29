@@ -184,10 +184,9 @@ header backup with the correct encrypted device.
 Store the header backup somewhere safe and externally, that is, not on the same
 physical drive as the encrypted volume. An automated backup-setup script is
 included that can do this for you, alongside setting up general backups; this is
-covered [in a later section](#3.9-set-up-automated-backups) Preferably, also
+covered [in a later section](#39-set-up-automated-backups) Preferably, also
 test that each backed-up header can successfully unlock its corresponding
-volume. This process is described [at the end of these setup
-instructions](#testing-recovery-of-luks-headers).
+volume. This process is described [at the end of these setup instructions](#testing-recovery-of-luks-headers).
 
 Create a new header backup whenever enrollment slots are changed, and securely
 remove obsolete backups that should no longer remain usable.
@@ -473,8 +472,8 @@ secret-tool store \
     account personal
 ```
 
-Also store address-specific IMAP and SMTP credentials once per email address
-(for use by the Emacs mail configuration):
+Also store address-specific SMTP and (optionally) IMAP credentials once per email address,
+at least including host, port, and user values (for use by the Emacs mail configuration):
 
 ```sh
 # Replace values with actual host, port, and user reported in Bridge

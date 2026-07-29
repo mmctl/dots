@@ -338,7 +338,7 @@ defaults when explicitly supplied."
   (make-a-mu4e-context-config
    :group :miscellaneous
    :name "Miscellaneous"
-   :sync-group "business"
+   :sync-group "miscellaneous"
    :mailboxes
    (list (make-a-mu4e-mailbox-config
           :label "Host"
@@ -568,9 +568,9 @@ before starting composition of new mail, so that the From address is set
 correctly.
 
 Meant as advice around `mu4e--draft'."
-  (let ((mu4e-compose-parent-message parent)
-        (mu4e-compose-type compose-type)
-        (user-mail-address (a-determine-mu4e-compose-from-address)))
+  (let* ((mu4e-compose-parent-message parent)
+         (mu4e-compose-type compose-type)
+         (user-mail-address (a-determine-mu4e-compose-from-address)))
     (funcall draft-func compose-type compose-func parent)))
 
 (defun an-smtpmail-configure-and-send-it ()
@@ -589,10 +589,10 @@ Meant as replacement for `smtpmail-send-it', e.g., in
       (error "`From' field non-existent or not parseable"))
     (unless config
       (error "Failed to find SMTP configuration for %s" from))
-    (let ((smtpmail-smtp-user from)
-          (smtpmail-smtp-server (a-mail-address-config-smtp-server config))
-          (smtpmail-smtp-service (a-mail-address-config-smtp-port config))
-          (smtpmail-stream-type (a-mail-address-config-smtp-type config)))
+    (let* ((smtpmail-smtp-user from)
+           (smtpmail-smtp-server (a-mail-address-config-smtp-server config))
+           (smtpmail-smtp-service (a-mail-address-config-smtp-port config))
+           (smtpmail-stream-type (a-mail-address-config-smtp-type config)))
       (smtpmail-send-it))))
 
 
