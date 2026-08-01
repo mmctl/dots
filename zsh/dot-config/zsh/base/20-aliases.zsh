@@ -13,6 +13,10 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 
 if (( $+commands[emacsclient] )); then
+    alias firefox='firefox -P default'
+fi
+
+if (( $+commands[emacsclient] )); then
     # alias ecc='emacsclient -c -n --alternate-editor='
     alias ecc='emacsclient-x11 -c -n'
 fi
@@ -20,5 +24,5 @@ fi
 if (( $+commands[flatpak] )); then
     alias signal='flatpak run org.signal.Signal'
     alias zotero='flatpak run org.zotero.Zotero'
-    alias zen='flatpak run app.zen_browser.zen -P "mm"'
+    # alias zen='flatpak run app.zen_browser.zen -P "mm"'
 fi

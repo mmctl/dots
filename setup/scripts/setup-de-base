@@ -46,7 +46,7 @@ sudo zypper --non-interactive --no-color install \
      libwayland-client0 libwayland-server0 \
      polkit \
      gnome-keyring gnome-keyring-pam secret-tool \
-     pipewire wireplumber \
+     pipewire wireplumber alsa-utils alsa-ucm-conf \
      xdg-desktop-portal xdg-desktop-portal-gnome xdg-desktop-portal-gtk \
      libnotify-tools \
      xwayland-satellite \

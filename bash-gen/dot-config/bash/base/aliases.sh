@@ -12,6 +12,10 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 
+if command -v firefox >/dev/null; then
+    alias firefox='firefox -P default'
+fi
+
 if command -v emacsclient >/dev/null; then
   # alias ecc='emacsclient -c -n --alternate-editor='
   alias ecc='emacsclient-x11 -c -n'
