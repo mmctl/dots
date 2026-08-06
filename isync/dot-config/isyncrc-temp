@@ -29,6 +29,7 @@ Sync New Gone Flags
 Patterns * "!All Mail"
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -62,6 +63,7 @@ Sync New Gone Flags
 Patterns *
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -95,6 +97,7 @@ Sync New Gone Flags
 Patterns *
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -128,6 +131,7 @@ Sync New Gone Flags
 Patterns *
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -166,6 +170,7 @@ Channel kem-mmeijers
 # Patterns * "!All Mail"
 # Create Both
 # # Expunge Both
+# ExpungeSolo Both
 # CopyArrivalDate yes
 # SyncState *
 
@@ -199,6 +204,7 @@ Channel kem-mmeijers
 # Patterns *
 # Create Both
 # # Expunge Both
+# ExpungeSolo Both
 # CopyArrivalDate yes
 # SyncState *
 
@@ -235,6 +241,7 @@ Sync New Gone Flags
 Patterns * "!All Mail"
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -268,6 +275,7 @@ Sync New Gone Flags
 Patterns *
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -301,6 +309,7 @@ Sync New Gone Flags
 Patterns *
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -342,6 +351,7 @@ Sync New Gone Flags
 Patterns *
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
@@ -375,6 +385,7 @@ Sync New Gone Flags
 Patterns *
 Create Both
 # Expunge Both
+ExpungeSolo Both
 CopyArrivalDate yes
 SyncState *
 
