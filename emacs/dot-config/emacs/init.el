@@ -97,7 +97,15 @@
 
 (setopt package-vc-register-as-project nil)
 (setopt package-vc-selected-packages
-        '((move-it
+        '((easycrypt-ext
+           :url "https://github.com/mmctl/easycrypt-ext"
+           :vc-backend Git
+           :branch "main")
+          (math-delimiters
+           :url "https://github.com/oantolin/math-delimiters"
+           :vc-backend Git
+           :branch "main")
+          (move-it
            :url "https://github.com/mmctl/move-it"
            :vc-backend Git
            :branch "main")
@@ -105,12 +113,11 @@
            :url "https://github.com/jdtsmith/org-modern-indent"
            :vc-backend Git
            :branch "main")
-          (math-delimiters
-           :url "https://github.com/oantolin/math-delimiters"
-           :branch "main")
-          (easycrypt-ext
-           :url "https://github.com/mmctl/easycrypt-ext"
-           :branch "main")))
+          ;; (para
+          ;;  :url "https://github.com/mmctl/para"
+          ;;  :vc-backend Git
+          ;;  :branch "main")
+          ))
 
 (unless package-archive-contents
   (package-refresh-contents))
@@ -1562,6 +1569,48 @@ that allows to include other templates by their name."
   ;; Remove non-existent suffix (bug)
   (transient-remove-suffix 'dirvish-dispatch #'dirvish-fd-jump))
 
+(use-package para
+  :demand t
+  :load-path "~/para/projects/emacs-para"
+
+  :init
+  (setopt para-project-directories (expand-file-name (or (getenv "PROJECTS_DIR") "~/projects"))
+          para-area-directories (expand-file-name (or (getenv "AREAS_DIR") "~/areas"))
+          para-resource-directories (expand-file-name (or (getenv "RESOURCES_DIR") "~/resources"))
+          para-archive-directories (let ((root (expand-file-name (or (getenv "ARCHIVES_DIR") "~/archives"))))
+                                     `((project . ,(expand-file-name "projects" root))
+                                       (area . ,(expand-file-name "areas" root))
+                                       (resource . ,(expand-file-name "resources" root)))))
+
+  :config
+  (require 'local-para)
+
+  (setopt para-item-creation-functions
+          '((project a-para-create-index-file-denote
+                     a-para-create-agenda-file-org
+                     a-para-create-workspace
+                     a-para-visit-created-index)
+            (area a-para-create-index-file-denote
+                  a-para-create-agenda-file-org
+                  a-para-visit-created-index)
+            (resource a-para-create-index-file-denote
+                      a-para-visit-created-index)))
+
+  (add-hook 'para-after-create-hook #'a-para-refresh-agenda-files)
+  (add-hook 'para-after-move-hook #'a-para-refresh-agenda-files)
+
+  (with-eval-after-load 'denote
+    (setopt denote-directory
+            (append (para-type-directories 'project)
+                    (para-type-directories 'area)
+                    (para-type-directories 'resource)
+                    (para-archive-type-directories 'project)
+                    (para-archive-type-directories 'area)
+                    (para-archive-type-directories 'resource))))
+
+  (with-eval-after-load 'org
+    (a-para-refresh-agenda-files)))
+
 ;; Buffer, window, and frame management
 (use-package popper
   :demand t
@@ -2244,8 +2293,9 @@ that allows to include other templates by their name."
 
   :init
   (defconst DENOTE_DIR (file-name-as-directory
-                        (or (when (getenv "PARA_ROOT_DIR")
-                              (expand-file-name (getenv "PARA_ROOT_DIR")))
+                        (or
+                         ;; (when (getenv "PARA_ROOT_DIR")
+                         ;;      (expand-file-name (getenv "PARA_ROOT_DIR")))
                             (when (getenv "XDG_DATA_HOME")
                               (expand-file-name "denote/" (getenv "XDG_DATA_HOME")))
                             (expand-file-name "~/denote/")))
