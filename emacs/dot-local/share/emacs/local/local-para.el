@@ -115,6 +115,7 @@ archived roots in `PARA_ORG_AGENDA_ITEM_TYPES'."
 Preserve agenda files not managed by PARA, remove stale PARA entries,
 and append the agenda files of all currently active PARA projects and
 areas."
+  (interactive "i")
   (unless (and (boundp 'org-agenda-files) (listp org-agenda-files))
     (user-error "`org-agenda-files' void or not configured as a list"))
   (setq org-agenda-files
