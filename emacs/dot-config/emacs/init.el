@@ -2737,11 +2737,14 @@ that allows to include other templates by their name."
   (setopt org-log-done 'time
           org-log-refile nil)
 
+  (defconst ORG_REFILE_TARGET_TAG "rftarget"
+    "Org tag for refile targets.")
+
   (setopt org-refile-allow-creating-parent-nodes 'confirm
-          org-refile-targets '((nil . (:level . 1))
-                               (nil . (:tag . "rftarget"))
+          org-refile-targets `((nil . (:level . 1))
+                               (nil . (:tag . ,ORG_REFILE_TARGET_TAG))
                                (org-agenda-files . (:level . 1))
-                               (org-agenda-files . (:tag . "rftarget")))
+                               (org-agenda-files . (:tag . ,ORG_REFILE_TARGET_TAG)))
           org-refile-use-outline-path t
           org-outline-path-complete-in-steps nil)
 

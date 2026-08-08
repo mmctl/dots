@@ -29,20 +29,36 @@ the transient `index-file' property of ITEM for use by subsequent
 creation functions."
   (require 'denote)
   (let* ((type (symbol-name (para-item-type item)))
-         (title (denote-title-prompt (para-item-name item)))
-         (keywords (denote-keywords-prompt nil (list PARA_DENOTE_INDEX_KEYWORD type)))
+         (title (denote-title-prompt (para-item-name item) "Index file TITLE"))
+         (keywords (denote-keywords-prompt "Index file KEYWORDS" (string-join (list PARA_DENOTE_INDEX_KEYWORD type) ",")))
          (denote-use-directory (para-item-root item))
          (denote-use-title title)
          (denote-use-keywords keywords))
+    (para-item-put item 'title title)
     (para-item-put item 'index-file (denote))))
 
-(defun a-para-org-agenda-file (item)
+(defun a-para-org-agenda-file-name (item)
   "Return the Org agenda file name for ITEM."
   (para-item-expand-file-name PARA_ORG_AGENDA_FILE_NAME item))
 
+(defun a-para-org-agenda-file-front-matter (item)
+  "Return Org agenda front matter for ITEM."
+  (let ((title (para-item-get item 'title))
+        (type (capitalize (symbol-name (para-item-type item)))))
+    (format "#+TITLE: %s\n#+CATEGORY: %s\n#+FILETAGS: :%s:\n\n"
+            title title type)))
+
+(defun a-para-org-agenda-file-main-matter ()
+  "Return Org agenda main matter for ITEM."
+  (format "* Tasks%s" (if ORG_REFILE_TARGET_TAG
+                          (concat " :" ORG_REFILE_TARGET_TAG ":")
+                        "")))
+
 (defun a-para-create-agenda-file-org (item)
-  "Create an empty Org agenda file for ITEM."
-  (with-temp-file (a-para-org-agenda-file item)))
+  "Create the Org agenda file for ITEM with appropriately initialized content."
+  (with-temp-file (a-para-org-agenda-file-name item)
+    (insert (a-para-org-agenda-file-front-matter item))
+    (insert (a-para-org-agenda-file-main-matter))))
 
 (defun a-para-create-workspace (item)
   "Create a workspace directory for ITEM."
@@ -89,7 +105,7 @@ archived roots in `PARA_ORG_AGENDA_ITEM_TYPES'."
 (defun a-para-agenda-files ()
   "Return Org agenda files belonging to active PARA items."
   (seq-keep (lambda (item)
-              (let ((file (a-para-org-agenda-file item)))
+              (let ((file (a-para-org-agenda-file-name item)))
                 (and (file-regular-p file) file)))
             (para-active-items PARA_ORG_AGENDA_ITEM_TYPES)))
 
