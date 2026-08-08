@@ -113,11 +113,10 @@
            :url "https://github.com/jdtsmith/org-modern-indent"
            :vc-backend Git
            :branch "main")
-          ;; (para
-          ;;  :url "https://github.com/mmctl/para"
-          ;;  :vc-backend Git
-          ;;  :branch "main")
-          ))
+          (para
+           :url "https://github.com/mmctl/para"
+           :vc-backend Git
+           :branch "main")))
 
 (unless package-archive-contents
   (package-refresh-contents))
@@ -931,7 +930,7 @@
   (require 'local-cape)
 
   ;; Keybindings
-  (keymap-global-set "C-c w" #'cape-prefix-map)
+  (keymap-global-set "C-c '" #'cape-prefix-map)
 
   ;; Hooks
   (add-hook 'completion-at-point-functions #'cape-abbrev)
@@ -1571,7 +1570,14 @@ that allows to include other templates by their name."
 
 (use-package para
   :demand t
-  :load-path "~/para/projects/emacs-para"
+
+  :bind
+  (:prefix-map a-para-map :prefix "C-c p" :prefix-docstring "Keymap for para (global)"
+               ("p" . para-create-project)
+               ("a" . para-create-area)
+               ("r" . para-create-resource)
+               ("x" . para-archive)
+               ("z" . para-unarchive))
 
   :init
   (setopt para-project-directories (expand-file-name (or (getenv "PROJECTS_DIR") "~/projects"))
@@ -1656,7 +1662,7 @@ that allows to include other templates by their name."
   (keymap-global-set "C-S-o" #'a-popper-cycle-default-group)
   (keymap-global-set "C-M-S-o" #'popper-toggle-type)
 
-  (keymap-global-set "C-c p" 'a-popper-map-prefix)
+  (keymap-global-set "C-c w" 'a-popper-map-prefix)
 
   ;; Activation
   (popper-mode 1))

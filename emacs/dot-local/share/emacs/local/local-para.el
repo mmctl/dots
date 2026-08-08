@@ -19,8 +19,7 @@
   "PARA item types whose agenda files are included in `org-agenda-files'.")
 
 
-;;;; Item creation
-
+;;; Item creation
 (defun a-para-create-index-file-denote (item)
   "Create a Denote index note for ITEM.
 
@@ -34,8 +33,7 @@ creation functions."
          (keywords (denote-keywords-prompt nil (list PARA_DENOTE_INDEX_KEYWORD type)))
          (denote-use-directory (para-item-root item))
          (denote-use-title title)
-         (denote-use-keywords keywords)
-         (denote-use-file-type 'org))
+         (denote-use-keywords keywords))
     (para-item-put item 'index-file (denote))))
 
 (defun a-para-org-agenda-file (item)
@@ -59,8 +57,7 @@ it relies on the transient `index-file' property established by
   (find-file (para-item-get item 'index-file)))
 
 
-;;;; Org agenda integration
-
+;;; Org agenda integration
 (defun a-para-org-agenda-roots ()
   "Return all roots that may contain PARA-managed Org agenda files.
 
