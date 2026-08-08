@@ -22,11 +22,22 @@ Inbox ${MAILDIR}/matthiasmeijers-proton/INBOX/
 MaxSize 50m
 SubFolders Verbatim
 
-Channel matthiasmeijers-proton
+Channel matthiasmeijers-proton-system
 Far :matthiasmeijers-proton-remote:
 Near :matthiasmeijers-proton-local:
 Sync New Gone Flags
-Patterns * "!All Mail"
+Patterns INBOX Starred Archive Drafts Trash Spam "Recovered Messages" Sent
+Create Near
+# Expunge Both
+ExpungeSolo Both
+CopyArrivalDate yes
+SyncState *
+
+Channel matthiasmeijers-proton-folders
+Far :matthiasmeijers-proton-remote:Folders/
+Near :matthiasmeijers-proton-local:
+Sync New Gone Flags
+Patterns * !INBOX !Starred !Archive !Drafts "!All Mail" !Trash !Spam "!Recovered Messages" !Sent
 Create Both
 # Expunge Both
 ExpungeSolo Both
@@ -137,81 +148,11 @@ SyncState *
 
 ## Group
 Group personal
-Channel matthiasmeijers-proton
+Channel matthiasmeijers-proton-system
+Channel matthiasmeijers-proton-folders
 Channel personal-mmeijers
 Channel kernel-mmeijers
 Channel kem-mmeijers
-
-
-# # Business
-# ## mmeijersbsn@protonmail.com
-# IMAPAccount mmeijersbsn-protonmail
-# Host 127.0.0.1
-# Port 1143
-# User mmeijersbsn@protonmail.com
-# PassCmd "secret-tool lookup service proton-bridge account business"
-# TLSType STARTTLS
-# SystemCertificates no
-# CertificateFile ${XDG_CONFIG_HOME}/proton/bridge/cert.pem
-
-# IMAPStore mmeijersbsn-protonmail-remote
-# Account mmeijersbsn-protonmail
-
-# MaildirStore mmeijersbsn-protonmail-local
-# Path ${MAILDIR}/mmeijersbsn-protonmail/
-# Inbox ${MAILDIR}/mmeijersbsn-protonmail/INBOX/
-# MaxSize 50m
-# SubFolders Verbatim
-
-# Channel mmeijersbsn-protonmail
-# Far :mmeijersbsn-protonmail-remote:
-# Near :mmeijersbsn-protonmail-local:
-# Sync New Gone Flags
-# Patterns * "!All Mail"
-# Create Both
-# # Expunge Both
-# ExpungeSolo Both
-# CopyArrivalDate yes
-# SyncState *
-
-# ## contracting@mmeijers.com
-# IMAPAccount contracting-mmeijers
-# # Host 127.0.0.1
-# # Port 1143
-# Host mail.your-server.de
-# User contracting@mmeijers.com
-# # PassCmd "secret-tool lookup service proton-bridge account business"
-# PassCmd "secret-tool lookup host mail.your-server.de user contracting@mmeijers.com"
-# # TLSType STARTTLS
-# TLSType IMAPS
-# # SystemCertificates no
-# # CertificateFile ${XDG_CONFIG_HOME}/proton/bridge/cert.pem
-
-# IMAPStore contracting-mmeijers-remote
-# Account contracting-mmeijers
-
-# MaildirStore contracting-mmeijers-local
-# Path ${MAILDIR}/contracting-mmeijers/
-# Inbox ${MAILDIR}/contracting-mmeijers/INBOX/
-# MaxSize 50m
-# SubFolders Verbatim
-
-# Channel contracting-mmeijers
-# Far :contracting-mmeijers-remote:
-# Near :contracting-mmeijers-local:
-# Sync New Gone Flags
-# # Patterns * "!All Mail"
-# Patterns *
-# Create Both
-# # Expunge Both
-# ExpungeSolo Both
-# CopyArrivalDate yes
-# SyncState *
-
-# ## Group
-# Group business
-# Channel mmeijersbsn-protonmail
-# Channel contracting-mmeijers
 
 
 # Research
@@ -234,11 +175,22 @@ Inbox ${MAILDIR}/mmeijersres-protonmail/INBOX/
 MaxSize 50m
 SubFolders Verbatim
 
-Channel mmeijersres-protonmail
+Channel mmeijersres-protonmail-system
 Far :mmeijersres-protonmail-remote:
 Near :mmeijersres-protonmail-local:
 Sync New Gone Flags
-Patterns * "!All Mail"
+Patterns INBOX Starred Archive Drafts Trash Spam "Recovered Messages" Sent
+Create Near
+# Expunge Both
+ExpungeSolo Both
+CopyArrivalDate yes
+SyncState *
+
+Channel mmeijersres-protonmail-folders
+Far :mmeijersres-protonmail-remote:Folders/
+Near :mmeijersres-protonmail-local:
+Sync New Gone Flags
+Patterns * !INBOX !Starred !Archive !Drafts "!All Mail" !Trash !Spam "!Recovered Messages" !Sent
 Create Both
 # Expunge Both
 ExpungeSolo Both
@@ -315,7 +267,8 @@ SyncState *
 
 ## Group
 Group research
-Channel mmeijersres-protonmail
+Channel mmeijersres-protonmail-system
+Channel mmeijersres-protonmail-folders
 Channel research-mmeijers
 Channel teaching-mmeijers
 

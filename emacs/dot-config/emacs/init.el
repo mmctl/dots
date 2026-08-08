@@ -1601,15 +1601,24 @@ that allows to include other templates by their name."
 
   (with-eval-after-load 'denote
     (setopt denote-directory
-            (append (para-type-directories 'project)
-                    (para-type-directories 'area)
-                    (para-type-directories 'resource)
-                    (para-archive-type-directories 'project)
-                    (para-archive-type-directories 'area)
-                    (para-archive-type-directories 'resource))))
+            (delete-dups
+             (append (ensure-list denote-directory)
+                     (para-type-directories 'project)
+                     (para-type-directories 'area)
+                     (para-type-directories 'resource)
+                     (para-archive-type-directories 'project)
+                     (para-archive-type-directories 'area)
+                     (para-archive-type-directories 'resource))))
+
+    (setopt denote-excluded-directories-regexp
+            (rx (or (regexp denote-excluded-directories-regexp)
+                    (literal PARA_ITEM_WORKSPACE_DIR_NAME)))))
 
   (with-eval-after-load 'org
-    (a-para-refresh-agenda-files)))
+    (a-para-refresh-agenda-files))
+
+  (para-project-integration-mode 1))
+
 
 ;; Buffer, window, and frame management
 (use-package popper
@@ -2293,10 +2302,7 @@ that allows to include other templates by their name."
 
   :init
   (defconst DENOTE_DIR (file-name-as-directory
-                        (or
-                         ;; (when (getenv "PARA_ROOT_DIR")
-                         ;;      (expand-file-name (getenv "PARA_ROOT_DIR")))
-                            (when (getenv "XDG_DATA_HOME")
+                        (or (when (getenv "XDG_DATA_HOME")
                               (expand-file-name "denote/" (getenv "XDG_DATA_HOME")))
                             (expand-file-name "~/denote/")))
     "Directory used as default location for denote notes.")
@@ -2306,7 +2312,6 @@ that allows to include other templates by their name."
   (setopt denote-directory DENOTE_DIR)
 
   (setopt denote-prompts '(subdirectory title keywords))
-  (setopt denote-excluded-directories-regexp (rx string-start "workspace" string-end))
 
   (setopt denote-known-keywords
         '(;; Domains
@@ -2533,7 +2538,6 @@ that allows to include other templates by their name."
   (setopt mu4e-headers-fields
           '((:human-date    .   24)
             (:flags         .   18)
-            ;; (:mailing-list  .   18)
             (:from          .   24)
             (:subject       .   nil)))
 
@@ -2597,12 +2601,9 @@ that allows to include other templates by their name."
           mu4e-trash-folder #'a-determine-mu4e-trash-folder
           mu4e-refile-folder #'a-determine-mu4e-refile-folder)
 
-  (setopt mu4e-contexts (list
-                         PERSONAL_MU4E_CONTEXT
-                         ;; BUSINESS_MU4E_CONTEXT
-                         RESEARCH_MU4E_CONTEXT
-                         MISCELLANEOUS_MU4E_CONTEXT
-                         ))
+  (setopt mu4e-contexts (list PERSONAL_MU4E_CONTEXT
+                              RESEARCH_MU4E_CONTEXT
+                              MISCELLANEOUS_MU4E_CONTEXT))
 
   (setopt mu4e-context-policy 'ask-if-none)
   (setopt mu4e-compose-context-policy nil)

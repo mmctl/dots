@@ -220,18 +220,6 @@ defaults when explicitly supplied."
     :maildir "/teaching-mmeijers"
     :backend-id :mmeijers.com)
 
-   ;; (make-a-mail-address-config
-   ;;  :group :business
-   ;;  :address "mmeijersbsn@protonmail.com"
-   ;;  :maildir "/mmeijersbsn-protonmail"
-   ;;  :backend-id :protonmail-bridge)
-
-   ;; (make-a-mail-address-config
-   ;;  :group :business
-   ;;  :address "contracting@mmeijers.com"
-   ;;  :maildir "/contracting-mmeijers"
-   ;;  :backend-id :mmeijers.com)
-
    (make-a-mail-address-config
     :group :miscellaneous
     :address "host@mmeijers.com"
@@ -242,8 +230,7 @@ defaults when explicitly supplied."
     :group :miscellaneous
     :address "dump@mmeijers.com"
     :maildir "/dump-mmeijers"
-    :backend-id :mmeijers.com)
-   )
+    :backend-id :mmeijers.com))
   "Configurations for all active email addresses.")
 
 ;; Mu4e configurations
@@ -317,22 +304,6 @@ defaults when explicitly supplied."
           :key ?t
           :mailroot "/teaching-mmeijers")))
   "Configuration for research mu4e context.")
-
-(defconst BUSINESS_MU4E_CONTEXT_CONFIG
-  (make-a-mu4e-context-config
-   :group :business
-   :name "Business"
-   :sync-group "business"
-   :mailboxes
-   (list (make-a-mu4e-mailbox-config
-          :label "Main"
-          :key ?m
-          :mailroot "/mmeijersbsn-protonmail")
-         (make-a-mu4e-mailbox-config
-          :label "Contracting"
-          :key ?c
-          :mailroot "/contracting-mmeijers")))
-  "Configuration for business mu4e context.")
 
 (defconst MISCELLANEOUS_MU4E_CONTEXT_CONFIG
   (make-a-mu4e-context-config
@@ -441,9 +412,7 @@ Returns nil if MAILROOT is not configured."
   (a-mailroots-from-configs (a-mail-address-configs-for-group group)))
 
 (defun a-mu4e-context-config-for-name (name)
-  "Returns the mu4e context configuration named NAME.
-
-Returns nil if NAME does not identify a configured context."
+  "Returns the mu4e context configuration named NAME."
   (cl-find name ALL_MU4E_CONTEXT_CONFIGS
            :key #'a-mu4e-context-config-name
            :test #'string=))
@@ -659,7 +628,6 @@ sync command if SYNC-GROUP is nil."
            (cons 'mu4e-get-mail-command
                  (a-mu4e-get-mail-command (a-mu4e-context-config-sync-group context-config)))))))
 
-
 (defconst PERSONAL_MU4E_CONTEXT (a-make-mu4e-context PERSONAL_MU4E_CONTEXT_CONFIG)
   "Mu4e context for personal addresses.")
 
@@ -703,6 +671,7 @@ Meant for `mu4e-headers-found-hook'."
 
 Meant for `mu4e-headers-mode-hook'"
   (setq-local truncate-string-ellipsis ".."))
+
 
 (provide 'local-mu4e)
 

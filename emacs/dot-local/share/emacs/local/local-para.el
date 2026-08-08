@@ -6,6 +6,9 @@
 
 ;;;; Configuration constants
 
+(defconst PARA_ITEM_WORKSPACE_DIR_NAME "workspace"
+  "Directory name used for workspace root in PARA items.")
+
 (defconst PARA_DENOTE_INDEX_KEYWORD "index"
   "Denote keyword used to identify PARA index notes.")
 
@@ -28,10 +31,7 @@ creation functions."
   (require 'denote)
   (let* ((type (symbol-name (para-item-type item)))
          (title (denote-title-prompt (para-item-name item)))
-         (keywords
-          (denote-keywords-prompt
-           nil
-           (list PARA_DENOTE_INDEX_KEYWORD type)))
+         (keywords (denote-keywords-prompt nil (list PARA_DENOTE_INDEX_KEYWORD type)))
          (denote-use-directory (para-item-root item))
          (denote-use-title title)
          (denote-use-keywords keywords)
@@ -40,8 +40,7 @@ creation functions."
 
 (defun a-para-org-agenda-file (item)
   "Return the Org agenda file name for ITEM."
-  (para-item-expand-file-name
-   PARA_ORG_AGENDA_FILE_NAME item))
+  (para-item-expand-file-name PARA_ORG_AGENDA_FILE_NAME item))
 
 (defun a-para-create-agenda-file-org (item)
   "Create an empty Org agenda file for ITEM."
@@ -49,8 +48,7 @@ creation functions."
 
 (defun a-para-create-workspace (item)
   "Create a workspace directory for ITEM."
-  (make-directory
-   (para-item-expand-file-name "workspace/" item)))
+  (make-directory (file-name-as-directory (para-item-expand-file-name PARA_ITEM_WORKSPACE_DIR_NAME item))))
 
 (defun a-para-visit-created-index (item)
   "Visit the Denote index note created for ITEM.
@@ -68,14 +66,11 @@ it relies on the transient `index-file' property established by
 
 Include active and archived roots so stale agenda entries left behind
 by moves or archiving can also be recognized and removed."
-  (apply
-   #'append
-   (mapcar
-    (lambda (type)
-      (append
-       (para-type-directories type)
-       (para-archive-type-directories type)))
-    PARA_ORG_AGENDA_ITEM_TYPES)))
+  (apply #'append
+         (mapcar (lambda (type)
+                   (append (para-type-directories type)
+                           (para-archive-type-directories type)))
+                 PARA_ORG_AGENDA_ITEM_TYPES)))
 
 (defun a-para-managed-agenda-file-p (file)
   "Return non-nil when FILE is a PARA-managed Org agenda file.
@@ -83,34 +78,23 @@ by moves or archiving can also be recognized and removed."
 A managed agenda file is named `PARA_ORG_AGENDA_FILE_NAME' and is
 located directly inside an item directory below one of the active or
 archived roots in `PARA_ORG_AGENDA_ITEM_TYPES'."
-  (and
-   (stringp file)
-   (string=
-    (file-name-nondirectory file)
-    PARA_ORG_AGENDA_FILE_NAME)
-   (seq-some
-    (lambda (directory)
-      (let* ((relative
-              (file-relative-name
-               (expand-file-name file)
-               (file-name-as-directory
-                (expand-file-name directory))))
-             (components
-              (split-string relative "/" t)))
-        (and (= (length components) 2)
-             (not (member (car components) '("." "..")))
-             (string=
-              (cadr components)
-              PARA_ORG_AGENDA_FILE_NAME))))
-    (a-para-org-agenda-roots))))
+  (and (stringp file)
+       (string= (file-name-nondirectory file) PARA_ORG_AGENDA_FILE_NAME)
+   (seq-some (lambda (directory)
+               (let* ((relative (file-relative-name (expand-file-name file)
+                                                    (file-name-as-directory (expand-file-name directory))))
+                      (components (split-string relative "/" t)))
+                 (and (= (length components) 2)
+                      (not (member (car components) '("." "..")))
+                      (string= (cadr components) PARA_ORG_AGENDA_FILE_NAME))))
+             (a-para-org-agenda-roots))))
 
 (defun a-para-agenda-files ()
   "Return Org agenda files belonging to active PARA items."
-  (seq-keep
-   (lambda (item)
-     (let ((file (a-para-org-agenda-file item)))
-       (and (file-regular-p file) file)))
-   (para-active-items PARA_ORG_AGENDA_ITEM_TYPES)))
+  (seq-keep (lambda (item)
+              (let ((file (a-para-org-agenda-file item)))
+                (and (file-regular-p file) file)))
+            (para-active-items PARA_ORG_AGENDA_ITEM_TYPES)))
 
 (defun a-para-refresh-agenda-files (&rest _)
   "Synchronize PARA-managed entries in `org-agenda-files'.
@@ -118,15 +102,12 @@ archived roots in `PARA_ORG_AGENDA_ITEM_TYPES'."
 Preserve agenda files not managed by PARA, remove stale PARA entries,
 and append the agenda files of all currently active PARA projects and
 areas."
-  (require 'org)
-  (unless (listp org-agenda-files)
-    (user-error "`org-agenda-files' is not configured as a list"))
+  (unless (and (boundp 'org-agenda-files) (listp org-agenda-files))
+    (user-error "`org-agenda-files' void or not configured as a list"))
   (setq org-agenda-files
-        (append
-         (seq-remove
-          #'a-para-managed-agenda-file-p
-          org-agenda-files)
-         (a-para-agenda-files))))
+        (append (seq-remove #'a-para-managed-agenda-file-p org-agenda-files)
+                (a-para-agenda-files))))
+
 
 (provide 'local-para)
 
