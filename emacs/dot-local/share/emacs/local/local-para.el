@@ -43,16 +43,18 @@ creation functions."
 
 (defun a-para-org-agenda-file-front-matter (item)
   "Return Org agenda front matter for ITEM."
-  (let ((title (para-item-get item 'title))
-        (type (capitalize (symbol-name (para-item-type item)))))
+  (let* ((title (para-item-get item 'title))
+         (category (captalize title))
+         (type (capitalize (symbol-name (para-item-type item)))))
     (format "#+TITLE: %s\n#+CATEGORY: %s\n#+FILETAGS: :%s:\n\n"
-            title title type)))
+            title category type)))
 
 (defun a-para-org-agenda-file-main-matter ()
   "Return Org agenda main matter for ITEM."
-  (format "* Tasks%s" (if ORG_REFILE_TARGET_TAG
-                          (concat " :" ORG_REFILE_TARGET_TAG ":")
-                        "")))
+  (format "* General tasks%s"
+          (if ORG_REFILE_TARGET_TAG
+              (concat " :" ORG_REFILE_TARGET_TAG ":")
+            "")))
 
 (defun a-para-create-agenda-file-org (item)
   "Create the Org agenda file for ITEM with appropriately initialized content."

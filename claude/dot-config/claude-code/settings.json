@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+
+  "permissions": {
+    "defaultMode": "plan",
+    "disableBypassPermissionsMode": "disable",
+    "disableAutoMode": "disable",
+
+    "allow": [
+      "Bash(rg *)",
+      "Bash(tree *)",
+      "Bash(file *)",
+      "Bash(realpath *)",
+      "Bash(readlink *)",
+      "Bash(man *)",
+      "Bash(info *)",
+      "Bash(jq *)",
+      "Bash(cargo doc *)",
+      "Bash(rustdoc --help *)",
+      "Bash(cargo --help *)",
+      "Bash(* --version)",
+      "Bash(* --help *)"
+    ],
+
+    "ask": [
+      "Bash(git push)",
+      "Bash(git push *)"
+    ],
+
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/secrets/**)",
+
+      "Read(~/.ssh/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.local/share/keyrings/**)",
+      "Read(~/.config/gh/hosts.yml)",
+      "Read(~/.git-credentials)"
+    ]
+  },
+
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": false,
+
+    "credentials": {
+      "files": [
+        {
+          "path": "~/.ssh",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.gnupg",
+          "mode": "deny"
+        },
+        {
+          "path": "~/.claude/.credentials.json",
+          "mode": "deny"
+        }
+      ],
+      "envVars": [
+        {
+          "name": "GITHUB_TOKEN",
+          "mode": "deny"
+        },
+        {
+          "name": "GH_TOKEN",
+          "mode": "deny"
+        }
+      ]
+    }
+  },
+
+  "autoMemoryEnabled": false,
+  "disableClaudeAiConnectors": true,
+  "disableDeepLinkRegistration": "disable",
+  "disableRemoteControl": true
+}

@@ -77,6 +77,10 @@ export CARGO_HOME="$XDG_DATA_HOME/cargo"
 ### LEAN
 export ELAN_HOME="$XDG_DATA_HOME/elan"
 
+### Claude
+export CLAUDE_CONFIG_DIR="$XDG_CONFIG_HOME/claude-code"
+export CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1
+
 
 ## Default programs
 export PAGER='less'
