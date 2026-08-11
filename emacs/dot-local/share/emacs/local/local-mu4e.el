@@ -324,7 +324,6 @@ defaults when explicitly supplied."
 (defconst ALL_MU4E_CONTEXT_CONFIGS
   (list PERSONAL_MU4E_CONTEXT_CONFIG
         RESEARCH_MU4E_CONTEXT_CONFIG
-        BUSINESS_MU4E_CONTEXT_CONFIG
         MISCELLANEOUS_MU4E_CONTEXT_CONFIG)
   "Configurations identifying all supported mu4e contexts.")
 
@@ -633,9 +632,6 @@ sync command if SYNC-GROUP is nil."
 
 (defconst RESEARCH_MU4E_CONTEXT (a-make-mu4e-context RESEARCH_MU4E_CONTEXT_CONFIG)
   "Mu4e context for research addresses.")
-
-(defconst BUSINESS_MU4E_CONTEXT (a-make-mu4e-context BUSINESS_MU4E_CONTEXT_CONFIG)
-  "Mu4e context for business addresses.")
 
 (defconst MISCELLANEOUS_MU4E_CONTEXT (a-make-mu4e-context MISCELLANEOUS_MU4E_CONTEXT_CONFIG)
   "Mu4e context for miscellaneous addresses.")
