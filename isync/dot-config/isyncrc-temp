@@ -26,7 +26,7 @@ Channel matthiasmeijers-proton-system
 Far :matthiasmeijers-proton-remote:
 Near :matthiasmeijers-proton-local:
 Sync New Gone Flags
-Patterns INBOX Starred Archive Drafts Trash Spam "Recovered Messages" Sent
+Patterns INBOX Starred Archive Drafts Trash Spam Sent
 Create Near
 # Expunge Both
 ExpungeSolo Both
@@ -37,7 +37,7 @@ Channel matthiasmeijers-proton-folders
 Far :matthiasmeijers-proton-remote:Folders/
 Near :matthiasmeijers-proton-local:
 Sync New Gone Flags
-Patterns * !INBOX !Starred !Archive !Drafts "!All Mail" !Trash !Spam "!Recovered Messages" !Sent
+Patterns * !INBOX !Starred !Archive !Drafts "!All Mail" !Trash !Spam !Sent
 Create Both
 # Expunge Both
 ExpungeSolo Both
@@ -179,7 +179,7 @@ Channel mmeijersres-protonmail-system
 Far :mmeijersres-protonmail-remote:
 Near :mmeijersres-protonmail-local:
 Sync New Gone Flags
-Patterns INBOX Starred Archive Drafts Trash Spam "Recovered Messages" Sent
+Patterns INBOX Starred Archive Drafts Trash Spam Sent
 Create Near
 # Expunge Both
 ExpungeSolo Both
@@ -190,7 +190,7 @@ Channel mmeijersres-protonmail-folders
 Far :mmeijersres-protonmail-remote:Folders/
 Near :mmeijersres-protonmail-local:
 Sync New Gone Flags
-Patterns * !INBOX !Starred !Archive !Drafts "!All Mail" !Trash !Spam "!Recovered Messages" !Sent
+Patterns * !INBOX !Starred !Archive !Drafts "!All Mail" !Trash !Spam !Sent
 Create Both
 # Expunge Both
 ExpungeSolo Both
