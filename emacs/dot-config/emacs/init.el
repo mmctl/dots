@@ -1598,14 +1598,12 @@ that allows to include other templates by their name."
 
   (with-eval-after-load 'denote
     (setopt denote-directory
-            (delete-dups
-             (append (ensure-list denote-directory)
-                     (para-type-directories 'project)
-                     (para-type-directories 'area)
-                     (para-type-directories 'resource)
-                     (para-archive-type-directories 'project)
-                     (para-archive-type-directories 'area)
-                     (para-archive-type-directories 'resource))))
+            (append (para-type-directories 'project)
+                    (para-type-directories 'area)
+                    (para-type-directories 'resource)
+                    (para-archive-type-directories 'project)
+                    (para-archive-type-directories 'area)
+                    (para-archive-type-directories 'resource)))
 
     (setopt denote-excluded-directories-regexp
             (rx (or (regexp denote-excluded-directories-regexp)
@@ -2306,7 +2304,11 @@ that allows to include other templates by their name."
   (unless (file-directory-p DENOTE_DIR)
     (make-directory DENOTE_DIR t))
 
-  (setopt denote-directory DENOTE_DIR)
+  (if (boundp 'denote-directory)
+      (progn
+        (setopt denote-directory (ensure-list denote-directory))
+        (add-to-list 'denote-directory DENOTE_DIR))
+    (setopt denote-directory DENOTE_DIR))
 
   (setopt denote-prompts '(subdirectory title keywords))
 
@@ -2613,8 +2615,15 @@ that allows to include other templates by their name."
       (with-eval-after-load 'gnutls
         (add-to-list 'gnutls-trustfiles bridge-cert))))
 
-  (advice-add #'mu4e--draft :around #'an-around-advice-draft-configure))
+  (advice-add #'mu4e--draft :around #'an-around-advice-draft-configure)
 
+  (gnus-icalendar-setup))
+
+(use-package mu4e-icalendar
+  :after mu4e
+
+  :config
+  (gnus-icalendar-setup))
 
 ;; Org
 (use-package org

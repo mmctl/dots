@@ -2,6 +2,7 @@
 ;; local-para.el
 
 (require 'para)
+(require 'denote)
 
 
 ;;;; Configuration constants
@@ -27,13 +28,11 @@ Use the item name as the initial title and add `index' and the item's
 PARA type as the initial keywords.  Store the resulting file name as
 the transient `index-file' property of ITEM for use by subsequent
 creation functions."
-  (require 'denote)
   (let* ((type (symbol-name (para-item-type item)))
-         (title (denote-title-prompt (para-item-name item) "Index file TITLE"))
-         (keywords (denote-keywords-prompt "Index file KEYWORDS" (string-join (list PARA_DENOTE_INDEX_KEYWORD type) ",")))
+         (title (para-item-name item))
          (denote-use-directory (para-item-root item))
          (denote-use-title title)
-         (denote-use-keywords keywords))
+         (denote-use-keywords (list PARA_DENOTE_INDEX_KEYWORD type)))
     (para-item-put item 'title title)
     (para-item-put item 'index-file (denote))))
 
@@ -44,7 +43,7 @@ creation functions."
 (defun a-para-org-agenda-file-front-matter (item)
   "Return Org agenda front matter for ITEM."
   (let* ((title (para-item-get item 'title))
-         (category (captalize title))
+         (category (capitalize title))
          (type (capitalize (symbol-name (para-item-type item)))))
     (format "#+TITLE: %s\n#+CATEGORY: %s\n#+FILETAGS: :%s:\n\n"
             title category type)))

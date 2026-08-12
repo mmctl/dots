@@ -187,7 +187,16 @@ cat > "$XDG_CONFIG_HOME/systemd/user/environment/mail.conf" <<EOF
 MAILDIR="$MAILDIR"
 EOF
 
-mu init --maildir="$MAILDIR"
+mu init --maildir="$MAILDIR" \
+        --personal-address=matthiasmeijers@proton.me \
+        --personal-address=personal@mmeijers.com \
+        --personal-address=kernel@mmeijers.com \
+        --personal-address=kem@mmeijers.com \
+        --personal-address=mmeijersres@protonmail.com \
+        --personal-address=research@mmeijers.com \
+        --personal-address=teaching@mmeijers.com \
+        --personal-address=host@mmeijers.com \
+        --personal-address=dump@mmeijers.com
 mu index
 
 setup_log_info "Initializing mail environment (mu)."
